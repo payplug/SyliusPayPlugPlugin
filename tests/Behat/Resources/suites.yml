@@ -1,0 +1,4 @@
+imports:
+    - suites/ui/refunding_payplug_payment.yml
+    - suites/ui/managing_payment_method_payplug.yml
+    - suites/ui/paying_with_payplug_for_order.yml

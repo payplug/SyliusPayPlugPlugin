@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <imports>
+        <import resource="services/gateway_factory.xml" />
+        <import resource="services/form.xml" />
+        <import resource="services/action.xml" />
+    </imports>
+
+    <services>
+        <service id="payplug_sylius_payplug_plugin.api_client.payplug" class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient" public="true" />
+
+        <service id="payplug_sylius_payplug_plugin.payment_processing.refund" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor" public="true">
+            <argument type="service" id="session" />
+            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
+            <argument type="service" id="monolog.logger.payum" />
+        </service>
+
+        <service id="payplug_sylius_payplug_plugin.repository.payment" class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository" parent="sylius.repository.payment" />
+
+        <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
+            <argument type="service" id="sm.factory" />
+            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
+            <argument type="service" id="sylius.manager.payment" />
+        </service>
+
+        <service id="payplug_sylius_payplug_plugin.command.payment_state" class="PayPlug\SyliusPayPlugPlugin\Cli\UpdatePaymentStateCommand">
+            <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" />
+            <argument type="service" id="payplug_sylius_payplug_plugin.resolver.payment_state" />
+            <argument type="service" id="monolog.logger.payum" />
+            <tag name="console.command" />
+        </service>
+    </services>
+</container>
