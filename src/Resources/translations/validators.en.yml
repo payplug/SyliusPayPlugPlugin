@@ -1,0 +1,3 @@
+payplug_sylius_payplug_plugin:
+    secret_key:
+        not_blank: Secret key cannot be blank.

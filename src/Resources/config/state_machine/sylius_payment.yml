@@ -1,0 +1,8 @@
+winzou_state_machine:
+    sylius_payment:
+        callbacks:
+            before:
+                payplug_sylius_payplug_plugin_refund_process:
+                    on: ["refund"]
+                    do: ["@payplug_sylius_payplug_plugin.payment_processing.refund", "process"]
+                    args: ["object"]

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <defaults public="true" />
+
+        <service id="payplug_sylius_payplug_plugin.action.capture" class="PayPlug\SyliusPayPlugPlugin\Action\CaptureAction">
+            <argument type="service" id="monolog.logger.payum" />
+            <tag name="payum.action" factory="payplug" alias="payum.action.capture" />
+        </service>
+
+        <service id="payplug_sylius_payplug_plugin.action.status" class="PayPlug\SyliusPayPlugPlugin\Action\StatusAction">
+            <tag name="payum.action" factory="payplug" alias="payum.action.status" />
+        </service>
+
+        <service id="payplug_sylius_payplug_plugin.action.convert_payment" class="PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction">
+            <tag name="payum.action" factory="payplug" alias="payum.action.convert_payment" />
+        </service>
+
+        <service id="payplug_sylius_payplug_plugin.action.notify" class="PayPlug\SyliusPayPlugPlugin\Action\NotifyAction">
+            <argument type="service" id="monolog.logger.payum" />
+            <tag name="payum.action" factory="payplug" alias="payum.action.notify" />
+        </service>
+    </services>
+</container>
