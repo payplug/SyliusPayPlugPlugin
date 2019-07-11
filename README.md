@@ -21,7 +21,7 @@ Add a package to your private repository and add the repository to `composer.jso
 1. Require plugin with composer:
 
     ```bash
-    composer require payplug/payplug-plugin
+    composer require payplug/payplug-sylius
     ```
 
 2. Import configuration in your `config/packages/_sylius.yaml` file:
