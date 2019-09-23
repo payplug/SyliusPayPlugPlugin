@@ -49,7 +49,8 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
 
         $delivery_type = $shipping->getId() == $billing->getId() ? 'BILLING' : 'OTHER';
 
-        $billing_phone = $this->formatNumber($billing->getPhoneNumber(),$billing->getCountryCode());
+        //Sylius does not require any phone number so we have to considere it null
+        $billing_phone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(),$billing->getCountryCode()) : null;
         $details['billing'] = array(
             'title' => $this->formatTitle($customer),
             'first_name' => $billing->getFirstName(),
@@ -67,7 +68,7 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
             'language' => $this->formatLanguageCode($order->getLocaleCode()),
         );
 
-        $shipping_phone = $this->formatNumber($shipping->getPhoneNumber(),$shipping->getCountryCode());
+        $shipping_phone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(),$shipping->getCountryCode()) : null;
         $details['shipping'] = array(
             'title' => $this->formatTitle($customer),
             'first_name' => $shipping->getFirstName(),
