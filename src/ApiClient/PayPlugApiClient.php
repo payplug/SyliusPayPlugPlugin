@@ -9,14 +9,9 @@ use Payplug\Resource\Refund;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
 {
-    /** @var string|null */
-    private $notificationUrlDev;
-
-    public function initialise(string $secretKey, ?string $notificationUrlDev = null): void
+    public function initialise(string $secretKey): void
     {
         \Payplug\Payplug::setSecretKey($secretKey);
-
-        $this->notificationUrlDev = $notificationUrlDev;
     }
 
     public function createPayment(array $data): Payment
@@ -37,10 +32,5 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     public function retrieve(string $paymentId): Payment
     {
         return \Payplug\Payment::retrieve($paymentId);
-    }
-
-    public function getNotificationUrlDev(): ?string
-    {
-        return $this->notificationUrlDev;
     }
 }
