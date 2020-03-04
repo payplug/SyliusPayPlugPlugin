@@ -25,10 +25,6 @@ final class PayPlugGatewayConfigurationType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('notificationUrlDev', TextType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.ui.notification_url_for_env_dev',
-                'required' => false,
-            ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
                 $data = $event->getData();
 

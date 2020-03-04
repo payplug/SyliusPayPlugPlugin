@@ -23,7 +23,6 @@ final class PayPlugGatewayFactory extends GatewayFactory
         if (false === (bool) $config['payum.api']) {
             $config['payum.default_options'] = [
                 'secretKey' => null,
-                'notificationUrlDev' => null,
             ];
 
             $config->defaults($config['payum.default_options']);
@@ -38,7 +37,7 @@ final class PayPlugGatewayFactory extends GatewayFactory
                 /** @var PayPlugApiClientInterface $payPlugApiClient */
                 $payPlugApiClient = $config['payum.http_client'];
 
-                $payPlugApiClient->initialise($config['secretKey'], $config['notificationUrlDev']);
+                $payPlugApiClient->initialise($config['secretKey']);
 
                 return $payPlugApiClient;
             };
