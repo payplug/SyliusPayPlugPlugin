@@ -41,10 +41,15 @@ final class PayPlugPaymentMethodsResolver implements PaymentMethodsResolverInter
 
         $supportedMethods = [];
 
+        $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
+
         foreach ($paymentMethods as $paymentMethod) {
             if (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()) {
                 $supportedMethods[] = $paymentMethod;
-            } elseif (in_array($this->currencyContext->getCurrencyCode(), PayPlugGatewayFactory::AUTHORIZED_CURRENCY)) {
+            } elseif (in_array($activeCurrencyCode, array_keys(PayPlugGatewayFactory::AUTHORIZED_CURRENCIES))
+                && $payment->getAmount() >= PayPlugGatewayFactory::AUTHORIZED_CURRENCIES[$activeCurrencyCode]['min_amount']
+                && $payment->getAmount() <= PayPlugGatewayFactory::AUTHORIZED_CURRENCIES[$activeCurrencyCode]['max_amount']
+            ) {
                 $supportedMethods[] = $paymentMethod;
             }
         }
@@ -57,6 +62,6 @@ final class PayPlugPaymentMethodsResolver implements PaymentMethodsResolverInter
         return $payment instanceof PaymentInterface &&
             null !== $payment->getOrder() &&
             null !== $payment->getOrder()->getChannel()
-            ;
+        ;
     }
 }
