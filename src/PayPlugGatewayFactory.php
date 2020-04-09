@@ -11,6 +11,12 @@ use Payum\Core\GatewayFactory;
 final class PayPlugGatewayFactory extends GatewayFactory
 {
     public const FACTORY_NAME = 'payplug';
+    public const AUTHORIZED_CURRENCIES = [
+        'EUR' => [
+            'min_amount' => 99,
+            'max_amount' => 2000000,
+        ],
+    ];
 
     protected function populateConfig(ArrayObject $config)
     {

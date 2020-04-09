@@ -21,6 +21,6 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
             ->setParameter('stateProcessing', PaymentInterface::STATE_PROCESSING)
             ->getQuery()
             ->getResult()
-        ;
+            ;
     }
 }
