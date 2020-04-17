@@ -15,7 +15,7 @@ interface PayPlugApiClientInterface
     public const FAILED = 'failed';
     public const REFUNDED = 'refunded';
 
-    public function initialise(string $secretKey, ?string $notificationUrlDev = null): void;
+    public function initialise(string $secretKey): void;
 
     public function createPayment(array $data): Payment;
 
@@ -24,6 +24,4 @@ interface PayPlugApiClientInterface
     public function treat($input);
 
     public function retrieve(string $paymentId): Payment;
-
-    public function getNotificationUrlDev(): ?string;
 }
