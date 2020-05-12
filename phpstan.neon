@@ -1,21 +1,15 @@
-includes:
-    - vendor/phpstan/phpstan-doctrine/extension.neon
-    - vendor/phpstan/phpstan-symfony/extension.neon
-    - vendor/phpstan/phpstan-webmozart-assert/extension.neon
-
 parameters:
+    level: max
     reportUnmatchedIgnoredErrors: false
-
-    symfony:
-        container_xml_path: tests/Application/var/cache/test/ApplicationTests_BitBag_SyliusPayPlugPlugin_Application_KernelTestDebugContainer.xml
-
+    checkMissingIterableValueType: false
     excludes_analyse:
         # Makes PHPStan crash
-        - 'src/DependencyInjection/Configuration.php'
-
+        - ../src/DependencyInjection/Configuration.php
+        - ../src/Migrations/
         # Test dependencies
-        - 'tests/Application/app/**.php'
-        - 'tests/Application/src/**.php'
-
+        - ../tests
+        # PHPSpec
+        - ../spec
     ignoreErrors:
-        - '/Parameter #1 $configuration of method Symfony\Component\DependencyInjection\Extension\Extension::processConfiguration() expects Symfony\Component\Config\Definition\ConfigurationInterface, Symfony\Component\Config\Definition\ConfigurationInterface|null given./'
+        # ignore false positive
+        - '#Access to an undefined property Payplug\\Resource\\[a-zA-Z0-9]+::\$#'

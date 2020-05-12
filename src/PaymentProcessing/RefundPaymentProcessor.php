@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -47,6 +48,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         $details = $payment->getDetails();
 
         if (
+            !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
             PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName() ||
             (isset($details['status']) && PayPlugApiClientInterface::REFUNDED === $details['status'])
         ) {

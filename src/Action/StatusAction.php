@@ -6,11 +6,11 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payum\Core\Action\ActionInterface;
+use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
-use Payum\Core\Exception\RequestNotSupportedException;
 use Sylius\Component\Core\Model\PaymentInterface;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface
@@ -43,21 +43,27 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
         switch ($details['status']) {
             case PayPlugApiClientInterface::STATUS_CANCELED:
                 $request->markCanceled();
+
                 break;
             case PayPlugApiClientInterface::STATUS_CREATED:
                 $request->markPending();
+
                 break;
             case PayPlugApiClientInterface::STATUS_CAPTURED:
                 $request->markCaptured();
+
                 break;
             case PayPlugApiClientInterface::FAILED:
                 $request->markFailed();
+
                 break;
             case PayPlugApiClientInterface::REFUNDED:
                 $request->markRefunded();
+
                 break;
             default:
                 $request->markUnknown();
+
                 break;
         }
     }

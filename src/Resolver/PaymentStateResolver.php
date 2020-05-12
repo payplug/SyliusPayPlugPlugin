@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
-use Doctrine\ORM\EntityManagerInterface;
+use Payum\Core\Model\GatewayConfigInterface;
 use SM\Factory\FactoryInterface;
 use SM\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -39,7 +40,8 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $payment->getMethod();
 
-        if (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()) {
+        if (!$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
+            PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()) {
             return;
         }
 
@@ -60,9 +62,11 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
         switch (true) {
             case $payment->is_paid:
                 $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_COMPLETE);
+
                 break;
             case null !== $payment->failure:
                 $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_FAIL);
+
                 break;
             default:
                 $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_PROCESS);
