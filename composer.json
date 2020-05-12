@@ -6,9 +6,9 @@
     "license": "OSL-3.0",
     "require": {
         "php": "^7.2",
-        "sylius/sylius": "^1.4",
+        "giggsey/libphonenumber-for-php": "^8.10",
         "payplug/payplug-php": "^3.1",
-        "giggsey/libphonenumber-for-php": "^8.10"
+        "sylius/sylius": "^1.4"
     },
     "require-dev": {
         "behat/behat": "^3.4",
@@ -21,27 +21,21 @@
         "friends-of-behat/symfony-extension": "^2.0",
         "friends-of-behat/variadic-extension": "^1.1",
         "lakion/mink-debug-extension": "^1.2.3",
-        "phpspec/phpspec": "^5.0",
-        "phpstan/phpstan-doctrine": "^0.10",
-        "phpstan/phpstan-shim": "^0.10",
-        "phpstan/phpstan-symfony": "^0.10",
-        "phpstan/phpstan-webmozart-assert": "^0.10",
+        "phpspec/phpspec": "^6.0",
+        "phpstan/extension-installer": "^1.0",
+        "phpstan/phpstan": "^0.12.1",
+        "phpstan/phpstan-doctrine": "^0.12.1",
+        "phpstan/phpstan-strict-rules": "^0.12.1",
+        "phpstan/phpstan-webmozart-assert": "^0.12.1",
         "phpunit/phpunit": "^6.5",
-        "sensiolabs/security-checker": "^5.0",
-        "sylius-labs/coding-standard": "^2.0",
-        "symfony/browser-kit": "^3.4||^4.1",
-        "symfony/debug-bundle": "^3.4||^4.1",
-        "symfony/dotenv": "^4.2",
-        "symfony/intl": "^3.4||^4.1",
-        "symfony/web-profiler-bundle": "^3.4||^4.1",
-        "symfony/web-server-bundle": "^3.4||^4.1"
-    },
-    "conflict": {
-        "symfony/symfony": "4.1.8",
-        "symfony/browser-kit": "4.1.8",
-        "symfony/dependency-injection": "4.1.8",
-        "symfony/dom-crawler": "4.1.8",
-        "symfony/routing": "4.1.8"
+        "sensiolabs/security-checker": "^6.0",
+        "sylius-labs/coding-standard": "^3.1",
+        "symfony/browser-kit": "^3.4||^4.3",
+        "symfony/debug-bundle": "^3.4||^4.3",
+        "symfony/dotenv": "^3.4||^4.3",
+        "symfony/intl": "^3.4||^4.3",
+        "symfony/web-profiler-bundle": "^3.4||^4.3",
+        "symfony/web-server-bundle": "^3.4||^4.3"
     },
     "prefer-stable": true,
     "autoload": {
@@ -52,6 +46,9 @@
     },
     "autoload-dev": {
         "classmap": ["tests/Application/Kernel.php"]
+    },
+    "config": {
+        "sort-packages": true
     },
     "extra": {
         "branch-alias": {
