@@ -38,37 +38,72 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
 
         $customer->getEmail()->willReturn('test@test.pl');
         $customer->getId()->willReturn(1);
+        $customer->getGender()->willReturn('M');
+
+        $address->getId()->willReturn(1);
         $address->getFirstName()->willReturn('John');
         $address->getLastName()->willReturn('Doe');
+        $address->getPhoneNumber()->willReturn('0606060606');
+        $address->getCompany()->willReturn('Bob');
         $address->getPostcode()->willReturn('97980');
         $address->getStreet()->willReturn('test');
         $address->getCity()->willReturn('City');
+        $address->getProvinceName()->willReturn('State');
         $address->getCountryCode()->willReturn('US');
+
         $order->getCustomer()->willReturn($customer);
         $order->getBillingAddress()->willReturn($address);
+        $order->getShippingAddress()->willReturn($address);
         $order->getNumber()->willReturn('000000001');
+        $order->getLocaleCode()->willReturn('en_US');
+
         $payment->getOrder()->willReturn($order);
-        $request->getSource()->willReturn($payment);
-        $request->getTo()->willReturn('array');
         $payment->getDetails()->willReturn([]);
         $payment->getAmount()->willReturn(100);
         $payment->getCurrencyCode()->willReturn('EUR');
 
+        $request->getSource()->willReturn($payment);
+        $request->getTo()->willReturn('array');
+
         $request->setResult([
             'amount' => 100,
             'currency' => 'EUR',
-            'customer' => [
-                'email' => 'test@test.pl',
-                'first_name' => 'John',
-                'last_name' => 'Doe',
-                'address1' => 'test',
-                'city' => 'City',
-                'country' => 'US',
-                'postcode' => '97980',
-            ],
             'metadata' => [
                 'customer_id' => 1,
                 'order_number' => '000000001',
+            ],
+            'billing' => [
+              'title' => null,
+              'first_name' => "John",
+              'last_name' => "Doe",
+              'company_name' => "Bob",
+              'email' => "test@test.pl",
+              'mobile_phone_number' => null,
+              'landline_phone_number' => null,
+              'address1' => "test",
+              'address2' => null,
+              'postcode' => "97980",
+              'city' => "City",
+              'state' => "State",
+              'country' => "US",
+              'language' => "en",
+            ],
+            'shipping' => [
+              'title' => null,
+              'first_name' => "John",
+              'last_name' => "Doe",
+              'company_name' => "Bob",
+              'email' => "test@test.pl",
+              'mobile_phone_number' => null,
+              'landline_phone_number' => null,
+              'address1' => "test",
+              'address2' => null,
+              'postcode' => "97980",
+              'city' => "City",
+              'state' => "State",
+              'country' => "US",
+              'language' => "en",
+              'delivery_type' => "BILLING",
             ],
         ])->shouldBeCalled();
 
