@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
+use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\CaptureAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use Payplug\Resource\Payment;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
