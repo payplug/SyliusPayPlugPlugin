@@ -1,12 +1,12 @@
 {
-    "name": "payplug/payplug-sylius",
+    "name": "payplug/sylius-payplug-plugin",
     "type": "sylius-plugin",
-    "keywords": ["sylius", "sylius-plugin"],
+    "keywords": ["sylius", "sylius-plugin", "payplug"],
     "description": "PayPlug payment plugin for Sylius applications.",
     "license": "OSL-3.0",
     "require": {
         "php": "^7.2",
-        "sylius/sylius": "^1.4",  
+        "sylius/sylius": "^1.4",
         "payplug/payplug-php": "^3.1",
         "giggsey/libphonenumber-for-php": "^8.10"
     },
