@@ -3,7 +3,7 @@
     "type": "sylius-plugin",
     "keywords": ["sylius", "sylius-plugin", "payplug"],
     "description": "PayPlug payment plugin for Sylius applications.",
-    "license": "OSL-3.0",
+    "license": "MIT",
     "require": {
         "php": "^7.2",
         "sylius/sylius": "^1.4",
