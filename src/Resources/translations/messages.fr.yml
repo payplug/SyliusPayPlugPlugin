@@ -1,0 +1,5 @@
+payplug_sylius_payplug_plugin:
+    ui:
+        secret_key: Clé secrète
+        payplug_gateway_label: PayPlug
+        notification_url_for_env_dev: Url de notification pour l'environnement de développement
