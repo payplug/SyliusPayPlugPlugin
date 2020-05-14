@@ -55,7 +55,7 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
 
         $paymentStateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
 
-        $payment = $this->payPlugApiClient->retrieve($details['payment_id']);
+        $payment = $this->payPlugApiClient->retrieve((string) $details['payment_id']);
 
         switch (true) {
             case $payment->is_paid:

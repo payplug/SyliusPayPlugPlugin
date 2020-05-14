@@ -6,7 +6,9 @@ Feature: Paying with PayPlug during checkout
 
     Background:
         Given the store operates on a single channel in "United States"
+        And that channel also allows to shop using the "EUR" currency
         And there is a user "john@bitbag.pl" identified by "password123"
+        And I changed my currency to "EUR"
         And the store has a payment method "PayPlug" with a code "payplug" and PayPlug payment gateway
         And the store has a product "PHP T-Shirt" priced at "€100.00"
         And the store ships everywhere for free

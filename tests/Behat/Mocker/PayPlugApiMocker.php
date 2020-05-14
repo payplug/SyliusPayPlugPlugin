@@ -118,4 +118,26 @@ final class PayPlugApiMocker
 
         $this->mocker->unmockAll();
     }
+
+
+    public function mockApiStatePayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+        $mock ->shouldReceive('initialise');
+
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->state = 'failed';
+        $payment->is_paid = false;
+        $payment->failure = true;
+
+        $mock
+            ->shouldReceive('retrieve')//->withArgs(['paymentId' => '123456'])
+            ->andReturn($payment)
+        ;
+
+        $action();
+
+        $this->mocker->unmockAll();
+    }
+
 }
