@@ -11,6 +11,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
@@ -23,14 +24,19 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     /** @var LoggerInterface */
     private $logger;
 
+    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    private $translator;
+
     public function __construct(
         Session $session,
         PayPlugApiClientInterface $payPlugApiClient,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        TranslatorInterface $translator
     ) {
         $this->session = $session;
         $this->payPlugApiClient = $payPlugApiClient;
         $this->logger = $logger;
+        $this->translator = $translator;
     }
 
     public function process(PaymentInterface $payment): void
@@ -48,7 +54,10 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         }
 
         if (!isset($details['payment_id'])) {
-            $this->session->getFlashBag()->add('info', 'The payment refund was made only locally.');
+            $this->session->getFlashBag()->add(
+                'info',
+                $this->translator->trans('payplug_sylius_payplug_plugin.ui.payment_refund_locally')
+            );
 
             return;
         }
