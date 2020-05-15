@@ -54,7 +54,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $times = 0;
 
             do {
-                $payment = $this->payPlugApiClient->retrieve($details['payment_id']);
+                $payment = $this->payPlugApiClient->retrieve((string) $details['payment_id']);
 
                 if ($payment->is_paid) {
                     $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
