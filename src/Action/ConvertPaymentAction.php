@@ -8,6 +8,7 @@ use Payum\Core\Action\ActionInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Payum\Core\Request\Convert;
@@ -15,7 +16,6 @@ use Payum\Core\Bridge\Spl\ArrayObject;
 
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
-
 
 final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterface
 {
@@ -31,6 +31,7 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         /** @var OrderInterface $order */
         $order = $payment->getOrder();
 
+        /** @var CustomerInterface $customer */
         $customer = $order->getCustomer();
 
         $details = ArrayObject::ensureArrayObject($payment->getDetails());
