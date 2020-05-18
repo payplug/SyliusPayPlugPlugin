@@ -52,51 +52,9 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
 
         $deliveryType = $shipping->getId() == $billing->getId() ? 'BILLING' : 'OTHER';
 
-        //Sylius does not require any phone number so we have to considere it null
-        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(), $billing->getCountryCode()) : null;
-        $billingMobilePhone = null;
-        $billingLandingPhone = null;
-        $this->loadPhoneNumbers($billingPhone, $billingMobilePhone, $billingLandingPhone);
+        $this->addBillingInfo($billing, $customer, $order, $details);
 
-        $details['billing'] = [
-            'title' => $this->formatTitle($customer),
-            'first_name' => $billing->getFirstName(),
-            'last_name' => $billing->getLastName(),
-            'company_name' => $billing->getCompany(),
-            'email' => $customer->getEmail(),
-            'mobile_phone_number' => $billingMobilePhone,
-            'landline_phone_number' => $billingLandingPhone,
-            'address1' => $billing->getStreet(),
-            'address2' => null,
-            'postcode' => $billing->getPostcode(),
-            'city' => $billing->getCity(),
-            'state' => $billing->getProvinceName(),
-            'country' => $billing->getCountryCode(),
-            'language' => $this->formatLanguageCode($order->getLocaleCode()),
-        ];
-
-        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(), $shipping->getCountryCode()) : null;
-        $shippingMobilePhone = null;
-        $shippingLandingPhone = null;
-        $this->loadPhoneNumbers($shippingPhone, $shippingMobilePhone, $shippingLandingPhone);
-
-        $details['shipping'] = [
-            'title' => $this->formatTitle($customer),
-            'first_name' => $shipping->getFirstName(),
-            'last_name' => $shipping->getLastName(),
-            'company_name' => $shipping->getCompany(),
-            'email' => $customer->getEmail(),
-            'mobile_phone_number' => $shippingMobilePhone,
-            'landline_phone_number' => $shippingLandingPhone,
-            'address1' => $shipping->getStreet(),
-            'address2' => null,
-            'postcode' => $shipping->getPostcode(),
-            'city' => $shipping->getCity(),
-            'state' => $shipping->getProvinceName(),
-            'country' => $shipping->getCountryCode(),
-            'language' => $this->formatLanguageCode($order->getLocaleCode()),
-            'delivery_type' => $deliveryType,
-        ];
+        $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
         $request->setResult((array) $details);
     }
@@ -164,5 +122,53 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         if ($phoneData['is_mobile'] !== true) {
             $landingPhone = $phoneData['phone'];
         }
+    }
+
+    private function addBillingInfo(AddressInterface $billing, CustomerInterface $customer, OrderInterface $order, ArrayObject &$details): void
+    {
+        //Sylius does not require any phone number so we have to considere it null
+        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(), $billing->getCountryCode()) : null;
+        $this->loadPhoneNumbers($billingPhone, $billingMobilePhone, $billingLandingPhone);
+
+        $details['billing'] = [
+            'title' => $this->formatTitle($customer),
+            'first_name' => $billing->getFirstName(),
+            'last_name' => $billing->getLastName(),
+            'company_name' => $billing->getCompany(),
+            'email' => $customer->getEmail(),
+            'mobile_phone_number' => $billingMobilePhone,
+            'landline_phone_number' => $billingLandingPhone,
+            'address1' => $billing->getStreet(),
+            'address2' => null,
+            'postcode' => $billing->getPostcode(),
+            'city' => $billing->getCity(),
+            'state' => $billing->getProvinceName(),
+            'country' => $billing->getCountryCode(),
+            'language' => $this->formatLanguageCode($order->getLocaleCode()),
+        ];
+    }
+
+    private function addShippingInfo(AddressInterface $shipping, CustomerInterface $customer, OrderInterface $order, string $deliveryType, ArrayObject &$details): void
+    {
+        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(), $shipping->getCountryCode()) : null;
+        $this->loadPhoneNumbers($shippingPhone, $shippingMobilePhone, $shippingLandingPhone);
+
+        $details['shipping'] = [
+            'title' => $this->formatTitle($customer),
+            'first_name' => $shipping->getFirstName(),
+            'last_name' => $shipping->getLastName(),
+            'company_name' => $shipping->getCompany(),
+            'email' => $customer->getEmail(),
+            'mobile_phone_number' => $shippingMobilePhone,
+            'landline_phone_number' => $shippingLandingPhone,
+            'address1' => $shipping->getStreet(),
+            'address2' => null,
+            'postcode' => $shipping->getPostcode(),
+            'city' => $shipping->getCity(),
+            'state' => $shipping->getProvinceName(),
+            'country' => $shipping->getCountryCode(),
+            'language' => $this->formatLanguageCode($order->getLocaleCode()),
+            'delivery_type' => $deliveryType,
+        ];
     }
 }

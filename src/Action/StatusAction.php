@@ -40,7 +40,23 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
             $payment->setDetails($details);
         }
 
-        switch ($details['status']) {
+        $this->markRequestAs($details['status'], $request);
+    }
+
+    public function supports($request): bool
+    {
+        return
+            $request instanceof GetStatusInterface &&
+            $request->getModel() instanceof PaymentInterface
+        ;
+    }
+
+    /**
+     * @param mixed $request
+     */
+    private function markRequestAs(string $status, $request): void
+    {
+        switch ($status) {
             case PayPlugApiClientInterface::STATUS_CANCELED:
                 $request->markCanceled();
 
@@ -66,13 +82,5 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
                 break;
         }
-    }
-
-    public function supports($request): bool
-    {
-        return
-            $request instanceof GetStatusInterface &&
-            $request->getModel() instanceof PaymentInterface
-        ;
     }
 }
