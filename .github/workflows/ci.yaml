@@ -1,27 +1,64 @@
-name: PHP Composer
+name: CI
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    push:
+        branches: [develop, qa, master]
+        paths-ignore:
+            - README.md
+    pull_request:
+        branches: [develop, qa, master]
+        paths-ignore:
+            - README.md
 
 jobs:
-  build:
 
-    runs-on: ubuntu-latest
+    php:
+        runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
+        strategy:
+            fail-fast: false
+            matrix:
+                php: [7.2, 7.3]
+                prefer: ["--prefer-lowest", ""]
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate
+        steps:
+            - uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+            - name: PHP - Switch
+              run: sudo update-alternatives --set php /usr/bin/php${{ matrix.php }}
 
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
+            - name: Composer - Get Cache Directory
+              id: composer-cache
+              run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-    # - name: Run test suite
-    #   run: composer run-script test
+            - uses: actions/cache@v1
+              id: cache-composer
+              with:
+                  path: ${{ steps.composer-cache.outputs.dir }}
+                  key: composer-php.${{ matrix.php }}-prefer.${{ matrix.prefer }}-${{ github.sha }}
+                  restore-keys: composer-php.${{ matrix.php }}-prefer.${{ matrix.prefer }}-
+
+            - name: Composer - Create cache directory
+              run: mkdir -p /home/runner/.composer/cache
+              if: steps.cache-composer.outputs.cache-hit != 'true'
+
+            - name: Composer - Self Update
+              run: sudo composer self-update
+
+            - name: Composer - Validate composer.json and composer.lock
+              run: composer validate --strict
+
+            - name: Composer - Github Auth
+              run: composer config -g github-oauth.github.com ${{ github.token }}
+
+            - name: Composer - Update dependencies
+              run: composer update ${{ matrix.prefer }} --no-progress --no-scripts
+
+            - name: ECS - Run
+              run: if [ -f ruleset/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c ruleset/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
+
+            - name: PHPStan - Run
+              run: if [ -f ruleset/phpstan.neon ]; then vendor/bin/phpstan analyse -c ruleset/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
+
+            - name: PHPSpec - Run
+              run: if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi
