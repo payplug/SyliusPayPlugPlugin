@@ -14,12 +14,17 @@ use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessorSpec extends ObjectBehavior
 {
-    function let(Session $session, PayPlugApiClientInterface $payPlugApiClient, LoggerInterface $logger): void
-    {
-        $this->beConstructedWith($session, $payPlugApiClient, $logger);
+    function let(
+        Session $session,
+        PayPlugApiClientInterface $payPlugApiClient,
+        LoggerInterface $logger,
+        TranslatorInterface $translator
+    ): void {
+        $this->beConstructedWith($session, $payPlugApiClient, $logger, $translator);
     }
 
     function it_is_initializable(): void
