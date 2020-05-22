@@ -19,8 +19,11 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php: [7.2, 7.3]
-                prefer: ["--prefer-lowest", ""]
+                php: [7.2, 7.3, 7.4]
+                prefer: ['--prefer-lowest', '']
+                exclude:
+                    - php: 7.4
+                      prefer: '--prefer-lowest'
 
         steps:
             - uses: actions/checkout@v2
@@ -71,8 +74,11 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php: [7.2, 7.3]
-                sylius: ['~1.6.0']
+                php: [7.2, 7.3, 7.4]
+                sylius: ['~1.5.0', '~1.6.0', '~1.7.0']
+                exclude:
+                    - php: 7.2
+                      sylius: '~1.7.0'
 
         env:
             APP_ENV: test
@@ -129,13 +135,10 @@ jobs:
               working-directory: ./sylius
               run: composer req "${{ env.package-name }}:*" --prefer-source
 
-            # TEMP remove after merge of PR https://github.com/symfony/recipes-contrib/pull/936
-            - name: Sylius - Config package
+            - name: Sylius - Get test services from Plugin
               working-directory: ./sylius
               run: |
-                  cp vendor/${{ env.package-name }}/sylius_payplug.yaml config/packages/sylius_payplug.yaml
-                  sed -i '/];/i\    PayPlug\\SyliusPayPlugPlugin\\PayPlugSyliusPayPlugPlugin::class => ["all" => true],' config/bundles.php
-                  cat config/bundles.php
+                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
 
             - name: Sylius - Init database
               working-directory: ./sylius

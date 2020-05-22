@@ -79,6 +79,11 @@ final class PayPlugApiMocker
             ->andReturn($payment)
         ;
 
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+
         $action();
 
         $this->mocker->unmockAll();

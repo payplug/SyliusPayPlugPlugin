@@ -22,6 +22,7 @@
             <argument type="service" id="session" />
             <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
             <argument type="service" id="monolog.logger.payum" />
+            <argument type="service" id="translator" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.command.payment_state" class="PayPlug\SyliusPayPlugPlugin\Cli\UpdatePaymentStateCommand">
