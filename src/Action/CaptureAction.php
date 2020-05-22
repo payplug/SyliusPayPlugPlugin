@@ -8,16 +8,16 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
+use Payum\Core\Exception\RuntimeException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Reply\HttpRedirect;
 use Payum\Core\Request\Capture;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
-use Payum\Core\Exception\RuntimeException;
 use Psr\Log\LoggerInterface;
 
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
@@ -46,7 +46,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
 
-        if (isset($details['status']) && isset($details['payment_id'])) {
+        if (isset($details['status'], $details['payment_id'])) {
             if (PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
                 return;
             }

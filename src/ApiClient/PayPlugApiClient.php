@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
+use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
+use Webmozart\Assert\Assert;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
 {
@@ -16,21 +18,31 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function createPayment(array $data): Payment
     {
-        return \Payplug\Payment::create($data);
+        $payment = \Payplug\Payment::create($data);
+        Assert::isInstanceOf($payment, Payment::class);
+
+        return $payment;
     }
 
     public function refundPayment(string $paymentId): Refund
     {
-        return \Payplug\Refund::create($paymentId);
+        /** @var Refund|null $refund */
+        $refund = \Payplug\Refund::create($paymentId);
+        Assert::isInstanceOf($refund, Refund::class);
+
+        return $refund;
     }
 
-    public function treat($input)
+    public function treat(string $input): IVerifiableAPIResource
     {
         return \Payplug\Notification::treat($input);
     }
 
     public function retrieve(string $paymentId): Payment
     {
-        return \Payplug\Payment::retrieve($paymentId);
+        $payment = \Payplug\Payment::retrieve($paymentId);
+        Assert::isInstanceOf($payment, Payment::class);
+
+        return $payment;
     }
 }

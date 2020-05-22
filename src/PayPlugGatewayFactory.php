@@ -11,6 +11,7 @@ use Payum\Core\GatewayFactory;
 final class PayPlugGatewayFactory extends GatewayFactory
 {
     public const FACTORY_NAME = 'payplug';
+
     public const AUTHORIZED_CURRENCIES = [
         'EUR' => [
             'min_amount' => 99,
@@ -18,7 +19,7 @@ final class PayPlugGatewayFactory extends GatewayFactory
         ],
     ];
 
-    protected function populateConfig(ArrayObject $config)
+    protected function populateConfig(ArrayObject $config): void
     {
         $config->defaults([
             'payum.factory_name' => self::FACTORY_NAME,
@@ -37,7 +38,7 @@ final class PayPlugGatewayFactory extends GatewayFactory
                 'secretKey',
             ];
 
-            $config['payum.api'] = function (ArrayObject $config) {
+            $config['payum.api'] = function (ArrayObject $config): PayPlugApiClientInterface {
                 $config->validateNotEmpty($config['payum.required_options']);
 
                 /** @var PayPlugApiClientInterface $payPlugApiClient */

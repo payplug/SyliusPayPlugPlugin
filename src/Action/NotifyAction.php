@@ -8,10 +8,10 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Notify;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Psr\Log\LoggerInterface;
 
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
@@ -33,6 +33,9 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
         $input = file_get_contents('php://input');
 
         try {
+            if (!is_string($input)) {
+                throw new \LogicException('Input must be of type string.');
+            }
             $resource = $this->payPlugApiClient->treat($input);
 
             if ($resource instanceof \Payplug\Resource\Payment && $resource->is_paid) {

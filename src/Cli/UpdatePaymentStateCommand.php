@@ -45,7 +45,7 @@ final class UpdatePaymentStateCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): void
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var PaymentInterface[] $payments */
         $payments = $this->paymentRepository->findAllActiveByGatewayFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
@@ -54,7 +54,9 @@ final class UpdatePaymentStateCommand extends Command
 
         foreach ($payments as $payment) {
             $oldState = $payment->getState();
-            $orderNumber = $payment->getOrder()->getNumber();
+            /** @var \Sylius\Component\Core\Model\OrderInterface $order */
+            $order = $payment->getOrder();
+            $orderNumber = $order->getNumber();
 
             try {
                 $this->paymentStateResolver->resolve($payment);
@@ -62,6 +64,7 @@ final class UpdatePaymentStateCommand extends Command
                 $message = sprintf('An error occurred for the order #%s: %s', $orderNumber, $exception->getMessage());
                 $this->logger->error($message);
                 $output->writeln($message);
+
                 continue;
             }
 
@@ -73,5 +76,7 @@ final class UpdatePaymentStateCommand extends Command
 
         $output->writeln('');
         $output->writeln(sprintf('Updated: %d', $updatesCount));
+
+        return 0;
     }
 }
