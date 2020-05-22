@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker;
 
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PayPlugApiClient implements PayPlugApiClientInterface

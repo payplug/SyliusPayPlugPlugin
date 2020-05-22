@@ -6,9 +6,9 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Shop;
 
 use Behat\Behat\Context\Context;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
 use Sylius\Behat\Page\Shop\Order\ShowPageInterface;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker;
-use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Shop\Payum\PaymentPageInterface;
 
 final class CheckoutContext implements Context

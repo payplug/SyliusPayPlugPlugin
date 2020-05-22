@@ -21,6 +21,7 @@
         "friends-of-behat/symfony-extension": "^2.0",
         "friends-of-behat/variadic-extension": "^1.1",
         "lakion/mink-debug-extension": "^1.2.3",
+        "phpmd/phpmd": "^2.8",
         "phpspec/phpspec": "^6.0",
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^0.12.1",
@@ -54,5 +55,16 @@
         "branch-alias": {
             "dev-master": "1.4-dev"
         }
+    },
+    "scripts": {
+        "ecs": "ecs check -c rulesets/easy-coding-standard.yml --ansi --clear-cache .",
+        "fix-ecs": "@ecs --fix",
+        "phpmd": "phpmd src ansi rulesets/.php_md.xml",
+        "phpstan": "phpstan analyse src -c rulesets/phpstan.neon",
+        "tests": [
+            "@ecs",
+            "@phpmd",
+            "@phpstan"
+        ]
     }
 }

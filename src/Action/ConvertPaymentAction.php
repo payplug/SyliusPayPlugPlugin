@@ -50,21 +50,13 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         /** @var AddressInterface $billing */
         $billing = $order->getBillingAddress();
 
-        $delivery_type = $shipping->getId() == $billing->getId() ? 'BILLING' : 'OTHER';
+        $deliveryType = $shipping->getId() == $billing->getId() ? 'BILLING' : 'OTHER';
 
         //Sylius does not require any phone number so we have to considere it null
-        $billing_phone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(), $billing->getCountryCode()) : null;
+        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(), $billing->getCountryCode()) : null;
         $billingMobilePhone = null;
         $billingLandingPhone = null;
-
-        if (isset($billing_phone['phone'], $billing_phone['is_mobile'])) {
-            if ($billing_phone['is_mobile'] === true) {
-                $billingMobilePhone = $billing_phone['phone'];
-            }
-            if ($billing_phone['is_mobile'] !== true) {
-                $billingLandingPhone = $billing_phone['phone'];
-            }
-        }
+        $this->loadPhoneNumbers($billingPhone, $billingMobilePhone, $billingLandingPhone);
 
         $details['billing'] = [
             'title' => $this->formatTitle($customer),
@@ -83,18 +75,11 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
             'language' => $this->formatLanguageCode($order->getLocaleCode()),
         ];
 
-        $shipping_phone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(), $shipping->getCountryCode()) : null;
+        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(), $shipping->getCountryCode()) : null;
         $shippingMobilePhone = null;
         $shippingLandingPhone = null;
+        $this->loadPhoneNumbers($shippingPhone, $shippingMobilePhone, $shippingLandingPhone);
 
-        if (isset($shipping_phone['phone'], $shipping_phone['is_mobile'])) {
-            if ($shipping_phone['is_mobile'] === true) {
-                $shippingMobilePhone = $shipping_phone['phone'];
-            }
-            if ($shipping_phone['is_mobile'] !== true) {
-                $shippingLandingPhone = $shipping_phone['phone'];
-            }
-        }
         $details['shipping'] = [
             'title' => $this->formatTitle($customer),
             'first_name' => $shipping->getFirstName(),
@@ -110,7 +95,7 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
             'state' => $shipping->getProvinceName(),
             'country' => $shipping->getCountryCode(),
             'language' => $this->formatLanguageCode($order->getLocaleCode()),
-            'delivery_type' => $delivery_type,
+            'delivery_type' => $deliveryType,
         ];
 
         $request->setResult((array) $details);
@@ -133,21 +118,21 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
 
     public function formatNumber(string $phoneNumber, ?string $isoCode): array
     {
-        $phone_util = PhoneNumberUtil::getInstance();
-        $parsed = $phone_util->parse($phoneNumber, $isoCode);
+        $phoneNumberUtil = PhoneNumberUtil::getInstance();
+        $parsed = $phoneNumberUtil->parse($phoneNumber, $isoCode);
 
-        if (!$phone_util->isValidNumber($parsed)) {
+        if (!$phoneNumberUtil->isValidNumber($parsed)) {
             return [
                 'phone' => null,
                 'is_mobile' => null,
             ];
         }
 
-        $formated = $phone_util->format($parsed, PhoneNumberFormat::E164);
+        $formated = $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164);
 
         return [
             'phone' => $formated,
-            'is_mobile' => $phone_util->getNumberType($parsed) == 1,
+            'is_mobile' => $phoneNumberUtil->getNumberType($parsed) == 1,
         ];
     }
 
@@ -160,5 +145,24 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         $parse = explode('_', $languageCode);
 
         return strtolower($parse[0]);
+    }
+
+    private function loadPhoneNumbers(
+        ?array $phoneData,
+        ?string &$mobilePhone = null,
+        ?string &$landingPhone = null
+    ): void {
+        if (null === $phoneData) {
+            return;
+        }
+        if (!isset($phoneData['phone'], $phoneData['is_mobile'])) {
+            return;
+        }
+        if ($phoneData['is_mobile'] === true) {
+            $mobilePhone = $phoneData['phone'];
+        }
+        if ($phoneData['is_mobile'] !== true) {
+            $landingPhone = $phoneData['phone'];
+        }
     }
 }
