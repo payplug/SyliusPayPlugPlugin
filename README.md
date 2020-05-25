@@ -1,56 +1,57 @@
-## Overview
+[![License](https://img.shields.io/packagist/l/payplug/payplug-sylius.svg)](https://github.com/payplug/SyliusPayPlugPlugin/blob/master/LICENSE)
+![CI](https://github.com/payplug/SyliusPayPlugPlugin/workflows/CI/badge.svg?branch=master)
+[![Version](https://img.shields.io/packagist/v/payplug/payplug-sylius.svg)](https://packagist.org/packages/payplug/payplug-sylius)
+[![Total Downloads](https://poser.pugx.org/payplug/payplug-sylius/downloads)](https://packagist.org/packages/payplug/payplug-sylius)
 
-This plugin allows you to integrate PayPlug payment with Sylius platform app.
+<p align="center">
+    <a href="https://sylius.com" target="_blank">
+        <img src="https://demo.sylius.com/assets/shop/img/logo.png" />
+    </a>
+</p>
+
+<h1 align="center">PayPlug payment plugin for Sylius</h1>
+
+<p align="center">This plugin allows you to integrate PayPlug payment with Sylius platform app including payment features and refunding orders.</p>
+
+## Requirements
+In the channel settings, the base currency must be set to EUR because the payment gateway only works in this currency. The plugin in the local environment will not work properly because you will not be notified of the status of payments from the payment gateway.
 
 ## Installation
 
-Add a package to your private repository and add the repository to `composer.json`:
+1. Add the bundle and dependencies in your composer.json :
 
-```json
-{
-    "minimum-stability": "dev",
-    "repositories": [
-        {
-          "type": "vcs",
-          "url": "<your URL to private repository>"
-        }
-    ]
-}
-```
+    With **Symfony Flex** :
 
-1. Require plugin with composer:
+        composer config extra.symfony.allow-contrib true
+        composer require payplug/payplug-sylius
 
-    ```bash
-    composer require payplug/payplug-sylius
+    Yon can now skip the next three steps.
+
+    Or **manually** :
+
+        composer require payplug/payplug-sylius
+
+2. Enable the plugin in your `config/bundles.php` file by add
+
+    ```php
+    PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin::class => ['all' => true],
     ```
 
-2. Import configuration in your `config/packages/_sylius.yaml` file:
+3. Import required config in your `config/packages/sylius_payplug.yaml` file:
 
     ```yaml
     imports:
         - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/config.yml" }
-    ```
-
-3. Add plugin class to your `config/bundles.php` file:
-
-    ```php
-    $bundles = [
-        PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin::class => ['all' => true],
-    ];
+        - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/services.xml" }
     ```
 
 4. Clear cache:
 
     ```bash
-    bin/console cache:clear
+   bin/console cache:clear
     ```
-    
-## Requirements
- 
-In the channel settings, the base currency must be set to EUR because the payment gateway only works in this currency. The plugin in the local environment will not work properly because you will not be notified of the status of payments from the payment gateway
 
-## Cron job
-
+## Cronjob
 In the case when the IPN is blocked, you can set cron job every minute that updates the payment status.
 
 For example:
@@ -94,16 +95,16 @@ $ bin/console debug:container payplug_sylius_payplug_plugin
 $ composer install
 $ cd tests/Application
 $ yarn install
-$ yarn run gulp
-$ bin/console assets:install web -e test
+$ yarn build
+$ bin/console assets:install public -e test
 $ bin/console doctrine:database:create -e test
 $ bin/console doctrine:schema:create -e test
-$ bin/console server:run 127.0.0.1:8080 -d web -e test
+$ bin/console server:run 127.0.0.1:8080 -d public -e test
 $ open http://localhost:8080
 $ bin/behat
 $ bin/phpspec run
 ```
 
-## Contribution
+## License
 
-Learn more about our contribution workflow on http://docs.sylius.org/en/latest/contributing/.
+This library is under the MIT license.
