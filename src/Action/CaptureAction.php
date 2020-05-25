@@ -114,6 +114,8 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     {
         $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
         $details['payment_id'] = $payment->id;
+        $details['is_live'] = $payment->is_live;
+
         $this->logger->debug('[PayPlug] Create payment', [
             'payment_id' => $payment->id,
         ]);
