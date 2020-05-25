@@ -53,6 +53,12 @@ final class UpdatePaymentStateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if (!$this->lock()) {
+            $output->writeln('payplug:update-payment-state is already running!');
+
+            return 0;
+        }
+
         /** @var PaymentInterface[] $payments */
         $payments = $this->paymentRepository->findAllActiveByGatewayFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
 
