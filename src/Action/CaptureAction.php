@@ -73,29 +73,16 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         /** @var TokenInterface $token */
         $token = $request->getToken();
 
-        if (null === $this->tokenFactory) {
-            throw new RuntimeException();
-        }
-
-        $notifyToken = $this->tokenFactory->createNotifyToken($token->getGatewayName(), $token->getDetails());
-
-        $notificationUrl = $notifyToken->getTargetUrl();
+        $details = $this->addNotificationUrl($token, $details);
 
         $details['hosted_payment'] = [
             'return_url' => $token->getAfterUrl(),
             'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
-        $details['notification_url'] = $notificationUrl;
-
-        $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
-
-        $details['payment_id'] = $payment->id;
         $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
-        $this->logger->debug('[PayPlug] Create payment', [
-            'payment_id' => $payment->id,
-        ]);
+        $payment = $this->createPayment($details);
 
         throw new HttpRedirect($payment->hosted_payment->payment_url);
     }
@@ -106,5 +93,31 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $request instanceof Capture &&
             $request->getModel() instanceof \ArrayAccess
         ;
+    }
+
+    private function addNotificationUrl(TokenInterface $token, ArrayObject $details): \Payum\Core\Bridge\Spl\ArrayObject
+    {
+        if (null === $this->tokenFactory) {
+            throw new RuntimeException();
+        }
+
+        $notifyToken = $this->tokenFactory->createNotifyToken($token->getGatewayName(), $token->getDetails());
+
+        $notificationUrl = $notifyToken->getTargetUrl();
+
+        $details['notification_url'] = $notificationUrl;
+
+        return $details;
+    }
+
+    private function createPayment(ArrayObject $details): \Payplug\Resource\Payment
+    {
+        $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
+        $details['payment_id'] = $payment->id;
+        $this->logger->debug('[PayPlug] Create payment', [
+            'payment_id' => $payment->id,
+        ]);
+
+        return $payment;
     }
 }
