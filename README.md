@@ -25,7 +25,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
         composer config extra.symfony.allow-contrib true
         composer require payplug/payplug-sylius
 
-    Yon can now skip the next three steps.
+    Yon can now skip the next two steps.
 
     Or **manually** :
 
@@ -45,7 +45,23 @@ In the channel settings, the base currency must be set to EUR because the paymen
         - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/services.xml" }
     ```
 
-4. Clear cache:
+4. Import custom form row theme in your `config/packages/twig.yaml` file:
+    ```yaml
+   twig:
+       ...
+       form_themes: [
+           'form/form_gateway_config_row.html.twig'
+       ]
+    ```
+
+5. Copy custom form row theme template
+
+    ```shell
+    mkdir -p templates/form/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
+    ```
+
+6. Clear cache:
 
     ```bash
    bin/console cache:clear

@@ -4,3 +4,4 @@ payplug_sylius_payplug_plugin:
         payplug_gateway_label: PayPlug
         notification_url_for_env_dev: Notification url for environment dev
         payment_refund_locally: The payment refund was made only locally.
+        retrieve_secret_key_in_api_configuration_portal: Retrieve your LIVE and TEST Secret Key in your <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portal</a>
