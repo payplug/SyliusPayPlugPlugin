@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
+use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -86,11 +87,11 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
             ];
         }
 
-        $formated = $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164);
+        $formatted = $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164);
 
         return [
-            'phone' => $formated,
-            'is_mobile' => $phoneNumberUtil->getNumberType($parsed) == 1,
+            'phone' => $formatted,
+            'is_mobile' => $phoneNumberUtil->getNumberType($parsed) === PhoneNumberType::MOBILE,
         ];
     }
 

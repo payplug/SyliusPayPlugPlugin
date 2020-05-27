@@ -63,10 +63,12 @@
         "fix-ecs": "@ecs --fix",
         "phpmd": "phpmd src ansi rulesets/.php_md.xml",
         "phpstan": "phpstan analyse src -c rulesets/phpstan.neon",
+        "phpunit": "phpunit tests/PHPUnit --colors=always",
         "tests": [
             "@ecs",
             "@phpmd",
-            "@phpstan"
+            "@phpstan",
+            "@phpunit"
         ]
     }
 }
