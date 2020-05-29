@@ -1,10 +1,4 @@
 imports:
     - { resource: "../../Behat/Resources/services.xml" }
     - { resource: "../../../vendor/sylius/sylius/src/Sylius/Behat/Resources/config/services.xml" }
-
-services:
-    payplug_sylius_payplug_plugin.api_client.payplug:
-        class: Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiClient
-        public: true
-        arguments:
-            - "@service_container"
+    - { resource: "packages/test/payplug.yaml" }

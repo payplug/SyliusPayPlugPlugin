@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker;
 
+use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
@@ -34,7 +35,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->refundPayment($paymentId);
     }
 
-    public function treat($input)
+    public function treat(string $input): IVerifiableAPIResource
     {
         return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->treat($input);
     }

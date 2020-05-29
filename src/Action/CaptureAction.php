@@ -80,9 +80,9 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
-        $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
-
         $payment = $this->createPayment($details);
+
+        $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
         throw new HttpRedirect($payment->hosted_payment->payment_url);
     }
