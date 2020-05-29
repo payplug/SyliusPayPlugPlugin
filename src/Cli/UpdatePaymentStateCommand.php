@@ -10,11 +10,14 @@ use PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolverInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 final class UpdatePaymentStateCommand extends Command
 {
+    use LockableTrait;
+
     /** @var PaymentRepositoryInterface */
     private $paymentRepository;
 
@@ -50,6 +53,12 @@ final class UpdatePaymentStateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if (!$this->lock()) {
+            $output->writeln('payplug:update-payment-state is already running!');
+
+            return 0;
+        }
+
         /** @var PaymentInterface[] $payments */
         $payments = $this->paymentRepository->findAllActiveByGatewayFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
 
@@ -79,6 +88,7 @@ final class UpdatePaymentStateCommand extends Command
 
         $output->writeln('');
         $output->writeln(sprintf('Updated: %d', $updatesCount));
+        $this->release();
 
         return 0;
     }

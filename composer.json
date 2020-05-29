@@ -35,6 +35,7 @@
         "symfony/debug-bundle": "^3.4||^4.3",
         "symfony/dotenv": "^3.4||^4.3",
         "symfony/intl": "^3.4||^4.3",
+        "symfony/lock": "^3.4||^4.3",
         "symfony/web-profiler-bundle": "^3.4||^4.3",
         "symfony/web-server-bundle": "^3.4||^4.3"
     },
