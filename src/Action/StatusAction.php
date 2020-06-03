@@ -11,11 +11,21 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
+use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Order\OrderTransitions;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
+
+    /** @var \SM\Factory\FactoryInterface */
+    private $stateMachineFactory;
+
+    public function __construct(FactoryInterface $stateMachineFactory)
+    {
+        $this->stateMachineFactory = $stateMachineFactory;
+    }
 
     public function execute($request): void
     {
@@ -71,6 +81,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
                 break;
             case PayPlugApiClientInterface::FAILED:
                 $request->markFailed();
+                $this->cancelOrder($request);
 
                 break;
             case PayPlugApiClientInterface::REFUNDED:
@@ -82,5 +93,21 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
                 break;
         }
+    }
+
+    private function cancelOrder($request): void
+    {
+        /** @var PaymentInterface $payment */
+        $payment = $request->getModel();
+
+        if (!isset($payment->getDetails()['failure']) ||
+            $payment->getDetails()['failure']['code'] !== 'timeout') {
+            return;
+        }
+
+        $this->stateMachineFactory
+            ->get($payment->getOrder(), OrderTransitions::GRAPH)
+            ->apply(OrderTransitions::TRANSITION_CANCEL)
+        ;
     }
 }

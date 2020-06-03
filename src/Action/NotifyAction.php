@@ -52,10 +52,13 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
 
             $this->logger->info('[PayPlug] Notify action', ['failure' => $resource->failure]);
 
+            $details['failure'] = [
+                'code' => $resource->failure->code ?? '',
+                'message' => $resource->failure->message ?? '',
+            ];
             $details['status'] = PayPlugApiClientInterface::FAILED;
         } catch (\Payplug\Exception\PayplugException $exception) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
-
             $this->logger->error('[PayPlug] Notify action', ['error' => $exception->getMessage()]);
         }
     }

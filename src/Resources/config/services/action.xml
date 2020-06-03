@@ -10,6 +10,7 @@
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.status" class="PayPlug\SyliusPayPlugPlugin\Action\StatusAction">
+            <argument type="service" id="sm.factory" />
             <tag name="payum.action" factory="payplug" alias="payum.action.status" />
         </service>
 
