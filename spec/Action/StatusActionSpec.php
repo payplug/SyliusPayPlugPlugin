@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\StatusAction;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayInterface;
@@ -14,6 +15,11 @@ use Sylius\Component\Core\Model\PaymentInterface;
 
 final class StatusActionSpec extends ObjectBehavior
 {
+    function let(RefundPaymentHandlerInterface $refundPaymentHandler): void
+    {
+        $this->beConstructedWith($refundPaymentHandler);
+    }
+
     function it_is_initializable(): void
     {
         $this->shouldHaveType(StatusAction::class);

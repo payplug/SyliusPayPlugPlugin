@@ -8,15 +8,25 @@ use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Behat\Service\Mocker\MockerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class PayPlugApiMocker
 {
+    /** @var ContainerInterface */
+    private $container;
+
     /** @var MockerInterface */
     private $mocker;
 
-    public function __construct(MockerInterface $mocker)
+    public function __construct(MockerInterface $mocker, ContainerInterface $container)
     {
         $this->mocker = $mocker;
+        $this->container = $container;
+    }
+
+    public function getPayPlugApiClient()
+    {
+        return new PayPlugApiClient($this->container);
     }
 
     public function mockApiRefundedPayment(callable $action): void
@@ -124,11 +134,10 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
     }
 
-
     public function mockApiStatePayment(callable $action): void
     {
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
-        $mock ->shouldReceive('initialise');
+        $mock->shouldReceive('initialise');
 
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->state = 'failed';
@@ -145,4 +154,45 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
     }
 
+    public function mockApiRefundedFromPayPlugPortal(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+
+        $mock
+            ->shouldReceive('initialise')
+        ;
+
+        $refund = \Mockery::mock('refund', Refund::class);
+        $refund->amount = 34000;
+
+        $mock
+            ->shouldReceive('treat')
+            ->andReturn($refund)
+        ;
+
+        $action();
+
+        $this->mocker->unmockAll();
+    }
+
+    public function mockApiRefundPartiallyFromPayPlugPortal(callable $action, int $amount): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+
+        $mock
+            ->shouldReceive('initialise')
+        ;
+
+        $refund = \Mockery::mock('refund', Refund::class);
+        $refund->amount = $amount;
+
+        $mock
+            ->shouldReceive('treat')
+            ->andReturn($refund)
+        ;
+
+        $action();
+
+        $this->mocker->unmockAll();
+    }
 }

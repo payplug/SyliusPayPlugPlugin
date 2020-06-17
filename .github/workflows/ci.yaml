@@ -56,13 +56,13 @@ jobs:
               run: composer config -g github-oauth.github.com ${{ github.token }}
 
             - name: Composer - Update dependencies
-              run: composer update ${{ matrix.prefer }} --no-progress --no-scripts
+              run: composer update ${{ matrix.prefer }} --no-progress
 
             - name: ECS - Run
-              run: if [ -f ruleset/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c ruleset/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
+              run: if [ -f rulesets/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c rulesets/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
 
             - name: PHPStan - Run
-              run: if [ -f ruleset/phpstan.neon ]; then vendor/bin/phpstan analyse -c ruleset/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
+              run: if [ -f rulesets/phpstan.neon ]; then vendor/bin/phpstan analyse -c rulesets/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
 
             - name: PHPSpec - Run
               run: if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi
@@ -92,7 +92,6 @@ jobs:
               run: |
                   echo "date.timezone=UTC" >> /tmp/timezone.ini; \
                   sudo mv /tmp/timezone.ini /etc/php/${{ matrix.php }}/cli/conf.d/timezone.ini
-
             - uses: actions/checkout@v2
               with:
                   path: plugin
@@ -112,33 +111,35 @@ jobs:
               run: |
                   mkdir -p /home/runner/.composer/
                   sudo composer self-update
-
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
 
             - name: Composer - Install Sylius-Standard
-              run: composer create-project --no-scripts --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
+              run: composer create-project --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
 
             - name: Composer - Add path repository
               working-directory: ./sylius
               run: |
                   composer config repositories.plugin '{"type": "path", "url": "../plugin/"}'
-
             - name: Composer - Config
               working-directory: ./sylius
               run: |
                   composer config extra.symfony.allow-contrib true
                   composer config minimum-stability "dev"
                   composer config prefer-stable true
-
             - name: Composer - Install plugin
               working-directory: ./sylius
-              run: composer req "${{ env.package-name }}:*" --prefer-source
-
+              run: |
+                  cp ../plugin/tests/Application/config/packages/framework.yaml config/packages/framework.yaml
+                  composer req "${{ env.package-name }}:*" --prefer-source
             - name: Sylius - Get test services from Plugin
               working-directory: ./sylius
               run: |
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
+                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
+            - name: Sylius - Get migrations from Plugin
+              working-directory: ./sylius
+              run: cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
 
             - name: Sylius - Init database
               working-directory: ./sylius
@@ -161,7 +162,6 @@ jobs:
               run: |
                   /sbin/start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1680x1050x16
                   export DISPLAY=:99
-
             - name: Behat - Download and configure ChromeDriver
               working-directory: ./sylius
               run: |
@@ -170,7 +170,6 @@ jobs:
                       unzip chromedriver.zip
                       chmod +x chromedriver
                   fi
-
             - name: Behat - Run ChromeDriver
               working-directory: ./sylius
               run: chromedriver > /dev/null 2>&1 &
@@ -181,7 +180,6 @@ jobs:
                   if [ ! -f selenium.jar ] || [ "$(java -jar selenium.jar --version | grep -c 3.4.0)" = "0" ]; then
                       curl http://selenium-release.storage.googleapis.com/3.4/selenium-server-standalone-3.4.0.jar > selenium.jar
                   fi
-
             - name: Behat - Run Selenium
               working-directory: ./sylius
               run: java -Dwebdriver.chrome.driver=chromedriver -jar selenium.jar > /dev/null 2>&1 &
@@ -196,7 +194,7 @@ jobs:
                   sed -i "s#vendor/sylius/sylius/src/Sylius/Behat/Resources/config/suites.yml#vendor/${{ env.package-name }}/tests/Behat/Resources/suites.yml#g" behat.yml.dist
                   sed -i "s#vendor/sylius/sylius/features#vendor/${{ env.package-name }}/features#g" behat.yml.dist
                   echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
-
+                  echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
             - name: Behat - Run Behat tests
               working-directory: ./sylius
               run: vendor/bin/behat --strict -vvv --no-interaction || vendor/bin/behat --strict -vvv --no-interaction --rerun
