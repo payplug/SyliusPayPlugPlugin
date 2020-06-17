@@ -9,4 +9,6 @@ use Sylius\Component\Core\Model\PaymentInterface;
 interface PaymentProcessorInterface
 {
     public function process(PaymentInterface $payment): void;
+
+    public function processWithAmount(PaymentInterface $payment, int $amount): void;
 }

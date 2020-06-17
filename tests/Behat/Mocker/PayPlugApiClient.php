@@ -20,7 +20,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         $this->container = $container;
     }
 
-    public function initialise(string $secretKey): void
+    public function initialise(string $secretKey, ?string $notificationUrlDev = null): void
     {
         $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->initialise($secretKey);
     }
@@ -43,5 +43,15 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     public function retrieve(string $paymentId): Payment
     {
         return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->retrieve($paymentId);
+    }
+
+    public function getNotificationUrlDev(): ?string
+    {
+        return '';
+    }
+
+    public function refundPaymentWithAmount(string $paymentId, int $amount): Refund
+    {
+        return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->refundPaymentWithAmount($paymentId, 100);
     }
 }

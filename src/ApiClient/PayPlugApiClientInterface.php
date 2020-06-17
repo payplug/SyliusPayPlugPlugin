@@ -20,13 +20,17 @@ interface PayPlugApiClientInterface
 
     public const REFUNDED = 'refunded';
 
-    public function initialise(string $secretKey): void;
+    public function initialise(string $secretKey, ?string $notificationUrlDev = null): void;
 
     public function createPayment(array $data): Payment;
 
     public function refundPayment(string $paymentId): Refund;
 
+    public function refundPaymentWithAmount(string $paymentId, int $amount): Refund;
+
     public function treat(string $input): IVerifiableAPIResource;
 
     public function retrieve(string $paymentId): Payment;
+
+    public function getNotificationUrlDev(): ?string;
 }

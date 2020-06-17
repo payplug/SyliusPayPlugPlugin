@@ -39,6 +39,10 @@ final class PayPlugGatewayConfigurationType extends AbstractType
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
             ])
+            ->add('notificationUrlDev', TextType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.ui.notification_url_for_env_dev',
+                'required' => false,
+            ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
                 $data = $event->getData();
 

@@ -4,7 +4,14 @@
     <imports>
         <import resource="services/contexts.xml" />
         <import resource="services/pages.xml" />
+        <import resource="../../../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" />
     </imports>
+
+    <parameters>
+        <parameter key="sylius_refund.supported_gateways" type="collection">
+            <parameter>payplug</parameter>
+        </parameter>
+    </parameters>
 
     <services>
         <defaults public="true" />

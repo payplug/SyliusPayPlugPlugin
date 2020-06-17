@@ -133,7 +133,9 @@ jobs:
 
             - name: Composer - Install plugin
               working-directory: ./sylius
-              run: composer req "${{ env.package-name }}:*" --prefer-source
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
+                  composer req "${{ env.package-name }}:*" --prefer-source
 
             - name: Sylius - Get test services from Plugin
               working-directory: ./sylius

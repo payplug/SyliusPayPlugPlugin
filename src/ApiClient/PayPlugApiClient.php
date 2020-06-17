@@ -11,9 +11,13 @@ use Webmozart\Assert\Assert;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
 {
-    public function initialise(string $secretKey): void
+    /** @var string|null */
+    private $notificationUrlDev;
+
+    public function initialise(string $secretKey, ?string $notificationUrlDev = null): void
     {
         \Payplug\Payplug::setSecretKey($secretKey);
+        $this->notificationUrlDev = $notificationUrlDev;
     }
 
     public function createPayment(array $data): Payment
@@ -33,6 +37,15 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         return $refund;
     }
 
+    public function refundPaymentWithAmount(string $paymentId, int $amount): Refund
+    {
+        /** @var Refund|null $refund */
+        $refund = \Payplug\Refund::create($paymentId, ['amount' => $amount]);
+        Assert::isInstanceOf($refund, Refund::class);
+
+        return $refund;
+    }
+
     public function treat(string $input): IVerifiableAPIResource
     {
         return \Payplug\Notification::treat($input);
@@ -44,5 +57,10 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         Assert::isInstanceOf($payment, Payment::class);
 
         return $payment;
+    }
+
+    public function getNotificationUrlDev(): ?string
+    {
+        return $this->notificationUrlDev;
     }
 }

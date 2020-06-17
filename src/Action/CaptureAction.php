@@ -105,6 +105,13 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         $notificationUrl = $notifyToken->getTargetUrl();
 
+        if (isset($_ENV['APP_ENV']) && 'dev' === $_ENV['APP_ENV'] && !empty($this->payPlugApiClient->getNotificationUrlDev())) {
+            $notificationUrl = sprintf(
+                '%s%s',
+                rtrim($this->payPlugApiClient->getNotificationUrlDev(), '/'),
+                parse_url($notificationUrl, \PHP_URL_PATH)
+            );
+        }
         $details['notification_url'] = $notificationUrl;
 
         return $details;
