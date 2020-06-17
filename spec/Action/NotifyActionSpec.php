@@ -7,6 +7,7 @@ namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\NotifyAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\GatewayAwareInterface;
@@ -17,9 +18,9 @@ use Psr\Log\LoggerInterface;
 
 final class NotifyActionSpec extends ObjectBehavior
 {
-    function let(LoggerInterface $logger): void
+    function let(LoggerInterface $logger, RefundPaymentHandlerInterface $refundPaymentHandler): void
     {
-        $this->beConstructedWith($logger);
+        $this->beConstructedWith($logger, $refundPaymentHandler);
     }
 
     function it_is_initializable(): void

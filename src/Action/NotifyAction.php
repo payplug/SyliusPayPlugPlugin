@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -18,12 +19,18 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
 {
     use GatewayAwareTrait, ApiAwareTrait;
 
+    /** @var RefundPaymentHandlerInterface */
+    private $refundPaymentHandler;
+
     /** @var LoggerInterface */
     private $logger;
 
-    public function __construct(LoggerInterface $logger)
-    {
+    public function __construct(
+        LoggerInterface $logger,
+        RefundPaymentHandlerInterface $refundPaymentHandler
+    ) {
         $this->logger = $logger;
+        $this->refundPaymentHandler = $refundPaymentHandler;
     }
 
     public function execute($request): void
@@ -44,8 +51,9 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
                 return;
             }
 
-            if ($resource instanceof \Payplug\Resource\Refund && $resource->is_refunded) {
+            if ($resource instanceof \Payplug\Resource\Refund) {
                 $details['status'] = PayPlugApiClientInterface::REFUNDED;
+                $this->refundPaymentHandler->handle($resource, $request->getFirstModel());
 
                 return;
             }

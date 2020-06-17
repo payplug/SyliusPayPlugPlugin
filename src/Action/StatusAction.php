@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
@@ -22,9 +23,15 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
     /** @var \SM\Factory\FactoryInterface */
     private $stateMachineFactory;
 
-    public function __construct(FactoryInterface $stateMachineFactory)
-    {
+    /** @var RefundPaymentHandlerInterface */
+    private $refundPaymentHandler;
+
+    public function __construct(
+        FactoryInterface $stateMachineFactory,
+        RefundPaymentHandlerInterface $refundPaymentHandler
+    ) {
         $this->stateMachineFactory = $stateMachineFactory;
+        $this->refundPaymentHandler = $refundPaymentHandler;
     }
 
     public function execute($request): void
@@ -85,7 +92,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
                 break;
             case PayPlugApiClientInterface::REFUNDED:
-                $request->markRefunded();
+                $this->refundPaymentHandler->updatePaymentStatus($request->getModel());
 
                 break;
             default:
