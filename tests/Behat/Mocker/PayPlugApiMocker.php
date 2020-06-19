@@ -48,6 +48,7 @@ final class PayPlugApiMocker
         $payment = \Mockery::mock('payment', Payment::class);
 
         $payment->id = 1;
+        $payment->is_live = false;
         $payment->hosted_payment = (object) [
             'payment_url' => 'test',
         ];
