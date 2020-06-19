@@ -10,10 +10,16 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayInterface;
 use Payum\Core\Request\GetStatusInterface;
 use PhpSpec\ObjectBehavior;
+use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 
 final class StatusActionSpec extends ObjectBehavior
 {
+    function let(FactoryInterface $stateMachineFactory): void
+    {
+        $this->beConstructedWith($stateMachineFactory);
+    }
+
     function it_is_initializable(): void
     {
         $this->shouldHaveType(StatusAction::class);

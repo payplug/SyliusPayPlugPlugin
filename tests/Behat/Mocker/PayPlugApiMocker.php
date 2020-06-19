@@ -111,6 +111,56 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
     }
 
+    public function mockApiExpiredPayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+
+        $mock
+            ->shouldReceive('initialise')
+        ;
+
+        $payment = \Mockery::mock('payment', Payment::class);
+
+        $payment->status = 'failure';
+        $payment->is_paid = false;
+        $failure = new \stdClass();
+        $failure->code = 'timeout';
+        $failure->message = 'The customer has not tried to pay and left the payment page.';
+        $payment->failure = $failure;
+
+        $mock
+            ->shouldReceive('treat')
+            ->andReturn($payment)
+        ;
+
+        $action();
+
+        $this->mocker->unmockAll();
+    }
+
+    public function mockApiCreatedPayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+
+        $mock
+            ->shouldReceive('initialise')
+        ;
+
+        $payment = \Mockery::mock('payment', Payment::class);
+
+        $payment->status = 'created';
+        $payment->is_paid = false;
+
+        $mock
+            ->shouldReceive('treat')
+            ->andReturn($payment)
+        ;
+
+        $action();
+
+        $this->mocker->unmockAll();
+    }
+
     public function mockApiCancelledPayment(callable $action): void
     {
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
@@ -124,11 +174,10 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
     }
 
-
     public function mockApiStatePayment(callable $action): void
     {
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
-        $mock ->shouldReceive('initialise');
+        $mock->shouldReceive('initialise');
 
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->state = 'failed';
@@ -144,5 +193,4 @@ final class PayPlugApiMocker
 
         $this->mocker->unmockAll();
     }
-
 }

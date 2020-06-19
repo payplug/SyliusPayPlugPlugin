@@ -8,8 +8,10 @@ use Behat\Behat\Context\Context;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
 use Sylius\Behat\Page\Shop\Order\ShowPageInterface;
+use Sylius\Component\Core\Model\OrderInterface;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Shop\Payum\PaymentPageInterface;
+use Webmozart\Assert\Assert;
 
 final class CheckoutContext implements Context
 {
@@ -82,6 +84,27 @@ final class CheckoutContext implements Context
     }
 
     /**
+     * @When I leave my PayPlug payment page
+     */
+    public function iLeaveMyPayPlugPaymentPage(): void
+    {
+        $this->payPlugApiMocker->mockApiCreatedPayment(function () {
+            $this->paymentPage->capture(['status' => PayPlugApiClientInterface::STATUS_CREATED]);
+        });
+    }
+
+    /**
+     * @When PayPlug notified that the payment is expired
+     * @Given I have left PayPlug payment page for more than 15 minutes
+     */
+    public function PayPlugExpiredThePayment(): void
+    {
+        $this->payPlugApiMocker->mockApiExpiredPayment(function () {
+            $this->paymentPage->notify([]);
+        });
+    }
+
+    /**
      * @When I try to pay again PayPlug payment
      */
     public function iTryToPayAgainPayPlugPayment(): void
@@ -89,5 +112,21 @@ final class CheckoutContext implements Context
         $this->payPlugApiMocker->mockApiCreatePayment(function () {
             $this->orderDetails->pay();
         });
+    }
+
+    /**
+     * @Then /^the (latest order) state should be "([^"]+)"$/
+     */
+    public function theLatestOrderHasState(OrderInterface $order, string $state)
+    {
+        Assert::eq($order->getState(), $state);
+    }
+
+    /**
+     * @Then /^the (latest order) shipping state should be "([^"]+)"$/
+     */
+    public function theLatestOrderHasShippingState(OrderInterface $order, string $state)
+    {
+        Assert::eq($order->getShippingState(), $state);
     }
 }
