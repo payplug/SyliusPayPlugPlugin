@@ -25,7 +25,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
         composer config extra.symfony.allow-contrib true
         composer require payplug/payplug-sylius
 
-    Yon can now skip the next five steps.
+    Yon can now skip the next three steps.
 
     Or **manually** :
 
