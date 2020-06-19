@@ -22,6 +22,9 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
 {
     use GatewayAwareTrait;
 
+    private const DELIVERY_TYPE_BILLING = 'BILLING';
+    private const DELIVERY_TYPE_NEW = 'NEW';
+
     public function execute($request): void
     {
         RequestNotSupportedException::assertSupports($this, $request);
@@ -51,10 +54,9 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         /** @var AddressInterface $billing */
         $billing = $order->getBillingAddress();
 
-        $deliveryType = $shipping->getId() == $billing->getId() ? 'BILLING' : 'OTHER';
+        $deliveryType = $shipping->getId() === $billing->getId() ? self::DELIVERY_TYPE_BILLING : self::DELIVERY_TYPE_NEW;
 
         $this->addBillingInfo($billing, $customer, $order, $details);
-
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
         $request->setResult((array) $details);
@@ -65,14 +67,14 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         return
             $request instanceof Convert &&
             $request->getSource() instanceof PaymentInterface &&
-            $request->getTo() == 'array';
+            $request->getTo() === 'array';
     }
 
     public function formatTitle(CustomerInterface $customer): ?string
     {
         $gender = $customer->getGender();
 
-        return $gender == 'm' ? 'mr' : ($gender == 'f' ? 'mrs' : null);
+        return $gender === 'm' ? 'mr' : ($gender === 'f' ? 'mrs' : null);
     }
 
     public function formatNumber(string $phoneNumber, ?string $isoCode): array
