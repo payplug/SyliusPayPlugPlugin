@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.2",
-        "giggsey/libphonenumber-for-php": "^8.10",
+        "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^3.1",
         "sylius/sylius": "^1.4",
         "symfony/contracts": "^1.1|^2.0"
@@ -63,10 +63,12 @@
         "fix-ecs": "@ecs --fix",
         "phpmd": "phpmd src ansi rulesets/.php_md.xml",
         "phpstan": "phpstan analyse src -c rulesets/phpstan.neon",
+        "phpunit": "phpunit tests/PHPUnit --colors=always",
         "tests": [
             "@ecs",
             "@phpmd",
-            "@phpstan"
+            "@phpstan",
+            "@phpunit"
         ]
     }
 }
