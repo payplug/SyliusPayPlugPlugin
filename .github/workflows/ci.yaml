@@ -59,10 +59,10 @@ jobs:
               run: composer update ${{ matrix.prefer }} --no-progress --no-scripts
 
             - name: ECS - Run
-              run: if [ -f ruleset/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c ruleset/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
+              run: if [ -f rulesets/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c rulesets/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
 
             - name: PHPStan - Run
-              run: if [ -f ruleset/phpstan.neon ]; then vendor/bin/phpstan analyse -c ruleset/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
+              run: if [ -f rulesets/phpstan.neon ]; then vendor/bin/phpstan analyse -c rulesets/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
 
             - name: PHPSpec - Run
               run: if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi
@@ -134,13 +134,18 @@ jobs:
             - name: Composer - Install plugin
               working-directory: ./sylius
               run: |
-                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
-                  composer req "${{ env.package-name }}:*" --prefer-source
+                cp ../plugin/tests/Application/config/packages/framework.yaml config/packages/framework.yaml
+                composer req "${{ env.package-name }}:*" --prefer-source
 
             - name: Sylius - Get test services from Plugin
               working-directory: ./sylius
               run: |
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
+                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
+
+            - name: Sylius - Get migrations from Plugin
+              working-directory: ./sylius
+              run: cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
 
             - name: Sylius - Init database
               working-directory: ./sylius
@@ -198,6 +203,7 @@ jobs:
                   sed -i "s#vendor/sylius/sylius/src/Sylius/Behat/Resources/config/suites.yml#vendor/${{ env.package-name }}/tests/Behat/Resources/suites.yml#g" behat.yml.dist
                   sed -i "s#vendor/sylius/sylius/features#vendor/${{ env.package-name }}/features#g" behat.yml.dist
                   echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
+                  echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
 
             - name: Behat - Run Behat tests
               working-directory: ./sylius

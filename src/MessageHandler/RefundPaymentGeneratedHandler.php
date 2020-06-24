@@ -50,7 +50,13 @@ final class RefundPaymentGeneratedHandler
         try {
             /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
             $payment = $this->paymentRepository->find($message->paymentId());
-            $gatewayName = $payment->getMethod()->getCode();
+            $paymentMethod = $payment->getMethod();
+
+            if (null === $paymentMethod) {
+                return;
+            }
+
+            $gatewayName = $paymentMethod->getCode();
 
             if ($gatewayName !== PayPlugGatewayFactory::FACTORY_NAME) {
                 return;

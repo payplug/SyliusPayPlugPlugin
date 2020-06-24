@@ -4,7 +4,6 @@
     <imports>
         <import resource="services/contexts.xml" />
         <import resource="services/pages.xml" />
-        <import resource="../../../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" />
     </imports>
 
     <parameters>
