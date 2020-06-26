@@ -1,4 +1,5 @@
 name: CI
+description: Execute code quality checks and tests
 
 on:
     push:
