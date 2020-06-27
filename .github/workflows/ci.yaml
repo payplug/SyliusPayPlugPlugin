@@ -1,5 +1,4 @@
 name: CI
-description: Execute code quality checks and tests
 
 on:
     push:
@@ -163,6 +162,14 @@ jobs:
             - name: Sylius - Assets
               working-directory: ./sylius
               run: yarn install && yarn build
+
+            - name: Wkhtmltopdf - Install
+              working-directory: ./sylius
+              run: |
+                sudo apt-get install xvfb libfontconfig wkhtmltopdf
+                printf '#!/bin/bash\nxvfb-run -a --server-args="-screen 0, 1024x768x24" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh
+                sudo chmod a+x /usr/bin/wkhtmltopdf.sh
+                sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
 
             - name: Behat - Configure display
               working-directory: ./sylius
