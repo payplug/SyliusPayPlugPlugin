@@ -2,7 +2,6 @@ payplug_sylius_payplug_plugin:
     ui:
         secret_key: Clé secrète
         payplug_gateway_label: PayPlug
-        notification_url_for_env_dev: Url de notification pour l'environnement de développement
         payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
         retrieve_secret_key_in_api_configuration_portal: Retrouvez vos Secret Key LIVE et TEST dans votre <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portail PayPlug</a>
         test_mode: Mode TEST
