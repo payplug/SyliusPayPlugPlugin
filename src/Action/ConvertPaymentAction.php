@@ -23,6 +23,7 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
     use GatewayAwareTrait;
 
     private const DELIVERY_TYPE_BILLING = 'BILLING';
+
     private const DELIVERY_TYPE_NEW = 'NEW';
 
     public function execute($request): void

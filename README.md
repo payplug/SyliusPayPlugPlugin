@@ -68,10 +68,33 @@ In the channel settings, the base currency must be set to EUR because the paymen
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
     ```
 
-7. Clear cache:
+7. Copy templates and migrations for Sylius Refund Plugin
+    ```shell
+    cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
+    bin/console doctrine:migrations:migrate
+    mkdir -p templates/bundles/SyliusAdminBundle/
+    cp -R vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+    ```
+8. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus:
 
-    ```bash
-   bin/console cache:clear
+    ```yaml
+    framework:
+        messenger:
+            default_bus: sylius_refund_plugin.command_bus
+    ```
+
+9. Add PayPlug to refundable payment method for Sylius Refund Plugin
+
+    ```yaml
+    parameters:
+        sylius_refund.supported_gateways:
+            - payplug
+    ```
+
+10. Clear cache:
+
+    ```shell
+    bin/console cache:clear
     ```
 
 ## Cronjob

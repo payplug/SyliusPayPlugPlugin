@@ -26,6 +26,8 @@ interface PayPlugApiClientInterface
 
     public function refundPayment(string $paymentId): Refund;
 
+    public function refundPaymentWithAmount(string $paymentId, int $amount): Refund;
+
     public function treat(string $input): IVerifiableAPIResource;
 
     public function retrieve(string $paymentId): Payment;

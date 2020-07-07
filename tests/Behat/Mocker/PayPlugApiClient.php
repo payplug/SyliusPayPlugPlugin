@@ -44,4 +44,9 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     {
         return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->retrieve($paymentId);
     }
+
+    public function refundPaymentWithAmount(string $paymentId, int $amount): Refund
+    {
+        return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->refundPaymentWithAmount($paymentId, 100);
+    }
 }

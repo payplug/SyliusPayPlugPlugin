@@ -37,6 +37,24 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
     }
 
+    public function mockApiRefundedWithAmountPayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+
+        $mock
+            ->shouldReceive('initialise')
+        ;
+
+        $mock
+            ->shouldReceive('refundPaymentWithAmount')
+            ->andReturn(\Mockery::mock('refund', Refund::class))
+        ;
+
+        $action();
+
+        $this->mocker->unmockAll();
+    }
+
     public function mockApiCreatePayment(callable $action): void
     {
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
@@ -190,6 +208,13 @@ final class PayPlugApiMocker
             ->andReturn($payment)
         ;
 
+        $action();
+
+        $this->mocker->unmockAll();
+    }
+
+    public function refundPaymentWithAmount(callable $action): void
+    {
         $action();
 
         $this->mocker->unmockAll();

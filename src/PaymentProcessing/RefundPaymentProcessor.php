@@ -42,6 +42,42 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
     public function process(PaymentInterface $payment): void
     {
+        $this->prepare($payment);
+        $details = $payment->getDetails();
+
+        try {
+            $this->payPlugApiClient->refundPayment($details['payment_id']);
+        } catch (\Exception $exception) {
+            $message = $exception->getMessage();
+
+            $this->session->getFlashBag()->add('error', $message);
+
+            $this->logger->error('[PayPlug] Refund Payment', ['error' => $message]);
+
+            throw new UpdateHandlingException();
+        }
+    }
+
+    public function processWithAmount(PaymentInterface $payment, int $amount): void
+    {
+        $this->prepare($payment);
+        $details = $payment->getDetails();
+
+        try {
+            $this->payPlugApiClient->refundPaymentWithAmount($details['payment_id'], $amount);
+        } catch (\Exception $exception) {
+            $message = $exception->getMessage();
+
+            $this->session->getFlashBag()->add('error', $message);
+
+            $this->logger->error('[PayPlug] Refund Payment', ['error' => $message]);
+
+            throw new UpdateHandlingException();
+        }
+    }
+
+    private function prepare(PaymentInterface $payment): void
+    {
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $payment->getMethod();
 
@@ -69,17 +105,5 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         $gatewayConfig = $paymentMethod->getGatewayConfig()->getConfig();
 
         $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
-
-        try {
-            $this->payPlugApiClient->refundPayment($details['payment_id']);
-        } catch (\Exception $exception) {
-            $message = $exception->getMessage();
-
-            $this->session->getFlashBag()->add('error', $message);
-
-            $this->logger->error('[PayPlug] Refund Payment', ['error' => $message]);
-
-            throw new UpdateHandlingException();
-        }
     }
 }

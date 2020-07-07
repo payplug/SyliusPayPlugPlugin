@@ -6,6 +6,12 @@
         <import resource="services/pages.xml" />
     </imports>
 
+    <parameters>
+        <parameter key="sylius_refund.supported_gateways" type="collection">
+            <parameter>payplug</parameter>
+        </parameter>
+    </parameters>
+
     <services>
         <defaults public="true" />
 

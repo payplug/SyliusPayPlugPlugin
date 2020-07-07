@@ -95,6 +95,9 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
         }
     }
 
+    /**
+     * @param mixed $request
+     */
     private function cancelOrder($request): void
     {
         /** @var PaymentInterface $payment */
@@ -105,8 +108,11 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
             return;
         }
 
+        /** @var \Sylius\Component\Core\Model\OrderInterface $order */
+        $order = $payment->getOrder();
+
         $this->stateMachineFactory
-            ->get($payment->getOrder(), OrderTransitions::GRAPH)
+            ->get($order, OrderTransitions::GRAPH)
             ->apply(OrderTransitions::TRANSITION_CANCEL)
         ;
     }

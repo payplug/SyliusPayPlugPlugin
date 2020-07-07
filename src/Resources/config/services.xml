@@ -37,5 +37,14 @@
             <argument type="service" id="sylius.context.currency" />
             <tag name="sylius.payment_method_resolver" type="payplug" label="sylius.payment_methods_resolver.payplug" priority="10" />
         </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="sylius.repository.payment" />
+            <argument type="service" id="sm.factory" />
+            <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
+            <argument type="service" id="logger" />
+            <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
+        </service>
     </services>
 </container>
