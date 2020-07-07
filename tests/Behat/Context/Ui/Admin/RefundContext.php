@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use PayPlug\SyliusPayPlugPlugin\Action\NotifyAction;
+use Payum\Core\Request\Notify;
 use Sylius\Behat\Context\Ui\Admin\ManagingOrdersContext;
 use Sylius\Component\Core\Model\OrderInterface;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker;
@@ -12,6 +14,9 @@ use Tests\Sylius\RefundPlugin\Behat\Context\Ui\RefundingContext;
 
 final class RefundContext implements Context
 {
+    /** @var NotifyAction */
+    private $notifyAction;
+
     /** @var PayPlugApiMocker */
     private $payPlugApiMocker;
 
@@ -24,11 +29,13 @@ final class RefundContext implements Context
     public function __construct(
         PayPlugApiMocker $payPlugApiMocker,
         ManagingOrdersContext $managingOrdersContext,
-        RefundingContext $refundingContext
+        RefundingContext $refundingContext,
+        NotifyAction $notifyAction
     ) {
         $this->payPlugApiMocker = $payPlugApiMocker;
         $this->managingOrdersContext = $managingOrdersContext;
         $this->refundingContext = $refundingContext;
+        $this->notifyAction = $notifyAction;
     }
 
     /**
@@ -58,50 +65,26 @@ final class RefundContext implements Context
     }
 
     /**
-     * @When I want to refund some units of order :orderNumber
+     * @When /^I refund totally (this order)'s from payplug portal$/
      */
-    public function wantToRefundSomeUnitsOfOrder(string $orderNumber): void
+    public function iRefundTotallyThisOrdersFromPayplugPortal(OrderInterface $order)
     {
-        $this->refundingContext->wantToRefundSomeUnitsOfOrder($orderNumber);
+        $this->payPlugApiMocker->mockApiRefundedFromPayPlugPortal(function () use ($order) {
+            $notifyRequest = new Notify($order->getPayments()[0]);
+            $this->notifyAction->setApi($this->payPlugApiMocker->getPayPlugApiClient());
+            $this->notifyAction->execute($notifyRequest);
+        });
     }
 
     /**
-     * @Then I should still be able to refund order shipment with :paymentMethodName payment
+     * @When /^I refund partially (this order)'s from payplug portal with ([^"]+)$/
      */
-    public function shouldStillBeAbleToRefundOrderShipment(): void
+    public function iRefundPartiallyThisOrdersFromPayplugPortal(OrderInterface $order, float $amount)
     {
-        $this->refundingContext->shouldStillBeAbleToRefundOrderShipment();
-    }
-
-    /**
-     * @Then this order refunded total should (still) be :refundedTotal
-     */
-    public function refundedTotalShouldBe(string $refundedTotal): void
-    {
-        $this->refundingContext->refundedTotalShouldBe($refundedTotal);
-    }
-
-    /**
-     * @When I decide to refund all units of this order with :paymentMethod payment
-     */
-    public function decideToRefundAllUnits(string $paymentMethod): void
-    {
-        $this->refundingContext->decideToRefundAllUnits($paymentMethod);
-    }
-
-    /**
-     * @Then I should not be able to refund anything
-     */
-    public function iShouldNotBeAbleToRefundAnything(): void
-    {
-        $this->refundingContext->iShouldNotBeAbleToRefundAnything();
-    }
-
-    /**
-     * @Then I should be able to refund :count :productName products
-     */
-    public function shouldBeAbleToRefundProducts(int $count, string $productName): void
-    {
-        $this->refundingContext->shouldBeAbleToRefundProducts($count, $productName);
+        $this->payPlugApiMocker->mockApiRefundPartiallyFromPayPlugPortal(function () use ($order) {
+            $notifyRequest = new Notify($order->getPayments()[0]);
+            $this->notifyAction->setApi($this->payPlugApiMocker->getPayPlugApiClient());
+            $this->notifyAction->execute($notifyRequest);
+        }, (int) ($amount * 100));
     }
 }

@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
 {
-    /** @var PayPlugApiClientInterface */
+    /** @var ContainerInterface */
     private $container;
 
     public function __construct(ContainerInterface $container)
