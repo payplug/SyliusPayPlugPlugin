@@ -68,9 +68,10 @@ In the channel settings, the base currency must be set to EUR because the paymen
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
     ```
 
-7. Copy templates and migrations for Sylius Refund Plugin
+7. Copy templates and migrations
     ```shell
     cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     bin/console doctrine:migrations:migrate
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/

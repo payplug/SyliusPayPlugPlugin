@@ -8,11 +8,13 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentProcessorInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Model\GatewayConfigInterface;
 use PhpSpec\ObjectBehavior;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -22,9 +24,18 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
         Session $session,
         PayPlugApiClientInterface $payPlugApiClient,
         LoggerInterface $logger,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        RepositoryInterface $refundPaymentRepository,
+        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository
     ): void {
-        $this->beConstructedWith($session, $payPlugApiClient, $logger, $translator);
+        $this->beConstructedWith(
+            $session,
+            $payPlugApiClient,
+            $logger,
+            $translator,
+            $refundPaymentRepository,
+            $payplugRefundHistoryRepository
+        );
     }
 
     function it_is_initializable(): void
