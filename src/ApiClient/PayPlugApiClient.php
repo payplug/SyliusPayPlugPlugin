@@ -33,10 +33,13 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         return $refund;
     }
 
-    public function refundPaymentWithAmount(string $paymentId, int $amount): Refund
+    public function refundPaymentWithAmount(string $paymentId, int $amount, int $refundId): Refund
     {
         /** @var Refund|null $refund */
-        $refund = \Payplug\Refund::create($paymentId, ['amount' => $amount]);
+        $refund = \Payplug\Refund::create($paymentId, [
+            'amount' => $amount,
+            'metadata' => ['refund_from_sylius' => true],
+        ]);
         Assert::isInstanceOf($refund, Refund::class);
 
         return $refund;

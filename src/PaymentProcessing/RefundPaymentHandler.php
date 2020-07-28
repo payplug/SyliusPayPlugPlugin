@@ -21,7 +21,6 @@ use Sylius\RefundPlugin\Model\ShipmentRefund;
 use Sylius\RefundPlugin\Model\UnitRefundInterface;
 use Sylius\RefundPlugin\Provider\RemainingTotalProviderInterface;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplierInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Webmozart\Assert\Assert;
 
 final class RefundPaymentHandler implements RefundPaymentHandlerInterface
@@ -32,9 +31,6 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
     /** @var UnitRefundTotalCalculatorInterface */
     private $unitRefundTotalCalculator;
 
-    /** @var MessageBusInterface */
-    private $commandBus;
-
     /** @var ObjectRepository */
     private $refundPaymentRepository;
 
@@ -42,23 +38,20 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
     private $refundPaymentCompletedStateApplier;
 
     public function __construct(
-        MessageBusInterface $commandBus,
         UnitRefundTotalCalculatorInterface $unitRefundTotalCalculator,
         RemainingTotalProviderInterface $remainingTotalProvider,
         ObjectRepository $refundPaymentInterface,
         RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier
     ) {
-        $this->commandBus = $commandBus;
         $this->unitRefundTotalCalculator = $unitRefundTotalCalculator;
         $this->remainingTotalProvider = $remainingTotalProvider;
         $this->refundPaymentRepository = $refundPaymentInterface;
         $this->refundPaymentCompletedStateApplier = $refundPaymentCompletedStateApplier;
     }
 
-    public function handle(Refund $refund, PaymentInterface $payment): void
+    public function handle(Refund $refund, PaymentInterface $payment): RefundUnits
     {
-        $refundUnits = $this->fromRequest($refund, $payment);
-        $this->commandBus->dispatch($refundUnits);
+        return $this->fromRequest($refund, $payment);
     }
 
     public function fromRequest(Refund $refund, PaymentInterface $payment): RefundUnits

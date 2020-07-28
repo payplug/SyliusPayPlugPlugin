@@ -22,6 +22,8 @@
         <service id="payplug_sylius_payplug_plugin.action.notify" class="PayPlug\SyliusPayPlugPlugin\Action\NotifyAction">
             <argument type="service" id="monolog.logger.payum" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
+            <argument type="service" id="sylius_refund_plugin.command_bus" />
+            <argument type="service" id="payplug.repository.payplug_refund_history" />
             <tag name="payum.action" factory="payplug" alias="payum.action.notify" />
         </service>
     </services>

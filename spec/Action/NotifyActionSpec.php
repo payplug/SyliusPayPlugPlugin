@@ -8,6 +8,7 @@ use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\NotifyAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
+use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\GatewayAwareInterface;
@@ -15,12 +16,22 @@ use Payum\Core\GatewayInterface;
 use Payum\Core\Request\Notify;
 use PhpSpec\ObjectBehavior;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final class NotifyActionSpec extends ObjectBehavior
 {
-    function let(LoggerInterface $logger, RefundPaymentHandlerInterface $refundPaymentHandler): void
-    {
-        $this->beConstructedWith($logger, $refundPaymentHandler);
+    function let(
+        LoggerInterface $logger,
+        RefundPaymentHandlerInterface $refundPaymentHandler,
+        MessageBusInterface $commandBus,
+        RefundHistoryRepositoryInterface $refundHistoryRepository
+    ): void {
+        $this->beConstructedWith(
+            $logger,
+            $refundPaymentHandler,
+            $commandBus,
+            $refundHistoryRepository
+        );
     }
 
     function it_is_initializable(): void
