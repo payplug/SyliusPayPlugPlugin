@@ -23,7 +23,6 @@ use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Notify;
-use function property_exists;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -142,7 +141,7 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
             return true;
         }
 
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         if ($resource->__isset('authorization') &&
             $resource->__get('authorization') instanceof PaymentAuthorization &&
             $resource->__get('authorization')->__get('expires_at') !== null &&

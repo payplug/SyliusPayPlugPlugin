@@ -70,6 +70,8 @@
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
             <argument type="service" id="logger" />
             <argument type="service" id="session" />
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="translator.default" />
             <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
         </service>
 
@@ -92,6 +94,37 @@
             <argument type="service" id="sylius_refund_plugin.event_bus" />
             <argument type="service" id="Sylius\RefundPlugin\Provider\RelatedPaymentIdProviderInterface" />
             <tag name="controller.service_arguments"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction">
+            <argument type="service" id="sylius_refund_plugin.command_bus" />
+            <argument type="service" id="session" />
+            <argument type="service" id="router" />
+            <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator" />
+            <argument type="service" id="monolog.logger" />
+
+            <tag name="controller.service_arguments"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decorates="Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface"
+                decoration-inner-name="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"
+                public="false"
+        >
+            <argument type="service" id="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
         </service>
     </services>
 </container>

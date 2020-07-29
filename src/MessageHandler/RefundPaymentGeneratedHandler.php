@@ -25,6 +25,7 @@ use Sylius\RefundPlugin\Entity\RefundPayment;
 use Sylius\RefundPlugin\Event\RefundPaymentGenerated;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentTransitions;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 use Webmozart\Assert\Assert;
 
@@ -54,6 +55,9 @@ final class RefundPaymentGeneratedHandler
     /** @var OrderRepositoryInterface */
     private $orderRepository;
 
+    /** @var TranslatorInterface */
+    private $translator;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         PaymentRepositoryInterface $paymentRepository,
@@ -62,7 +66,8 @@ final class RefundPaymentGeneratedHandler
         RefundPaymentProcessor $refundPaymentProcessor,
         LoggerInterface $logger,
         Session $session,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        TranslatorInterface $translator
     ) {
         $this->entityManager = $entityManager;
         $this->paymentRepository = $paymentRepository;
@@ -72,6 +77,7 @@ final class RefundPaymentGeneratedHandler
         $this->logger = $logger;
         $this->session = $session;
         $this->orderRepository = $orderRepository;
+        $this->translator = $translator;
     }
 
     public function __invoke(RefundPaymentGenerated $message): void
@@ -179,7 +185,7 @@ final class RefundPaymentGeneratedHandler
 
         if ($payment->getMethod()->getCode() === OneyGatewayFactory::FACTORY_NAME &&
             $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())) {
-            throw new ApiRefundException('Another transaction have beeen made less than 48 hours ago.');
+            throw new ApiRefundException($this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours'));
         }
     }
 }

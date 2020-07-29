@@ -51,10 +51,17 @@ For file `config/routes.yaml`
 
     ```yaml
     sylius_refund_complete_refund_payment:
-        path: /orders/{orderNumber}/refund-payments/{id}/complete
+        path: /admin/orders/{orderNumber}/refund-payments/{id}/complete
         methods: [POST]
         defaults:
             _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction
+        prefix: /admin
+    
+    sylius_refund_refund_units:
+        path: /admin/orders/{orderNumber}/refund-units
+        defaults:
+            _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction
+        prefix: /admin
     ```
    
 4. Copy templates and migrations

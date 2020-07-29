@@ -12,6 +12,7 @@ payplug_sylius_payplug_plugin:
             <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
         oney_cgv_url_label: Merci de renseigner ici l'URL de vos CGV
         oney: Oney
+        oney_transaction_less_than_forty_eight_hours: Une autre transaction a été faite il y a moins de 48 heures.
         or_pay_with_oney: Ou payez en
         pay: Paiement
         by_credit_cart: Par carte bancaire

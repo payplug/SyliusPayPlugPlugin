@@ -32,7 +32,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
-    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
+    /** @var SessionInterface */
     private $session;
 
     public function __construct(SessionInterface $session)
@@ -40,9 +40,6 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $this->session = $session;
     }
 
-    /**
-     * @param Convert $request
-     */
     public function execute($request): void
     {
         RequestNotSupportedException::assertSupports($this, $request);
@@ -240,17 +237,5 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     {
         // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
         return 'carrier';
-    }
-}
-
-        return ['cart' => $data];
-    }
-
-    private function retrieveDeliveryType(ShipmentInterface $shipment): string
-    {
-        // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
-        // TODO: retrieve good delivery from Shipment
-
-        return 'storepickup';
     }
 }
