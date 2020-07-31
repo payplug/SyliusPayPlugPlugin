@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Cli;
 
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolverInterface;
 use Psr\Log\LoggerInterface;

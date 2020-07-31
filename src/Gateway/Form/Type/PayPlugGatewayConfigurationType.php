@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PayPlug\SyliusPayPlugPlugin\Form\Type;
+namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
