@@ -56,5 +56,16 @@
             <argument type="service" id="logger" />
             <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
         </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decorates="Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface"
+                decoration-inner-name="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"
+                public="false"
+        >
+            <argument type="service" id="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
     </services>
 </container>

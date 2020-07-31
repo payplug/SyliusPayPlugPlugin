@@ -10,6 +10,7 @@ Feature: Refunding order's PayPlug payment
         And the store has a product "Red Arrow" priced at "$330.00"
         And the store ships everywhere for free
         And the store has a payment method "PayPlug" with a code "payplug" and PayPlug payment gateway
+        And the store has a payment method "Cash on delivery" with a code "cash_on_delivery" other than PayPlug payment gateway
         And there is a customer "oliver@teamarrow.com" that placed an order "#00000001"
         And the customer bought a single "Green Arrow"
         And the customer bought a single "Red Arrow"
@@ -60,6 +61,8 @@ Feature: Refunding order's PayPlug payment
     @ui
     Scenario: Should be able to refund using payplug payment
         When I want to refund some units of order "00000001"
+        Then there should be "PayPlug" payment method
+        Then there should be "Cash on delivery" payment method
         Then I should still be able to refund order shipment with "PayPlug" payment
         When For this order I decide to refund 1st "Green Arrow" product with "PayPlug" payment
         Then this order refunded total should be "$10.00"
@@ -68,6 +71,8 @@ Feature: Refunding order's PayPlug payment
     @ui
     Scenario: Should be able to refund using payplug payment
         When I want to refund some units of order "00000001"
+        Then there should be "PayPlug" payment method
+        Then there should be "Cash on delivery" payment method
         Then I should still be able to refund order shipment with "PayPlug" payment
         When For this order I decide to refund 1st "Green Arrow" product with "PayPlug" payment
         Then this order refunded total should be "$10.00"

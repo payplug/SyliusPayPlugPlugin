@@ -9,6 +9,7 @@
     <parameters>
         <parameter key="sylius_refund.supported_gateways" type="collection">
             <parameter>payplug</parameter>
+            <parameter>cash_on_delivery</parameter>
         </parameter>
     </parameters>
 
