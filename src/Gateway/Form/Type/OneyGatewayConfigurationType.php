@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -39,6 +41,8 @@ final class OneyGatewayConfigurationType extends AbstractType
                     new NotBlank([
                         'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
                     ]),
+                    new IsPayPlugSecretKeyValid(),
+                    new IsOneyEnabled(),
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
@@ -47,6 +51,7 @@ final class OneyGatewayConfigurationType extends AbstractType
                 'label' => 'payplug_sylius_payplug_plugin.ui.oney_cgv_url_label',
                 'validation_groups' => $validationGroups,
                 'constraints' => [
+                    new NotBlank(),
                     new Url(),
                 ],
             ])
