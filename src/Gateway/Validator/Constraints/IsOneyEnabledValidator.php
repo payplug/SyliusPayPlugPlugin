@@ -28,7 +28,7 @@ final class IsOneyEnabledValidator extends ConstraintValidator
 
         try {
             \Payplug\Payplug::init(['secretKey' => $value]);
-            $permissions = \Payplug\Authentication::getPermissions();
+            $permissions = \Payplug\Authentication::getPermissions() ?? [];
 
             if (!\array_key_exists(self::PERMISSION_ONEY_FIELD, $permissions) ||
                 $permissions[self::PERMISSION_ONEY_FIELD] !== true) {
