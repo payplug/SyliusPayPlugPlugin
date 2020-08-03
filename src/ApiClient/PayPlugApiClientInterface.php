@@ -20,7 +20,12 @@ interface PayPlugApiClientInterface
 
     public const REFUNDED = 'refunded';
 
+    /**
+     * @deprecated
+     */
     public function initialise(string $secretKey): void;
+
+    public function getPermissions(): array;
 
     public function createPayment(array $data): Payment;
 
