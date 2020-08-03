@@ -4,5 +4,5 @@ payplug_sylius_payplug_plugin:
         not_valid: This is not a valid PayPlug secret key
     oney:
         not_enabled: |
-            Be careful ! For use Oney By PayPlug in LIVE mode, please contact us
+            Be careful ! For use Oney by PayPlug in LIVE mode, please contact us
             at support@payplug.com

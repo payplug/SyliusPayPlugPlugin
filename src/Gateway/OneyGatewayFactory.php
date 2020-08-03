@@ -8,5 +8,5 @@ final class OneyGatewayFactory extends AbstractGatewayFactory
 {
     public const FACTORY_NAME = 'payplug_oney';
 
-    public const FACTORY_TITLE = 'Oney By PayPlug';
+    public const FACTORY_TITLE = 'Oney by PayPlug';
 }
