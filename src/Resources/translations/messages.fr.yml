@@ -9,5 +9,5 @@ payplug_sylius_payplug_plugin:
         oney_gateway_label: Oney By PayPlug
         oney_cgv_added_label: |
             J'ai intégré les mentions légales Oney aux CGV de mon site.
-            <a href="//example.net/#TO_DEFINE" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
+            <a href="https://support.payplug.com/hc/fr/articles/360011971719-Le-paiement-en-plusieurs-fois-garanti-avec-Oney" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
         oney_cgv_url_label: Merci de renseigner ici l'URL de vos CGV
