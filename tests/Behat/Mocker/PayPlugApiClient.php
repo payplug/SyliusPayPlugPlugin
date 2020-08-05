@@ -25,6 +25,11 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->initialise($secretKey);
     }
 
+    public function getPermissions(): array
+    {
+        return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->getPermissions();
+    }
+
     public function createPayment(array $data): Payment
     {
         return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->createPayment($data);
