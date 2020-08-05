@@ -12,8 +12,13 @@
         </div>
         <div class="description">
             {{ money.format(payment.amount, payment.order.currencyCode) }}
-            {% if payment.details.payment_id is defined %}
+            {% if (payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayPlugGatewayFactory::FACTORY_NAME')
+                or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME'))
+                and payment.details.payment_id is defined %}
                 <br />{{ 'payplug_sylius_payplug_plugin.ui.payplug_id'|trans({'%paymentId%': payment.details.payment_id}) }}
+                {% if payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+                    <br />{{ 'payplug_sylius_payplug_plugin.ui.oney'|trans }}
+                {% endif %}
                 {% if payment.details.is_live is defined and payment.details.is_live == false %}
                     <br />{{ 'payplug_sylius_payplug_plugin.ui.test_mode'|trans }}
                 {% endif %}
