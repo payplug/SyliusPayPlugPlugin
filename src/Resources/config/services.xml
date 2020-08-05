@@ -14,7 +14,7 @@
         </defaults>
 
         <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
-                   resource="../../../src/{Checker,EventSubscriber}/*" />
+                   resource="../../../src/{Checker,EventSubscriber,Twig}/*" />
 
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
             <argument type="service" id="sm.factory" />

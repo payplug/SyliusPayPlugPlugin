@@ -1,0 +1,12 @@
+sylius_ui:
+    events:
+        sylius.shop.product.show.right_sidebar:
+            blocks:
+                pay_with_oney:
+                    template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/product/pay_with_oney.html.twig'
+                    priority: 29 # After price widget
+        sylius.shop.cart.summary.totals:
+            blocks:
+                pay_with_oney:
+                    template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/cart/pay_with_oney.html.twig'
+
