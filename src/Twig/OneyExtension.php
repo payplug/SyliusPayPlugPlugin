@@ -6,6 +6,8 @@ namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use Sylius\Component\Channel\Context\ChannelContextInterface;
+use Sylius\Component\Core\Model\PaymentMethod;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -17,22 +19,28 @@ final class OneyExtension extends AbstractExtension
      */
     private $gatewayConfigRepository;
     /**
-     * @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker
-     */
-    private $oneyChecker;
-    /**
      * @var \Sylius\Component\Resource\Repository\RepositoryInterface
      */
     private $paymentMethodRepository;
+    /**
+     * @var \Sylius\Component\Channel\Context\ChannelContextInterface
+     */
+    private $channelContext;
+    /**
+     * @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker
+     */
+    private $oneyChecker;
 
     public function __construct(
         RepositoryInterface $gatewayConfigRepository,
         RepositoryInterface $paymentMethodRepository,
+        ChannelContextInterface $channelContext,
         OneyChecker $oneyChecker
     ) {
         $this->gatewayConfigRepository = $gatewayConfigRepository;
-        $this->oneyChecker = $oneyChecker;
         $this->paymentMethodRepository = $paymentMethodRepository;
+        $this->channelContext = $channelContext;
+        $this->oneyChecker = $oneyChecker;
     }
 
     public function getFilters(): array
@@ -62,9 +70,14 @@ final class OneyExtension extends AbstractExtension
             return false;
         }
 
-        /** @var \Sylius\Component\Payment\Model\PaymentMethod $paymentMethod */
+        /** @var PaymentMethod $paymentMethod */
         $paymentMethod = $this->paymentMethodRepository->findOneBy(['gatewayConfig' => $gateway]);
         if (null === $paymentMethod || false === $paymentMethod->isEnabled()) {
+            return false;
+        }
+
+        $currentChannel = $this->channelContext->getChannel();
+        if (!$paymentMethod->getChannels()->contains($currentChannel)) {
             return false;
         }
 

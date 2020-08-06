@@ -1,4 +1,11 @@
-
 {% if is_oney_enabled() %}
-<span style="position:absolute; bottom: 10px; background-color: greenyellow">{{ 'or_pay_with_oney'|trans }}</span>
+<div style="position:absolute; bottom: 10px;">
+    <span style="vertical-align: middle;text-transform: uppercase; font-size: 1.1rem">{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+    <img style="vertical-align: middle" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
+</div>
+<style>
+    .five.wide.column .ui.segment {
+        padding-bottom: 30px;
+    }
+</style>
 {% endif %}
