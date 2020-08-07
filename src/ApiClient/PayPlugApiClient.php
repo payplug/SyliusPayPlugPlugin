@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
+use Payplug\Authentication;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
@@ -25,6 +26,11 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     public function initialise(string $secretKey): void
     {
         \Payplug\Payplug::setSecretKey($secretKey);
+    }
+
+    public function getAccount(): array
+    {
+        return Authentication::getAccount($this->configuration)['httpResponse'] ?? [];
     }
 
     public function getPermissions(): array

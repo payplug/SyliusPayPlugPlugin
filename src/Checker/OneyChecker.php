@@ -24,4 +24,18 @@ final class OneyChecker implements OneyCheckerInterface
 
         return (bool) ($permissions[self::ONEY_PERMISSION_FIELD] ?? false);
     }
+
+    public function isPriceEligible(int $price, string $currency = 'EUR'): bool
+    {
+        $account = $this->client->getAccount();
+        $minAmount = $account['configuration']['oney']['min_amounts'][$currency] ?? null;
+        $maxAmount = $account['configuration']['oney']['max_amounts'][$currency] ?? null;
+
+        if (null === $minAmount || null === $maxAmount) {
+            // amount not found, consider not eligible
+            return false;
+        }
+
+        return $price >= $minAmount && $price <= $maxAmount;
+    }
 }

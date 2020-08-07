@@ -25,6 +25,8 @@ interface PayPlugApiClientInterface
      */
     public function initialise(string $secretKey): void;
 
+    public function getAccount(): array;
+
     public function getPermissions(): array;
 
     public function createPayment(array $data): Payment;
