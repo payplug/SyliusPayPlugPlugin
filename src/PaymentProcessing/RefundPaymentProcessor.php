@@ -6,7 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;

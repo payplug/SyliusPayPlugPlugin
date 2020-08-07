@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;

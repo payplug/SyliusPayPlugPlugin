@@ -57,18 +57,11 @@ In the channel settings, the base currency must be set to EUR because the paymen
    twig:
        ...
        form_themes: [
-           'form/form_gateway_config_row.html.twig'
+           '@PayPlugSyliusPayPlugPlugin/form/form_gateway_config_row.html.twig'
        ]
     ```
 
-6. Copy custom form row theme template
-
-    ```shell
-    mkdir -p templates/form/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
-    ```
-
-7. Copy templates and migrations
+6. Copy templates and migrations
     ```shell
     cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
     cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
@@ -76,7 +69,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
-8. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus:
+7. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus:
 
     ```yaml
     framework:

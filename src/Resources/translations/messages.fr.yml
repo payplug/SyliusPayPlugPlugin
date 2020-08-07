@@ -6,3 +6,8 @@ payplug_sylius_payplug_plugin:
         retrieve_secret_key_in_api_configuration_portal: Retrouvez vos Secret Key LIVE et TEST dans votre <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portail PayPlug</a>
         test_mode: Mode TEST
         payplug_id: 'ID PayPlug : %paymentId%'
+        oney_gateway_label: Oney by PayPlug
+        oney_cgv_added_label: |
+            J'ai intégré les mentions légales Oney aux CGV de mon site.
+            <a href="https://support.payplug.com/hc/fr/articles/360011971719-Le-paiement-en-plusieurs-fois-garanti-avec-Oney" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
+        oney_cgv_url_label: Merci de renseigner ici l'URL de vos CGV

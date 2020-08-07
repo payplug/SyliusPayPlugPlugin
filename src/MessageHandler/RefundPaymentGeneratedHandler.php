@@ -6,8 +6,8 @@ namespace PayPlug\SyliusPayPlugPlugin\MessageHandler;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use SM\Factory\FactoryInterface;
