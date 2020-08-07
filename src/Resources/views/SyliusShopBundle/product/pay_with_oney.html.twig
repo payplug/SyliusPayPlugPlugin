@@ -1,6 +1,10 @@
 {% if is_oney_enabled() %}
-<div>
-    <span style="vertical-align: middle;text-transform: uppercase; font-size: 1.1rem">{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-    <img style="vertical-align: middle" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
-</div>
+    {% set logo_name = '3x4x-alt.svg' %}
+    {% if oney_cart_eligible() %}
+        {% set logo_name = '3x4x.svg' %}
+    {% endif %}
+    <div class="oney-info">
+        <span style="vertical-align: middle;text-transform: uppercase; font-size: 1.1rem">{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+        <img style="vertical-align: middle" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+    </div>
 {% endif %}
