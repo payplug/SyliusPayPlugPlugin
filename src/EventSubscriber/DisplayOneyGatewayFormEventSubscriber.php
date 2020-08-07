@@ -9,7 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Event\KernelEvent;
 
 final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInterface
 {
@@ -39,7 +39,7 @@ final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInte
         ];
     }
 
-    public function handle(ControllerEvent $event): void
+    public function handle(KernelEvent $event): void
     {
         if ($event->getRequest()->attributes->get('_route') !== 'sylius_admin_payment_method_update') {
             return;
