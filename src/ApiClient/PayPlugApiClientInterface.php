@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
+use Payplug\Payplug;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
@@ -24,6 +25,8 @@ interface PayPlugApiClientInterface
      * @deprecated
      */
     public function initialise(string $secretKey): void;
+
+    public function getConfiguration(): Payplug;
 
     public function getAccount(): array;
 
