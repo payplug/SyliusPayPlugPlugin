@@ -1,58 +1,62 @@
 {% import "@SyliusShop/Common/Macro/money.html.twig" as money %}
 
-{% set main_color = '#81BC00' %}
-<div class="oney-popin" style="display: block;">
-    {% if data.reasons is defined and data.reasons is not empty %}
-        {% set main_color = '#CCC' %}
-        <ul>
-            {% for reason in data.reasons %}
-                <li>{{ reason | trans(data.trans_params) }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}" alt="oney-logo"/>
-        <p>{{ 'payplug_sylius_payplug_plugin.ui.pay'|trans }}</p>
-        <span>{{ 'payplug_sylius_payplug_plugin.ui.by_credit_cart'|trans }}</span>
-
-        <div class="section-3x">
-            <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x.svg') }}" alt="payment in 3x"/>
-            {{ 'payplug_sylius_payplug_plugin.ui.popin_paiement_desc'|trans({
-                '%apport%': money.convertAndFormat(data['x3_with_fees']['down_payment_amount']),
-                '%nb_mensuality%': data['x3_with_fees']['installments'] | length,
-                '%mensuality%': money.convertAndFormat(data['x3_with_fees']['installments'][0]['amount']),
-                '%cost%': money.convertAndFormat(data['x3_with_fees']['total_cost']),
-                '%percentage%': data['x3_with_fees']['effective_annual_percentage_rate']
-            }) | raw }}
-        </div>
-        <hr style="background-color: #81BC00">
-        <div class="section-4x">
-            <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/4x.svg') }}" alt="payment in 4x"/>
-            {{ 'payplug_sylius_payplug_plugin.ui.popin_paiement_desc'|trans({
-                '%apport%': money.convertAndFormat(data['x4_with_fees']['down_payment_amount']),
-                '%nb_mensuality%': data['x4_with_fees']['installments'] | length,
-                '%mensuality%': money.convertAndFormat(data['x4_with_fees']['installments'][0]['amount']),
-                '%cost%': money.convertAndFormat(data['x4_with_fees']['total_cost']),
-                '%percentage%': data['x4_with_fees']['effective_annual_percentage_rate']
-            }) | raw }}
-        </div>
-        <div>
-            <p>
-                {{ 'payplug_sylius_payplug_plugin.ui.popin_legal_mention'|trans({
-                    '%min_amount%': money.convertAndFormat(data['min_amount']),
-                    '%max_amount%': money.convertAndFormat(data['max_amount']),
-                }) | raw }}
-            </p>
-        </div>
-    {% endif %}
+<div class="oney-popin {{ data.reasons is defined and data.reasons is not empty ? "disabled" : "enabled" }}">
+    <div class="oney-popin__header">
+        <a class="close" href="javascript:void(0);">
+            <span></span><span></span>
+        </a>
+    </div>
+        <div class="oney-popin__content">
+        {% if data.reasons is defined and data.reasons is not empty %}
+            <ul>
+                {% for reason in data.reasons %}
+                    <li>{{ reason|trans(data.trans_params) }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}" alt="oney-logo"/>
+            <p>{{ 'payplug_sylius_payplug_plugin.ui.pay'|trans }}</p>
+            <p><strong>{{ 'payplug_sylius_payplug_plugin.ui.by_credit_cart'|trans }}</strong></p>
+            <section class="section-3x">
+                <div>
+                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x.svg') }}" alt="payment in 3x"/>
+                </div>
+                <div>
+                    {{ 'payplug_sylius_payplug_plugin.ui.popin_paiement_desc'|trans({
+                        '%apport%': money.convertAndFormat(data['x3_with_fees']['down_payment_amount']),
+                        '%nb_mensuality%': data['x3_with_fees']['installments']|length,
+                        '%mensuality%': money.convertAndFormat(data['x3_with_fees']['installments'][0]['amount']),
+                        '%cost%': money.convertAndFormat(data['x3_with_fees']['total_cost']),
+                        '%percentage%': data['x3_with_fees']['effective_annual_percentage_rate']
+                    })|raw }}
+                </div>
+            </section>
+            <hr>
+            <section class="section-4x">
+                <div>
+                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/4x.svg') }}" alt="payment in 4x"/>
+                </div>
+                <div>
+                    {{ 'payplug_sylius_payplug_plugin.ui.popin_paiement_desc'|trans({
+                        '%apport%': money.convertAndFormat(data['x4_with_fees']['down_payment_amount']),
+                        '%nb_mensuality%': data['x4_with_fees']['installments']|length,
+                        '%mensuality%': money.convertAndFormat(data['x4_with_fees']['installments'][0]['amount']),
+                        '%cost%': money.convertAndFormat(data['x4_with_fees']['total_cost']),
+                        '%percentage%': data['x4_with_fees']['effective_annual_percentage_rate']
+                    })|raw }}
+                </div>
+            </section>
+            <div class="oney-popin__footer">
+                <p>
+                    {{ 'payplug_sylius_payplug_plugin.ui.popin_legal_mention'|trans({
+                        '%min_amount%': money.convertAndFormat(data['min_amount']),
+                        '%max_amount%': money.convertAndFormat(data['max_amount']),
+                    })|raw }}
+                </p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
-<style>
-    .oney-popin {
-        border: 1px solid {{ main_color }};
-        background-color: white;
-        padding: 10px;
-        position: absolute;
-        z-index: 99;
-        max-width: 20em;
-    }
-</style>
+<script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">

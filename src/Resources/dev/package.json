@@ -1,0 +1,30 @@
+{
+  "name": "sylius-payplug-plugin",
+  "version": "1.0.0",
+  "description": "Sylius Payplug Plugin",
+  "main": "src/index.js",
+  "scripts": {
+    "prod": "parcel build pages/**/* --out-dir ../public/assets/oney --no-source-maps",
+    "dev": "parcel watch pages/**/* --out-dir ../public/assets/oney --no-hmr",
+    "eslint": "eslint -c .eslintrc ./",
+    "fix-eslint": "eslint -c .eslintrc ./ --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.3",
+    "parcel-bundler": "^1.12.4",
+    "prettier": "2.0.4",
+    "sass": "^1.26.3"
+  }
+}

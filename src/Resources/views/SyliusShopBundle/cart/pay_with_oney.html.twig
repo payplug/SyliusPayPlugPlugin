@@ -7,16 +7,12 @@
     {% else %}
         {% set data = oney_ineligible_reasons() %}
     {% endif %}
-    {% if data is not empty %}
-        {% include '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/oney/popin.html.twig' %}
-    {% endif %}
-    <div class="oney-info" style="position:absolute; margin-top:10px; bottom: 10px;">
-        <span style="vertical-align: middle;text-transform: uppercase; font-size: 1.1rem">{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-        <img style="vertical-align: middle" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+    <div class="oney-info">
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        {% if data is not empty %}
+            {% include '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/oney/popin.html.twig' %}
+        {% endif %}
     </div>
-    <style>
-        .five.wide.column .ui.segment {
-            padding-bottom: 30px;
-        }
-    </style>
+    <link rel="stylesheet" href=href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/cart/index.css') }}">
 {% endif %}

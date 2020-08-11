@@ -16,9 +16,9 @@ payplug_sylius_payplug_plugin:
         pay: Paiement
         by_credit_cart: Par carte bancaire
         popin_paiement_desc: |
-            <b> Apport : %apport% <br>
-            + %nb_mensuality% mensualités de : %mensuality%</b> <br>
-            Dont coût du financement : %cost% TAEG : %percentage% %
+            <p><strong> Apport : %apport% <br>
+            + %nb_mensuality% mensualités de : %mensuality%</strong> <br>
+            Dont coût du financement : %cost% TAEG : %percentage% %</p>
         popin_legal_mention: |
             <small>
                 Offre de financement avec apport

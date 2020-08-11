@@ -6,10 +6,12 @@
         {% set data = oney_simulation_data() %}
     {% endif %}
     <div class="oney-info">
-        <span style="vertical-align: middle;text-transform: uppercase; font-size: 1.1rem">{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-        <img style="vertical-align: middle" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        {% if data is not empty %}
+            {% include '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/oney/popin.html.twig' %}
+        {% endif %}
     </div>
-    {% if data is not empty %}
-        {% include '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/oney/popin.html.twig' %}
-    {% endif %}
 {% endif %}
+
+<link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/product/index.css') }}">

@@ -1,0 +1,130 @@
+.oney-popin {
+    display: none;
+    background-color: white;
+    padding: 10px;
+    position: absolute;
+    z-index: 99;
+    max-width: 20em;
+    top: 0;
+    right: calc(-20em - 16px);
+    transform: translateY(calc(-100% / 3 + 10px));
+
+    &:after {
+        content: '';
+        display: inline-block;
+        height: 0;
+        width: 0;
+        border-top: 20px solid transparent;
+        border-bottom: 20px solid transparent;
+        position: absolute;
+        left: -20px;
+        top: calc(100% / 3 - 10px);
+    }
+
+    &.enabled {
+        border: 1px solid #81BC00;
+
+        hr {
+            border-color: #81BC00;
+        }
+
+        &:after {
+            border-right: 20px solid #81bc00;
+        }
+
+        a.close > span {
+            background: #81BC00;
+        }
+
+        .oney-popin__content > p {
+            color: #81BC00;
+        }
+    }
+
+    &.disabled {
+        border: 1px solid #cccccc;
+
+        hr {
+            border-color: #cccccc;
+        }
+
+        &:after {
+            border-right: 20px solid #cccccc;
+        }
+
+        a.close > span {
+            background: #cccccc;
+        }
+
+        .oney-popin__content > p {
+            color: #cccccc;
+        }
+    }
+
+    &__header {
+        text-align: right;
+
+        a.close {
+            > span {
+                position: absolute;
+                width: 15px;
+                height: 2px;
+                right: .5em;
+                top: 1em;
+                margin: 0;
+                border-radius: 0;
+
+                &:first-of-type {
+                    transform: rotate(55deg);
+                }
+
+                &:last-of-type {
+                    transform: rotate(-55deg);
+
+                }
+            }
+        }
+    }
+
+    &__content {
+        > p {
+            text-transform: uppercase;
+            margin-bottom: 0;
+
+            &:last-of-type {
+                margin-bottom: 1em;
+            }
+        }
+    }
+
+    &__footer {
+        margin-top: 1em;
+
+        > p {
+            text-align: justify;
+        }
+    }
+
+    section {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    p {
+        line-height: normal;
+    }
+
+    img {
+        height: auto;
+        margin-right: 1em;
+    }
+
+    hr {
+        border-top-width: 1px;
+        border-top-style: solid;
+        border-bottom: 0;
+        border-left: 0;
+        border-right: 0;
+        margin: 1em 0;
+    }
+}
