@@ -1,7 +1,6 @@
 .oney-info {
     position: relative;
     margin-top: 10px;
-    bottom: 10px;
 
     span {
         vertical-align: middle;
@@ -9,9 +8,10 @@
         font-size: 1.1rem;
     }
 
-    img {
+    > img {
         cursor: pointer;
         vertical-align: middle;
+        margin: 0 4px;
     }
 }
 

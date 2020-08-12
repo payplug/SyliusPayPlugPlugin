@@ -15,10 +15,11 @@ payplug_sylius_payplug_plugin:
         or_pay_with_oney: Ou payez en
         pay: Paiement
         by_credit_cart: Par carte bancaire
+        popin_close: Fermer
         popin_paiement_desc: |
             <p><strong> Apport : %apport% <br>
             + %nb_mensuality% mensualités de : %mensuality%</strong> <br>
-            Dont coût du financement : %cost% TAEG : %percentage% %</p>
+            Dont coût du financement : %cost% TAEG : %percentage%%</p>
         popin_legal_mention: |
             <small>
                 Offre de financement avec apport

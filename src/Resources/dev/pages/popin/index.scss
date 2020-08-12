@@ -6,7 +6,7 @@
     z-index: 99;
     max-width: 20em;
     top: 0;
-    right: calc(-20em - 16px);
+    right: calc(-20em - 32px);
     transform: translateY(calc(-100% / 3 + 10px));
 
     &:after {
@@ -22,10 +22,10 @@
     }
 
     &.enabled {
-        border: 1px solid #81BC00;
+        border: 1px solid #81bc00;
 
         hr {
-            border-color: #81BC00;
+            border-color: #81bc00;
         }
 
         &:after {
@@ -33,11 +33,11 @@
         }
 
         a.close > span {
-            background: #81BC00;
+            background: #81bc00;
         }
 
         .oney-popin__content > p {
-            color: #81BC00;
+            color: #81bc00;
         }
     }
 
@@ -90,6 +90,7 @@
         > p {
             text-transform: uppercase;
             margin-bottom: 0;
+            font-size: 16px;
 
             &:last-of-type {
                 margin-bottom: 1em;
@@ -110,13 +111,9 @@
         align-items: flex-start;
     }
 
-    p {
-        line-height: normal;
-    }
-
     img {
         height: auto;
-        margin-right: 1em;
+        margin-right: .5em;
     }
 
     hr {
@@ -125,6 +122,6 @@
         border-bottom: 0;
         border-left: 0;
         border-right: 0;
-        margin: 1em 0;
+        margin: 1.25em 0;
     }
 }
