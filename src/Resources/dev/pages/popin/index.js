@@ -1,4 +1,7 @@
 const Popin = {
+  init() {
+    Popin.fade();
+  },
   fade() {
     $(".oney-info").on("click", (e) => {
       e.stopPropagation();
@@ -11,4 +14,4 @@ const Popin = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", Popin.fade, false);
+document.addEventListener("DOMContentLoaded", Popin.init, false);

@@ -7,6 +7,7 @@
 
     p {
         color: #66727F;
+        margin: 0;
     }
 
     small {
@@ -19,11 +20,12 @@
 .oney-info {
     position: relative;
     display: inline-block;
+    margin: 1em auto .5em;
 
     span {
-        vertical-align: middle;
+        vertical-align: text-bottom;
         text-transform: uppercase;
-        font-size: 1.1rem;
+        font-size: 16px;
     }
 
     > img {

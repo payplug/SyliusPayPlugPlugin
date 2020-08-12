@@ -6,7 +6,7 @@
     z-index: 99;
     max-width: 20em;
     top: 0;
-    right: calc(-20em - 32px);
+    left: calc(-20em - 32px);
     transform: translateY(calc(-100% / 3 + 10px));
 
     &:after {
@@ -17,7 +17,7 @@
         border-top: 20px solid transparent;
         border-bottom: 20px solid transparent;
         position: absolute;
-        left: -20px;
+        right: -20px;
         top: calc(100% / 3 - 10px);
     }
 
@@ -29,7 +29,7 @@
         }
 
         &:after {
-            border-right: 20px solid #81bc00;
+            border-left: 20px solid #81bc00;
         }
 
         a.close > span {
@@ -49,7 +49,7 @@
         }
 
         &:after {
-            border-right: 20px solid #cccccc;
+            border-left: 20px solid #cccccc;
         }
 
         a.close > span {
@@ -57,7 +57,7 @@
         }
 
         .oney-popin__content > p {
-            color: #cccccc;
+            color: #66727f;
         }
     }
 
@@ -88,12 +88,14 @@
 
     &__content {
         > p {
-            text-transform: uppercase;
-            margin-bottom: 0;
-            font-size: 16px;
+            &:not(.reasons) {
+                text-transform: uppercase;
+                margin-bottom: 0;
+                font-size: 16px;
 
-            &:last-of-type {
-                margin-bottom: 1em;
+                &:last-of-type {
+                    margin-bottom: 1em;
+                }
             }
         }
     }

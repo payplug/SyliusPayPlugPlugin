@@ -8,11 +8,9 @@
     </div>
         <div class="oney-popin__content">
         {% if data.reasons is defined and data.reasons is not empty %}
-            <ul>
-                {% for reason in data.reasons %}
-                    <li>{{ reason|trans(data.trans_params) }}</li>
-                {% endfor %}
-            </ul>
+            {% for reason in data.reasons %}
+                <p class="reasons">{{ reason|trans(data.trans_params) }}</p>
+            {% endfor %}
         {% else %}
             <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}" alt="oney-logo"/>
             <p>{{ 'payplug_sylius_payplug_plugin.ui.pay'|trans }}</p>
