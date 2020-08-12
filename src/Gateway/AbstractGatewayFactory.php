@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway;
 
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayFactory;
@@ -36,13 +37,10 @@ abstract class AbstractGatewayFactory extends GatewayFactory
             'secretKey',
         ];
 
-        $config['payum.api'] = static function (ArrayObject $config): PayPlugApiClientInterface {
-            $config->validateNotEmpty($config['payum.required_options']);
-            /** @var PayPlugApiClientInterface $payPlugApiClient */
-            $payPlugApiClient = $config['payum.http_client'];
-            $payPlugApiClient->initialise($config['secretKey']);
+        $config['payum.api'] = function (ArrayObject $formConfig): PayPlugApiClientInterface {
+            $formConfig->validateNotEmpty($formConfig['payum.required_options']);
 
-            return $payPlugApiClient;
+            return new PayPlugApiClient($formConfig['secretKey'], static::FACTORY_NAME);
         };
     }
 }

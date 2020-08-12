@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use Payplug\Resource\IVerifiableAPIResource;
+use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
@@ -58,8 +60,14 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
             }
             $resource = $this->payPlugApiClient->treat($input);
 
-            if ($resource instanceof \Payplug\Resource\Payment && $resource->is_paid) {
+            if ($resource instanceof Payment && $resource->is_paid) {
                 $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
+
+                return;
+            }
+
+            if ($this->isResourceIsAuthorized($resource)) {
+                $details['status'] = PayPlugApiClientInterface::STATUS_AUTHORIZED;
 
                 return;
             }
@@ -111,5 +119,29 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
             $request instanceof Notify &&
             $request->getModel() instanceof \ArrayAccess
         ;
+    }
+
+    private function isResourceIsAuthorized(IVerifiableAPIResource $resource): bool
+    {
+        if (!$resource instanceof Payment) {
+            return false;
+        }
+
+        // Oney is reviewing the payer’s file
+        if ($resource->payment_method !== null &&
+            $resource->payment_method['is_pending'] === true) {
+            return true;
+        }
+
+        $now = new \DateTimeImmutable();
+        if ($resource->authorization !== null &&
+            $resource->authorization->expires_at !== null &&
+            $now < $now->setTimestamp($resource->authorization->expires_at)) {
+            return true;
+        }
+
+        // Maybe other check
+
+        return false;
     }
 }
