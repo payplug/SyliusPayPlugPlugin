@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
+use Payum\Core\ApiAwareInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
@@ -18,9 +20,10 @@ use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Order\OrderTransitions;
 
-final class StatusAction implements ActionInterface, GatewayAwareInterface
+final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
     use GatewayAwareTrait;
+    use ApiAwareTrait;
 
     /** @var \SM\Factory\FactoryInterface */
     private $stateMachineFactory;
@@ -36,6 +39,9 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
         $this->refundPaymentHandler = $refundPaymentHandler;
     }
 
+    /**
+     * @param GetStatusInterface $request
+     */
     public function execute($request): void
     {
         RequestNotSupportedException::assertSupports($this, $request);

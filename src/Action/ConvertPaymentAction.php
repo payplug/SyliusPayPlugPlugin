@@ -40,6 +40,9 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $this->session = $session;
     }
 
+    /**
+     * @param Convert $request
+     */
     public function execute($request): void
     {
         RequestNotSupportedException::assertSupports($this, $request);
@@ -239,3 +242,14 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         return 'carrier';
     }
 }
+
+        return ['cart' => $data];
+    }
+
+    private function retrieveDeliveryType(ShipmentInterface $shipment): string
+    {
+        // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
+        // TODO: retrieve good delivery from Shipment
+
+        return 'storepickup';
+    }}

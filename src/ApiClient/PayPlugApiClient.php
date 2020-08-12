@@ -19,6 +19,10 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     /** @var \Payplug\Payplug */
     private $configuration;
+    /**
+     * @var string
+     */
+    private $factoryName;
 
     /** @var string */
     private $factoryName;
