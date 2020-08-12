@@ -9,3 +9,19 @@ sylius_ui:
             blocks:
                 pay_with_oney:
                     template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/cart/pay_with_oney.html.twig'
+        sylius.shop.layout.javascripts:
+            blocks:
+                webfontloader:
+                    template: '@SyliusUi/_javascripts.html.twig'
+                    context:
+                        path: 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js'
+                oney_common:
+                    template: '@SyliusUi/_javascripts.html.twig'
+                    context:
+                        path: 'bundles/payplugsyliuspayplugplugin/assets/oney/common/index.js'
+        sylius.shop.layout.stylesheets:
+            blocks:
+                oney_common:
+                    template: '@SyliusUi/_stylesheets.html.twig'
+                    context:
+                        path: 'bundles/payplugsyliuspayplugplugin/assets/oney/common/index.css'
