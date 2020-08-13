@@ -16,6 +16,25 @@
 {%- endblock %}
 
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
-    {# TODO : better form rendering #}
-    {{ form_row(form) }}
+    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/pages/payment/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/pages/payment/index.css') }}">
+
+    <div class="oney-payment-choice__container">
+        {% for keyChoice, choice in form.vars.choices %}
+            <div class="oney-payment-choice__item oney-payment__item--{{ choice.value }}" id="{{ choice.value }}">
+                <input
+                    type="radio"
+                    value="{{ choice.value }}"
+                    id="oney_choice_{{ keyChoice }}"
+                    name="{{ form.vars.full_name }}"
+                    class="oney-payment-choice__input"
+                    {{ loop.index is same as(1) ? "checked" : "" }}
+                >
+                <label for="oney_choice_{{ keyChoice }}" class="oney-payment-choice__label">
+                    <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ choice.label ~ '.svg') }}">
+                    <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
+                </label>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
