@@ -22,7 +22,7 @@
             </div>
         {% endif %}
         {% if method.gatewayConfig.factoryName == factoryName and form.parent.parent.oney_payment_choice is defined %}
-            <div class="oney-payment-choice">
+            <div class="oney-payment-choice" data-oney-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.oney_payment_choice) }}
             </div>
         {% endif %}
