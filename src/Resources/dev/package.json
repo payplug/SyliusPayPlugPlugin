@@ -4,7 +4,7 @@
   "description": "Sylius Payplug Plugin",
   "main": "src/index.js",
   "scripts": {
-    "prod": "parcel build pages/**/* --out-dir ../public/assets/oney --no-source-maps",
+    "build": "parcel build pages/**/* --out-dir ../public/assets/oney --no-source-maps",
     "dev": "parcel watch pages/**/* --out-dir ../public/assets/oney --no-hmr",
     "eslint": "eslint -c .eslintrc ./",
     "fix-eslint": "eslint -c .eslintrc ./ --fix",
