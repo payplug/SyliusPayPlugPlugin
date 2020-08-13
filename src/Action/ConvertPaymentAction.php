@@ -41,6 +41,16 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     }
 
     /**
+     * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+     */
+    private $session;
+
+    public function __construct(SessionInterface $session)
+    {
+        $this->session = $session;
+    }
+
+    /**
      * @param Convert $request
      */
     public function execute($request): void
