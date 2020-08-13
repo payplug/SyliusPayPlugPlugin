@@ -19,6 +19,7 @@ use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\ShipmentInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 {
@@ -27,6 +28,16 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     private const DELIVERY_TYPE_BILLING = 'BILLING';
 
     private const DELIVERY_TYPE_NEW = 'NEW';
+
+    /**
+     * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+     */
+    private $session;
+
+    public function __construct(SessionInterface $session)
+    {
+        $this->session = $session;
+    }
 
     /**
      * @param Convert $request
@@ -187,7 +198,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private function alterOneyDetails(PaymentInterface $payment, ArrayObject $details): ArrayObject
     {
-        $details['payment_method'] = 'oney_x3_with_fees';
+        $details['payment_method'] = $this->session->get('oney_payment_method', 'oney_x3_with_fees');
         $details['auto_capture'] = true;
         $details['authorized_amount'] = $details['amount'];
         unset($details['amount']);

@@ -14,3 +14,8 @@
         {{- label|trans(label_translation_parameters, translation_domain) | raw -}}
     </{{ element|default('label') }}>
 {%- endblock %}
+
+{% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
+    {# TODO : better form rendering #}
+    {{ form_row(form) }}
+{% endblock %}
