@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Form\Extension;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -14,9 +16,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class PaymentTypeExtension extends AbstractTypeExtension
 {
-    /**
-     * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
-     */
+    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
     private $session;
 
     public function __construct(SessionInterface $session)
@@ -47,6 +47,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 // TODO : Ref US 1.14.1 validate shipment data for mandatory fields
                 if ($payment->getOrder()->getShippingAddress()->getCompany() === null) {
                     $event->getForm()->addError(new FormError('Oney est disponible que quand la companie est remplie dans l\'adresse.'));
+
                     return;
                 }
 

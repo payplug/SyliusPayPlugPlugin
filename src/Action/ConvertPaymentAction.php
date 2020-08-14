@@ -29,9 +29,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
-    /**
-     * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
-     */
+    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
     private $session;
 
     public function __construct(SessionInterface $session)
@@ -225,7 +223,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
                 'name' => $orderItem->getProductName() . ' ' . $orderItem->getVariantName(),
                 'total_amount' => $orderItem->getTotal(),
                 'price' => $orderItem->getUnitPrice(),
-                'quantity' => $orderItem->getQuantity()
+                'quantity' => $orderItem->getQuantity(),
             ];
         }
 
@@ -238,4 +236,5 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         // TODO: retrieve good delivery from Shipment
 
         return 'storepickup';
-    }}
+    }
+}
