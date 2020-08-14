@@ -65,4 +65,9 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     {
         // TODO: Implement getAccount() method.
     }
+
+    public function getGatewayFactoryName(): string
+    {
+        return $this->container->get('payplug_sylius_payplug_plugin.api_client.payplug')->getGatewayFactoryName();
+    }
 }
