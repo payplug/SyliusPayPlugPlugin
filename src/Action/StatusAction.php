@@ -39,9 +39,6 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         $this->refundPaymentHandler = $refundPaymentHandler;
     }
 
-    /**
-     * @param GetStatusInterface $request
-     */
     public function execute($request): void
     {
         RequestNotSupportedException::assertSupports($this, $request);

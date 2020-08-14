@@ -37,9 +37,6 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $this->session = $session;
     }
 
-    /**
-     * @param Convert $request
-     */
     public function execute($request): void
     {
         RequestNotSupportedException::assertSupports($this, $request);
@@ -74,7 +71,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
         if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
-            $details = $this->alterOneyDetails($payment, $details);
+            $details = $this->alterOneyDetails($details);
             $details->offsetSet('payment_context', $this->getCartContext($order));
         }
 
@@ -194,7 +191,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         ];
     }
 
-    private function alterOneyDetails(PaymentInterface $payment, ArrayObject $details): ArrayObject
+    private function alterOneyDetails(ArrayObject $details): ArrayObject
     {
         $details['payment_method'] = $this->session->get('oney_payment_method', 'oney_x3_with_fees');
         $details['auto_capture'] = true;
@@ -215,10 +212,10 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         foreach ($order->getItems() as $orderItem) {
             $data[] = [
-                'delivery_label' => $shipment->getMethod()->getName(),
+                'delivery_label' => (null !== $shipment->getMethod()) ? $shipment->getMethod()->getName() : 'none',
                 'delivery_type' => $deliveryType,
                 'expected_delivery_date' => $expectedDeliveryDate,
-                'merchant_item_id' => $orderItem->getVariant()->getCode(),
+                'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode() : 'none',
                 'brand' => $orderItem->getProductName(),
                 'name' => $orderItem->getProductName() . ' ' . $orderItem->getVariantName(),
                 'total_amount' => $orderItem->getTotal(),
@@ -230,6 +227,9 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         return ['cart' => $data];
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
     private function retrieveDeliveryType(ShipmentInterface $shipment): string
     {
         // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
