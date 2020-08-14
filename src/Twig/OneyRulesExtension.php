@@ -7,6 +7,8 @@ namespace PayPlug\SyliusPayPlugPlugin\Twig;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
 use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
+use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -22,7 +24,7 @@ final class OneyRulesExtension extends AbstractExtension
     /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
     private $oneyClient;
 
-    /** @var \Sylius\Bundle\MoneyBundle\Templating\Helper\ConvertMoneyHelperInterface */
+    /** @var \Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface */
     private $moneyFormatter;
 
     public function __construct(
@@ -55,8 +57,18 @@ final class OneyRulesExtension extends AbstractExtension
         }
 
         try {
-            $currency = $currentCart->getChannel()->getBaseCurrency()->getCode();
-            if (null === $currency) {
+            $channel = $currentCart->getChannel();
+            if (!$channel instanceof ChannelInterface) {
+                throw new \LogicException('No channel found');
+            }
+
+            $currency = $channel->getBaseCurrency();
+            if (!$currency instanceof CurrencyInterface) {
+                throw new \LogicException('No currency found');
+            }
+
+            $currencyCode = $currency->getCode();
+            if (null === $currencyCode) {
                 throw new \LogicException('No currency code found');
             }
         } catch (\Throwable $throwable) {
@@ -64,7 +76,7 @@ final class OneyRulesExtension extends AbstractExtension
             return false;
         }
 
-        return $this->oneyChecker->isPriceEligible($currentCart->getTotal(), $currency);
+        return $this->oneyChecker->isPriceEligible($currentCart->getTotal(), $currencyCode);
     }
 
     public function getReasonsOfIneligibility(): array
@@ -79,31 +91,51 @@ final class OneyRulesExtension extends AbstractExtension
             $transParam[] = ['%max_articles%' => 1000];
         }
 
-        $currency = $currentCart->getChannel()->getBaseCurrency()->getCode();
+        try {
+            $channel = $currentCart->getChannel();
+            if (!$channel instanceof ChannelInterface) {
+                throw new \LogicException('No channel found');
+            }
 
-        if (null !== $currency && !$this->oneyChecker->isPriceEligible($currentCart->getTotal(), $currency)) {
-            $data[] = 'payplug_sylius_payplug_plugin.ui.invalid_cart_price';
-            $account = $this->oneyClient->getAccount();
+            $currency = $channel->getBaseCurrency();
+            if (!$currency instanceof CurrencyInterface) {
+                throw new \LogicException('No currency found');
+            }
 
-            $transParam[] = [
-                '%min_amount%' => $this->moneyFormatter->format(
-                    $account['configuration']['oney']['min_amounts'][$currency],
-                    $currency,
-                    $currentCart->getLocaleCode()
-                ),
+            $currencyCode = $currency->getCode();
+            if (null === $currencyCode) {
+                throw new \LogicException('No currency code found');
+            }
+
+            if (!$this->oneyChecker->isPriceEligible($currentCart->getTotal(), $currencyCode)) {
+                $data[] = 'payplug_sylius_payplug_plugin.ui.invalid_cart_price';
+                $account = $this->oneyClient->getAccount();
+
+                $transParam[] = [
+                    '%min_amount%' => $this->moneyFormatter->format(
+                        $account['configuration']['oney']['min_amounts'][$currencyCode],
+                        $currencyCode,
+                        $currentCart->getLocaleCode()
+                    ),
+                ];
+                $transParam[] = [
+                    '%max_amount%' => $this->moneyFormatter->format(
+                        $account['configuration']['oney']['max_amounts'][$currencyCode],
+                        $currencyCode,
+                        $currentCart->getLocaleCode()
+                    ),
+                ];
+            }
+
+            return [
+                'reasons' => $data,
+                'trans_params' => $transParam,
             ];
-            $transParam[] = [
-                '%max_amount%' => $this->moneyFormatter->format(
-                    $account['configuration']['oney']['max_amounts'][$currency],
-                    $currency,
-                    $currentCart->getLocaleCode()
-                ),
+        } catch (\Throwable $throwable) {
+            return [
+                'reasons' => $data,
+                'trans_params' => $transParam,
             ];
         }
-
-        return [
-            'reasons' => $data,
-            'trans_params' => array_merge(...$transParam),
-        ];
     }
 }

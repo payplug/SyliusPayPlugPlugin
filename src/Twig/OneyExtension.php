@@ -59,13 +59,13 @@ final class OneyExtension extends AbstractExtension
     {
         // TODO : add cache on this response
 
-        /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfig $gateway */
+        /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfig|null $gateway */
         $gateway = $this->gatewayConfigRepository->findOneBy(['factoryName' => OneyGatewayFactory::FACTORY_NAME]);
         if (null === $gateway) {
             return false;
         }
 
-        /** @var PaymentMethod $paymentMethod */
+        /** @var PaymentMethod|null $paymentMethod */
         $paymentMethod = $this->paymentMethodRepository->findOneBy(['gatewayConfig' => $gateway]);
         if (null === $paymentMethod || false === $paymentMethod->isEnabled()) {
             return false;
