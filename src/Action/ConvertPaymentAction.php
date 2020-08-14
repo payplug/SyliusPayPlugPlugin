@@ -32,17 +32,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
-    /** @var SessionInterface */
-    private $session;
-
-    public function __construct(SessionInterface $session)
-    {
-        $this->session = $session;
-    }
-
-    /**
-     * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
-     */
+    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
     private $session;
 
     public function __construct(SessionInterface $session)
@@ -262,4 +252,5 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         // TODO: retrieve good delivery from Shipment
 
         return 'storepickup';
-    }}
+    }
+}

@@ -81,7 +81,6 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->addError($error);
                     });
-
                     return;
                 }
                 $data = $event->getForm()->get('oney_payment_choice')->getData();
