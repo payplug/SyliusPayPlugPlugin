@@ -13,21 +13,16 @@ use Twig\TwigFunction;
 
 final class OneyRulesExtension extends AbstractExtension
 {
-    /**
-     * @var \Sylius\Component\Order\Context\CartContextInterface
-     */
+    /** @var \Sylius\Component\Order\Context\CartContextInterface */
     private $cartContext;
-    /**
-     * @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface
-     */
+
+    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface */
     private $oneyChecker;
-    /**
-     * @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface
-     */
+
+    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
     private $oneyClient;
-    /**
-     * @var \Sylius\Bundle\MoneyBundle\Templating\Helper\ConvertMoneyHelperInterface
-     */
+
+    /** @var \Sylius\Bundle\MoneyBundle\Templating\Helper\ConvertMoneyHelperInterface */
     private $moneyFormatter;
 
     public function __construct(
@@ -95,20 +90,20 @@ final class OneyRulesExtension extends AbstractExtension
                     $account['configuration']['oney']['min_amounts'][$currency],
                     $currency,
                     $currentCart->getLocaleCode()
-                )
+                ),
             ];
             $transParam[] = [
                 '%max_amount%' => $this->moneyFormatter->format(
                     $account['configuration']['oney']['max_amounts'][$currency],
                     $currency,
                     $currentCart->getLocaleCode()
-                )
+                ),
             ];
         }
 
         return [
             'reasons' => $data,
-            'trans_params' => array_merge(...$transParam)
+            'trans_params' => array_merge(...$transParam),
         ];
     }
 }

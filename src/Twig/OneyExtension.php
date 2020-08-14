@@ -14,21 +14,16 @@ use Twig\TwigFunction;
 
 final class OneyExtension extends AbstractExtension
 {
-    /**
-     * @var \Sylius\Component\Resource\Repository\RepositoryInterface
-     */
+    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
     private $gatewayConfigRepository;
-    /**
-     * @var \Sylius\Component\Resource\Repository\RepositoryInterface
-     */
+
+    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
     private $paymentMethodRepository;
-    /**
-     * @var \Sylius\Component\Channel\Context\ChannelContextInterface
-     */
+
+    /** @var \Sylius\Component\Channel\Context\ChannelContextInterface */
     private $channelContext;
-    /**
-     * @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker
-     */
+
+    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker */
     private $oneyChecker;
 
     public function __construct(
