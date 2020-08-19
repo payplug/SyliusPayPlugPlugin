@@ -45,8 +45,10 @@ final class CheckoutContext implements Context
      */
     public function iConfirmMyOrderWithPayPlugPayment(): void
     {
-        $this->payPlugApiMocker->mockApiCreatePayment(function () {
-            $this->summaryPage->confirmOrder();
+        $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
+            $this->payPlugApiMocker->mockApiCreatePayment(function () {
+                $this->summaryPage->confirmOrder();
+            });
         });
     }
 
@@ -55,9 +57,11 @@ final class CheckoutContext implements Context
      */
     public function iSignInToPayPlugAndPaySuccessfully(): void
     {
-        $this->payPlugApiMocker->mockApiSuccessfulPayment(function () {
-            $this->paymentPage->notify(['id' => 1]);
-            $this->paymentPage->capture();
+        $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
+            $this->payPlugApiMocker->mockApiSuccessfulPayment(function () {
+                $this->paymentPage->notify(['id' => 1]);
+                $this->paymentPage->capture();
+            });
         });
     }
 
@@ -109,8 +113,10 @@ final class CheckoutContext implements Context
      */
     public function iTryToPayAgainPayPlugPayment(): void
     {
-        $this->payPlugApiMocker->mockApiCreatePayment(function () {
-            $this->orderDetails->pay();
+        $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
+            $this->payPlugApiMocker->mockApiCreatePayment(function () {
+                $this->orderDetails->pay();
+            });
         });
     }
 

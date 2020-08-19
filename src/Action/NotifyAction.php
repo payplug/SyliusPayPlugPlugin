@@ -128,13 +128,16 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
         }
 
         // Oney is reviewing the payer’s file
-        if ($resource->payment_method !== null &&
+        if (\property_exists($resource, 'payment_method') &&
+            $resource->payment_method !== null &&
             $resource->payment_method['is_pending'] === true) {
             return true;
         }
 
         $now = new \DateTimeImmutable();
-        if ($resource->authorization !== null &&
+        if (\property_exists($resource, 'authorization') &&
+            $resource->authorization !== null &&
+            \property_exists($resource->authorization, 'expires_at') &&
             $resource->authorization->expires_at !== null &&
             $now < $now->setTimestamp($resource->authorization->expires_at)) {
             return true;

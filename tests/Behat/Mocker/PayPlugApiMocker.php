@@ -7,6 +7,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Behat\Service\Mocker\MockerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -88,6 +89,7 @@ final class PayPlugApiMocker
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
         $mock
             ->shouldReceive('initialise')
+            ->shouldReceive('createPayment')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->is_paid = true;
@@ -225,6 +227,19 @@ final class PayPlugApiMocker
             ->shouldReceive('treat')
             ->andReturn($refund)
         ;
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function mockPayPlugApiGetGatewayFactoryName(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+        $mock
+            ->shouldReceive([
+                'getGatewayFactoryName' => PayPlugGatewayFactory::FACTORY_NAME,
+            ])
+        ;
+
         $action();
         $this->mocker->unmockAll();
     }
