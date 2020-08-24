@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use DateInterval;
+use DateTime;
 use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
@@ -18,6 +20,7 @@ use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -29,7 +32,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
-    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
+    /** @var SessionInterface */
     private $session;
 
     public function __construct(SessionInterface $session)
@@ -203,10 +206,10 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private function getCartContext(OrderInterface $order): array
     {
-        /** @var \Sylius\Component\Core\Model\Shipment $shipment */
+        /** @var Shipment $shipment */
         $shipment = $order->getShipments()->current();
 
-        $expectedDeliveryDate = (new \DateTime())->add(new \DateInterval('P7D'))->format('Y-m-d');
+        $expectedDeliveryDate = (new DateTime())->add(new DateInterval('P7D'))->format('Y-m-d');
         $deliveryType = $this->retrieveDeliveryType($shipment);
         $data = [];
 
@@ -233,8 +236,6 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     private function retrieveDeliveryType(ShipmentInterface $shipment): string
     {
         // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
-        // TODO: retrieve good delivery from Shipment
-
-        return 'storepickup';
+        return 'carrier';
     }
 }
