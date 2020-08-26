@@ -25,7 +25,7 @@
     <rule ref="rulesets/naming.xml/ShortVariable">
         <properties>
             <property name="minimum" value="3"/>
-            <property name="exceptions" value="id,io"/>
+            <property name="exceptions" value="id,io,to"/>
         </properties>
     </rule>
     <rule ref="rulesets/naming.xml/ShortMethodName">

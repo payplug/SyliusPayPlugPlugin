@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker;
 
+use function bin2hex;
+use Mockery;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use function random_bytes;
+use stdClass;
 use Sylius\Behat\Service\Mocker\MockerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -38,7 +42,7 @@ final class PayPlugApiMocker
         ;
         $mock
             ->shouldReceive('refundPayment')
-            ->andReturn(\Mockery::mock('refund', Refund::class))
+            ->andReturn(Mockery::mock('refund', Refund::class))
         ;
         $action();
         $this->mocker->unmockAll();
@@ -50,10 +54,10 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $refund = \Mockery::mock('refund', Refund::class);
+        $refund = Mockery::mock('refund', Refund::class);
         $refund->amount = 34000;
         $refund->currency = 'EUR';
-        $refund->id = \bin2hex(\random_bytes(10));
+        $refund->id = bin2hex(random_bytes(10));
         $refund->payment_id = 'pay_2PykkdCqJLzJ7nYM5gV4RZ';
         $refund->metadata = ['requested_by' => 'payplug'];
         $mock
@@ -70,7 +74,7 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $payment = \Mockery::mock('payment', Payment::class);
+        $payment = Mockery::mock('payment', Payment::class);
         $payment->id = 1;
         $payment->is_live = false;
         $payment->hosted_payment = (object) [
@@ -91,8 +95,9 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
             ->shouldReceive('createPayment')
         ;
-        $payment = \Mockery::mock('payment', Payment::class);
+        $payment = Mockery::mock('payment', Payment::class);
         $payment->is_paid = true;
+        $payment->created_at = 1598273578;
         $mock
             ->shouldReceive('treat')
             ->andReturn($payment)
@@ -111,7 +116,7 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $payment = \Mockery::mock('payment', Payment::class);
+        $payment = Mockery::mock('payment', Payment::class);
         $payment->is_paid = false;
         $mock
             ->shouldReceive('treat')
@@ -127,10 +132,10 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $payment = \Mockery::mock('payment', Payment::class);
+        $payment = Mockery::mock('payment', Payment::class);
         $payment->status = 'failure';
         $payment->is_paid = false;
-        $failure = new \stdClass();
+        $failure = new stdClass();
         $failure->code = 'timeout';
         $failure->message = 'The customer has not tried to pay and left the payment page.';
         $payment->failure = $failure;
@@ -148,7 +153,7 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $payment = \Mockery::mock('payment', Payment::class);
+        $payment = Mockery::mock('payment', Payment::class);
         $payment->status = 'created';
         $payment->is_paid = false;
         $mock
@@ -173,7 +178,7 @@ final class PayPlugApiMocker
     {
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
         $mock->shouldReceive('initialise');
-        $payment = \Mockery::mock('payment', Payment::class);
+        $payment = Mockery::mock('payment', Payment::class);
         $payment->state = 'failed';
         $payment->is_paid = false;
         $payment->failure = true;
@@ -197,10 +202,10 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $refund = \Mockery::mock('refund', Refund::class);
+        $refund = Mockery::mock('refund', Refund::class);
         $refund->amount = 34000;
         $refund->currency = 'EUR';
-        $refund->id = \bin2hex(\random_bytes(10));
+        $refund->id = bin2hex(random_bytes(10));
         $refund->payment_id = 'pay_2PykkdCqJLzJ7nYM5gV4RZ';
         $refund->metadata = ['requested_by' => 'payplug'];
         $mock
@@ -217,10 +222,10 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
-        $refund = \Mockery::mock('refund', Refund::class);
+        $refund = Mockery::mock('refund', Refund::class);
         $refund->amount = $amount;
         $refund->currency = 'EUR';
-        $refund->id = \bin2hex(\random_bytes(10));
+        $refund->id = bin2hex(random_bytes(10));
         $refund->payment_id = 'pay_2PykkdCqJLzJ7nYM5gV4RZ';
         $refund->metadata = ['requested_by' => 'payplug'];
         $mock

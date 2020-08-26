@@ -1,0 +1,5 @@
+sylius_refund_complete_refund_payment:
+  path: /orders/{orderNumber}/refund-payments/{id}/complete
+  methods: [POST]
+  defaults:
+    _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction

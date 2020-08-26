@@ -4,37 +4,55 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\MessageHandler;
 
+use DateTime;
+use DateTimeInterface;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Exception\ApiRefundException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use SM\Factory\FactoryInterface;
+use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Core\Repository\PaymentRepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Sylius\RefundPlugin\Event\RefundPaymentGenerated;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentTransitions;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Throwable;
+use Webmozart\Assert\Assert;
 
 final class RefundPaymentGeneratedHandler
 {
-    /** @var \Doctrine\Common\Persistence\ObjectManager */
+    /** @var ObjectManager */
     private $entityManager;
 
-    /** @var \SM\Factory\FactoryInterface */
+    /** @var FactoryInterface */
     private $stateMachineFactory;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor */
+    /** @var RefundPaymentProcessor */
     private $refundPaymentProcessor;
 
-    /** @var \Sylius\Component\Core\Repository\PaymentRepositoryInterface */
+    /** @var PaymentRepositoryInterface */
     private $paymentRepository;
 
-    /** @var \Psr\Log\LoggerInterface */
+    /** @var LoggerInterface */
     private $logger;
 
     /** @var RefundHistoryRepositoryInterface */
     private $payplugRefundHistoryRepository;
+
+    /** @var Session */
+    private $session;
+
+    /** @var OrderRepositoryInterface */
+    private $orderRepository;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -42,7 +60,9 @@ final class RefundPaymentGeneratedHandler
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
         FactoryInterface $stateMachineFactory,
         RefundPaymentProcessor $refundPaymentProcessor,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        Session $session,
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->entityManager = $entityManager;
         $this->paymentRepository = $paymentRepository;
@@ -50,13 +70,16 @@ final class RefundPaymentGeneratedHandler
         $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentProcessor = $refundPaymentProcessor;
         $this->logger = $logger;
+        $this->session = $session;
+        $this->orderRepository = $orderRepository;
     }
 
     public function __invoke(RefundPaymentGenerated $message): void
     {
         try {
-            /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
+            /** @var PaymentInterface $payment */
             $payment = $this->paymentRepository->find($message->paymentId());
+            /** @var PaymentMethodInterface|null $paymentMethod */
             $paymentMethod = $payment->getMethod();
 
             if (null === $paymentMethod) {
@@ -65,7 +88,7 @@ final class RefundPaymentGeneratedHandler
 
             $gatewayName = $paymentMethod->getCode();
 
-            if ($gatewayName !== PayPlugGatewayFactory::FACTORY_NAME) {
+            if ($gatewayName !== PayPlugGatewayFactory::FACTORY_NAME && $gatewayName !== OneyGatewayFactory::FACTORY_NAME) {
                 return;
             }
 
@@ -86,16 +109,77 @@ final class RefundPaymentGeneratedHandler
                 return;
             }
 
-            $this->refundPaymentProcessor->processWithAmount($payment, $message->amount(), $message->id());
+            $this->checkOneyRequirements($payment, $message);
 
-            /** @var RefundPayment $refundPayment */
-            $refundPayment = $this->entityManager->getRepository(RefundPayment::class)->find($message->id());
-            $stateMachine = $this->stateMachineFactory->get($refundPayment, RefundPaymentTransitions::GRAPH);
-            $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
-
-            $this->entityManager->flush();
-        } catch (\Throwable $throwable) {
+            $this->processRefund($payment, $message);
+        } catch (Throwable $throwable) {
             $this->logger->critical($throwable->getMessage());
+
+            throw new ApiRefundException($throwable->getMessage(), $throwable->getCode(), $throwable);
+        }
+    }
+
+    private function processRefund(PaymentInterface $payment, RefundPaymentGenerated $message): void
+    {
+        $this->refundPaymentProcessor->processWithAmount($payment, $message->amount(), $message->id());
+
+        /** @var RefundPayment $refundPayment */
+        $refundPayment = $this->entityManager->getRepository(RefundPayment::class)->find($message->id());
+        $stateMachine = $this->stateMachineFactory->get($refundPayment, RefundPaymentTransitions::GRAPH);
+        $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
+
+        $this->entityManager->flush();
+    }
+
+    private function hasLessThanFortyEightHoursTransaction(PaymentInterface $payment, string $orderNumber): bool
+    {
+        $now = new DateTime();
+
+        /** @var OrderInterface $order */
+        $order = $this->orderRepository->findOneByNumber($orderNumber);
+
+        Assert::isInstanceOf($order->getLastPayment(), PaymentInterface::class);
+        Assert::isInstanceOf($order->getLastPayment()->getCreatedAt(), DateTimeInterface::class);
+
+        /** @var RefundHistory|null $refundHistory */
+        $refundHistory = $this->payplugRefundHistoryRepository->findLastProcessedRefundForPayment($payment);
+        if (!$refundHistory instanceof RefundHistory) {
+            Assert::isInstanceOf($order->getLastPayment()->getCreatedAt(), DateTimeInterface::class);
+
+            return $this->isLessThanFortyEightHours(
+                $order->getLastPayment()->getCreatedAt(),
+                $now
+            );
+        }
+
+        if ($this->isLessThanFortyEightHours($order->getLastPayment()->getCreatedAt(), $now)) {
+            return true;
+        }
+
+        return $this->isLessThanFortyEightHours(
+            $refundHistory->getCreatedAt(),
+            $now
+        );
+    }
+
+    private function isLessThanFortyEightHours(DateTimeInterface $from, DateTimeInterface $to): bool
+    {
+        $diff = $to->diff($from);
+        Assert::integer($diff->days);
+        $hours = $diff->h + ($diff->days * 24);
+
+        return $hours < OneyGatewayFactory::REFUND_WAIT_TIME_IN_HOURS;
+    }
+
+    private function checkOneyRequirements(
+        PaymentInterface $payment,
+        RefundPaymentGenerated $message
+    ): void {
+        Assert::isInstanceOf($payment->getMethod(), PaymentMethodInterface::class);
+
+        if ($payment->getMethod()->getCode() === OneyGatewayFactory::FACTORY_NAME &&
+            $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())) {
+            throw new ApiRefundException('Another transaction have beeen made less than 48 hours ago.');
         }
     }
 }

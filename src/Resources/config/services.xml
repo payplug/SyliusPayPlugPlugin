@@ -69,6 +69,7 @@
             <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
             <argument type="service" id="logger" />
+            <argument type="service" id="session" />
             <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
         </service>
 
@@ -80,6 +81,17 @@
         <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension">
             <argument>%kernel.environment%</argument>
             <tag name="twig.extension" />
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction">
+            <argument type="service" id="session" />
+            <argument type="service" id="sylius_refund.repository.refund_payment" />
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplier" />
+            <argument type="service" id="router" />
+            <argument type="service" id="sylius_refund_plugin.event_bus" />
+            <argument type="service" id="Sylius\RefundPlugin\Provider\RelatedPaymentIdProviderInterface" />
+            <tag name="controller.service_arguments"/>
         </service>
     </services>
 </container>

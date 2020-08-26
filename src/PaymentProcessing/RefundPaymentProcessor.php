@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
+use Exception;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
+use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
@@ -17,6 +20,7 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Webmozart\Assert\Assert;
 
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
@@ -29,7 +33,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    /** @var TranslatorInterface */
     private $translator;
 
     /** @var RepositoryInterface */
@@ -61,7 +65,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
         try {
             $this->payPlugApiClient->refundPayment($details['payment_id']);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $message = $exception->getMessage();
 
             $this->session->getFlashBag()->add('error', $message);
@@ -74,6 +78,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
     public function processWithAmount(PaymentInterface $payment, int $amount, int $refundId): void
     {
+        Assert::isInstanceOf($payment, Payment::class);
         $this->prepare($payment);
         $details = $payment->getDetails();
 
@@ -94,12 +99,13 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
             $refundHistory = new RefundHistory();
             $refundHistory
                 ->setExternalId(null)
+                ->setPayment($payment)
                 ->setRefundPayment($refundPayment)
                 ->setValue($amount)
                 ->setProcessed(true)
             ;
             $this->payplugRefundHistoryRepository->add($refundHistory);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $message = $exception->getMessage();
 
             $this->session->getFlashBag()->add('error', $message);
@@ -119,7 +125,8 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
         if (
             !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()
+            (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName() &&
+            OneyGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName())
         ) {
             return;
         }
