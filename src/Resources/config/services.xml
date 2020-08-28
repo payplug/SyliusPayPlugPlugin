@@ -4,12 +4,17 @@
     <imports>
         <import resource="services/gateway.xml" />
         <import resource="services/action.xml" />
+        <import resource="services/client.xml" />
+        <import resource="services/no_defaults.xml" />
     </imports>
 
     <services>
-        <service id="payplug_sylius_payplug_plugin.api_client.payplug" class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient" public="true" />
+        <defaults autowire="true" autoconfigure="true">
+            <bind key="$oneyClient" type="service" id="payplug_sylius_payplug_plugin.api_client.oney" />
+        </defaults>
 
-        <service id="payplug_sylius_payplug_plugin.repository.payment" class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository" parent="sylius.repository.payment" />
+        <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
+                   resource="../../../src/{Checker,EventSubscriber}/*" />
 
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
             <argument type="service" id="sm.factory" />

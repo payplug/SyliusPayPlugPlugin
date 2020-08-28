@@ -11,14 +11,30 @@ use Webmozart\Assert\Assert;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
 {
+    /** @var \Payplug\Payplug */
+    private $configuration;
+
+    public function __construct(string $secretKey)
+    {
+        $this->configuration = \Payplug\Payplug::init(['secretKey' => $secretKey]);
+    }
+
+    /**
+     * @deprecated use DI instead to get a pre-configured client
+     */
     public function initialise(string $secretKey): void
     {
         \Payplug\Payplug::setSecretKey($secretKey);
     }
 
+    public function getPermissions(): array
+    {
+        return \Payplug\Authentication::getPermissions($this->configuration) ?? [];
+    }
+
     public function createPayment(array $data): Payment
     {
-        $payment = \Payplug\Payment::create($data);
+        $payment = \Payplug\Payment::create($data, $this->configuration);
         Assert::isInstanceOf($payment, Payment::class);
 
         return $payment;
@@ -27,7 +43,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     public function refundPayment(string $paymentId): Refund
     {
         /** @var Refund|null $refund */
-        $refund = \Payplug\Refund::create($paymentId);
+        $refund = \Payplug\Refund::create($paymentId, null, $this->configuration);
         Assert::isInstanceOf($refund, Refund::class);
 
         return $refund;
@@ -39,7 +55,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         $refund = \Payplug\Refund::create($paymentId, [
             'amount' => $amount,
             'metadata' => ['refund_from_sylius' => true],
-        ]);
+        ], $this->configuration);
         Assert::isInstanceOf($refund, Refund::class);
 
         return $refund;
@@ -47,12 +63,12 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function treat(string $input): IVerifiableAPIResource
     {
-        return \Payplug\Notification::treat($input);
+        return \Payplug\Notification::treat($input, $this->configuration);
     }
 
     public function retrieve(string $paymentId): Payment
     {
-        $payment = \Payplug\Payment::retrieve($paymentId);
+        $payment = \Payplug\Payment::retrieve($paymentId, $this->configuration);
         Assert::isInstanceOf($payment, Payment::class);
 
         return $payment;
