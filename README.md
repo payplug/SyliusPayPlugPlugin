@@ -49,7 +49,9 @@ In the channel settings, the base currency must be set to EUR because the paymen
 
    ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
+    mkdir -p templates/bundles/SyliusShopBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
     ```
 
 5. Import custom form row theme in your `config/packages/twig.yaml` file:
@@ -85,9 +87,10 @@ In the channel settings, the base currency must be set to EUR because the paymen
             - payplug
     ```
 
-10. Clear cache:
+10. Dump assets and clear cache:
 
     ```shell
+    bin/console assets:install public --symlink
     bin/console cache:clear
     ```
 
