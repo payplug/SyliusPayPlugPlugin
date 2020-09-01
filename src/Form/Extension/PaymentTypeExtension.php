@@ -16,15 +16,20 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PaymentTypeExtension extends AbstractTypeExtension
 {
     /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
     private $session;
 
-    public function __construct(SessionInterface $session)
+    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    private $translator;
+
+    public function __construct(SessionInterface $session, TranslatorInterface $translator)
     {
         $this->session = $session;
+        $this->translator = $translator;
     }
 
     /**
@@ -65,12 +70,20 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 }
 
                 // TODO : Ref US 1.14.1 validate shipment data for mandatory fields
+                $errors = [];
                 if ($shippingAddress->getCompany() === null) {
-                    $event->getForm()->addError(new FormError('Oney est disponible que quand la companie est remplie dans l\'adresse.'));
+                    $errors[] = new FormError(
+                        $this->translator->trans('payplug_sylius_payplug_plugin.form.missing_company')
+                    );
+                }
+
+                if (\count($errors) > 0) {
+                    \array_walk($errors, static function (FormError $error) use ($event): void {
+                        $event->getForm()->addError($error);
+                    });
 
                     return;
                 }
-
                 $data = $event->getForm()->get('oney_payment_choice')->getData();
                 $this->session->set('oney_payment_method', $data);
             });
