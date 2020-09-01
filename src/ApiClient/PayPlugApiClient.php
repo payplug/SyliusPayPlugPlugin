@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
+use Payplug\Core\HttpClient;
+use Payplug\Notification;
+use Payplug\Payplug;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
+use PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin;
+use Sylius\Bundle\CoreBundle\Application\Kernel;
 use Webmozart\Assert\Assert;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
 {
     public function initialise(string $secretKey): void
     {
-        \Payplug\Payplug::setSecretKey($secretKey);
+        Payplug::setSecretKey($secretKey);
+        HttpClient::addDefaultUserAgentProduct(
+            'PayPlug-Sylius',
+            PayPlugSyliusPayPlugPlugin::VERSION,
+            'Sylius/' . Kernel::VERSION
+        );
     }
 
     public function createPayment(array $data): Payment
@@ -47,7 +57,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function treat(string $input): IVerifiableAPIResource
     {
-        return \Payplug\Notification::treat($input);
+        return Notification::treat($input);
     }
 
     public function retrieve(string $paymentId): Payment
