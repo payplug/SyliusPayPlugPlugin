@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
 use Payplug\Authentication;
+use Payplug\Exception\UnauthorizedException;
 use Payplug\Payplug;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
@@ -36,7 +37,11 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function getPermissions(): array
     {
-        return \Payplug\Authentication::getPermissions($this->configuration) ?? [];
+        try {
+            return \Payplug\Authentication::getPermissions($this->configuration) ?? [];
+        } catch (UnauthorizedException $exception) {
+            return [];
+        }
     }
 
     public function getConfiguration(): Payplug
