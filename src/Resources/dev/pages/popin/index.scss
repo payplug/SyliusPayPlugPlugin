@@ -97,6 +97,10 @@
                     margin-bottom: 1em;
                 }
             }
+            &.reasons {
+              // avoid superposition of closing button over text
+              max-width: 95%;
+            }
         }
     }
 

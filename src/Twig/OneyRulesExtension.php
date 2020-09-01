@@ -126,16 +126,13 @@ final class OneyRulesExtension extends AbstractExtension
                     ),
                 ];
             }
-
-            return [
-                'reasons' => $data,
-                'trans_params' => $transParam,
-            ];
         } catch (\Throwable $throwable) {
-            return [
-                'reasons' => $data,
-                'trans_params' => $transParam,
-            ];
+            // do nothing
         }
+
+        return [
+            'reasons' => $data,
+            'trans_params' => array_merge([], ...$transParam),
+        ];
     }
 }
