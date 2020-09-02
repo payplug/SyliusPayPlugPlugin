@@ -5,6 +5,8 @@ sylius_ui:
                 pay_with_oney:
                     template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/product/pay_with_oney.html.twig'
                     priority: 29 # After price widget
+                    context:
+                        legacy_event: 'sonata.block.event.sylius.shop.product.show.after_price'
         sylius.shop.cart.summary.totals:
             blocks:
                 pay_with_oney:
@@ -12,16 +14,10 @@ sylius_ui:
         sylius.shop.layout.javascripts:
             blocks:
                 webfontloader:
-                    template: '@SyliusUi/_javascripts.html.twig'
-                    context:
-                        path: 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js'
+                    template: '@PayPlugSyliusPayPlugPlugin/javascripts/webfont_loader.html.twig'
                 oney_common:
-                    template: '@SyliusUi/_javascripts.html.twig'
-                    context:
-                        path: 'bundles/payplugsyliuspayplugplugin/assets/oney/common/index.js'
+                    template: '@PayPlugSyliusPayPlugPlugin/javascripts/oney_common.html.twig'
         sylius.shop.layout.stylesheets:
             blocks:
                 oney_common:
-                    template: '@SyliusUi/_stylesheets.html.twig'
-                    context:
-                        path: 'bundles/payplugsyliuspayplugplugin/assets/oney/common/index.css'
+                    template: '@PayPlugSyliusPayPlugPlugin/stylesheets/oney_common.html.twig'
