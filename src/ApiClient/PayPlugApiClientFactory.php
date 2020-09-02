@@ -26,6 +26,6 @@ final class PayPlugApiClientFactory
             throw new \LogicException('Not yet gateway created for ' . $factoryName);
         }
 
-        return new PayPlugApiClient($gatewayConfig->getConfig()['secretKey']);
+        return new PayPlugApiClient($gatewayConfig->getConfig()['secretKey'], $factoryName);
     }
 }

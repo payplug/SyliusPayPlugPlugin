@@ -44,26 +44,8 @@ In the channel settings, the base currency must be set to EUR because the paymen
         - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/config.yml" }
         - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/services.xml" }
     ```
-
-4. Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
-
-   ```shell
-    mkdir -p templates/bundles/SyliusAdminBundle/
-    mkdir -p templates/bundles/SyliusShopBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
-    ```
-
-5. Import custom form row theme in your `config/packages/twig.yaml` file:
-    ```yaml
-   twig:
-       ...
-       form_themes: [
-           '@PayPlugSyliusPayPlugPlugin/form/form_gateway_config_row.html.twig'
-       ]
-    ```
-
-6. Copy templates and migrations
+   
+4. Copy templates and migrations
     ```shell
     cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
     cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
@@ -71,7 +53,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
-7. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus:
+5. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus:
 
     ```yaml
     framework:
@@ -79,7 +61,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
             default_bus: sylius_refund_plugin.command_bus
     ```
 
-9. Add PayPlug to refundable payment method for Sylius Refund Plugin
+6. Add PayPlug to refundable payment method for Sylius Refund Plugin
 
     ```yaml
     parameters:
@@ -87,7 +69,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
             - payplug
     ```
 
-10. Dump assets and clear cache:
+7. Dump assets and clear cache:
 
     ```shell
     bin/console assets:install public --symlink
@@ -131,6 +113,20 @@ Run the below command to see what Symfony services are shared with this plugin:
 ```bash
 $ bin/console debug:container payplug_sylius_payplug_plugin
 ```
+
+### Template overriding
+
+This plugin override some sylius templates. 
+If you plan override them also, you should retrieve them in your application.
+
+Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
+
+   ```shell
+    mkdir -p templates/bundles/SyliusAdminBundle/
+    mkdir -p templates/bundles/SyliusShopBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
+    ```
 
 ### Assets
 

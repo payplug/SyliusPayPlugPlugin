@@ -25,7 +25,7 @@
                  class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
             <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory</argument>
             <tag name="payum.gateway_factory_builder"
-                 factory="oney"/>
+                 factory="payplug_oney"/>
         </service>
         <service id="payplug_sylius_payplug_plugin.form.type.oney_gateway_configuration"
                  class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\OneyGatewayConfigurationType">

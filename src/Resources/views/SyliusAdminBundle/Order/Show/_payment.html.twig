@@ -3,7 +3,7 @@
 
 <div class="item">
     <div class="right floated content">
-        {% include '@SyliusAdmin/Common/Label/paymentState.html.twig' with {'data': payment.state} %}
+        {% include '@SyliusAdmin/Common/Label/paymentState.html.twig' ignore missing with {'data': payment.state} %}
     </div>
     <i class="large payment icon"></i>
     <div class="content">

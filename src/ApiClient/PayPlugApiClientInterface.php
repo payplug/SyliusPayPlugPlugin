@@ -17,6 +17,8 @@ interface PayPlugApiClientInterface
 
     public const STATUS_CAPTURED = 'captured';
 
+    public const STATUS_AUTHORIZED = 'authorized';
+
     public const FAILED = 'failed';
 
     public const REFUNDED = 'refunded';
@@ -29,6 +31,8 @@ interface PayPlugApiClientInterface
     public function getConfiguration(): Payplug;
 
     public function getAccount(): array;
+
+    public function getGatewayFactoryName(): string;
 
     public function getPermissions(): array;
 

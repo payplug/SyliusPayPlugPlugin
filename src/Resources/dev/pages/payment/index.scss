@@ -1,0 +1,58 @@
+.oney-payment-choice {
+    display: none;
+
+    &__container {
+        display: flex;
+    }
+
+    &__item {
+        &:first-of-type {
+            margin-right: 1em;
+        }
+
+        input {
+            display: none;
+
+            &:checked + label {
+                border-color: #81bc00;
+
+                &:after {
+                    content: "✓";
+                    opacity: 1;
+                    top: -6px;
+                    background-color: #81bc00;
+                }
+            }
+        }
+
+        label {
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            border: 1px solid #cccccc;
+            box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
+            margin: 1rem 0;
+            padding: 1em 1em;
+            border-radius: .28571429rem;
+            transition: border-color 300ms ease-in-out;
+
+            &:after {
+                content: "";
+                opacity: 0;
+                color: white;
+                position: absolute;
+                text-align: center;
+                right: -6px;
+                border-radius: 20px;
+                width: 20px;
+                height: 20px;
+                display: block;
+                transition: opacity 300ms ease-in-out;
+            }
+
+            img {
+                vertical-align: text-bottom;
+            }
+        }
+    }
+}

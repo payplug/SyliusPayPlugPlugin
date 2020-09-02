@@ -1,3 +1,5 @@
+{% set factoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+
 <div class="item" {{ sylius_test_html_attribute('payment-item') }}>
     <div class="field">
         <div class="ui radio checkbox" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
@@ -6,7 +8,7 @@
     </div>
     <div class="content">
         <a class="header">
-            {% if method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+            {% if method.gatewayConfig.factoryName == factoryName %}
                 <label for="{{ form.vars.id }}" data-test-payment-method-label="">
                     <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
                 </label>
@@ -17,6 +19,11 @@
         {% if method.description is not null %}
             <div class="description">
                 <p>{{ method.description }}</p>
+            </div>
+        {% endif %}
+        {% if method.gatewayConfig.factoryName == factoryName and form.parent.parent.oney_payment_choice is defined %}
+            <div class="oney-payment-choice" data-oney-input-id="{{ form.vars.id }}">
+                {{ form_row(form.parent.parent.oney_payment_choice) }}
             </div>
         {% endif %}
     </div>
