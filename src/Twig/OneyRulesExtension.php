@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
@@ -51,8 +52,7 @@ final class OneyRulesExtension extends AbstractExtension
     {
         /** @var \Sylius\Component\Core\Model\Order $currentCart */
         $currentCart = $this->cartContext->getCart();
-        if ($currentCart->getTotalQuantity() > 999) {
-            // TODO change this value to one from gateway
+        if ($currentCart->getTotalQuantity() > OneyGatewayFactory::MAX_ITEMS) {
             return false;
         }
 
@@ -86,9 +86,9 @@ final class OneyRulesExtension extends AbstractExtension
         /** @var \Sylius\Component\Core\Model\Order $currentCart */
         $currentCart = $this->cartContext->getCart();
 
-        if ($currentCart->getTotalQuantity() > 999) {
+        if ($currentCart->getTotalQuantity() > OneyGatewayFactory::MAX_ITEMS) {
             $data[] = 'payplug_sylius_payplug_plugin.ui.too_much_quantity';
-            $transParam[] = ['%max_articles%' => 1000];
+            $transParam[] = ['%max_articles%' => OneyGatewayFactory::MAX_ITEMS + 1];
         }
 
         try {

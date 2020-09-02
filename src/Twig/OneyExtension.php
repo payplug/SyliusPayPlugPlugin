@@ -57,8 +57,6 @@ final class OneyExtension extends AbstractExtension
 
     public function isOneyEnabled(): bool
     {
-        // TODO : add cache on this response
-
         /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfig|null $gateway */
         $gateway = $this->gatewayConfigRepository->findOneBy(['factoryName' => OneyGatewayFactory::FACTORY_NAME]);
         if (null === $gateway) {
