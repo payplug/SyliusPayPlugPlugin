@@ -155,3 +155,6 @@ $ bin/phpspec run
 ## License
 
 This library is under the MIT license.
+
+## Doc
+- [Release Process](RELEASE.md)
