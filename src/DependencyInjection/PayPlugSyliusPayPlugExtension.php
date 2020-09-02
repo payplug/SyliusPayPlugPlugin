@@ -27,7 +27,9 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
 
     public function prepend(ContainerBuilder $container): void
     {
-        if (\version_compare(Kernel::VERSION, '1.7.0', '<') === true) {
+        /** @var bool $isBelow17 */
+        $isBelow17 = version_compare(Kernel::VERSION, '1.7.0', '<');
+        if (true === $isBelow17) {
             // Current version is below 1.7, load legacy sonata block
             // This part can be dropped when we no longer support sylius < 1.7
             $this->loadSonataEvent($container);
@@ -50,16 +52,20 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         ]);
     }
 
-    private function loadSonataEvent(ContainerBuilder $container)
+    private function loadSonataEvent(ContainerBuilder $container): void
     {
-        $uiConfig = Yaml::parse(\file_get_contents(\dirname(__DIR__) . '/Resources/config/ui.yaml'));
+        $uiConfig = file_get_contents(\dirname(__DIR__) . '/Resources/config/ui.yaml');
+        if (false === $uiConfig) {
+            return;
+        }
+        $uiConfig = Yaml::parse($uiConfig);
 
         foreach ($uiConfig['sylius_ui']['events'] as $event => $blocks) {
             $tag = [
                 'event' => 'sonata.block.event.' . $event,
-                'method' => 'onBlockEvent'
+                'method' => 'onBlockEvent',
             ];
-            \array_map(function (array $data, string $key) use ($tag, $event, $container) {
+            \array_map(static function (array $data, string $key) use ($tag, $event, $container): void {
                 $key = 'payplug.' . $event . '.' . $key;
                 $sonataEvent = $data['context']['legacy_event'] ?? $tag['event'];
                 $definition = $container->register($key, BlockEventListener::class);
