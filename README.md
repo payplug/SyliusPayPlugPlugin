@@ -93,7 +93,7 @@ In the channel settings, the base currency must be set to EUR because the paymen
     bin/console assets:install public --symlink
     bin/console cache:clear
     ```
-
+    
 ## Cronjob
 In the case when the IPN is blocked, you can set cron job every minute that updates the payment status.
 
@@ -130,6 +130,41 @@ Run the below command to see what Symfony services are shared with this plugin:
  
 ```bash
 $ bin/console debug:container payplug_sylius_payplug_plugin
+```
+
+### Assets
+
+For the sake of quickness, the usage of a tool like [Parcel](https://github.com/parcel-bundler/parcel/tree/1.x) shows that its efficiency is indeed undeniable.
+
+So, if you want to edit assets (js, scss, ...) you'll likely go into `src/Resources/dev` and run `yarn install`.
+
+Then, you'll find a list of commands inside `package.json` which are :
+
+```bash
+$ (cd src/Resources/dev && yarn build)
+``` 
+
+Or, if you prefer the dev mode; a `watch` command that compile in real time, then run:
+
+```bash
+$ (cd src/Resources/dev && yarn dev)
+``` 
+
+You can add any resources as far as Parcel can go, but those have to be located in `/pages` otherwize they won't be compiled.
+
+Assets can be found in `src/Resources/public/assets/oney` so you'll have to install them in your application by running:
+
+```bash
+$ bin/console assets:install --symlink
+# or
+$ bin/console sylius:theme:assets:install --symlink # e.g if bootstrapTheme is enabled 
+``` 
+
+To make it fully compatible with [Sylius Bootstrap Theme](https://github.com/Sylius/BootstrapTheme), some lines have to be added to ̀the main entrypoint (such as `app.js`) of the theme:
+
+```js
+const $ = require('jquery');
+global.$ = global.jQuery = $;
 ```
 
 ## Testing
