@@ -17,5 +17,4 @@ interface OneyCheckerInterface
      * For x products, check if oney allow it
      */
     public function isNumberOfProductEligible(int $numberOfProduct): bool;
-
 }

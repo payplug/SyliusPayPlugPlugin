@@ -57,7 +57,7 @@ class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInter
             }
 
             if (!$this->oneyChecker->isEnabled() ||
-                !$this->oneyChecker->isPriceEligible($payment->getAmount(), $activeCurrencyCode) ||
+                !$this->oneyChecker->isPriceEligible($payment->getAmount() ?? 0, $activeCurrencyCode) ||
                 !$this->oneyChecker->isNumberOfProductEligible($order->getItemUnits()->count())) {
                 unset($supportedMethods[$key]);
             }
