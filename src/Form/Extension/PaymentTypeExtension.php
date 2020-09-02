@@ -45,10 +45,10 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     '4x' => 'oney_x4_with_fees',
                 ],
             ])->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
-                /** @var \Sylius\Component\Core\Model\PaymentMethod $paymentMethod */
+                /** @var \Sylius\Component\Core\Model\PaymentMethod|null $paymentMethod */
                 $paymentMethod = $event->getForm()->get('method')->getData();
 
-                if (!$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface) {
+                if (null === $paymentMethod || !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface) {
                     return;
                 }
 

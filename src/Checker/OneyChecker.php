@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 
 final class OneyChecker implements OneyCheckerInterface
 {
@@ -37,5 +38,10 @@ final class OneyChecker implements OneyCheckerInterface
         }
 
         return $price >= $minAmount && $price <= $maxAmount;
+    }
+
+    public function isNumberOfProductEligible(int $numberOfProduct): bool
+    {
+        return $numberOfProduct <= OneyGatewayFactory::MAX_ITEMS;
     }
 }

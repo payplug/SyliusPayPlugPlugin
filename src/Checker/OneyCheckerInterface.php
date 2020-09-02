@@ -12,4 +12,10 @@ interface OneyCheckerInterface
      * For a given price, check if oney allow it
      */
     public function isPriceEligible(int $price, string $currency = 'EUR'): bool;
+
+    /**
+     * For x products, check if oney allow it
+     */
+    public function isNumberOfProductEligible(int $numberOfProduct): bool;
+
 }

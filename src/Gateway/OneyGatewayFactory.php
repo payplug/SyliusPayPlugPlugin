@@ -10,12 +10,5 @@ final class OneyGatewayFactory extends AbstractGatewayFactory
 
     public const FACTORY_TITLE = 'Oney by PayPlug';
 
-    public const AUTHORIZED_CURRENCIES = [
-        'EUR' => [
-            'min_amount' => 10000,
-            'max_amount' => 300000,
-        ],
-    ];
-
     public const MAX_ITEMS = 999;
 }

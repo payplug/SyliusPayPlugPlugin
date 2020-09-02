@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
+use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -22,12 +23,17 @@ class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInter
     /** @var PaymentMethodsResolverInterface */
     private $decorated;
 
+    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface */
+    private $oneyChecker;
+
     public function __construct(
+        PaymentMethodsResolverInterface $decorated,
         CurrencyContextInterface $currencyContext,
-        PaymentMethodsResolverInterface $decorated
+        OneyCheckerInterface $oneyChecker
     ) {
         $this->currencyContext = $currencyContext;
         $this->decorated = $decorated;
+        $this->oneyChecker = $oneyChecker;
     }
 
     public function getSupportedMethods(BasePaymentInterface $payment): array
@@ -50,29 +56,10 @@ class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInter
                 continue;
             }
 
-            /*
-               TODO: ApiClient check if oney is available
-               OneyChecker->isEnabled()
-            */
-
-            if (!\array_key_exists($activeCurrencyCode, OneyGatewayFactory::AUTHORIZED_CURRENCIES)) {
+            if (!$this->oneyChecker->isEnabled() ||
+                !$this->oneyChecker->isPriceEligible($payment->getAmount(), $activeCurrencyCode) ||
+                !$this->oneyChecker->isNumberOfProductEligible($order->getItemUnits()->count())) {
                 unset($supportedMethods[$key]);
-
-                continue;
-            }
-
-            if ($payment->getAmount() < OneyGatewayFactory::AUTHORIZED_CURRENCIES[$activeCurrencyCode]['min_amount']
-                || $payment->getAmount() > OneyGatewayFactory::AUTHORIZED_CURRENCIES[$activeCurrencyCode]['max_amount']
-            ) {
-                unset($supportedMethods[$key]);
-
-                continue;
-            }
-
-            if ($order->getItemUnits()->count() > OneyGatewayFactory::MAX_ITEMS) {
-                unset($supportedMethods[$key]);
-
-                continue;
             }
         }
 
