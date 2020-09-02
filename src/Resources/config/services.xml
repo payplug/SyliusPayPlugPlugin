@@ -73,12 +73,12 @@
             <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
         </service>
 
-        <service id="sylius.twig.extension.form_test_attribute_array" class="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension">
+        <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension">
             <argument>%kernel.environment%</argument>
             <tag name="twig.extension" />
         </service>
 
-        <service id="sylius.twig.extension.form_test_attribute_name" class="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension">
+        <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension">
             <argument>%kernel.environment%</argument>
             <tag name="twig.extension" />
         </service>
