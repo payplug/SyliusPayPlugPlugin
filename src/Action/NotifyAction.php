@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
+use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
@@ -128,18 +129,17 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
         }
 
         // Oney is reviewing the payer’s file
-        if (\property_exists($resource, 'payment_method') &&
-            $resource->payment_method !== null &&
-            $resource->payment_method['is_pending'] === true) {
+        if ($resource->__isset('payment_method') &&
+            $resource->__get('payment_method') !== null &&
+            $resource->__get('payment_method')['is_pending'] === true) {
             return true;
         }
 
         $now = new \DateTimeImmutable();
-        if (\property_exists($resource, 'authorization') &&
-            $resource->authorization !== null &&
-            \property_exists($resource->authorization, 'expires_at') &&
-            $resource->authorization->expires_at !== null &&
-            $now < $now->setTimestamp($resource->authorization->expires_at)) {
+        if ($resource->__isset('authorization') &&
+            $resource->__get('authorization') instanceof PaymentAuthorization &&
+            $resource->__get('authorization')->__get('expires_at') !== null &&
+            $now < $now->setTimestamp($resource->__get('authorization')->__get('expires_at'))) {
             return true;
         }
 
