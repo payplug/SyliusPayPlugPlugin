@@ -50,8 +50,7 @@
                 decorates="sylius.payment_methods_resolver"
                 public="false"
         >
-            <argument type="service" id="sylius.context.currency"/>
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator.inner"/>
         </service>
 
         <service

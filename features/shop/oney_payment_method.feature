@@ -14,6 +14,7 @@ Feature: Paying with Oney during checkout
         And the store ships everywhere for free
         And the store has "DHL" shipping method with "0.00" fee
         And I am logged in as "john@bitbag.pl"
+        And Oney is enabled
 
     @ui
     Scenario: I can use Oney with cart of 100 euros
@@ -83,6 +84,15 @@ Feature: Paying with Oney during checkout
     Scenario: I cannot use Oney with cart of 999 items and less than "€100.00"
         Given the store has a product "PHP T-Shirt" priced at "€90.00"
         And I add 999 of them to my cart
+        And I chose "DHL" shipping method
+        Then I should be on the checkout payment step
+        And I should not be able to select "Oney" payment method
+
+    @ui
+    Scenario: I cannot use Oney as payment method when it's disabled in my account
+        Given Oney is disabled
+        Given the store has a product "PHP T-Shirt" priced at "€100"
+        And I added product "PHP T-Shirt" to the cart
         And I chose "DHL" shipping method
         Then I should be on the checkout payment step
         And I should not be able to select "Oney" payment method

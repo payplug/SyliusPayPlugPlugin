@@ -52,7 +52,7 @@ final class OneyRulesExtension extends AbstractExtension
     {
         /** @var \Sylius\Component\Core\Model\Order $currentCart */
         $currentCart = $this->cartContext->getCart();
-        if ($currentCart->getTotalQuantity() > OneyGatewayFactory::MAX_ITEMS) {
+        if (!$this->oneyChecker->isNumberOfProductEligible($currentCart->getTotalQuantity())) {
             return false;
         }
 
@@ -86,7 +86,7 @@ final class OneyRulesExtension extends AbstractExtension
         /** @var \Sylius\Component\Core\Model\Order $currentCart */
         $currentCart = $this->cartContext->getCart();
 
-        if ($currentCart->getTotalQuantity() > OneyGatewayFactory::MAX_ITEMS) {
+        if (!$this->oneyChecker->isNumberOfProductEligible($currentCart->getTotalQuantity())) {
             $data[] = 'payplug_sylius_payplug_plugin.ui.too_much_quantity';
             $transParam[] = ['%max_articles%' => OneyGatewayFactory::MAX_ITEMS + 1];
         }
