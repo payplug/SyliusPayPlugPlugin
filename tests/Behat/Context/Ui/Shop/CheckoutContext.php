@@ -135,4 +135,20 @@ final class CheckoutContext implements Context
     {
         Assert::eq($order->getShippingState(), $state);
     }
+
+    /**
+     * @Given Oney is enabled
+     */
+    public function oneyIsEnabled(): void
+    {
+        $this->payPlugApiMocker->enableOney();
+    }
+
+    /**
+     * @Given Oney is disabled
+     */
+    public function oneyIsDisabled(): void
+    {
+        $this->payPlugApiMocker->disableOney();
+    }
 }
