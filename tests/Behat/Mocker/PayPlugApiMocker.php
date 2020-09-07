@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker;
 
-use function bin2hex;
 use Mockery;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use function random_bytes;
 use stdClass;
 use Sylius\Behat\Service\Mocker\MockerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -57,7 +55,7 @@ final class PayPlugApiMocker
         $refund = Mockery::mock('refund', Refund::class);
         $refund->amount = 34000;
         $refund->currency = 'EUR';
-        $refund->id = bin2hex(random_bytes(10));
+        $refund->id = \bin2hex(\random_bytes(10));
         $refund->payment_id = 'pay_2PykkdCqJLzJ7nYM5gV4RZ';
         $refund->metadata = ['requested_by' => 'payplug'];
         $mock

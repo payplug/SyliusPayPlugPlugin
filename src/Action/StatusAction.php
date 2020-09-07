@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
-use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\ApiAwareInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
@@ -16,16 +14,14 @@ use Payum\Core\Reply\HttpRedirect;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
 use Payum\Core\Request\GetToken;
-use function sleep;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Order\OrderTransitions;
 
-final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
+final class StatusAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
-    use ApiAwareTrait;
 
     /** @var FactoryInterface */
     private $stateMachineFactory;
@@ -62,7 +58,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
             && isset($httpRequest->query['payum_token'])) {
             $this->gateway->execute($token = new GetToken($httpRequest->query['payum_token']));
-            sleep(1);
+            \sleep(1);
             // TODO: check if we can refresh status in a better way than redirect
             throw new HttpRedirect($token->getToken()->getTargetUrl());
         }
