@@ -65,6 +65,7 @@
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="sylius.repository.payment" />
+            <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
             <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />

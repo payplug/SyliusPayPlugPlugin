@@ -21,6 +21,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Core\Repository\PaymentRepositoryInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Sylius\RefundPlugin\Event\RefundPaymentGenerated;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentTransitions;
@@ -58,9 +59,13 @@ final class RefundPaymentGeneratedHandler
     /** @var TranslatorInterface */
     private $translator;
 
+    /** @var RepositoryInterface */
+    private $refundPaymentRepository;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         PaymentRepositoryInterface $paymentRepository,
+        RepositoryInterface $refundPaymentRepository,
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
         FactoryInterface $stateMachineFactory,
         RefundPaymentProcessor $refundPaymentProcessor,
@@ -71,6 +76,7 @@ final class RefundPaymentGeneratedHandler
     ) {
         $this->entityManager = $entityManager;
         $this->paymentRepository = $paymentRepository;
+        $this->refundPaymentRepository = $refundPaymentRepository;
         $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
         $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentProcessor = $refundPaymentProcessor;
@@ -104,7 +110,7 @@ final class RefundPaymentGeneratedHandler
                 $refundHistory->getRefundPayment() === null
             ) {
                 /** @var RefundPayment $refundPayment */
-                $refundPayment = $this->entityManager->getRepository(RefundPayment::class)->find($message->id());
+                $refundPayment = $this->refundPaymentRepository->find($message->id());
                 $stateMachine = $this->stateMachineFactory->get($refundPayment, RefundPaymentTransitions::GRAPH);
                 $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
                 $this->entityManager->flush();
