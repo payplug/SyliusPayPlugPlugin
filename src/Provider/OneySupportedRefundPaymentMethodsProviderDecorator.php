@@ -46,7 +46,7 @@ final class OneySupportedRefundPaymentMethodsProviderDecorator implements Refund
         /** @var OrderInterface|null $order */
         $order = $this->orderRepository->findOneByNumber($request->get('orderNumber'));
 
-        if (!$order instanceof OrderInterface || $this->isPayPlugPayment($order)) {
+        if (!$order instanceof OrderInterface || $this->isOneyPayment($order)) {
             return $paymentMethods;
         }
 
@@ -60,7 +60,7 @@ final class OneySupportedRefundPaymentMethodsProviderDecorator implements Refund
         return $paymentMethods;
     }
 
-    private function isPayPlugPayment(OrderInterface $order): bool
+    private function isOneyPayment(OrderInterface $order): bool
     {
         $firstPayment = $order->getPayments()->first();
         if (!$firstPayment instanceof PaymentInterface) {
