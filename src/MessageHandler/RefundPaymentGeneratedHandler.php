@@ -136,7 +136,7 @@ final class RefundPaymentGeneratedHandler
         $this->refundPaymentProcessor->processWithAmount($payment, $message->amount(), $message->id());
 
         /** @var RefundPayment $refundPayment */
-        $refundPayment = $this->entityManager->getRepository(RefundPayment::class)->find($message->id());
+        $refundPayment = $this->refundPaymentRepository->find($message->id());
         $stateMachine = $this->stateMachineFactory->get($refundPayment, RefundPaymentTransitions::GRAPH);
         $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
 
