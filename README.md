@@ -51,7 +51,7 @@ For file `config/routes.yaml`
 
     ```yaml
     sylius_payplug:
-        resource: "../../../src/Resources/config/routing.yaml"
+        resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
     ```
    
 4. Copy templates and migrations
