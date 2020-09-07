@@ -22,7 +22,7 @@ final class Version20200824142425 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('ALTER TABLE payplug_refund_history ADD createdAt DATETIME NOT NULL');
+        $this->addSql('ALTER TABLE payplug_refund_history ADD createdAt DATETIME NULL');
         $this->addSql('ALTER TABLE payplug_refund_history DROP FOREIGN KEY FK_2D7BF4D84C3A3BB');
         $this->addSql('ALTER TABLE 
           payplug_refund_history 
