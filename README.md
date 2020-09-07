@@ -17,42 +17,29 @@
 In the channel settings, the base currency must be set to EUR because the payment gateway only works in this currency. The plugin in the local environment will not work properly because you will not be notified of the status of payments from the payment gateway.
 
 ## Installation
+1. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
 
-1. Add the bundle and dependencies in your composer.json :
+    ```yaml
+    framework:
+        messenger:
+            default_bus: sylius_refund_plugin.command_bus
+    ```
+
+2. Add the bundle and dependencies in your composer.json :
 
     With **Symfony Flex** :
 
         composer config extra.symfony.allow-contrib true
         composer require payplug/sylius-payplug-plugin
 
-    Yon can now skip the next three steps.
-
-    Or **manually** :
-
-        composer require payplug/sylius-payplug-plugin
-
-2. Enable the plugin in your `config/bundles.php` file by add
-
-    ```php
-    PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin::class => ['all' => true],
-    ```
-
-3. Import required config in your `config/packages/sylius_payplug.yaml` file:
-
-    ```yaml
-    imports:
-        - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/config.yml" }
-        - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/services.xml" }
-    ```
-
-4. Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
+3. Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
 
    ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
-5. Import custom form row theme in your `config/packages/twig.yaml` file:
+4. Import custom form row theme in your `config/packages/twig.yaml` file:
     ```yaml
    twig:
        ...
@@ -61,14 +48,14 @@ In the channel settings, the base currency must be set to EUR because the paymen
        ]
     ```
 
-6. Copy custom form row theme template
+5. Copy custom form row theme template
 
     ```shell
     mkdir -p templates/form/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
     ```
 
-7. Copy templates and migrations
+6. Copy templates and migrations
     ```shell
     cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
     cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
@@ -76,15 +63,8 @@ In the channel settings, the base currency must be set to EUR because the paymen
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
-8. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus:
 
-    ```yaml
-    framework:
-        messenger:
-            default_bus: sylius_refund_plugin.command_bus
-    ```
-
-9. Add PayPlug to refundable payment method for Sylius Refund Plugin
+7. Add PayPlug to refundable payment method for Sylius Refund Plugin inside `config/services.yaml`
 
     ```yaml
     parameters:
@@ -92,20 +72,11 @@ In the channel settings, the base currency must be set to EUR because the paymen
             - payplug
     ```
 
-10. Clear cache:
+8. Clear cache:
 
     ```shell
     bin/console cache:clear
     ```
-
-## Cronjob
-In the case when the IPN is blocked, you can set cron job every minute that updates the payment status.
-
-For example:
-
-```bash
-* * * * * bin/console payplug:update-payment-state
-```
 
 ## Logs
 
