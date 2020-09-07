@@ -42,6 +42,45 @@ Feature: Refunding order's Oney payment
         And I should be able to refund 1 "Red Arrow" products
 
     @ui
+    Scenario: Total refund order from PayPlug portal
+        When I refund totally this order's from payplug portal
+        And I want to refund some units of order "00000001"
+        Then this order refunded total should be "$340.00"
+
+    @ui
+    Scenario: Partial refund of one product from PayPlug portal
+        When I refund partially this order's from payplug portal with 3.00
+        And I want to refund some units of order "00000001"
+        Then 1st "Green Arrow" product should have "$3.00" refunded
+        And this order refunded total should be "$3.00"
+
+    @ui
+    Scenario: Two Partial refund of one product from PayPlug portal
+        When I refund partially this order's from payplug portal with 3.00
+        When I refund partially this order's from payplug portal with 7.00
+        And I want to refund some units of order "00000001"
+        Then 1st "Green Arrow" product should have "$10.00" refunded
+        And this order refunded total should be "$10.00"
+
+    @ui
+    Scenario: Two Partial refund from PayPlug portal
+        When I refund partially this order's from payplug portal with 13.00
+        When I refund partially this order's from payplug portal with 17.00
+        And I want to refund some units of order "00000001"
+        Then 1st "Green Arrow" product should have "$10.00" refunded
+        Then 1st "Red Arrow" product should have "$20.00" refunded
+        And this order refunded total should be "$30.00"
+
+    @ui
+    Scenario: Two Partial refund with total amount from PayPlug portal
+        When I refund partially this order's from payplug portal with 10.00
+        When I refund partially this order's from payplug portal with 330.00
+        And I want to refund some units of order "00000001"
+        Then 1st "Green Arrow" product should have "$10.00" refunded
+        Then 1st "Red Arrow" product should have "$330.00" refunded
+        And this order refunded total should be "$340.00"
+
+    @ui
     Scenario: Should not be able to refund another item before last transaction exceed 48 hours
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
@@ -57,7 +96,7 @@ Feature: Refunding order's Oney payment
         Then I should see an error message "Another transaction have been made less than 48 hours ago."
 
     @ui
-    Scenario: Should not be able to refund another item before last transaction exceed 48 hours
+    Scenario: Should be able to refund another item when last transaction is at least 48 hours old
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
         Then there should be "Cash on delivery" payment method
@@ -71,4 +110,3 @@ Feature: Refunding order's Oney payment
         When For this order I decide to refund 1st "Red Arrow" product with "Oney" payment
         Then this order refunded total should be "$340.00"
         Then I should see a success message "Selected order units have been successfully refunded"
-
