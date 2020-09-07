@@ -125,8 +125,10 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
         if (
             !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName() &&
-            OneyGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName())
+            !\in_array($paymentMethod->getGatewayConfig()->getFactoryName(), [
+                PayPlugGatewayFactory::FACTORY_NAME,
+                OneyGatewayFactory::FACTORY_NAME,
+            ], true)
         ) {
             return;
         }
