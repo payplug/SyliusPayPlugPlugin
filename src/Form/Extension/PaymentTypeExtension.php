@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Form\Extension;
 
-use function array_walk;
-use function count;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
@@ -81,8 +79,8 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     );
                 }
 
-                if (count($errors) > 0) {
-                    array_walk($errors, static function (FormError $error) use ($event): void {
+                if (\count($errors) > 0) {
+                    \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->addError($error);
                     });
 
