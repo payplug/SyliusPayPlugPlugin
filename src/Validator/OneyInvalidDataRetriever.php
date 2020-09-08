@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Validator;
 
 use libphonenumber\PhoneNumberUtil;
+use libphonenumber\PhoneNumberType;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Customer\Model\CustomerInterface;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Webmozart\Assert\Assert;
 
 final class OneyInvalidDataRetriever
@@ -33,15 +36,15 @@ final class OneyInvalidDataRetriever
         Assert::notNull($billingAddress);
 
         if (!$this->isCustomerEmailValid($customer)) {
-            $fields[] = 'email';
+            $fields['email'] = EmailType::class;
         }
 
         if (!$this->isPhoneAddressValid($shippingAddress)) {
-            $fields[] = 'shipping_address';
+            $fields['shipping_phone'] = TelType::class;
         }
 
         if (!$this->isPhoneAddressValid($billingAddress)) {
-            $fields[] = 'billing_address';
+            $fields['billing_phone'] = TelType::class;
         }
 
         return $fields;
@@ -49,7 +52,8 @@ final class OneyInvalidDataRetriever
 
     private function isCustomerEmailValid(CustomerInterface $customer): bool
     {
-        return \mb_strpos($customer->getEmail(), '+') === false;
+        return $customer->getEmail() !== null &&
+            \mb_strpos($customer->getEmail(), '+') === false;
     }
 
     private function isPhoneAddressValid(AddressInterface $address): bool
@@ -58,11 +62,15 @@ final class OneyInvalidDataRetriever
         if (null === $phoneNumber) {
             return false;
         }
-        $parsedNumber = $this->phoneNumberUtil->parse($phoneNumber, $address->getCountryCode());
-        if (null === $parsedNumber || !$this->phoneNumberUtil->isValidNumber($parsedNumber)) {
+        try {
+            $parsedNumber = $this->phoneNumberUtil->parse($phoneNumber, $address->getCountryCode());
+            if (!$this->phoneNumberUtil->isValidNumber($parsedNumber)) {
+                return false;
+            }
+
+            return $this->phoneNumberUtil->getNumberType($parsedNumber) === PhoneNumberType::MOBILE;
+        } catch (\Throwable $throwable) {
             return false;
         }
-
-        return $this->phoneNumberUtil->getNumberType($parsedNumber) === PhoneNumberType::MOBILE;
     }
 }
