@@ -25,6 +25,10 @@
             <div class="oney-payment-choice" data-oney-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.oney_payment_choice) }}
             </div>
+            {% if app.session is not null and app.session.get('oney_has_error') == true %}
+                {# TODO: Register here variable needed for displaying popin to complete info #}
+                {# Controller to call in AJAX : {{ path('payplug_sylius_oney_complete_info') }} #}
+            {% endif %}
         {% endif %}
     </div>
 </div>
