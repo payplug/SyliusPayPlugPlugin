@@ -1,0 +1,5 @@
+payplug_sylius_oney_complete_info:
+    path: /payplug/oney_complete_info
+    methods: ['GET', 'POST']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CompleteInfoController'
