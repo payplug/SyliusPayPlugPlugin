@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Form\Extension;
 
+use PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
-use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -26,10 +26,17 @@ final class PaymentTypeExtension extends AbstractTypeExtension
     /** @var \Symfony\Contracts\Translation\TranslatorInterface */
     private $translator;
 
-    public function __construct(SessionInterface $session, TranslatorInterface $translator)
-    {
+    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker */
+    private $orderChecker;
+
+    public function __construct(
+        SessionInterface $session,
+        TranslatorInterface $translator,
+        OneyOrderChecker $orderChecker
+    ) {
         $this->session = $session;
         $this->translator = $translator;
+        $this->orderChecker = $orderChecker;
     }
 
     /**
@@ -44,7 +51,12 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     '3x' => 'oney_x3_with_fees',
                     '4x' => 'oney_x4_with_fees',
                 ],
-            ])->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
+            ])
+            ->addEventListener(FormEvents::PRE_SET_DATA, function (): void {
+                // Remove on preset data, it'll be readded if needed in post_submit
+                $this->session->remove('oney_has_error');
+            })
+            ->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
                 /** @var \Sylius\Component\Core\Model\PaymentMethod|null $paymentMethod */
                 $paymentMethod = $event->getForm()->get('method')->getData();
 
@@ -64,38 +76,31 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     return;
                 }
 
-                $shippingAddress = $order->getShippingAddress();
-                if (!$shippingAddress instanceof AddressInterface) {
-                    return;
-                }
-
-                // TODO : Ref US 1.14.1 validate shipment data for mandatory fields
                 $errors = [];
-                if ($shippingAddress->getCompany() === null) {
+                if (!$this->orderChecker->isOrderInfoCorrect($order)) {
                     $errors[] = new FormError(
-                        $this->translator->trans('payplug_sylius_payplug_plugin.form.missing_company')
+                        $this->translator->trans('payplug_sylius_payplug_plugin.form.oney_error')
                     );
                 }
+                // Possible other checks here
 
                 if (\count($errors) > 0) {
                     \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->addError($error);
                     });
+                    $this->session->set('oney_has_error', true);
 
                     return;
                 }
+
                 $data = $event->getForm()->get('oney_payment_choice')->getData();
                 $this->session->set('oney_payment_method', $data);
-            });
+            })
+        ;
     }
 
     public static function getExtendedTypes(): array
     {
         return [PaymentType::class];
-    }
-
-    public function getExtendedType(): string
-    {
-        return PaymentType::class;
     }
 }
