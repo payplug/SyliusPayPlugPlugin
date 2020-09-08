@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
+use Sylius\Component\Core\Model\OrderInterface;
+
 interface OneyCheckerInterface
 {
     public function isEnabled(): bool;
