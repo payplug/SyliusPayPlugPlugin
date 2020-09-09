@@ -15,6 +15,7 @@ payplug_sylius_payplug_plugin:
         or_pay_with_oney: Ou payez en
         pay: Paiement
         by_credit_cart: Par carte bancaire
+        cancel: Annuler
         popin_close: Fermer
         popin_paiement_desc: |
             <p><strong> Apport : %apport% <br>
@@ -41,3 +42,12 @@ payplug_sylius_payplug_plugin:
         invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
     form:
         oney_error: Il y a des erreurs dans votre panier pour utiliser oney
+        complete_info:
+            missing_title: Informations manquantes
+            success_title: Information enregistrées
+            success_instruction: Cliquez à nouveau sur "Suivant" pour continuer
+            email: |
+                Merci de saisir votre adresse email :
+            phone: |
+                Merci de saisir votre numéro de téléphone portable:
+            submit: Valider et continuer

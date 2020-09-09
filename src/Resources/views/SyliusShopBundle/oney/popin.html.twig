@@ -6,7 +6,7 @@
             <span></span><span></span>
         </a>
     </div>
-        <div class="oney-popin__content">
+    <div class="oney-popin__content">
         {% if data.reasons is defined and data.reasons is not empty %}
             {% for reason in data.reasons %}
                 <p class="reasons">{{ reason|trans(data.trans_params) }}</p>

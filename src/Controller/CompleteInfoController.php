@@ -8,12 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Validator\OneyInvalidDataRetriever;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Form;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Constraints\NotBlank;
 use Webmozart\Assert\Assert;
 
 final class CompleteInfoController extends AbstractController
@@ -39,12 +39,6 @@ final class CompleteInfoController extends AbstractController
         Assert::isInstanceOf($order, OrderInterface::class);
         $form = $this->createFormForOrder($order);
 
-        if (Request::METHOD_GET === $request->getMethod()) {
-            return $this->render('@PayPlugSyliusPayPlugPlugin/form/complete_info_popin.html.twig', [
-                'form' => $form->createView()
-            ]);
-        }
-
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
@@ -62,8 +56,14 @@ final class CompleteInfoController extends AbstractController
                 $order->getShippingAddress()->setPhoneNumber($data['phone']);
             }
             $entityManager->flush();
+
+            return $this->json([]);
         }
-        return $this->json([]);
+
+        return $this->render('@PayPlugSyliusPayPlugPlugin/form/complete_info_popin.html.twig', [
+            'form' => $form->createView()
+        ]);
+
     }
 
     private function createFormForOrder(OrderInterface $order): Form
@@ -78,7 +78,9 @@ final class CompleteInfoController extends AbstractController
         }
 
         foreach ($fields as $field => $type) {
-            $formBuilder->add($field, $type);
+            $formBuilder->add($field, $type, ['required' => true, 'constraints' => [
+                new NotBlank(),
+            ]]);
         }
 
         $formBuilder->add('submit', SubmitType::class);
