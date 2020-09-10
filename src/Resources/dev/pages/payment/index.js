@@ -44,6 +44,8 @@ const Payment = {
   modalSubmit(evt) {
     const self = this;
     evt.preventDefault();
+    $(evt.currentTarget).addClass('loading');
+
     $.ajax({
       method: "post",
       url: completeInfoRoute,
