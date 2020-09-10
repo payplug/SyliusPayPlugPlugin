@@ -6,7 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Validator\OneyInvalidDataRetriever;
 
 final class OneyChecker implements OneyCheckerInterface
 {
@@ -15,7 +14,8 @@ final class OneyChecker implements OneyCheckerInterface
     /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
     private $client;
 
-    public function __construct(PayPlugApiClientInterface $oneyClient) {
+    public function __construct(PayPlugApiClientInterface $oneyClient)
+    {
         $this->client = $oneyClient;
     }
 
