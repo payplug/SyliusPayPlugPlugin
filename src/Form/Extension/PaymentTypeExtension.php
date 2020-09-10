@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Form\Extension;
 
+use PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
-use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
-use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Core\Model\PaymentMethod;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -22,16 +20,23 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PaymentTypeExtension extends AbstractTypeExtension
 {
-    /** @var SessionInterface */
+    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
     private $session;
 
-    /** @var TranslatorInterface */
+    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
     private $translator;
 
-    public function __construct(SessionInterface $session, TranslatorInterface $translator)
-    {
+    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker */
+    private $orderChecker;
+
+    public function __construct(
+        SessionInterface $session,
+        TranslatorInterface $translator,
+        OneyOrderChecker $orderChecker
+    ) {
         $this->session = $session;
         $this->translator = $translator;
+        $this->orderChecker = $orderChecker;
     }
 
     /**
@@ -46,8 +51,13 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     '3x' => 'oney_x3_with_fees',
                     '4x' => 'oney_x4_with_fees',
                 ],
-            ])->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
-                /** @var PaymentMethod|null $paymentMethod */
+            ])
+            ->addEventListener(FormEvents::PRE_SET_DATA, function (): void {
+                // Remove on preset data, it'll be readded if needed in post_submit
+                $this->session->remove('oney_has_error');
+            })
+            ->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
+                /** @var \Sylius\Component\Core\Model\PaymentMethod|null $paymentMethod */
                 $paymentMethod = $event->getForm()->get('method')->getData();
 
                 if (null === $paymentMethod || !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface) {
@@ -59,36 +69,34 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     return;
                 }
 
-                /** @var PaymentInterface $payment */
+                /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
                 $payment = $event->getData();
                 $order = $payment->getOrder();
                 if (!$order instanceof OrderInterface) {
                     return;
                 }
 
-                $shippingAddress = $order->getShippingAddress();
-                if (!$shippingAddress instanceof AddressInterface) {
-                    return;
-                }
-
-                // TODO : Ref US 1.14.1 validate shipment data for mandatory fields
                 $errors = [];
-                if ($shippingAddress->getCompany() === null) {
+                if (!$this->orderChecker->isOrderInfoCorrect($order)) {
                     $errors[] = new FormError(
-                        $this->translator->trans('payplug_sylius_payplug_plugin.form.missing_company')
+                        $this->translator->trans('payplug_sylius_payplug_plugin.form.oney_error')
                     );
                 }
+                // Possible other checks here
 
                 if (\count($errors) > 0) {
                     \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->addError($error);
                     });
+                    $this->session->set('oney_has_error', true);
 
                     return;
                 }
+
                 $data = $event->getForm()->get('oney_payment_choice')->getData();
                 $this->session->set('oney_payment_method', $data);
-            });
+            })
+        ;
     }
 
     public static function getExtendedTypes(): array
@@ -96,6 +104,9 @@ final class PaymentTypeExtension extends AbstractTypeExtension
         return [PaymentType::class];
     }
 
+    /**
+     * @deprecated since SF4.2
+     */
     public function getExtendedType(): string
     {
         return PaymentType::class;

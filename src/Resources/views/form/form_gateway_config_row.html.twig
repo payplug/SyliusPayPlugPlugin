@@ -11,13 +11,13 @@
 
 {% block _sylius_payment_method_gatewayConfig_config_cgv_added_label -%}
     <{{ element|default('label') }}{% if label_attr %}{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}>
-        {{- label|trans(label_translation_parameters, translation_domain) | raw -}}
+        {{- label|trans(label_translation_parameters, translation_domain)|raw -}}
     </{{ element|default('label') }}>
 {%- endblock %}
 
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
-    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/pages/payment/index.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/pages/payment/index.css') }}">
+    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
 
     <div class="oney-payment-choice__container">
         {% for keyChoice, choice in form.vars.choices %}

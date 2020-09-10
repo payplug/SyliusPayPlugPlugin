@@ -6,3 +6,4 @@ payplug_sylius_payplug_plugin:
         not_enabled: |
             Attention ! Pour utiliser la méthode de paiement “Oney by PayPlug” en mode LIVE,
             merci de nous contacter à support@payplug.com
+        not_valid_phone_number: Cette valeur n'est pas un numéro de téléphone portable valide.
