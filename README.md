@@ -17,7 +17,7 @@
 In the channel settings, the base currency must be set to EUR because the payment gateway only works in this currency. The plugin in the local environment will not work properly because you will not be notified of the status of payments from the payment gateway.
 
 ## Installation
-1. (optional) If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
+1. If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
 
     ```yaml
     framework:
