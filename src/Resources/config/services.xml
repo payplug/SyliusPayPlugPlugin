@@ -65,10 +65,14 @@
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="sylius.repository.payment" />
+            <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
             <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
             <argument type="service" id="logger" />
+            <argument type="service" id="session" />
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="translator.default" />
             <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
         </service>
 
@@ -80,6 +84,48 @@
         <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension">
             <argument>%kernel.environment%</argument>
             <tag name="twig.extension" />
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction">
+            <argument type="service" id="session" />
+            <argument type="service" id="sylius_refund.repository.refund_payment" />
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplier" />
+            <argument type="service" id="router" />
+            <argument type="service" id="sylius_refund_plugin.event_bus" />
+            <argument type="service" id="Sylius\RefundPlugin\Provider\RelatedPaymentIdProviderInterface" />
+            <tag name="controller.service_arguments"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction">
+            <argument type="service" id="sylius_refund_plugin.command_bus" />
+            <argument type="service" id="session" />
+            <argument type="service" id="router" />
+            <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator" />
+            <argument type="service" id="monolog.logger" />
+
+            <tag name="controller.service_arguments"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decorates="Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface"
+                decoration-inner-name="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"
+                public="false"
+        >
+            <argument type="service" id="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
         </service>
     </services>
 </container>

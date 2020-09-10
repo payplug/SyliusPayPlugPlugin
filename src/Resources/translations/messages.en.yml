@@ -7,3 +7,4 @@ payplug_sylius_payplug_plugin:
         test_mode: TEST Mode
         payplug_id: 'PayPlug ID : %paymentId%'
         oney: Oney
+        oney_transaction_less_than_forty_eight_hours: Another transaction have been made less than 48 hours ago.

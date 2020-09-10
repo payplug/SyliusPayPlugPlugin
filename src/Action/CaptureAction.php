@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use ArrayAccess;
+use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payum\Core\Action\ActionInterface;
@@ -91,11 +93,11 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     {
         return
             $request instanceof Capture &&
-            $request->getModel() instanceof \ArrayAccess
+            $request->getModel() instanceof ArrayAccess
         ;
     }
 
-    private function addNotificationUrl(TokenInterface $token, ArrayObject $details): \Payum\Core\Bridge\Spl\ArrayObject
+    private function addNotificationUrl(TokenInterface $token, ArrayObject $details): ArrayObject
     {
         if (null === $this->tokenFactory) {
             throw new RuntimeException();
@@ -110,7 +112,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         return $details;
     }
 
-    private function createPayment(ArrayObject $details): \Payplug\Resource\Payment
+    private function createPayment(ArrayObject $details): Payment
     {
         $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
         $details['payment_id'] = $payment->id;

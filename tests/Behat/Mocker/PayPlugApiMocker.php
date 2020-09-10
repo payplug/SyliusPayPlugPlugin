@@ -93,6 +93,7 @@ final class PayPlugApiMocker
         ;
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->is_paid = true;
+        $payment->created_at = 1598273578;
         $mock
             ->shouldReceive('treat')
             ->andReturn($payment)

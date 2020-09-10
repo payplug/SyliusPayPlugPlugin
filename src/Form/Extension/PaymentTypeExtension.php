@@ -9,6 +9,8 @@ use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethod;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -20,10 +22,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PaymentTypeExtension extends AbstractTypeExtension
 {
-    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
+    /** @var SessionInterface */
     private $session;
 
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    /** @var TranslatorInterface */
     private $translator;
 
     public function __construct(SessionInterface $session, TranslatorInterface $translator)
@@ -45,7 +47,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     '4x' => 'oney_x4_with_fees',
                 ],
             ])->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
-                /** @var \Sylius\Component\Core\Model\PaymentMethod|null $paymentMethod */
+                /** @var PaymentMethod|null $paymentMethod */
                 $paymentMethod = $event->getForm()->get('method')->getData();
 
                 if (null === $paymentMethod || !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface) {
@@ -57,7 +59,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     return;
                 }
 
-                /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
+                /** @var PaymentInterface $payment */
                 $payment = $event->getData();
                 $order = $payment->getOrder();
                 if (!$order instanceof OrderInterface) {

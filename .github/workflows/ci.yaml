@@ -142,6 +142,11 @@ jobs:
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
 
+            - name: Sylius - Get routes from Plugin
+              working-directory: ./sylius
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/routes.yaml config/routes.yaml
+
             - name: Sylius - Get migrations from Plugin
               working-directory: ./sylius
               run: |
