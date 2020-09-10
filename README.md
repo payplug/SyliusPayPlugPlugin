@@ -27,7 +27,6 @@ In the channel settings, the base currency must be set to EUR because the paymen
 
 2. Add the bundle and dependencies in your composer.json :
 
-    With **Symfony Flex** :
 
         composer config extra.symfony.allow-contrib true
         composer require payplug/sylius-payplug-plugin
