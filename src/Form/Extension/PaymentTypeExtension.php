@@ -103,4 +103,12 @@ final class PaymentTypeExtension extends AbstractTypeExtension
     {
         return [PaymentType::class];
     }
+
+    /**
+     * @deprecated since SF4.2
+     */
+    public function getExtendedType(): string
+    {
+        return PaymentType::class;
+    }
 }
