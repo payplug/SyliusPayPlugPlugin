@@ -13,6 +13,7 @@ use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 
 final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaymentMethodsProviderInterface
 {
@@ -25,14 +26,24 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
     /** @var OrderRepositoryInterface */
     private $orderRepository;
 
+    /** @var FlashBagInterface */
+    private $flashBag;
+
+    /** @var array */
+    private $supportedRefundGateways;
+
     public function __construct(
         RefundPaymentMethodsProviderInterface $decorated,
         RequestStack $requestStack,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        FlashBagInterface $flashBag,
+        array $supportedRefundGateways
     ) {
         $this->decorated = $decorated;
         $this->requestStack = $requestStack;
         $this->orderRepository = $orderRepository;
+        $this->flashBag = $flashBag;
+        $this->supportedRefundGateways = $supportedRefundGateways;
     }
 
     public function findForChannel(ChannelInterface $channel): array
@@ -48,6 +59,13 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
 
         if (!$order instanceof OrderInterface || $this->isPayPlugPayment($order)) {
             return $paymentMethods;
+        }
+
+        if (null !== $order->getLastPayment() &&
+            null !== $order->getLastPayment()->getMethod() &&
+            $order->getLastPayment()->getMethod()->getCode() === PayPlugGatewayFactory::FACTORY_NAME &&
+            !\in_array(PayPlugGatewayFactory::FACTORY_NAME, $this->supportedRefundGateways, true)) {
+            $this->flashBag->add('info', 'payplug_sylius_payplug_plugin.ui.payplug_refund_gateway_is_not_activated');
         }
 
         foreach ($paymentMethods as $key => $paymentMethod) {
