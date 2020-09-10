@@ -201,6 +201,18 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $details['authorized_amount'] = $details['amount'];
         unset($details['amount']);
 
+        $billing = $details['billing'];
+        if ($billing['company_name'] === null) {
+            $billing['company_name'] = \sprintf('%s %s', $billing['first_name'], $billing['last_name']);
+        }
+        $details['billing'] = $billing;
+
+        $shipping = $details['shipping'];
+        if ($shipping['company_name'] === null) {
+            $shipping['company_name'] = \sprintf('%s %s', $shipping['first_name'], $shipping['last_name']);
+        }
+        $details['shipping'] = $shipping;
+
         return $details;
     }
 
