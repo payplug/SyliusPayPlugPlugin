@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
 use Payplug\Authentication;
 use Payplug\Exception\UnauthorizedException;
+use Payplug\Notification;
 use Payplug\Payplug;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
@@ -17,7 +18,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 {
     private const CURRENT_API_VERSION = '2019-08-06';
 
-    /** @var \Payplug\Payplug */
+    /** @var Payplug */
     private $configuration;
 
     /** @var string */
@@ -25,7 +26,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function __construct(string $secretKey, ?string $factoryName = null)
     {
-        $this->configuration = \Payplug\Payplug::init([
+        $this->configuration = Payplug::init([
             'secretKey' => $secretKey,
             'apiVersion' => self::CURRENT_API_VERSION,
         ]);
@@ -37,7 +38,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
      */
     public function initialise(string $secretKey): void
     {
-        \Payplug\Payplug::setSecretKey($secretKey);
+        Payplug::setSecretKey($secretKey);
     }
 
     public function getAccount(): array
@@ -53,7 +54,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     public function getPermissions(): array
     {
         try {
-            return \Payplug\Authentication::getPermissions($this->configuration) ?? [];
+            return Authentication::getPermissions($this->configuration) ?? [];
         } catch (UnauthorizedException $exception) {
             return [];
         }
@@ -95,7 +96,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function treat(string $input): IVerifiableAPIResource
     {
-        return \Payplug\Notification::treat($input, $this->configuration);
+        return Notification::treat($input, $this->configuration);
     }
 
     public function retrieve(string $paymentId): Payment

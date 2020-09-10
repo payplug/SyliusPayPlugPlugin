@@ -85,6 +85,21 @@ final class PayPlugContext implements Context
         $this->paymentMethodManager->flush();
     }
 
+    /**
+     * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode other than PayPlug payment gateway
+     */
+    public function theStoreHasAPaymentMethodWithACodeOtherThanPayplugPaymentGateway(string $paymentMethodName, string $paymentMethodCode): void
+    {
+        $this->createPaymentMethodPayPlug(
+            $paymentMethodName,
+            $paymentMethodCode,
+            $paymentMethodCode,
+            ''
+        );
+
+        $this->paymentMethodManager->flush();
+    }
+
     private function createPaymentMethodPayPlug(
         string $name,
         string $code,

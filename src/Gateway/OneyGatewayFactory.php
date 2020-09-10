@@ -11,4 +11,6 @@ final class OneyGatewayFactory extends AbstractGatewayFactory
     public const FACTORY_TITLE = 'Oney by PayPlug';
 
     public const MAX_ITEMS = 999;
+
+    public const REFUND_WAIT_TIME_IN_HOURS = 48;
 }

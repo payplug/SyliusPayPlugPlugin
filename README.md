@@ -37,12 +37,21 @@ In the channel settings, the base currency must be set to EUR because the paymen
     PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin::class => ['all' => true],
     ```
 
-3. Import required config in your `config/packages/sylius_payplug.yaml` file:
+3. Import required config and routes:
+
+For file `config/packages/sylius_payplug.yaml`
 
     ```yaml
     imports:
         - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/config.yml" }
         - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/services.xml" }
+    ```
+   
+For file `config/routes.yaml`
+
+    ```yaml
+    sylius_payplug:
+        resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
     ```
    
 4. Copy templates and migrations

@@ -15,6 +15,7 @@ use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
 use Payum\Core\Request\GetToken;
 use SM\Factory\FactoryInterface;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Order\OrderTransitions;
 
@@ -22,7 +23,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
 
-    /** @var \SM\Factory\FactoryInterface */
+    /** @var FactoryInterface */
     private $stateMachineFactory;
 
     /** @var RefundPaymentHandlerInterface */
@@ -128,7 +129,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
             return;
         }
 
-        /** @var \Sylius\Component\Core\Model\OrderInterface $order */
+        /** @var OrderInterface $order */
         $order = $payment->getOrder();
 
         $this->stateMachineFactory
