@@ -41,7 +41,7 @@ payplug_sylius_payplug_plugin:
         too_much_quantity: Votre panier doit contenir moins de %max_articles% articles pour pouvoir payer avec Oney.
         invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
     form:
-        oney_error: Il y a des erreurs dans votre panier pour utiliser oney
+        oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
             missing_title: Informations manquantes
             success_title: Information enregistrées
