@@ -23,6 +23,7 @@
                 <label for="{{ form.email.vars.id }}"
                        class="required">{{ 'payplug_sylius_payplug_plugin.form.complete_info.email'|trans }}</label>
                 {{ form_widget(form.email, {attr: {class: 'required'}}) }}
+                {{ form_errors(form.email) }}
             </div>
         {% endif %}
         <div>

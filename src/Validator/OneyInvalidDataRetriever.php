@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Validator;
 
-use libphonenumber\PhoneNumberUtil;
 use libphonenumber\PhoneNumberType;
+use libphonenumber\PhoneNumberUtil;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Customer\Model\CustomerInterface;
@@ -62,6 +62,7 @@ final class OneyInvalidDataRetriever
         if (null === $phoneNumber) {
             return false;
         }
+
         try {
             $parsedNumber = $this->phoneNumberUtil->parse($phoneNumber, $address->getCountryCode());
             if (!$this->phoneNumberUtil->isValidNumber($parsedNumber)) {
