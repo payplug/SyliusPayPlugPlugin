@@ -131,3 +131,23 @@
         margin: 1.25em 0;
     }
 }
+
+@media screen and (max-width: 768px) {
+    .oney-popin {
+        top: 60px;
+        left: 0;
+        transform: none;
+
+        &__header {
+            a.close {
+                padding: 10px 50px;
+            }
+        }
+
+        &:after {
+            transform: rotate(-90deg);
+            right: calc(50% - 10px);
+            top: -30px;
+        }
+    }
+}
