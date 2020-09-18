@@ -54,6 +54,7 @@ final class OneySimulationExtension extends AbstractExtension
 
             return \array_merge(
                 [
+                    'current_total' => $data['amount'],
                     'min_amount' => $accountData['configuration']['oney']['min_amounts'][$currency],
                     'max_amount' => $accountData['configuration']['oney']['max_amounts'][$currency],
                 ],
