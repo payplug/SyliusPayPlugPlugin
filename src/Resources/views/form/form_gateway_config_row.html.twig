@@ -23,6 +23,18 @@
     <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
 
     <div class="oney-payment-choice__container">
+        <div class="oney-payment-choice__tab">
+            <a class="tablink" href="javascript:void(0);" data-id="oney_x3_with_fees">
+                <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x.svg') }}">
+                <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
+                <p>{{ ('payplug_sylius_payplug_plugin.ui.3x_payment')|trans }}</p>
+            </a>
+            <a class="tablink" href="javascript:void(0);" data-id="oney_x4_with_fees">
+                <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/4x.svg') }}">
+                <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
+                <p>{{ ('payplug_sylius_payplug_plugin.ui.4x_payment')|trans }}</p>
+            </a>
+        </div>
         {% for keyChoice, choice in form.vars.choices %}
             {% set nx_with_fees = (choice.value|split('_', 2))[1] %}
             {% set grand_total = data[nx_with_fees]['down_payment_amount'] %}

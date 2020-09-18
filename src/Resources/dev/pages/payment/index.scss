@@ -1,6 +1,10 @@
 .oney-payment-choice {
     display: none;
 
+    &__tab {
+        display: none;
+    }
+
     &__container {
         display: flex;
         margin: 1rem 0;
@@ -9,7 +13,7 @@
     &__item {
         flex: 1 1 auto;
 
-        &:first-of-type {
+        &--oney_x3_with_fees {
             margin-right: 1em;
         }
 
@@ -170,6 +174,35 @@
 
 @media screen and (max-width: 991px) {
     .oney-payment-choice {
+        &__tab {
+            display: flex;
+            justify-content: space-between;
+
+            .tablink {
+                padding: 1rem 0;
+                flex: 1;
+                text-align: center;
+                border: 1px solid #cccccc;
+                border-bottom: 0;
+
+                &.active {
+                    border-bottom: 5px solid #81bc00;
+                }
+
+                p {
+                    color: #000000;
+                }
+
+                &:first-of-type {
+                    border-right: 0;
+                }
+            }
+        }
+
+        &__header {
+            display: none;
+        }
+
         &__container {
             display: block;
         }
@@ -181,9 +214,22 @@
         }
 
         &__item {
-            &:first-of-type {
-                margin-right: 0;
+            display: none;
+
+            input:checked + label {
+                border-color: #cccccc;
+                background-color: #ffffff;
+            }
+
+            label {
+                border-top-right-radius: 0;
+                border-top-left-radius: 0;
+            }
+
+            &--oney_x3_with_fees {
                 margin-bottom: 1rem;
+                margin-right: 0;
+                display: block;
             }
         }
     }

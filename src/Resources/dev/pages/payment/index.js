@@ -11,6 +11,7 @@ const Payment = {
     if (typeof completeInfoRoute !== "undefined") {
       Payment.modalAppear();
     }
+    Payment.tabs();
   },
   toggleGateway() {
     const self = this;
@@ -23,6 +24,28 @@ const Payment = {
       } else {
         $(self.options.trigger).slideUp();
       }
+    });
+  },
+  tabs() {
+    if (window.innerWidth <= 991) {
+      $(".oney-payment-choice__item").hide();
+      setTimeout(function () {
+        $.each($(".oney-payment-choice__input"), (k, el) => {
+          if ($(el).is(":checked")) {
+            $(el).parent().show();
+            $(`a.tablink[data-id=${$(el).val()}]`).addClass("active");
+          }
+        });
+      }, 1);
+    }
+    $.each($("a.tablink"), (k, el) => {
+      $(el).click(function (evt) {
+        $("a.tablink").removeClass("active");
+        $(this).addClass("active");
+        $(".oney-payment-choice__item").hide();
+        $(`#${$(this).data("id")}`).show();
+        $(`input[value=${$(this).data("id")}`).prop("checked", true);
+      });
     });
   },
   modalAppear() {
@@ -44,7 +67,7 @@ const Payment = {
   modalSubmit(evt) {
     const self = this;
     evt.preventDefault();
-    $(evt.currentTarget).addClass('loading');
+    $(evt.currentTarget).addClass("loading");
 
     $.ajax({
       method: "post",
