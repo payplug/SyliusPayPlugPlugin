@@ -14,6 +14,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
+use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -91,16 +92,20 @@ final class RefundPaymentGeneratedHandler
         try {
             /** @var PaymentInterface $payment */
             $payment = $this->paymentRepository->find($message->paymentId());
-            /** @var PaymentMethodInterface|null $paymentMethod */
             $paymentMethod = $payment->getMethod();
 
             if (null === $paymentMethod) {
                 return;
             }
 
-            $gatewayName = $paymentMethod->getCode();
-
-            if ($gatewayName !== PayPlugGatewayFactory::FACTORY_NAME && $gatewayName !== OneyGatewayFactory::FACTORY_NAME) {
+            if (
+                !$paymentMethod instanceof PaymentMethodInterface ||
+                !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
+                !\in_array($paymentMethod->getGatewayConfig()->getFactoryName(), [
+                    PayPlugGatewayFactory::FACTORY_NAME,
+                    OneyGatewayFactory::FACTORY_NAME,
+                ], true)
+            ) {
                 return;
             }
 
