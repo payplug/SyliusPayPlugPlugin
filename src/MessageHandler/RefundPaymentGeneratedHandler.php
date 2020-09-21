@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
+use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Repository\PaymentRepositoryInterface;
@@ -63,9 +64,10 @@ final class RefundPaymentGeneratedHandler
                 return;
             }
 
-            $gatewayName = $paymentMethod->getCode();
-
-            if ($gatewayName !== PayPlugGatewayFactory::FACTORY_NAME) {
+            if (
+                !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
+                PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()
+            ) {
                 return;
             }
 
