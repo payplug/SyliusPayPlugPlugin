@@ -6,7 +6,6 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
 use PHPUnit\Framework\MockObject\Generator;
-use PHPUnit\Framework\MockObject\Matcher\InvokedAtLeastOnce;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Admin\PaymentMethod\CreatePageInterface;
 use Webmozart\Assert\Assert;
 

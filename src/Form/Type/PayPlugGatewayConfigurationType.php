@@ -53,6 +53,7 @@ final class PayPlugGatewayConfigurationType extends AbstractType
                 // This listener will validate payplug ApiKey.
                 // @TODO remove it after merging projet-oney as there is now a Validator for this
                 $data = $event->getData();
+
                 try {
                     Assert::notEmpty($data['secretKey']);
                     \Payplug\Payplug::init(['secretKey' => $data['secretKey']]);
