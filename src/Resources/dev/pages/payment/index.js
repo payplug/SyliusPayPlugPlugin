@@ -12,6 +12,10 @@ const Payment = {
       Payment.modalAppear();
     }
     Payment.tabs();
+    $(window).on('resize', function () {
+      setTimeout(Payment.tabs, 100);
+    });
+    Payment.tabsHandler();
   },
   toggleGateway() {
     const self = this;
@@ -38,7 +42,12 @@ const Payment = {
           }
         });
       }, 1);
+    } else {
+      $(".oney-payment-choice__item").show();
+      $("a.tablink").removeClass("active");
     }
+  },
+  tabsHandler() {
     $.each($("a.tablink"), (k, el) => {
       $(el).click(function (evt) {
         $("a.tablink").removeClass("active");
