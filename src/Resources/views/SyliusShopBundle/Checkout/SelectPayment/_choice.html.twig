@@ -9,7 +9,7 @@
     <div class="content">
         <a class="header">
             {% if method.gatewayConfig.factoryName == factoryName %}
-                <label for="{{ form.vars.id }}" data-test-payment-method-label="">
+                <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
                     <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
                 </label>
             {% else %}
