@@ -45,7 +45,11 @@
                     id="oney_choice_{{ keyChoice }}"
                     name="{{ form.vars.full_name }}"
                     class="oney-payment-choice__input"
-                    {{ loop.index is same as(1) ? "checked" : "" }}
+                    {% if form.vars.value is not empty %}
+                        {{ form.vars.value == choice.value ? 'checked="checked"' : '' }}
+                    {% elseif loop.index is same as(1) %}
+                        checked="checked"
+                    {% endif %}
                 >
                 <label for="oney_choice_{{ keyChoice }}" class="oney-payment-choice__label">
                     <span class="oney-payment-choice__header">

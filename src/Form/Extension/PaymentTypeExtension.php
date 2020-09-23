@@ -56,6 +56,11 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 // Remove on preset data, it'll be readded if needed in post_submit
                 $this->session->remove('oney_has_error');
             })
+            ->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event): void {
+                if ($this->session->has('oney_payment_method')) {
+                    $event->getForm()->get('oney_payment_choice')->setData($this->session->get('oney_payment_method'));
+                }
+            })
             ->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
                 /** @var \Sylius\Component\Core\Model\PaymentMethod|null $paymentMethod */
                 $paymentMethod = $event->getForm()->get('method')->getData();
