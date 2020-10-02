@@ -11,6 +11,7 @@
     <services>
         <defaults autowire="true" autoconfigure="true">
             <bind key="$oneyClient" type="service" id="payplug_sylius_payplug_plugin.api_client.oney" />
+            <bind key="$payplugLogger" type="service" id="monolog.logger.payum" />
         </defaults>
 
         <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
