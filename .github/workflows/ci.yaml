@@ -1,4 +1,4 @@
-name: CI
+name: Tests
 
 on:
     push:
@@ -67,6 +67,9 @@ jobs:
             - name: PHPSpec - Run
               run: if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi
 
+            - name: PHPUnit - Run
+              run: if [ -f phpunit.xml.dist ]; then vendor/bin/phpunit; else echo PHPUnit config file does not exist, skipping step ; fi
+
 
     sylius:
         name: Behat (PHP ${{ matrix.php }} Sylius ${{ matrix.sylius }})
@@ -75,10 +78,12 @@ jobs:
             fail-fast: false
             matrix:
                 php: [7.2, 7.3, 7.4]
-                sylius: ['~1.5.0', '~1.6.0', '~1.7.0']
+                sylius: ['~1.5.0', '~1.6.0', '~1.7.0', '~1.8.0']
                 exclude:
                     - php: 7.2
                       sylius: '~1.7.0'
+                    - php: 7.2
+                      sylius: '~1.8.0'
 
         env:
             APP_ENV: test
@@ -143,19 +148,23 @@ jobs:
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
 
-            - name: Sylius - Get migrations from Plugin
+            - name: Sylius - Copy migration
               working-directory: ./sylius
               run: |
                   cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
                   cp -R vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
 
-            - name: Sylius - Init database
+            - name: Sylius - Migration config
               working-directory: ./sylius
-              run: php bin/console doctrine:database:create --if-not-exists
+              run: |
+                  echo '    migrations_paths:' >> config/packages/doctrine_migrations.yaml
+                  echo '            'DoctrineMigrations': 'src/Migrations'' >> config/packages/doctrine_migrations.yaml
+              if: matrix.sylius == '~1.8.0' || matrix.sylius == 'dev-master'
 
-            - name: Sylius - Update database schema
+            - name: Sylius - Set database config
               working-directory: ./sylius
-              run: php bin/console doctrine:migr:migr -n
+              run: |
+                  echo 'DATABASE_URL=mysql://root:@127.0.0.1:3306/scheduler_command_plugin_%kernel.environment%?serverVersion=mariadb-10.4.11' >> .env
 
             - name: Sylius - Install
               working-directory: ./sylius
@@ -165,14 +174,18 @@ jobs:
               working-directory: ./sylius
               run: yarn install && yarn build
 
+            - name: Sylius - Update dependencies # need to update sylius version
+              working-directory: ./sylius
+              run: composer update
+
             - name: Wkhtmltopdf - Install
               working-directory: ./sylius
               run: |
-                sudo apt-get update
-                sudo apt-get install xvfb libfontconfig wkhtmltopdf
-                printf '#!/bin/bash\nxvfb-run -a --server-args="-screen 0, 1024x768x24" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh
-                sudo chmod a+x /usr/bin/wkhtmltopdf.sh
-                sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
+                  sudo apt-get update
+                  sudo apt-get install xvfb libfontconfig wkhtmltopdf
+                  printf '#!/bin/bash\nxvfb-run -a --server-args="-screen 0, 1024x768x24" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh
+                  sudo chmod a+x /usr/bin/wkhtmltopdf.sh
+                  sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
 
             - name: Behat - Configure display
               working-directory: ./sylius
@@ -222,8 +235,9 @@ jobs:
 
         services:
             mariadb:
-                image: mariadb:latest
+                image: mariadb:10.4.11
                 ports:
                     - 3306:3306
                 env:
                     MYSQL_ALLOW_EMPTY_PASSWORD: true
+                options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
