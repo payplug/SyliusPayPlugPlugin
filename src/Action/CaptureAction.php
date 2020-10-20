@@ -80,6 +80,12 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
+        if (isset($details['status']) && $details['status'] === 'pending') {
+            // We previously made a payment but not yet "authorized",
+            // Unset current status to allow to use payplug to change payment method
+            unset($details['status']);
+        }
+
         $payment = $this->createPayment($details);
 
         $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
