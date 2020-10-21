@@ -14,7 +14,13 @@
 <p align="center">This plugin allows you to integrate PayPlug payment with Sylius platform app including payment features and refunding orders.</p>
 
 ## Requirements
-In the channel settings, the base currency must be set to EUR because the payment gateway only works in this currency. The plugin in the local environment will not work properly because you will not be notified of the status of payments from the payment gateway.
+
+In the channel settings, the base currency must be set to **EUR** because the payment gateway only works in this currency. 
+
+In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
+
+> #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
+> More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
 
 ## Installation
 1. If you don't use symfony/messenger component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
