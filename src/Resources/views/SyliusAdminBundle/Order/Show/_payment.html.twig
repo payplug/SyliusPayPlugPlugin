@@ -3,7 +3,7 @@
 
 <div class="item">
     <div class="right floated content">
-        {% include '@SyliusAdmin/Common/Label/paymentState.html.twig' with {'data': payment.state} %}
+        {{ label.default(('sylius.ui.'~payment.state)|trans) }}
     </div>
     <i class="large payment icon"></i>
     <div class="content">
