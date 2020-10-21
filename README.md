@@ -109,10 +109,6 @@ If you want to follow the logs in the production environment, you need to add th
               type: stream
               path: "%kernel.logs_dir%/%kernel.environment%.log"
 ```
-
-## IPN testing on the local machine
-
-In the configuration of the payment gateway in the admin panel, set your url (eg from [ngrok](https://ngrok.com/)) to notifications in the field `Notification url for environment dev`. This url will only work in the dev environment.
  
 ## Customization
 
