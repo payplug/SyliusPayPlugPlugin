@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\MessageHandler;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Exception\ApiRefundException;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
@@ -98,8 +99,10 @@ final class RefundPaymentGeneratedHandler
             $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
 
             $this->entityManager->flush();
-        } catch (\Throwable $throwable) {
+        } catch (ApiRefundException $throwable) {
             $this->logger->critical($throwable->getMessage());
+
+            throw new ApiRefundException($throwable->getMessage(), $throwable->getCode(), $throwable);
         }
     }
 }
