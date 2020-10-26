@@ -31,7 +31,7 @@ final class OneySimulationPopin extends AbstractController
         $simulationData = $this->oneySimulationDataProvider->getForCart($cart);
 
         return $this->render(
-            '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/oney/popin.html.twig',
+            '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
             ['data' => $simulationData]
         );
     }
