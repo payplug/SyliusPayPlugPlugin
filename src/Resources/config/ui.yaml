@@ -3,14 +3,14 @@ sylius_ui:
         sylius.shop.product.show.right_sidebar:
             blocks:
                 pay_with_oney:
-                    template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/product/pay_with_oney.html.twig'
+                    template: '@PayPlugSyliusPayPlugPlugin/oney/product/pay_with_oney.html.twig'
                     priority: 29 # After price widget
                     context:
                         legacy_event: 'sonata.block.event.sylius.shop.product.show.after_price'
         sylius.shop.cart.summary.totals:
             blocks:
                 pay_with_oney:
-                    template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/cart/pay_with_oney.html.twig'
+                    template: '@PayPlugSyliusPayPlugPlugin/oney/cart/pay_with_oney.html.twig'
         sylius.shop.layout.javascripts:
             blocks:
                 webfontloader:

@@ -11,10 +11,11 @@
     <services>
         <defaults autowire="true" autoconfigure="true">
             <bind key="$oneyClient" type="service" id="payplug_sylius_payplug_plugin.api_client.oney" />
+            <bind key="$payplugLogger" type="service" id="monolog.logger.payum" />
         </defaults>
 
         <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
-                   resource="../../../src/{Checker,EventSubscriber,Form,Twig,Validator}/*" />
+                   resource="../../../src/{Checker,EventSubscriber,Form,Twig,Validator,Provider/OneySimulation}/*" />
         <prototype namespace="PayPlug\SyliusPayPlugPlugin\Controller\"
                    resource="../../../src/Controller" >
             <tag name="controller.service_arguments"/>
@@ -130,6 +131,12 @@
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider" />
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider"
+                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface">
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider.inner"/>
         </service>
     </services>
 </container>

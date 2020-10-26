@@ -1,0 +1,32 @@
+{% if is_oney_enabled() %}
+    {% set logo_name = '3x4x-alt.svg' %}
+    {% set data = [] %}
+    {% if oney_cart_eligible() %}
+        {% set logo_name = '3x4x.svg' %}
+    {% else %}
+        {% set data = oney_ineligible_reasons() %}
+    {% endif %}
+    <div class="oney-info">
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        <div class="ui inverted dimmer">
+            <div class="ui loader"></div>
+        </div>
+        <div class="oney-popin {% if data is not empty %}disabled{% else %}enabled{% endif %}"
+             data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}">{% if data is not empty %}
+            <div class="oney-popin__header">
+                <a class="close" href="javascript:void(0);" title="{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}">
+                    <span></span><span></span>
+                </a>
+            </div>
+            <div class="oney-popin__content">
+                {% for reason in data.reasons %}
+                    <p class="reasons">{{ reason|trans(data.trans_params) }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}</div>
+        <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/cart/index.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
+        <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">
+    </div>
+{% endif %}
