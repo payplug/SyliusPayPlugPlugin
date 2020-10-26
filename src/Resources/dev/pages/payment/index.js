@@ -23,8 +23,7 @@ const Payment = {
       $(this.options.trigger).show();
     }
     $("input[id*=sylius_checkout_select_payment]").on("change", function () {
-
-      if ($('label[for=' + $(this).attr('id') + ']').attr('data-gateway') === 'oney') {
+      if ($(`label[for=${$(this).attr('id')}]`).data("gateway") === "oney") {
         $(self.options.trigger).slideDown();
       } else {
         $(self.options.trigger).slideUp();
