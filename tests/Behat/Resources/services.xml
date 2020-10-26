@@ -21,5 +21,6 @@
             <argument type="service" id="sylius.behat.mocker" />
             <argument type="service" id="service_container" />
         </service>
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\StubOneySimulationDataProvider" />
     </services>
 </container>
