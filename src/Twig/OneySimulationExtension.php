@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
-use Payplug\Exception\BadRequestException;
-use Payplug\OneySimulation;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface;
-use Psr\Log\LoggerInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -19,9 +13,8 @@ final class OneySimulationExtension extends AbstractExtension
 {
     /** @var \Sylius\Component\Order\Context\CartContextInterface */
     private $cartContext;
-    /**
-     * @var \PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface
-     */
+
+    /** @var \PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface */
     private $oneySimulationDataProvider;
 
     public function __construct(

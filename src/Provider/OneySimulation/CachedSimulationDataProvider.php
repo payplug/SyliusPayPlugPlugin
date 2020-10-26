@@ -10,13 +10,10 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 final class CachedSimulationDataProvider implements OneySimulationDataProviderInterface
 {
-    /**
-     * @var OneySimulationDataProviderInterface
-     */
+    /** @var OneySimulationDataProviderInterface */
     private $decorated;
-    /**
-     * @var \Symfony\Contracts\Cache\CacheInterface
-     */
+
+    /** @var \Symfony\Contracts\Cache\CacheInterface */
     private $cache;
 
     public function __construct(OneySimulationDataProviderInterface $decorated, CacheInterface $cache)
@@ -32,6 +29,7 @@ final class CachedSimulationDataProvider implements OneySimulationDataProviderIn
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($cart): array {
             $item->expiresAfter(new \DateInterval('P1D')); // One day of cache
+
             return $this->decorated->getForCart($cart);
         });
     }

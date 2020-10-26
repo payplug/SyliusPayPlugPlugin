@@ -13,6 +13,7 @@ final class OneySimulationPopin extends AbstractController
 {
     /** @var OneySimulationDataProviderInterface */
     private $oneySimulationDataProvider;
+
     /** @var CartContextInterface */
     private $cartContext;
 

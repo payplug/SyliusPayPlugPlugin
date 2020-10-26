@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation;
 
+use Payplug\Exception\BadRequestException;
 use Payplug\OneySimulation;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Psr\Log\LoggerInterface;
