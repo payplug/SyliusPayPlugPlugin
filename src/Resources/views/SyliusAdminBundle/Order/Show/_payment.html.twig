@@ -3,7 +3,7 @@
 
 <div class="item">
     <div class="right floated content">
-        {% include '@SyliusAdmin/Common/Label/paymentState.html.twig' with {'data': payment.state} %}
+        {{ label.default(('sylius.ui.'~payment.state)|trans) }}
     </div>
     <i class="large payment icon"></i>
     <div class="content">
@@ -12,14 +12,16 @@
         </div>
         <div class="description">
             {{ money.format(payment.amount, payment.order.currencyCode) }}
-            {% if payment.details.payment_id is defined %}
-                <br />{{ 'payplug_sylius_payplug_plugin.ui.payplug_id'|trans({'%paymentId%': payment.details.payment_id}) }}
-                {% if payment.details.is_live is defined and payment.details.is_live == false %}
-                    <br />{{ 'payplug_sylius_payplug_plugin.ui.test_mode'|trans }}
-                {% endif %}
-            {% endif %}
         </div>
     </div>
+    {% if payment.details.payment_id is defined %}
+        <div class="ui" style="word-break: break-word">
+            {{ 'payplug_sylius_payplug_plugin.ui.payplug_id'|trans({'%paymentId%': payment.details.payment_id}) }}
+            {% if payment.details.is_live is defined and payment.details.is_live == false %}
+                <br /><i>{{ 'payplug_sylius_payplug_plugin.ui.test_mode'|trans }}</i>
+            {% endif %}
+        </div>
+    {% endif %}
     {% if sm_can(payment, 'complete', 'sylius_payment') %}
         <div class="ui segment">
             <form action="{{ path('sylius_admin_order_payment_complete', {'orderId': order.id, 'id': payment.id}) }}" method="post" novalidate>
