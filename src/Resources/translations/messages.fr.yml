@@ -15,6 +15,8 @@ payplug_sylius_payplug_plugin:
         oney_transaction_less_than_forty_eight_hours: Une autre transaction a été faite il y a moins de 48 heures.
         or_pay_with_oney: Ou payez en
         pay: Paiement
+        3x_payment: Paiement en 3x
+        4x_payment: Paiement en 4x
         by_credit_cart: Par carte bancaire
         cancel: Annuler
         popin_close: Fermer
@@ -22,6 +24,13 @@ payplug_sylius_payplug_plugin:
             <p><strong> Apport : %apport% <br>
             + %nb_mensuality% mensualités de : %mensuality%</strong> <br>
             Dont coût du financement : %cost% TAEG : %percentage%%</p>
+        payment_choice:
+            current_total: Pour un montant de
+            down_payment_amount: Premier apport de
+            effective_annual_percentage_rate: TAEG
+            total_cost: Coût de financement
+            installment_amount: Mensualité n°
+            grand_total: Total
         popin_legal_mention: |
             <small>
                 Offre de financement avec apport

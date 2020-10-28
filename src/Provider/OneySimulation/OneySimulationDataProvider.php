@@ -49,6 +49,7 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
 
             return \array_merge(
                 [
+                    'current_total' => $cart->getTotal(),
                     'min_amount' => $accountData['configuration']['oney']['min_amounts'][$currency],
                     'max_amount' => $accountData['configuration']['oney']['max_amounts'][$currency],
                 ],

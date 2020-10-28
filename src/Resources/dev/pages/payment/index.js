@@ -11,6 +11,11 @@ const Payment = {
     if (typeof completeInfoRoute !== "undefined") {
       Payment.modalAppear();
     }
+    Payment.tabs();
+    $(window).on('resize', function () {
+      setTimeout(Payment.tabs, 100);
+    });
+    Payment.tabsHandler();
   },
   toggleGateway() {
     const self = this;
@@ -18,11 +23,38 @@ const Payment = {
       $(this.options.trigger).show();
     }
     $("input[id*=sylius_checkout_select_payment]").on("change", function () {
-      if ($(this).val() === "oney") {
+      if ($(`label[for=${$(this).attr('id')}]`).data("gateway") === "oney") {
         $(self.options.trigger).slideDown();
       } else {
         $(self.options.trigger).slideUp();
       }
+    });
+  },
+  tabs() {
+    if (window.innerWidth <= 991) {
+      $(".oney-payment-choice__item").hide();
+      setTimeout(function () {
+        $.each($(".oney-payment-choice__input"), (k, el) => {
+          if ($(el).is(":checked")) {
+            $(el).parent().show();
+            $(`a.tablink[data-id=${$(el).val()}]`).addClass("active");
+          }
+        });
+      }, 1);
+    } else {
+      $(".oney-payment-choice__item").show();
+      $("a.tablink").removeClass("active");
+    }
+  },
+  tabsHandler() {
+    $.each($("a.tablink"), (k, el) => {
+      $(el).click(function (evt) {
+        $("a.tablink").removeClass("active");
+        $(this).addClass("active");
+        $(".oney-payment-choice__item").hide();
+        $(`#${$(this).data("id")}`).show();
+        $(`input[value=${$(this).data("id")}`).prop("checked", true);
+      });
     });
   },
   modalAppear() {
@@ -44,7 +76,7 @@ const Payment = {
   modalSubmit(evt) {
     const self = this;
     evt.preventDefault();
-    $(evt.currentTarget).addClass('loading');
+    $(evt.currentTarget).addClass("loading");
 
     $.ajax({
       method: "post",
