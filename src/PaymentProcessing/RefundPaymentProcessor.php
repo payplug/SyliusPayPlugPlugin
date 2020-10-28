@@ -64,8 +64,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         } catch (\Exception $exception) {
             $message = $exception->getMessage();
 
-            $this->session->getFlashBag()->add('error', $message);
-
             $this->logger->error('[PayPlug] RefundHistory Payment', ['error' => $message]);
 
             throw new UpdateHandlingException();
@@ -101,8 +99,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
             $this->payplugRefundHistoryRepository->add($refundHistory);
         } catch (\Exception $exception) {
             $message = $exception->getMessage();
-
-            $this->session->getFlashBag()->add('error', $message);
 
             $this->logger->error('[PayPlug] RefundHistory Payment', ['error' => $message]);
 
