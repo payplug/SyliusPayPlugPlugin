@@ -16,3 +16,9 @@ payplug_sylius_oney_complete_info:
     methods: ['GET', 'POST']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CompleteInfoController'
+
+payplug_sylius_oney_simulation_popin:
+    path: /payplug/oney_popin
+    methods: ['GET']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin'
