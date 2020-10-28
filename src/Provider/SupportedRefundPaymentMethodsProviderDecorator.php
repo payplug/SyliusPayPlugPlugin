@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -57,8 +58,23 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
         /** @var OrderInterface|null $order */
         $order = $this->orderRepository->findOneByNumber($request->get('orderNumber'));
 
-        if (!$order instanceof OrderInterface || $this->isPayPlugPayment($order)) {
+        if (!$order instanceof OrderInterface) {
             return $paymentMethods;
+        }
+
+        if ($this->isPayPlugPayment($order)) {
+            return array_filter($paymentMethods, function (PaymentMethodInterface $paymentMethod) use ($order): bool {
+                $lastPayment = $order->getLastPayment();
+                if (!$lastPayment instanceof PaymentInterface) {
+                    return false;
+                }
+                $lastPaymentMethod = $lastPayment->getMethod();
+                if (!$lastPaymentMethod instanceof PaymentMethodInterface) {
+                    return false;
+                }
+
+                return $paymentMethod->getId() === $lastPaymentMethod->getId();
+            });
         }
 
         if (null !== $order->getLastPayment() &&
@@ -80,17 +96,23 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
 
     private function isPayPlugPayment(OrderInterface $order): bool
     {
-        $firstPayment = $order->getPayments()->first();
-        if (!$firstPayment instanceof PaymentInterface) {
+        $lastPayment = $order->getLastPayment();
+        if (!$lastPayment instanceof PaymentInterface) {
             return false;
         }
 
-        $firstPaymentMethod = $firstPayment->getMethod();
-        if (!$firstPaymentMethod instanceof PaymentMethodInterface) {
+        $paymentMethod = $lastPayment->getMethod();
+        if (!$paymentMethod instanceof PaymentMethodInterface) {
             return false;
         }
 
-        if (PayPlugGatewayFactory::FACTORY_NAME !== $firstPaymentMethod->getCode()) {
+        $gatewayConfig = $paymentMethod->getGatewayConfig();
+
+        if (!$gatewayConfig instanceof GatewayConfigInterface) {
+            return false;
+        }
+
+        if (PayPlugGatewayFactory::FACTORY_NAME !== $gatewayConfig->getFactoryName()) {
             return false;
         }
 
