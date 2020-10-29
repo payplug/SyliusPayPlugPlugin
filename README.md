@@ -191,3 +191,7 @@ $ bin/phpspec run
 ## License
 
 This library is under the MIT license.
+
+## Oney Integration
+
+For better Oney integration, you can check the [Oney enhancement documentation](doc/oney_enhancement.md).
