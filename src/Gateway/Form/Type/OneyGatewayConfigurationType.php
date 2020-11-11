@@ -47,14 +47,6 @@ final class OneyGatewayConfigurationType extends AbstractType
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
             ])
-            ->add('cgv_url', UrlType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.ui.oney_cgv_url_label',
-                'validation_groups' => $validationGroups,
-                'constraints' => [
-                    new NotBlank(),
-                    new Url(),
-                ],
-            ])
             ->add('cgv_added', CheckboxType::class, [
                 'required' => false, // hide asterisk
                 'label' => 'payplug_sylius_payplug_plugin.ui.oney_cgv_added_label',
