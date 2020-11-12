@@ -9,11 +9,9 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKey
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class OneyGatewayConfigurationType extends AbstractType
@@ -46,14 +44,6 @@ final class OneyGatewayConfigurationType extends AbstractType
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
-            ])
-            ->add('cgv_url', UrlType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.ui.oney_cgv_url_label',
-                'validation_groups' => $validationGroups,
-                'constraints' => [
-                    new NotBlank(),
-                    new Url(),
-                ],
             ])
             ->add('cgv_added', CheckboxType::class, [
                 'required' => false, // hide asterisk
