@@ -8,8 +8,8 @@
         "php": "^7.2",
         "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^3.1",
-        "sylius/refund-plugin": "^1.0.0-RC.3",
-        "sylius/sylius": ">=1.5 <1.8",
+        "sylius/refund-plugin": "^1.0.0-RC.5",
+        "sylius/sylius": "~1.7",
         "symfony/contracts": "^1.1|^2.0"
     },
     "require-dev": {

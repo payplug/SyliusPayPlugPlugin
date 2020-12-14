@@ -19,7 +19,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php: [7.2, 7.3, 7.4]
+                php: [7.3, 7.4]
                 prefer: ['--prefer-lowest', '']
                 exclude:
                     - php: 7.4
@@ -47,7 +47,7 @@ jobs:
               if: steps.cache-composer.outputs.cache-hit != 'true'
 
             - name: Composer - Self Update
-              run: sudo composer self-update
+              run: sudo composer self-update --1
 
             - name: Composer - Validate composer.json and composer.lock
               run: composer validate --strict
@@ -74,8 +74,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php: [7.2, 7.3, 7.4]
-                sylius: ['~1.5.0', '~1.6.0', '~1.7.0']
+                php: [7.3, 7.4]
+                sylius: ['~1.7.0']
                 exclude:
                     - php: 7.2
                       sylius: '~1.7.0'
@@ -111,7 +111,8 @@ jobs:
             - name: Composer - Self Update
               run: |
                   mkdir -p /home/runner/.composer/
-                  sudo composer self-update
+                  sudo composer self-update --1
+              if: matrix.sylius == '~1.7.0'
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
@@ -135,7 +136,7 @@ jobs:
               working-directory: ./sylius
               run: |
                   cp ../plugin/tests/Application/config/packages/framework.yaml config/packages/framework.yaml
-                  composer req "${{ env.package-name }}:*" --prefer-source
+                  composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
 
             - name: Sylius - Get test services from Plugin
               working-directory: ./sylius
@@ -143,11 +144,16 @@ jobs:
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
 
-            - name: Sylius - Get migrations from Plugin
+            - name: Sylius - Get migrations from Sylius Refund Plugin
               working-directory: ./sylius
               run: |
-                  cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
-                  cp -R vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
+                  cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
+                  sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
+                  cp vendor/sylius/refund-plugin/etc/sylius17/doctrine_migrations.yaml config/packages/
+
+            - name: Sylius - Get migrations from Plugin
+              working-directory: ./sylius
+              run: cp -R vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
 
             - name: Sylius - Init database
               working-directory: ./sylius

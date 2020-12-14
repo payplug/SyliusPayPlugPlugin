@@ -6,4 +6,4 @@ framework:
     session:
         handler_id: ~
     messenger:
-        default_bus: sylius_refund_plugin.command_bus
+        default_bus: sylius_refund_plugin.event_bus
