@@ -5,7 +5,7 @@
     "description": "PayPlug payment plugin for Sylius applications.",
     "license": "MIT",
     "require": {
-        "php": "^7.2",
+        "php": "^7.3",
         "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^3.1",
         "sylius/refund-plugin": "^1.0.0-RC.5",
@@ -53,11 +53,6 @@
     },
     "config": {
         "sort-packages": true
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.4-dev"
-        }
     },
     "scripts": {
         "ecs": "ecs check -c rulesets/easy-coding-standard.yml --ansi --clear-cache .",

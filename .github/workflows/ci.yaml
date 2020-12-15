@@ -14,22 +14,23 @@ jobs:
 
     php:
         name: PHP ${{ matrix.php }} ${{ matrix.prefer }}
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-18.04
 
         strategy:
             fail-fast: false
             matrix:
                 php: [7.3, 7.4]
-                prefer: ['--prefer-lowest', '']
-                exclude:
-                    - php: 7.4
-                      prefer: '--prefer-lowest'
+                symfony: [4.4.*]
 
         steps:
             - uses: actions/checkout@v2
 
-            - name: PHP - Switch
-              run: sudo update-alternatives --set php /usr/bin/php${{ matrix.php }}
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "${{ matrix.php }}"
+                  tools: symfony
+                  coverage: none
 
             - name: Composer - Get Cache Directory
               id: composer-cache
@@ -39,15 +40,12 @@ jobs:
               id: cache-composer
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-php.${{ matrix.php }}-prefer.${{ matrix.prefer }}-${{ github.sha }}
-                  restore-keys: composer-php.${{ matrix.php }}-prefer.${{ matrix.prefer }}-
+                  key: composer-php.${{ matrix.php }}-${{ github.sha }}
+                  restore-keys: composer-php.${{ matrix.php }}-
 
             - name: Composer - Create cache directory
               run: mkdir -p /home/runner/.composer/cache
               if: steps.cache-composer.outputs.cache-hit != 'true'
-
-            - name: Composer - Self Update
-              run: sudo composer self-update --1
 
             - name: Composer - Validate composer.json and composer.lock
               run: composer validate --strict
@@ -55,64 +53,77 @@ jobs:
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
 
+            - name: Composer - Restrict Symfony version
+              run: composer config extra.symfony.require "${{ matrix.symfony }}"
+
             - name: Composer - Update dependencies
-              run: composer update ${{ matrix.prefer }} --no-progress
+              run: composer update --no-progress
+              id: end-of-setup
 
             - name: ECS - Run
               run: if [ -f rulesets/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c rulesets/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
+              if: always() && steps.end-of-setup.outcome == 'success'
 
             - name: PHPStan - Run
               run: if [ -f rulesets/phpstan.neon ]; then vendor/bin/phpstan analyse -c rulesets/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
+              if: always() && steps.end-of-setup.outcome == 'success'
 
             - name: PHPSpec - Run
               run: if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi
+              if: always() && steps.end-of-setup.outcome == 'success'
 
+            - name: Checks security issues - Run
+              run: symfony security:check
+              if: always() && steps.end-of-setup.outcome == 'success'
 
     sylius:
         name: Behat (PHP ${{ matrix.php }} Sylius ${{ matrix.sylius }})
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-18.04
         strategy:
             fail-fast: false
             matrix:
                 php: [7.3, 7.4]
-                sylius: ['~1.7.0']
-                exclude:
-                    - php: 7.2
-                      sylius: '~1.7.0'
+                sylius: [1.7.*]
+                symfony: [4.4.*]
+                node: [10.x]
 
         env:
             APP_ENV: test
             package-name: payplug/sylius-payplug-plugin
 
         steps:
-            - name: PHP - Switch
-              run: sudo update-alternatives --set php /usr/bin/php${{ matrix.php }} && php -v
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "${{ matrix.php }}"
+                  ini-values: date.timezone=UTC
+                  extensions: intl
+                  tools: symfony
+                  coverage: none
 
-            - name: PHP - Setup timezone
-              run: |
-                  echo "date.timezone=UTC" >> /tmp/timezone.ini; \
-                  sudo mv /tmp/timezone.ini /etc/php/${{ matrix.php }}/cli/conf.d/timezone.ini
+            - name: Setup Node
+              uses: actions/setup-node@v1
+              with:
+                  node-version: "${{ matrix.node }}"
 
             - uses: actions/checkout@v2
               with:
                   path: plugin
 
-            - uses: actions/cache@v1
+            - name: Composer - Get Cache Directory
+              id: composer-cache
+              run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+            - name: Composer - Set cache
+              uses: actions/cache@v1
               id: cache-composer
               with:
-                  path: /home/runner/.composer/cache
-                  key: composer-php.${{ matrix.php }}-sylius.${{ matrix.sylius }}-${{ github.sha }}
-                  restore-keys: composer-php.${{ matrix.php }}-sylius.${{ matrix.sylius }}-
-
-            - name: Composer - Create cache directory
-              run: mkdir -p /home/runner/.composer/cache
-              if: steps.cache-composer.outputs.cache-hit != 'true'
+                  path: ${{ steps.composer-cache.outputs.dir }}
+                  key: composer-php.${{ matrix.php }}-${{ github.sha }}
+                  restore-keys: composer-php.${{ matrix.php }}-
 
             - name: Composer - Self Update
-              run: |
-                  mkdir -p /home/runner/.composer/
-                  sudo composer self-update --1
-              if: matrix.sylius == '~1.7.0'
+              run: sudo composer self-update --1
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
@@ -134,38 +145,98 @@ jobs:
 
             - name: Composer - Install plugin
               working-directory: ./sylius
-              run: |
-                  cp ../plugin/tests/Application/config/packages/framework.yaml config/packages/framework.yaml
-                  composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
+              run: composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
 
-            - name: Sylius - Get test services from Plugin
+            - name: Composer - Security Checker
+              working-directory: ./sylius
+              run: composer require sensiolabs/security-checker --no-update
+
+            - name: Composer - Restrict Symfony version
+              working-directory: ./sylius
+              run: composer config extra.symfony.require "${{ matrix.symfony }}"
+
+            - name: Sylius - Update dependencies # need to update sylius version
+              working-directory: ./sylius
+              run: composer update --no-progress --no-suggest --prefer-dist -n -o
+
+            - name: Sylius - Run Symfony flex
+              working-directory: ./sylius
+              run: composer sync-recipes
+
+            - name: Sylius - Get services from Plugin
               working-directory: ./sylius
               run: |
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
-                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/messenger.yaml
+                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/test/messenger.yaml
 
-            - name: Sylius - Get migrations from Sylius Refund Plugin
+            - name: Sylius - Copy migration
               working-directory: ./sylius
               run: |
-                  cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
+                  cp vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
+                  cp vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
                   sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
-                  cp vendor/sylius/refund-plugin/etc/sylius17/doctrine_migrations.yaml config/packages/
 
-            - name: Sylius - Get migrations from Plugin
+            - name: Sylius - Twig form Theme
               working-directory: ./sylius
-              run: cp -R vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
+              run: |
+                  sed -i "4a \ \ \ \ form_themes: ['form/form_gateway_config_row.html.twig']" config/packages/twig.yaml
 
-            - name: Sylius - Init database
+            - name: Sylius - Copy custom form row theme template
               working-directory: ./sylius
-              run: php bin/console doctrine:database:create --if-not-exists
+              run: |
+                  mkdir -p templates/form/
+                  cp -R vendor/${{ env.package-name }}/src/Resources/views/form/* templates/form/
 
-            - name: Sylius - Update database schema
+            - name: Sylius - Copy templates
               working-directory: ./sylius
-              run: php bin/console doctrine:migr:migr -n
+              run: |
+                  mkdir -p templates/bundles/SyliusAdminBundle/
+                  cp -R vendor/${{ env.package-name }}/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+
+            - name: Behat - Config Suite
+              working-directory: ./sylius
+              run: |
+                  sed -i "s#vendor/sylius/sylius/src/Sylius/Behat/Resources/config/suites.yml#vendor/${{ env.package-name }}/tests/Behat/Resources/suites.yml#g" behat.yml.dist
+                  sed -i "s#vendor/sylius/sylius/features#vendor/${{ env.package-name }}/features#g" behat.yml.dist
+                  echo '    - { resource: "../vendor/${{ env.package-name }}/src/Resources/config/services.xml" }' >> config/services_test.yaml
+                  echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
+                  echo '    - { resource: "../vendor/sylius/refund-plugin/src/Resources/config/services.xml" }' >> config/services_test.yaml
+                  echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
+
+            - name: Sylius - Add PayPlug to refundable payment method
+              working-directory: ./sylius
+              run: |
+                  echo 'parameters:' >> config/services_test.yaml
+                  echo '    sylius_refund.supported_gateways:' >> config/services_test.yaml
+                  echo '        - payplug' >> config/services_test.yaml
+                  echo '        - cash_on_delivery' >> config/services_test.yaml
+
+            - name: Sylius - Process translations
+              working-directory: ./sylius
+              run: |
+                  php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
+                  php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
+
+            - name: Sylius - Set database config
+              working-directory: ./sylius
+              run: |
+                  echo 'DATABASE_URL=mysql://root:@127.0.0.1:3306/payplug_plugin_%kernel.environment%?serverVersion=mariadb-10.4.11' >> .env
 
             - name: Sylius - Install
               working-directory: ./sylius
               run: php bin/console sylius:install -n -s default
+
+            - name: Yarn - Get cache directory
+              id: yarn-cache
+              run: echo "::set-output name=dir::$(yarn cache dir)"
+
+            - name: Yarn - Set Cache
+              uses: actions/cache@v2
+              with:
+                path: ${{ steps.yarn-cache.outputs.dir }}
+                key: ${{ runner.os }}-node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
+                restore-keys: |
+                    ${{ runner.os }}-node-${{ matrix.node }}-yarn-
 
             - name: Sylius - Assets
               working-directory: ./sylius
@@ -180,56 +251,44 @@ jobs:
                 sudo chmod a+x /usr/bin/wkhtmltopdf.sh
                 sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
 
-            - name: Behat - Configure display
+            - name: Sylius - Cache clear
               working-directory: ./sylius
               run: |
-                  /sbin/start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1680x1050x16
-                  export DISPLAY=:99
+                php bin/console c:c
 
-            - name: Behat - Download and configure ChromeDriver
+            - name: Output PHP version for Symfony CLI
               working-directory: ./sylius
-              run: |
-                  if [ ! -f chromedriver ] || [ "$(chromedriver --version | grep -c 2.34)" = "0" ]; then
-                      curl http://chromedriver.storage.googleapis.com/2.34/chromedriver_linux64.zip > chromedriver.zip
-                      unzip chromedriver.zip
-                      chmod +x chromedriver
-                  fi
+              run: php -v | head -n 1 | awk '{ print $2 }' > .php-version
 
-            - name: Behat - Run ChromeDriver
+            - name: Install certificates
               working-directory: ./sylius
-              run: chromedriver > /dev/null 2>&1 &
+              run: symfony server:ca:install
 
-            - name: Behat - Download and configure Selenium
+            - name: Run Chrome headless
               working-directory: ./sylius
-              run: |
-                  if [ ! -f selenium.jar ] || [ "$(java -jar selenium.jar --version | grep -c 3.4.0)" = "0" ]; then
-                      curl http://selenium-release.storage.googleapis.com/3.4/selenium-server-standalone-3.4.0.jar > selenium.jar
-                  fi
+              run: google-chrome-stable --enable-automation --disable-background-networking --no-default-browser-check --no-first-run --disable-popup-blocking --disable-default-apps --allow-insecure-localhost --disable-translate --disable-extensions --no-sandbox --enable-features=Metal --headless --remote-debugging-port=9222 --window-size=2880,1800 --proxy-server='direct://' --proxy-bypass-list='*' https://127.0.0.1 > /dev/null 2>&1 &
 
-            - name: Behat - Run Selenium
+            - name: Run webserver
               working-directory: ./sylius
-              run: java -Dwebdriver.chrome.driver=chromedriver -jar selenium.jar > /dev/null 2>&1 &
+              run: symfony server:start --port=8080 --dir=public --daemon
+              id: end-of-setup-sylius
 
-            - name: Behat - Run webserver
+            - name: Run behat
               working-directory: ./sylius
-              run: bin/console server:run 127.0.0.1:8080 --quiet > /dev/null 2>&1 &
+              run: vendor/bin/behat --strict --no-interaction -f progress || vendor/bin/behat --strict -vvv --no-interaction --rerun
+              if: always() && steps.end-of-setup-sylius.outcome == 'success'
 
-            - name: Behat - Config Suite
-              working-directory: ./sylius
-              run: |
-                  sed -i "s#vendor/sylius/sylius/src/Sylius/Behat/Resources/config/suites.yml#vendor/${{ env.package-name }}/tests/Behat/Resources/suites.yml#g" behat.yml.dist
-                  sed -i "s#vendor/sylius/sylius/features#vendor/${{ env.package-name }}/features#g" behat.yml.dist
-                  echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
-                  echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
-
-            - name: Behat - Run Behat tests
-              working-directory: ./sylius
-              run: vendor/bin/behat --strict -vvv --no-interaction || vendor/bin/behat --strict -vvv --no-interaction --rerun
+            - uses: actions/upload-artifact@v2.1.4
+              if: failure()
+              with:
+                  name: logs
+                  path: ./sylius/etc/build
 
         services:
             mariadb:
-                image: mariadb:latest
+                image: mariadb:10.4.11
                 ports:
                     - 3306:3306
                 env:
                     MYSQL_ALLOW_EMPTY_PASSWORD: true
+                options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
