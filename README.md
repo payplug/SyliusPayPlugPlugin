@@ -79,7 +79,7 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug
     ```
 
-8. Process translations
+8. Process translations:
 
     ```bash
     php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
