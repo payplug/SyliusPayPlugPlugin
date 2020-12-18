@@ -64,8 +64,9 @@ In local environment, the plugin will not work properly because you will not be 
 
 6. Copy migrations and templates
     ```shell
-    cp -R vendor/sylius/refund-plugin/migrations/* src/Migrations
+    cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
     cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
+    sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
     bin/console doctrine:migrations:migrate
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
