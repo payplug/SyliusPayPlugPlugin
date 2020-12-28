@@ -36,16 +36,13 @@ jobs:
               id: composer-cache
               run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-            - uses: actions/cache@v1
-              id: cache-composer
+            - name: Composer - Set cache
+              uses: actions/cache@v2
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-php.${{ matrix.php }}-${{ github.sha }}
-                  restore-keys: composer-php.${{ matrix.php }}-
-
-            - name: Composer - Create cache directory
-              run: mkdir -p /home/runner/.composer/cache
-              if: steps.cache-composer.outputs.cache-hit != 'true'
+                  key: php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json **/composer.lock') }}
+                  restore-keys: |
+                      php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-
 
             - name: Composer - Validate composer.json and composer.lock
               run: composer validate --strict
@@ -115,12 +112,12 @@ jobs:
               run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
             - name: Composer - Set cache
-              uses: actions/cache@v1
-              id: cache-composer
+              uses: actions/cache@v2
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-php.${{ matrix.php }}-${{ github.sha }}
-                  restore-keys: composer-php.${{ matrix.php }}-
+                  key: php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json **/composer.lock') }}
+                  restore-keys: |
+                      php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-
 
             - name: Composer - Self Update
               run: sudo composer self-update --1
@@ -234,9 +231,9 @@ jobs:
               uses: actions/cache@v2
               with:
                 path: ${{ steps.yarn-cache.outputs.dir }}
-                key: ${{ runner.os }}-node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
+                key: node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
                 restore-keys: |
-                    ${{ runner.os }}-node-${{ matrix.node }}-yarn-
+                    node-${{ matrix.node }}-yarn-
 
             - name: Sylius - Assets
               working-directory: ./sylius
