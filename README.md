@@ -63,24 +63,27 @@ In local environment, the plugin will not work properly because you will not be 
     ```
 
 6. Copy migrations and templates
-    ```shell
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
-    bin/console doctrine:migrations:migrate
-    mkdir -p templates/bundles/SyliusAdminBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
-    ```
 
-    :grey_exclamation: Only for **Sylius 1.7**
+    :warning: Only for **Sylius 1.7**
     ```shell
     cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
     sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
     ```
 
-    :grey_exclamation: Only for **Sylius 1.8** and more, update `config/packages/doctrine_migrations.yaml` by add
+    :warning: Only for **Sylius 1.8** and more, update `config/packages/doctrine_migrations.yaml` by adding following config
     ```yaml
     doctrine_migrations:
         migrations_paths:
-            'DoctrineMigrations': 'src/Migrations'
+            ...
+            'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
+    ```
+
+    For all Sylius versions, do
+    ```shell
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
+    bin/console doctrine:migrations:migrate
+    mkdir -p templates/bundles/SyliusAdminBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
 7. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
