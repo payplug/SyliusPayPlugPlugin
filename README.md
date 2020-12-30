@@ -63,10 +63,24 @@ In local environment, the plugin will not work properly because you will not be 
     ```
 
 6. Copy migrations and templates
+
+    :warning: Only for **Sylius 1.7**
     ```shell
     cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
+    ```
+
+    :warning: Only for **Sylius 1.8** and more, update `config/packages/doctrine_migrations.yaml` by adding following config
+    ```yaml
+    doctrine_migrations:
+        migrations_paths:
+            ...
+            'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
+    ```
+
+    For all Sylius versions, do
+    ```shell
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     bin/console doctrine:migrations:migrate
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/

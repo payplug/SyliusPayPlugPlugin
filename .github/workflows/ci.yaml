@@ -11,7 +11,6 @@ on:
             - README.md
 
 jobs:
-
     php:
         name: PHP ${{ matrix.php }} ${{ matrix.prefer }}
         runs-on: ubuntu-18.04
@@ -36,16 +35,13 @@ jobs:
               id: composer-cache
               run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-            - uses: actions/cache@v1
-              id: cache-composer
+            - name: Composer - Set cache
+              uses: actions/cache@v2
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-php.${{ matrix.php }}-${{ github.sha }}
-                  restore-keys: composer-php.${{ matrix.php }}-
-
-            - name: Composer - Create cache directory
-              run: mkdir -p /home/runner/.composer/cache
-              if: steps.cache-composer.outputs.cache-hit != 'true'
+                  key: php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json') }}
+                  restore-keys: |
+                      php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-
 
             - name: Composer - Validate composer.json and composer.lock
               run: composer validate --strict
@@ -83,7 +79,7 @@ jobs:
             fail-fast: false
             matrix:
                 php: [7.3, 7.4]
-                sylius: [1.7.*]
+                sylius: [1.7.*, 1.8.*]
                 symfony: [4.4.*]
                 node: [10.x]
 
@@ -115,15 +111,16 @@ jobs:
               run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
             - name: Composer - Set cache
-              uses: actions/cache@v1
-              id: cache-composer
+              uses: actions/cache@v2
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: composer-php.${{ matrix.php }}-${{ github.sha }}
-                  restore-keys: composer-php.${{ matrix.php }}-
+                  key: php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json') }}
+                  restore-keys: |
+                      php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-
 
             - name: Composer - Self Update
               run: sudo composer self-update --1
+              if: matrix.sylius == '1.7.*'
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
@@ -169,12 +166,23 @@ jobs:
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/test/messenger.yaml
 
-            - name: Sylius - Copy migration
+            - name: Sylius - Copy migration for Sylius 1.7
+              working-directory: ./sylius
+              run: |
+                  cp vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
+                  sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
+              if: matrix.sylius == '1.7.*'
+
+            - name: Sylius - Copy migration of Plugin
               working-directory: ./sylius
               run: |
                   cp vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
-                  cp vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
-                  sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
+
+            - name: Sylius - Migration config
+              working-directory: ./sylius
+              run: |
+                  echo '        'DoctrineMigrations': 'src/Migrations'' >> config/packages/doctrine_migrations.yaml
+              if: matrix.sylius == '1.8.*'
 
             - name: Sylius - Twig form Theme
               working-directory: ./sylius
@@ -234,9 +242,9 @@ jobs:
               uses: actions/cache@v2
               with:
                 path: ${{ steps.yarn-cache.outputs.dir }}
-                key: ${{ runner.os }}-node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
+                key: node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
                 restore-keys: |
-                    ${{ runner.os }}-node-${{ matrix.node }}-yarn-
+                    node-${{ matrix.node }}-yarn-
 
             - name: Sylius - Assets
               working-directory: ./sylius
