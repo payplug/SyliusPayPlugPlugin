@@ -79,7 +79,7 @@ jobs:
             fail-fast: false
             matrix:
                 php: [7.3, 7.4]
-                sylius: [1.7.*, 1.8.*]
+                sylius: [1.8.*]
                 symfony: [4.4.*]
                 node: [10.x]
 
@@ -117,10 +117,6 @@ jobs:
                   key: php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json') }}
                   restore-keys: |
                       php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-
-
-            - name: Composer - Self Update
-              run: sudo composer self-update --1
-              if: matrix.sylius == '1.7.*'
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
@@ -166,13 +162,6 @@ jobs:
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/test/messenger.yaml
 
-            - name: Sylius - Copy migration for Sylius 1.7
-              working-directory: ./sylius
-              run: |
-                  cp vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
-                  sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
-              if: matrix.sylius == '1.7.*'
-
             - name: Sylius - Copy migration of Plugin
               working-directory: ./sylius
               run: |
@@ -182,7 +171,6 @@ jobs:
               working-directory: ./sylius
               run: |
                   echo '        'DoctrineMigrations': 'src/Migrations'' >> config/packages/doctrine_migrations.yaml
-              if: matrix.sylius == '1.8.*'
 
             - name: Sylius - Twig form Theme
               working-directory: ./sylius

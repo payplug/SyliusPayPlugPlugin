@@ -22,6 +22,10 @@ In local environment, the plugin will not work properly because you will not be 
 > #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
 > More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
 
+
+#### ❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
+- [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
+
 ## Installation
 
 1. If you don't use [**symfony/messenger**](https://packagist.org/packages/symfony/messenger) component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
@@ -62,15 +66,9 @@ In local environment, the plugin will not work properly because you will not be 
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
     ```
 
-6. Copy migrations and templates
+6. Copy and apply migrations
 
-    :warning: Only for **Sylius 1.7**
-    ```shell
-    cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
-    sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
-    ```
-
-    :warning: Only for **Sylius 1.8** and more, update `config/packages/doctrine_migrations.yaml` by adding following config
+    Update `config/packages/doctrine_migrations.yaml` by adding following config
     ```yaml
     doctrine_migrations:
         migrations_paths:
@@ -78,15 +76,20 @@ In local environment, the plugin will not work properly because you will not be 
             'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
     ```
 
-    For all Sylius versions, do
+    Copy migrations from `vendor/payplug/sylius-payplug-plugin/src/Migrations/` to your migrations directory (e.g. `src/Migrations`) and apply them to your database
     ```shell
     cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     bin/console doctrine:migrations:migrate
+    ```
+
+7. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
+    
+    ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
-7. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+8. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
     ```yaml
     parameters:
@@ -94,14 +97,14 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug
     ```
 
-8. Process translations
+9. Process translations
 
     ```bash
     php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
     php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
-9. Clear cache:
+10. Clear cache:
 
     ```shell
     php bin/console cache:clear
