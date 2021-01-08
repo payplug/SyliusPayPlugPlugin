@@ -69,7 +69,7 @@ In local environment, the plugin will not work properly because you will not be 
 6. Copy migrations and templates
 
 
-    :warning: Only for **Sylius 1.8** and more, update `config/packages/doctrine_migrations.yaml` by adding following config
+    Update `config/packages/doctrine_migrations.yaml` by adding following config
     ```yaml
     doctrine_migrations:
         migrations_paths:
