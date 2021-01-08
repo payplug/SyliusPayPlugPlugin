@@ -23,7 +23,7 @@ In local environment, the plugin will not work properly because you will not be 
 > More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
 
 
-####❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
+#### ❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
 - [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
 
 ## Installation
