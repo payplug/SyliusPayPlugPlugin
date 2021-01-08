@@ -22,6 +22,10 @@ In local environment, the plugin will not work properly because you will not be 
 > #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
 > More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
 
+
+####❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
+- [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
+
 ## Installation
 
 1. If you don't use [**symfony/messenger**](https://packagist.org/packages/symfony/messenger) component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
@@ -64,11 +68,6 @@ In local environment, the plugin will not work properly because you will not be 
 
 6. Copy migrations and templates
 
-    :warning: Only for **Sylius 1.7**
-    ```shell
-    cp -R vendor/sylius/refund-plugin/src/Migrations/* src/Migrations
-    sed -i -- 's/Sylius\\RefundPlugin\\Migrations/DoctrineMigrations/g' src/Migrations/*
-    ```
 
     :warning: Only for **Sylius 1.8** and more, update `config/packages/doctrine_migrations.yaml` by adding following config
     ```yaml
