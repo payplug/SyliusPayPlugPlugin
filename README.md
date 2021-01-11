@@ -1,63 +1,117 @@
-## Overview
+[![License](https://img.shields.io/packagist/l/payplug/payplug-sylius.svg)](https://github.com/payplug/SyliusPayPlugPlugin/blob/master/LICENSE)
+![CI](https://github.com/payplug/SyliusPayPlugPlugin/workflows/CI/badge.svg?branch=master)
+[![Version](https://img.shields.io/packagist/v/payplug/payplug-sylius.svg)](https://packagist.org/packages/payplug/payplug-sylius)
+[![Total Downloads](https://poser.pugx.org/payplug/payplug-sylius/downloads)](https://packagist.org/packages/payplug/payplug-sylius)
 
-This plugin allows you to integrate PayPlug payment with Sylius platform app.
+<p align="center">
+    <a href="https://sylius.com" target="_blank">
+        <img src="https://demo.sylius.com/assets/shop/img/logo.png" />
+    </a>
+</p>
+
+<h1 align="center">PayPlug payment plugin for Sylius</h1>
+
+<p align="center">This plugin allows you to integrate PayPlug payment with Sylius platform app including payment features and refunding orders.</p>
+
+## Requirements
+
+In the channel settings, the base currency must be set to **EUR** because the payment gateway only works in this currency. 
+
+In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
+
+> #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
+> More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
+
+
+#### ❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
+- [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
 
 ## Installation
 
-Add a package to your private repository and add the repository to `composer.json`:
-
-```json
-{
-    "minimum-stability": "dev",
-    "repositories": [
-        {
-          "type": "vcs",
-          "url": "<your URL to private repository>"
-        }
-    ]
-}
-```
-
-1. Require plugin with composer:
-
-    ```bash
-    composer require payplug/payplug-sylius
-    ```
-
-2. Import configuration in your `config/packages/_sylius.yaml` file:
+1. If you don't use [**symfony/messenger**](https://packagist.org/packages/symfony/messenger) component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
 
     ```yaml
-    imports:
-        - { resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/config.yml" }
+    framework:
+        messenger:
+            default_bus: sylius_refund_plugin.command_bus
     ```
 
-3. Add plugin class to your `config/bundles.php` file:
-
-    ```php
-    $bundles = [
-        PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin::class => ['all' => true],
-    ];
-    ```
-
-4. Clear cache:
+2. As this plugin has a dependency to [**sylius/refund-plugin**](https://packagist.org/packages/sylius/refund-plugin) which does not yet have a stable release, configure your project to accept release candidate version.
 
     ```bash
-    bin/console cache:clear
+    composer config minimum-stability rc
+    composer config prefer-stable true
     ```
+
+3. Require the **payplug/sylius-payplug-plugin** :
+
+    ```bash
+    composer config extra.symfony.allow-contrib true
+    composer require payplug/sylius-payplug-plugin
+    ```
+
+4. Import custom form row theme in your `config/packages/twig.yaml` file:
+    ```yaml
+    twig:
+        ...
+        form_themes: [
+            'form/form_gateway_config_row.html.twig'
+        ]
+    ```
+
+5. Copy custom form row theme template
+
+    ```shell
+    mkdir -p templates/form/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
+    ```
+
+6. Copy and apply migrations
+
+    Update `config/packages/doctrine_migrations.yaml` by adding following config
+    ```yaml
+    doctrine_migrations:
+        migrations_paths:
+            ...
+            'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
+    ```
+
+    Copy migrations from `vendor/payplug/sylius-payplug-plugin/src/Migrations/` to your migrations directory (e.g. `src/Migrations`) and apply them to your database
+    ```shell
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
+    bin/console doctrine:migrations:migrate
+    ```
+
+7. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
     
-## Requirements
- 
-In the channel settings, the base currency must be set to EUR because the payment gateway only works in this currency. The plugin in the local environment will not work properly because you will not be notified of the status of payments from the payment gateway
+    ```shell
+    mkdir -p templates/bundles/SyliusAdminBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+    ```
 
-## Cron job
+8. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
-In the case when the IPN is blocked, you can set cron job every minute that updates the payment status.
+    ```yaml
+    parameters:
+        sylius_refund.supported_gateways:
+            - payplug
+    ```
 
-For example:
+9. Process translations
 
-```bash
-* * * * * bin/console payplug:update-payment-state
-```
+    ```bash
+    php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
+    php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
+    ```
+
+10. Clear cache:
+
+    ```shell
+    php bin/console cache:clear
+    ```
+
+🎉 You are now ready to add Payplug Payment method.
+In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**PayPlug**".
 
 ## Logs
 
@@ -73,10 +127,6 @@ If you want to follow the logs in the production environment, you need to add th
               type: stream
               path: "%kernel.logs_dir%/%kernel.environment%.log"
 ```
-
-## IPN testing on the local machine
-
-In the configuration of the payment gateway in the admin panel, set your url (eg from [ngrok](https://ngrok.com/)) to notifications in the field `Notification url for environment dev`. This url will only work in the dev environment.
  
 ## Customization
 
@@ -94,16 +144,19 @@ $ bin/console debug:container payplug_sylius_payplug_plugin
 $ composer install
 $ cd tests/Application
 $ yarn install
-$ yarn run gulp
-$ bin/console assets:install web -e test
+$ yarn build
+$ bin/console assets:install public -e test
 $ bin/console doctrine:database:create -e test
 $ bin/console doctrine:schema:create -e test
-$ bin/console server:run 127.0.0.1:8080 -d web -e test
+$ bin/console server:run 127.0.0.1:8080 -d public -e test
 $ open http://localhost:8080
 $ bin/behat
 $ bin/phpspec run
 ```
 
-## Contribution
+## License
 
-Learn more about our contribution workflow on http://docs.sylius.org/en/latest/contributing/.
+This library is under the MIT license.
+
+## Doc
+- [Release Process](RELEASE.md)

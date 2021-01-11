@@ -12,11 +12,11 @@ trait ApiAwareTrait
     /** @var PayPlugApiClientInterface */
     protected $payPlugApiClient;
 
-    public function setApi($payPlugApiClient): void
+    public function setApi($api): void
     {
-        if (!$payPlugApiClient instanceof PayPlugApiClientInterface) {
+        if (!$api instanceof PayPlugApiClientInterface) {
             throw new UnsupportedApiException('Not supported.Expected an instance of ' . PayPlugApiClientInterface::class);
         }
-        $this->payPlugApiClient = $payPlugApiClient;
+        $this->payPlugApiClient = $api;
     }
 }

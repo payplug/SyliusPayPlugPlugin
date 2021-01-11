@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
 use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethod;
 use Sylius\Component\Core\Repository\PaymentMethodRepositoryInterface;
@@ -24,29 +27,36 @@ final class PayPlugPaymentMethodsResolver implements PaymentMethodsResolverInter
     public function __construct(
         PaymentMethodRepositoryInterface $paymentMethodRepository,
         CurrencyContextInterface $currencyContext
-    )
-    {
+    ) {
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->currencyContext = $currencyContext;
     }
 
     public function getSupportedMethods(BasePaymentInterface $payment): array
     {
-        /** @var PaymentInterface $payment */
         Assert::isInstanceOf($payment, PaymentInterface::class);
         Assert::true($this->supports($payment), 'This payment method is not support by resolver');
 
+        /** @var OrderInterface $order */
+        $order = $payment->getOrder();
+
+        /** @var ChannelInterface $channel */
+        $channel = $order->getChannel();
+
         /** @var PaymentMethod[] $paymentMethods */
-        $paymentMethods = $this->paymentMethodRepository->findEnabledForChannel($payment->getOrder()->getChannel());
+        $paymentMethods = $this->paymentMethodRepository->findEnabledForChannel($channel);
 
         $supportedMethods = [];
 
         $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
 
         foreach ($paymentMethods as $paymentMethod) {
-            if (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()) {
+            /** @var GatewayConfigInterface $gatewayConfig */
+            $gatewayConfig = $paymentMethod->getGatewayConfig();
+
+            if (PayPlugGatewayFactory::FACTORY_NAME !== $gatewayConfig->getFactoryName()) {
                 $supportedMethods[] = $paymentMethod;
-            } elseif (in_array($activeCurrencyCode, array_keys(PayPlugGatewayFactory::AUTHORIZED_CURRENCIES))
+            } elseif (\in_array($activeCurrencyCode, array_keys(PayPlugGatewayFactory::AUTHORIZED_CURRENCIES), true)
                 && $payment->getAmount() >= PayPlugGatewayFactory::AUTHORIZED_CURRENCIES[$activeCurrencyCode]['min_amount']
                 && $payment->getAmount() <= PayPlugGatewayFactory::AUTHORIZED_CURRENCIES[$activeCurrencyCode]['max_amount']
             ) {

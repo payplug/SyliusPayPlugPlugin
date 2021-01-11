@@ -8,16 +8,16 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
+use Payum\Core\Exception\RuntimeException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Reply\HttpRedirect;
 use Payum\Core\Request\Capture;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
-use Payum\Core\Exception\RuntimeException;
 use Psr\Log\LoggerInterface;
 
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
@@ -46,7 +46,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
 
-        if (isset($details['status']) && isset($details['payment_id'])) {
+        if (isset($details['status'], $details['payment_id'])) {
             if (PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
                 return;
             }
@@ -73,29 +73,22 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         /** @var TokenInterface $token */
         $token = $request->getToken();
 
-        if (null === $this->tokenFactory) {
-            throw new RuntimeException();
-        }
-
-        $notifyToken = $this->tokenFactory->createNotifyToken($token->getGatewayName(), $token->getDetails());
-
-        $notificationUrl = $notifyToken->getTargetUrl();
+        $details = $this->addNotificationUrl($token, $details);
 
         $details['hosted_payment'] = [
             'return_url' => $token->getAfterUrl(),
             'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
-        $details['notification_url'] = $notificationUrl;
+        if (isset($details['status']) && $details['status'] === 'pending') {
+            // We previously made a payment but not yet "authorized",
+            // Unset current status to allow to use payplug to change payment method
+            unset($details['status']);
+        }
 
-        $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
+        $payment = $this->createPayment($details);
 
-        $details['payment_id'] = $payment->id;
         $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
-
-        $this->logger->debug('[PayPlug] Create payment', [
-            'payment_id' => $payment->id,
-        ]);
 
         throw new HttpRedirect($payment->hosted_payment->payment_url);
     }
@@ -106,5 +99,33 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $request instanceof Capture &&
             $request->getModel() instanceof \ArrayAccess
         ;
+    }
+
+    private function addNotificationUrl(TokenInterface $token, ArrayObject $details): \Payum\Core\Bridge\Spl\ArrayObject
+    {
+        if (null === $this->tokenFactory) {
+            throw new RuntimeException();
+        }
+
+        $notifyToken = $this->tokenFactory->createNotifyToken($token->getGatewayName(), $token->getDetails());
+
+        $notificationUrl = $notifyToken->getTargetUrl();
+
+        $details['notification_url'] = $notificationUrl;
+
+        return $details;
+    }
+
+    private function createPayment(ArrayObject $details): \Payplug\Resource\Payment
+    {
+        $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
+        $details['payment_id'] = $payment->id;
+        $details['is_live'] = $payment->is_live;
+
+        $this->logger->debug('[PayPlug] Create payment', [
+            'payment_id' => $payment->id,
+        ]);
+
+        return $payment;
     }
 }

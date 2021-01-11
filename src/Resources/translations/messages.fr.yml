@@ -1,0 +1,10 @@
+payplug_sylius_payplug_plugin:
+    ui:
+        secret_key: Clé secrète
+        payplug_gateway_label: PayPlug
+        payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
+        retrieve_secret_key_in_api_configuration_portal: Retrouvez vos Secret Key LIVE et TEST dans votre <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portail PayPlug</a>
+        test_mode: Mode TEST
+        payplug_id: 'ID PayPlug : %paymentId%'
+        payplug_refund_gateway_is_not_activated: PayPlug n'a pas été activé comme méthode de remboursement
+        impossible_to_refund_this_payment: Impossible de rembourser ce paiement

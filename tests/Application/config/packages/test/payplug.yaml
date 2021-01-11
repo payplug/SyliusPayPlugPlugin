@@ -1,0 +1,6 @@
+services:
+    payplug_sylius_payplug_plugin.api_client.payplug:
+        class: Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiClient
+        public: true
+        arguments:
+            - "@service_container"

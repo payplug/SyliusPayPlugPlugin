@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use Doctrine\Common\Persistence\ObjectManager;
+use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use Payum\Core\Registry\RegistryInterface;
 use SM\Factory\FactoryInterface as StateMachineFactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;

@@ -6,11 +6,19 @@
         <import resource="services/pages.xml" />
     </imports>
 
+    <parameters>
+        <parameter key="sylius_refund.supported_gateways" type="collection">
+            <parameter>payplug</parameter>
+            <parameter>cash_on_delivery</parameter>
+        </parameter>
+    </parameters>
+
     <services>
         <defaults public="true" />
 
         <service id="payplug_sylius_payplug_plugin.behat.payplug_api_mocker" class="Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker">
             <argument type="service" id="sylius.behat.mocker" />
+            <argument type="service" id="service_container" />
         </service>
     </services>
 </container>

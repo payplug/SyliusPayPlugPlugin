@@ -32,6 +32,18 @@ Feature: Paying with PayPlug during checkout
         And I should be able to pay again
 
     @ui
+    Scenario: Expired payment
+        Given I added product "PHP T-Shirt" to the cart
+        And I have proceeded selecting "PayPlug" payment method
+        When I confirm my order with PayPlug payment
+        And I leave my PayPlug payment page
+        Then the latest order should have a payment with state "new"
+        And PayPlug notified that the payment is expired
+        Then the latest order should have a payment with state "cancelled"
+        Then the latest order shipping state should be "cancelled"
+        Then the latest order state should be "cancelled"
+
+    @ui
     Scenario: Retrying the payment with success
         Given I added product "PHP T-Shirt" to the cart
         And I have proceeded selecting "PayPlug" payment method

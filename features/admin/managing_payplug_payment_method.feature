@@ -14,6 +14,7 @@ Feature: Adding a new payplug payment method
         When I name it "PayPlug" in "English (United States)"
         And I specify its code as "payplug_test"
         And I fill the Secret key with "test"
+        And This secret Key is valid
         And make it available in channel "Web-USD"
         And I add it
         Then I should be notified that it has been successfully created

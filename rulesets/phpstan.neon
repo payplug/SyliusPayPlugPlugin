@@ -1,0 +1,16 @@
+parameters:
+    level: max
+    reportUnmatchedIgnoredErrors: false
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    excludes_analyse:
+        # Makes PHPStan crash
+        - ../src/DependencyInjection/Configuration.php
+        - ../src/Migrations/
+        # Test dependencies
+        - ../tests
+        # PHPSpec
+        - ../spec
+    ignoreErrors:
+        # ignore false positive
+        - '#Access to an undefined property Payplug\\Resource\\[a-zA-Z0-9]+::\$#'

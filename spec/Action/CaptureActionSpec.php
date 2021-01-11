@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
+use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\CaptureAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use Payplug\Resource\Payment;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -58,6 +58,7 @@ final class CaptureActionSpec extends ObjectBehavior
         $payment = \Mockery::mock('payment', Payment::class);
 
         $payment->id = 1;
+        $payment->is_live = true;
         $payment->hosted_payment = (object) [
             'payment_url' => 'test',
         ];
@@ -84,6 +85,7 @@ final class CaptureActionSpec extends ObjectBehavior
         $arrayObject->offsetSet('hosted_payment', ['return_url' => 'url', 'cancel_url' => 'url?&status=canceled'])->shouldBeCalled();
         $arrayObject->offsetSet('notification_url', 'url')->shouldBeCalled();
         $arrayObject->offsetSet('payment_id', 1)->shouldBeCalled();
+        $arrayObject->offsetSet('is_live', true)->shouldBeCalled();
         $arrayObject->offsetSet('status', PayPlugApiClientInterface::STATUS_CREATED)->shouldBeCalled();
 
         $this

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use Doctrine\Common\Persistence\ObjectManager;
+use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -60,6 +60,21 @@ final class PayPlugContext implements Context
             'secretKey' => 'test',
             'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
         ]);
+
+        $this->paymentMethodManager->flush();
+    }
+
+    /**
+     * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode other than PayPlug payment gateway
+     */
+    public function theStoreHasAPaymentMethodWithACodeOtherThanPayplugPaymentGateway(string $paymentMethodName, string $paymentMethodCode): void
+    {
+        $this->createPaymentMethodPayPlug(
+            $paymentMethodName,
+            $paymentMethodCode,
+            $paymentMethodCode,
+            ''
+        );
 
         $this->paymentMethodManager->flush();
     }

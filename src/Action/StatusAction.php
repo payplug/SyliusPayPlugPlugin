@@ -5,17 +5,34 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
+use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
-use Payum\Core\Exception\RequestNotSupportedException;
+use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Order\OrderTransitions;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
+
+    /** @var \SM\Factory\FactoryInterface */
+    private $stateMachineFactory;
+
+    /** @var RefundPaymentHandlerInterface */
+    private $refundPaymentHandler;
+
+    public function __construct(
+        FactoryInterface $stateMachineFactory,
+        RefundPaymentHandlerInterface $refundPaymentHandler
+    ) {
+        $this->stateMachineFactory = $stateMachineFactory;
+        $this->refundPaymentHandler = $refundPaymentHandler;
+    }
 
     public function execute($request): void
     {
@@ -40,26 +57,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
             $payment->setDetails($details);
         }
 
-        switch ($details['status']) {
-            case PayPlugApiClientInterface::STATUS_CANCELED:
-                $request->markCanceled();
-                break;
-            case PayPlugApiClientInterface::STATUS_CREATED:
-                $request->markPending();
-                break;
-            case PayPlugApiClientInterface::STATUS_CAPTURED:
-                $request->markCaptured();
-                break;
-            case PayPlugApiClientInterface::FAILED:
-                $request->markFailed();
-                break;
-            case PayPlugApiClientInterface::REFUNDED:
-                $request->markRefunded();
-                break;
-            default:
-                $request->markUnknown();
-                break;
-        }
+        $this->markRequestAs($details['status'], $request);
     }
 
     public function supports($request): bool
@@ -67,6 +65,62 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
         return
             $request instanceof GetStatusInterface &&
             $request->getModel() instanceof PaymentInterface
+        ;
+    }
+
+    /**
+     * @param mixed $request
+     */
+    private function markRequestAs(string $status, $request): void
+    {
+        switch ($status) {
+            case PayPlugApiClientInterface::STATUS_CANCELED:
+                $request->markCanceled();
+
+                break;
+            case PayPlugApiClientInterface::STATUS_CREATED:
+                $request->markPending();
+
+                break;
+            case PayPlugApiClientInterface::STATUS_CAPTURED:
+                $request->markCaptured();
+
+                break;
+            case PayPlugApiClientInterface::FAILED:
+                $request->markFailed();
+                $this->cancelOrder($request);
+
+                break;
+            case PayPlugApiClientInterface::REFUNDED:
+                $this->refundPaymentHandler->updatePaymentStatus($request->getModel());
+
+                break;
+            default:
+                $request->markUnknown();
+
+                break;
+        }
+    }
+
+    /**
+     * @param mixed $request
+     */
+    private function cancelOrder($request): void
+    {
+        /** @var PaymentInterface $payment */
+        $payment = $request->getModel();
+
+        if (!isset($payment->getDetails()['failure']) ||
+            $payment->getDetails()['failure']['code'] !== 'timeout') {
+            return;
+        }
+
+        /** @var \Sylius\Component\Core\Model\OrderInterface $order */
+        $order = $payment->getOrder();
+
+        $this->stateMachineFactory
+            ->get($order, OrderTransitions::GRAPH)
+            ->apply(OrderTransitions::TRANSITION_CANCEL)
         ;
     }
 }

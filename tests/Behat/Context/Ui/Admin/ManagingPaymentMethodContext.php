@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use PHPUnit\Framework\MockObject\Generator;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Admin\PaymentMethod\CreatePageInterface;
 use Webmozart\Assert\Assert;
 
@@ -55,5 +56,34 @@ final class ManagingPaymentMethodContext implements Context
     public function iFillTheSecretKeyWith(string $secretKey): void
     {
         $this->createPage->setSecretKey($secretKey);
+    }
+
+    /**
+     * @When This secret Key is valid
+     */
+    public function thisSecretKeyIsValid(): void
+    {
+        // Inspired by https://github.com/payplug/payplug-php/blob/master/tests/unit_tests/AuthenticationTest.php
+        $mockGenerator = new Generator();
+        $requestMock = $mockGenerator->getMock(\Payplug\Core\IHttpRequest::class);
+        $response = [
+            'is_live' => true,
+            'object' => 'account',
+            'id' => '12345',
+            'configuration' => [
+                'currencies' => [],
+                'min_amounts' => [],
+                'max_amounts' => [],
+            ],
+            'permissions' => [
+                'use_live_mode' => true,
+                'can_save_cards' => false,
+            ],
+        ];
+        $requestMock
+            ->method('exec')
+            ->willReturn(json_encode($response));
+
+        \Payplug\Core\HttpClient::$REQUEST_HANDLER = $requestMock;
     }
 }

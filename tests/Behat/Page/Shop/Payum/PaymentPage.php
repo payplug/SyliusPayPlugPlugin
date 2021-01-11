@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Shop\Payum;
 
-use FriendsOfBehat\PageObjectExtension\Page\Page;
 use Behat\Mink\Session;
+use FriendsOfBehat\PageObjectExtension\Page\Page;
 use Payum\Core\Security\TokenInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\BrowserKit\Client;
@@ -67,6 +67,7 @@ final class PaymentPage extends Page implements PaymentPageInterface
         if (count($tokens) > 0) {
             return end($tokens);
         }
+
         throw new \RuntimeException('Cannot find capture token, check if you are after proper checkout steps');
     }
 }

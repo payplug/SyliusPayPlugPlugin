@@ -1,0 +1,7 @@
+sylius_resource:
+    resources:
+        payplug.payplug_refund_history:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory
+                repository: PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepository
