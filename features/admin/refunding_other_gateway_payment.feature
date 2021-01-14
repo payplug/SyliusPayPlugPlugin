@@ -22,3 +22,4 @@ Feature: Refunding order's PayPlug payment
         When I want to refund some units of order "00000001"
         Then there should be "Cash on delivery" payment method
         Then there should not be "PayPlug" payment method
+        Then there should not be "Oney" payment method

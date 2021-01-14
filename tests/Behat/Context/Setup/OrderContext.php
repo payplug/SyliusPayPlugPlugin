@@ -6,7 +6,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
 use Doctrine\Common\Persistence\ObjectManager;
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Registry\RegistryInterface;
 use SM\Factory\FactoryInterface as StateMachineFactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -35,10 +35,12 @@ final class OrderContext implements Context
     }
 
     /**
-     * @Given /^(this order) with payplug payment is already paid$/
+     * @Given /^(this order) with payplug api payment is already paid$/
      */
-    public function thisOrderWithPayPlugPaymentIsAlreadyPaid(OrderInterface $order): void
+    public function thisOrderWithPayPlugOrOneyPaymentIsAlreadyPaid(OrderInterface $order): void
     {
+        $order->getLastPayment()->setDetails(['payment_id' => '00000001']);
+
         $this->applyPayPlugPaymentTransitionOnOrder($order, PaymentTransitions::TRANSITION_COMPLETE);
 
         $this->objectManager->flush();

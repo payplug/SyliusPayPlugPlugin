@@ -2,15 +2,24 @@
 
 <container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <imports>
-        <import resource="services/gateway_factory.xml" />
-        <import resource="services/form.xml" />
+        <import resource="services/gateway.xml" />
         <import resource="services/action.xml" />
+        <import resource="services/client.xml" />
+        <import resource="services/no_defaults.xml" />
     </imports>
 
     <services>
-        <service id="payplug_sylius_payplug_plugin.api_client.payplug" class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient" public="true" />
+        <defaults autowire="true" autoconfigure="true">
+            <bind key="$oneyClient" type="service" id="payplug_sylius_payplug_plugin.api_client.oney" />
+            <bind key="$payplugLogger" type="service" id="monolog.logger.payum" />
+        </defaults>
 
-        <service id="payplug_sylius_payplug_plugin.repository.payment" class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository" parent="sylius.repository.payment" />
+        <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
+                   resource="../../../src/{Checker,EventSubscriber,Form,Twig,Validator,Provider/OneySimulation}/*" />
+        <prototype namespace="PayPlug\SyliusPayPlugPlugin\Controller\"
+                   resource="../../../src/Controller" >
+            <tag name="controller.service_arguments"/>
+        </prototype>
 
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
             <argument type="service" id="sm.factory" />
@@ -41,19 +50,34 @@
             <tag name="console.command" />
         </service>
 
-        <service id="payplug.sylius_payplug_plugin.payment_methods_resolver.payplug" class="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolver">
-            <argument type="service" id="sylius.repository.payment_method" />
-            <argument type="service" id="sylius.context.currency" />
-            <tag name="sylius.payment_method_resolver" type="payplug" label="sylius.payment_methods_resolver.payplug" priority="10" />
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator"
+                decorates="sylius.payment_methods_resolver"
+                public="false"
+        >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator.inner"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator"
+                decorates="sylius.payment_methods_resolver"
+                public="false"
+        >
+            <argument type="service" id="sylius.context.currency"/>
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="sylius.repository.payment" />
+            <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
             <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
             <argument type="service" id="logger" />
+            <argument type="service" id="session" />
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="translator.default" />
             <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
         </service>
 
@@ -92,6 +116,33 @@
             <argument type="service" id="translator"/>
 
             <tag name="controller.service_arguments"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension">
+            <argument>%kernel.environment%</argument>
+            <tag name="twig.extension" />
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension">
+            <argument>%kernel.environment%</argument>
+            <tag name="twig.extension" />
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider" />
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider"
+                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface">
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider.inner"/>
         </service>
     </services>
 </container>

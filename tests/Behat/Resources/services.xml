@@ -9,6 +9,7 @@
     <parameters>
         <parameter key="sylius_refund.supported_gateways" type="collection">
             <parameter>payplug</parameter>
+            <parameter>payplug_oney</parameter>
             <parameter>cash_on_delivery</parameter>
         </parameter>
     </parameters>
@@ -20,5 +21,6 @@
             <argument type="service" id="sylius.behat.mocker" />
             <argument type="service" id="service_container" />
         </service>
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\StubOneySimulationDataProvider" />
     </services>
 </container>

@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <defaults autoconfigure="true" autowire="true" public="false"/>
+        <!-- Gateway PayPlug -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.payplug"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug" />
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type.payplug_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PayPlugGatewayConfigurationType">
+            <tag name="sylius.gateway_configuration_type"
+                 type="payplug"
+                 label="payplug_sylius_payplug_plugin.ui.payplug_gateway_label" />
+            <tag name="form.type" />
+        </service>
+
+        <!-- Gateway Oney By PayPlug -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.oney"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug_oney"/>
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type.oney_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\OneyGatewayConfigurationType">
+            <tag name="sylius.gateway_configuration_type"
+                 type="payplug_oney"
+                 label="payplug_sylius_payplug_plugin.ui.oney_gateway_label" />
+            <tag name="form.type" />
+        </service>
+    </services>
+</container>

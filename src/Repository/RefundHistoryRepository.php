@@ -23,4 +23,18 @@ final class RefundHistoryRepository extends EntityRepository implements RefundHi
             ->getOneOrNullResult()
         ;
     }
+
+    public function findLastProcessedRefundForPayment(PaymentInterface $payment): ?RefundHistory
+    {
+        return $this->createQueryBuilder('refund_history')
+            ->where('refund_history.payment = :payment')
+            ->andWhere('refund_history.processed = :processed')
+            ->setParameter('payment', $payment)
+            ->setParameter('processed', true)
+            ->orderBy('refund_history.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
 }

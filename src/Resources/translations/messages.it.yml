@@ -6,3 +6,4 @@ payplug_sylius_payplug_plugin:
         retrieve_secret_key_in_api_configuration_portal: Recupera le tue chiavi segrete LIVE e TEST nel tuo <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portale</a>
         test_mode: Modalità TEST
         payplug_id: 'ID PayPlug : %paymentId%'
+        oney: Oney

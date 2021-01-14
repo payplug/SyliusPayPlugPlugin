@@ -1,0 +1,19 @@
+{% if is_oney_enabled() %}
+    {% set logo_name = '3x4x-alt.svg' %}
+    {% if oney_cart_eligible() %}
+        {% set logo_name = '3x4x.svg' %}
+    {% endif %}
+    <div class="oney-info">
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        <div class="ui inverted dimmer">
+            <div class="ui loader"></div>
+        </div>
+        {% if oney_cart_eligible() %}
+            <div class="oney-popin enabled" data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}"></div>
+        {% endif %}
+    </div>
+
+    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">
+{% endif %}
