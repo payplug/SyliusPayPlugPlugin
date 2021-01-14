@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PayPlug\SyliusPayPlugPlugin\Form\Type;
+namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Payplug\Exception\UnauthorizedException;
 use Symfony\Component\Form\AbstractType;

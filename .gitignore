@@ -10,3 +10,5 @@
 /behat.yml
 /phpspec.yml
 /yarn-error.log
+
+/.idea

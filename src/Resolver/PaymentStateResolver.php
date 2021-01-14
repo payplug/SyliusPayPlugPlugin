@@ -6,7 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use SM\Factory\FactoryInterface;
 use SM\StateMachine\StateMachineInterface;

@@ -6,7 +6,6 @@ on:
         paths-ignore:
             - README.md
     pull_request:
-        branches: [develop, qa, master]
         paths-ignore:
             - README.md
 
@@ -188,6 +187,11 @@ jobs:
               run: |
                   mkdir -p templates/bundles/SyliusAdminBundle/
                   cp -R vendor/${{ env.package-name }}/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+
+            - name: Sylius - Get routes from Plugin
+              working-directory: ./sylius
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/routes.yaml config/routes.yaml
 
             - name: Behat - Config Suite
               working-directory: ./sylius
