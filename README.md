@@ -95,16 +95,24 @@ In local environment, the plugin will not work properly because you will not be 
     parameters:
         sylius_refund.supported_gateways:
             - payplug
+            - payplug_oney
     ```
 
-9. Process translations
+9. Add PayPlug routes in `config/routes.yaml`
+
+   ```yaml
+   sylius_payplug:
+      resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
+   ```
+
+10. Process translations
 
     ```bash
     php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
     php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
-10. Clear cache:
+11. Clear cache:
 
     ```shell
     php bin/console cache:clear
