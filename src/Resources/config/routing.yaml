@@ -12,13 +12,13 @@ sylius_refund_refund_units:
     prefix: /admin
 
 payplug_sylius_oney_complete_info:
-    path: /payplug/oney_complete_info
+    path: /{_locale}/payplug/oney_complete_info
     methods: ['GET', 'POST']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CompleteInfoController'
 
 payplug_sylius_oney_simulation_popin:
-    path: /payplug/oney_popin
+    path: /{_locale}/payplug/oney_popin
     methods: ['GET']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin'
