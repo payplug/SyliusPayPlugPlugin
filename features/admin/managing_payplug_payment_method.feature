@@ -5,7 +5,7 @@ Feature: Adding a new payplug payment method
     I want to add a new payment method to the registry
 
     Background:
-        Given the store operates on a channel named "Web-USD" in "USD" currency
+        Given the store operates on a channel named "Web-USD" in "EUR" currency
         And I am logged in as an administrator
 
     @ui
