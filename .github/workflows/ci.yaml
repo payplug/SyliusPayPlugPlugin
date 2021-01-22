@@ -120,8 +120,18 @@ jobs:
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
 
+          # FIX for sylius install error
+          #            - name: Composer - Install Sylius-Standard
+          #              run: composer create-project --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
             - name: Composer - Install Sylius-Standard
-              run: composer create-project --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
+              run: |
+                  composer create-project --no-progress --no-install --no-scripts sylius/sylius-standard sylius "${{ matrix.sylius }}"
+
+            - name: Composer - Update
+              working-directory: ./sylius
+              run: |
+                  composer req --no-update api-platform/core:2.5.9
+                  composer install
 
             - name: Composer - Add path repository
               working-directory: ./sylius
