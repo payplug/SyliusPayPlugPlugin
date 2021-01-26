@@ -50,23 +50,7 @@ In local environment, the plugin will not work properly because you will not be 
     composer require payplug/sylius-payplug-plugin
     ```
 
-4. Import custom form row theme in your `config/packages/twig.yaml` file:
-    ```yaml
-    twig:
-        ...
-        form_themes: [
-            'form/form_gateway_config_row.html.twig'
-        ]
-    ```
-
-5. Copy custom form row theme template
-
-    ```shell
-    mkdir -p templates/form/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
-    ```
-
-6. Copy and apply migrations
+4. Copy and apply migrations
 
     Update `config/packages/doctrine_migrations.yaml` by adding following config
     ```yaml
@@ -82,14 +66,14 @@ In local environment, the plugin will not work properly because you will not be 
     bin/console doctrine:migrations:migrate
     ```
 
-7. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
+5. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
     
     ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
-8. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+6. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
     ```yaml
     parameters:
@@ -98,21 +82,21 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug_oney
     ```
 
-9. Add PayPlug routes in `config/routes.yaml`
+7. Add PayPlug routes in `config/routes.yaml`
 
    ```yaml
    sylius_payplug:
       resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
    ```
 
-10. Process translations
+8. Process translations
 
     ```bash
     php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
     php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
-11. Clear cache:
+9. Clear cache:
 
     ```shell
     php bin/console cache:clear

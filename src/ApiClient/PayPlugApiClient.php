@@ -47,7 +47,6 @@ class PayPlugApiClient implements PayPlugApiClientInterface
             PayPlugSyliusPayPlugPlugin::VERSION,
             'Sylius/' . Kernel::VERSION
         );
-        Payplug::setSecretKey($secretKey);
     }
 
     public function getAccount(): array

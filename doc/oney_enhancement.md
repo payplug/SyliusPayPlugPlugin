@@ -1,6 +1,6 @@
 # Oney Integration
 
-## Require the phone number and check his type
+## Require the phone number and check its type
 
 By default the phone number on Sylius is not required when checking out but Oney requires a phone number of type mobile to be able to checkout using it.
 
