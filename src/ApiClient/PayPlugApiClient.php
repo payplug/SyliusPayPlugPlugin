@@ -34,6 +34,12 @@ class PayPlugApiClient implements PayPlugApiClientInterface
             'apiVersion' => self::CURRENT_API_VERSION,
         ]);
         $this->factoryName = $factoryName ?? PayPlugGatewayFactory::FACTORY_NAME;
+
+        HttpClient::addDefaultUserAgentProduct(
+            'PayPlug-Sylius',
+            PayPlugSyliusPayPlugPlugin::VERSION,
+            'Sylius/' . Kernel::VERSION
+        );
     }
 
     /**
