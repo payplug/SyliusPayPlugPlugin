@@ -118,16 +118,6 @@
             <tag name="controller.service_arguments"/>
         </service>
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestFormAttributeExtension">
-            <argument>%kernel.environment%</argument>
-            <tag name="twig.extension" />
-        </service>
-
-        <service id="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension" class="PayPlug\SyliusPayPlugPlugin\Twig\TestHtmlAttributeExtension">
-            <argument>%kernel.environment%</argument>
-            <tag name="twig.extension" />
-        </service>
-
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
