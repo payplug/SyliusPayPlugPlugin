@@ -193,8 +193,9 @@ final class RefundPaymentGeneratedHandler
         RefundPaymentGenerated $message
     ): void {
         Assert::isInstanceOf($payment->getMethod(), PaymentMethodInterface::class);
+        Assert::isInstanceOf($payment->getMethod()->getGatewayConfig(), GatewayConfigInterface::class);
 
-        if ($payment->getMethod()->getCode() === OneyGatewayFactory::FACTORY_NAME &&
+        if ($payment->getMethod()->getGatewayConfig()->getFactoryName() === OneyGatewayFactory::FACTORY_NAME &&
             $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())) {
             throw new ApiRefundException($this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours'));
         }
