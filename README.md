@@ -66,19 +66,18 @@ In local environment, the plugin will not work properly because you will not be 
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
     ```
 
-6. Copy and apply migrations
+6. Configure and apply migrations
 
     Update `config/packages/doctrine_migrations.yaml` by adding following config
     ```yaml
     doctrine_migrations:
         migrations_paths:
             ...
-            'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
+            'DoctrineMigrations': '@PayPlugSyliusPayPlugPlugin/Migrations'
     ```
 
-    Copy migrations from `vendor/payplug/sylius-payplug-plugin/src/Migrations/` to your migrations directory (e.g. `src/Migrations`) and apply them to your database
+    Apply them to your database
     ```shell
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     bin/console doctrine:migrations:migrate
     ```
 
