@@ -10,3 +10,5 @@ payplug_sylius_payplug_plugin:
         impossible_to_refund_this_payment: Impossible to refund this payment
         oney: Oney
         oney_transaction_less_than_forty_eight_hours: Another transaction have been made less than 48 hours ago.
+    form:
+        base_currency_not_euro: "Channel #channel_code# : PayPlug paiements is only available for channel which base currency is EURO"
