@@ -149,10 +149,6 @@ jobs:
               working-directory: ./sylius
               run: composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
 
-            - name: Composer - Security Checker
-              working-directory: ./sylius
-              run: composer require sensiolabs/security-checker --no-update
-
             - name: Composer - Restrict Symfony version
               working-directory: ./sylius
               run: composer config extra.symfony.require "${{ matrix.symfony }}"
