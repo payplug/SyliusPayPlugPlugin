@@ -65,7 +65,7 @@ final class OneySimulationExtension extends AbstractExtension
         $order = $this->orderRepository->findOneByTokenValue($currentRequest->get('tokenValue'));
 
         if (!$order instanceof OrderInterface) {
-            throw new \Exception('');
+            throw new \Exception('No order found.');
         }
 
         return $order;

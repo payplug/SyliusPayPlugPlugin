@@ -15,7 +15,7 @@ use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
 use Webmozart\Assert\Assert;
 
-class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
+final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
 {
     /** @var CurrencyContextInterface */
     private $currencyContext;
