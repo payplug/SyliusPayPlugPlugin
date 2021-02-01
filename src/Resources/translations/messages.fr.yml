@@ -62,4 +62,4 @@ payplug_sylius_payplug_plugin:
             phone: |
                 Merci de saisir votre numéro de téléphone portable:
             submit: Valider et continuer
-        base_currency_not_euro: "Canal #channel_code# : Payplug n’est disponible que sur des canaux dont la devise est l’EURO"
+        base_currency_not_euro: "Canal #channel_code# : PayPlug n’est disponible que sur des canaux dont la devise est l’EURO"
