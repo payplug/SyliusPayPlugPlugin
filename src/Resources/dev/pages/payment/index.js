@@ -12,7 +12,7 @@ const Payment = {
       Payment.modalAppear();
     }
     Payment.tabs();
-    $(window).on('resize', function () {
+    $(window).on("resize", function () {
       setTimeout(Payment.tabs, 100);
     });
     Payment.tabsHandler();
@@ -23,7 +23,7 @@ const Payment = {
       $(this.options.trigger).show();
     }
     $("input[id*=sylius_checkout_select_payment]").on("change", function () {
-      if ($(`label[for=${$(this).attr('id')}]`).data("gateway") === "oney") {
+      if ($(`label[for=${$(this).attr("id")}]`).data("gateway") === "oney") {
         $(self.options.trigger).slideDown();
       } else {
         $(self.options.trigger).slideUp();
