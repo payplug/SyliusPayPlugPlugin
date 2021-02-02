@@ -1,0 +1,7 @@
+@function const($name) {
+    @if not map-has-key($CONST, $name) {
+        @error 'Unknown constant `#{$name}`.';
+    }
+
+    @return map-get($CONST, $name);
+}
