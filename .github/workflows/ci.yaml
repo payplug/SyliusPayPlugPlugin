@@ -130,7 +130,7 @@ jobs:
             - name: Composer - Update
               working-directory: ./sylius
               run: |
-                  composer req --no-update api-platform/core:2.5.9
+                  composer req --no-update api-platform/core:2.5.10
                   composer install
 
             - name: Composer - Add path repository
