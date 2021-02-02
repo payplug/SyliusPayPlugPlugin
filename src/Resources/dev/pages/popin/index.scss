@@ -1,3 +1,5 @@
+@import "../../settings/constants.scss";
+
 .oney-popin {
     display: none;
     background-color: white;
@@ -22,42 +24,42 @@
     }
 
     &.enabled {
-        border: 1px solid #81bc00;
+        border: 1px solid $green;
 
         hr {
-            border-color: #81bc00;
+            border-color: $green;
         }
 
         &:after {
-            border-left: 20px solid #81bc00;
+            border-left: 20px solid $green;
         }
 
         a.close > span {
-            background: #81bc00;
+            background: $green;
         }
 
         .oney-popin__content > p {
-            color: #81bc00;
+            color: $green;
         }
     }
 
     &.disabled {
-        border: 1px solid #cccccc;
+        border: 1px solid $lightgrey;
 
         hr {
-            border-color: #cccccc;
+            border-color: $lightgrey;
         }
 
         &:after {
-            border-left: 20px solid #cccccc;
+            border-left: 20px solid $lightgrey;
         }
 
         a.close > span {
-            background: #cccccc;
+            background: $lightgrey;
         }
 
         .oney-popin__content > p {
-            color: #66727f;
+            color: $greyish;
         }
     }
 
