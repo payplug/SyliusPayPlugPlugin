@@ -1,7 +1,0 @@
-@mixin const($name, $value) {
-    @if map-has-key($CONST, $name) {
-        @error 'Constant `#{$name}` already defined.';
-    }
-
-    $CONSTANTS: map-merge($CONST, ($name: $value));
-}

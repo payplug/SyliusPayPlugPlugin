@@ -24,38 +24,38 @@
     }
 
     &.enabled {
-        border: 1px solid const("green");
+        border: 1px solid $green;
 
         hr {
-            border-color: const("green");
+            border-color: $green;
         }
 
         &:after {
-            border-left: 20px solid const("green");
+            border-left: 20px solid $green;
         }
 
         a.close > span {
-            background: const("green");
+            background: $green;
         }
 
         .oney-popin__content > p {
-            color: const("green");
+            color: $green;
         }
     }
 
     &.disabled {
-        border: 1px solid const("lightgrey");
+        border: 1px solid $lightgrey;
 
         hr {
-            border-color: const("lightgrey");
+            border-color: $lightgrey;
         }
 
         &:after {
-            border-left: 20px solid const("lightgrey");
+            border-left: 20px solid $lightgrey;
         }
 
         a.close > span {
-            background: const("lightgrey");
+            background: $lightgrey;
         }
 
         .oney-popin__content > p {

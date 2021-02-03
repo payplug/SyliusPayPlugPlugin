@@ -1,6 +1,3 @@
-@import "./functions";
-@import "./mixins";
-
 $white: #ffffff;
 $lightgrey: #cccccc;
 $greyish: #66727f;
@@ -9,14 +6,3 @@ $black: #000000;
 $green: #81bc00;
 $neongreen: #21ba45;
 $red: #db2828;
-
-$CONST: (
-    "white": $white,
-    "lightgrey": $lightgrey,
-    "greyish": $greyish,
-    "darkgrey": $darkgrey,
-    "black": $black,
-    "green": $green,
-    "neongreen": $neongreen,
-    "red": $red,
-)
