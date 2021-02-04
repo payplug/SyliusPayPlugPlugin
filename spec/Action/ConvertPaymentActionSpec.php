@@ -5,17 +5,24 @@ declare(strict_types=1);
 namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\GatewayInterface;
 use Payum\Core\Request\Convert;
 use PhpSpec\ObjectBehavior;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
+    function let(SessionInterface $session): void
+    {
+        $this->beConstructedWith($session);
+    }
+
     function it_is_initializable(): void
     {
         $this->shouldHaveType(ConvertPaymentAction::class);
@@ -29,12 +36,11 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
     function it_executes(
         Convert $request,
         PaymentInterface $payment,
-        GatewayInterface $gateway,
         OrderInterface $order,
         CustomerInterface $customer,
         AddressInterface $address
     ): void {
-        $this->setGateway($gateway);
+        $this->setApi(new PayPlugApiClient('test', PayPlugGatewayFactory::FACTORY_NAME));
 
         $customer = $this->getCustomer($customer);
         $address = $this->getAddress($address);
@@ -92,13 +98,12 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
     function it_executes_with_different_address(
         Convert $request,
         PaymentInterface $payment,
-        GatewayInterface $gateway,
         OrderInterface $order,
         CustomerInterface $customer,
         AddressInterface $address,
         AddressInterface $otherAddress
     ): void {
-        $this->setGateway($gateway);
+        $this->setApi(new PayPlugApiClient('test', PayPlugGatewayFactory::FACTORY_NAME));
 
         $customer = $this->getCustomer($customer);
         $address = $this->getAddress($address);

@@ -8,3 +8,58 @@ payplug_sylius_payplug_plugin:
         payplug_id: 'ID PayPlug : %paymentId%'
         payplug_refund_gateway_is_not_activated: PayPlug n'a pas été activé comme méthode de remboursement
         impossible_to_refund_this_payment: Impossible de rembourser ce paiement
+        oney_gateway_label: Oney by PayPlug
+        oney_cgv_added_label: |
+            J'ai intégré les mentions légales Oney aux CGV de mon site.
+            <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
+        oney: Oney
+        oney_transaction_less_than_forty_eight_hours: Une autre transaction a été faite il y a moins de 48 heures.
+        or_pay_with_oney: Ou payez en
+        pay: Paiement
+        3x_payment: Paiement en 3x
+        4x_payment: Paiement en 4x
+        by_credit_cart: Par carte bancaire
+        cancel: Annuler
+        popin_close: Fermer
+        popin_paiement_desc: |
+            <p><strong> Apport : %apport% <br>
+            + %nb_mensuality% mensualités de : %mensuality%</strong> <br>
+            Dont coût du financement : %cost% TAEG : %percentage%%</p>
+        payment_choice:
+            current_total: Pour un montant de
+            down_payment_amount: Premier apport de
+            effective_annual_percentage_rate: TAEG
+            total_cost: Coût de financement
+            installment_amount: Mensualité n°
+            grand_total: Total
+        popin_legal_mention: |
+            <small>
+                Offre de financement avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        too_much_quantity: Votre panier doit contenir moins de %max_articles% articles pour pouvoir payer avec Oney.
+        invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
+    form:
+        oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
+        complete_info:
+            missing_title: Informations manquantes
+            success_title: Information enregistrées
+            success_instruction: Cliquez à nouveau sur "Suivant" pour continuer
+            email: |
+                Merci de saisir votre adresse email :
+            phone: |
+                Merci de saisir votre numéro de téléphone portable:
+            submit: Valider et continuer
+        base_currency_not_euro: "Canal #channel_code# : PayPlug n’est disponible que sur des canaux dont la devise est l’EURO"

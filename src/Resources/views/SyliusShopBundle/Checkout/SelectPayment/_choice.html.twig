@@ -1,0 +1,37 @@
+{% set factoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+
+<div class="item" {{ sylius_test_html_attribute('payment-item') }}>
+    <div class="field">
+        <div class="ui radio checkbox" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
+            {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
+        </div>
+    </div>
+    <div class="content">
+        <a class="header">
+            {% if method.gatewayConfig.factoryName == factoryName %}
+                <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
+                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
+                </label>
+            {% else %}
+                {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
+            {% endif %}
+        </a>
+        {% if method.description is not null %}
+            <div class="description">
+                <p>{{ method.description }}</p>
+            </div>
+        {% endif %}
+        {% if method.gatewayConfig.factoryName == factoryName and form.parent.parent.oney_payment_choice is defined %}
+            <div class="oney-payment-choice" data-oney-input-id="{{ form.vars.id }}">
+                {{ form_row(form.parent.parent.oney_payment_choice) }}
+            </div>
+            {% if app.session is not null and app.session.get('oney_has_error') == true %}
+                <script type="text/javascript">
+                    /* <![CDATA[ */
+                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                    /* ]] */
+                </script>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

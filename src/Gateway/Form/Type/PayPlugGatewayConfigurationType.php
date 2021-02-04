@@ -2,27 +2,32 @@
 
 declare(strict_types=1);
 
-namespace PayPlug\SyliusPayPlugPlugin\Form\Type;
+namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
-use Payplug\Exception\UnauthorizedException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Webmozart\Assert\Assert;
 
 final class PayPlugGatewayConfigurationType extends AbstractType
 {
     /** @var \Symfony\Contracts\Translation\TranslatorInterface */
     private $translator;
 
-    public function __construct(TranslatorInterface $translator)
+    /** @var FlashBagInterface */
+    private $flashBag;
+
+    public function __construct(TranslatorInterface $translator, FlashBagInterface $flashBag)
     {
         $this->translator = $translator;
+        $this->flashBag = $flashBag;
     }
 
     /**
@@ -38,6 +43,7 @@ final class PayPlugGatewayConfigurationType extends AbstractType
                         'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
                         'groups' => 'sylius',
                     ]),
+                    new IsPayPlugSecretKeyValid(),
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
@@ -49,21 +55,25 @@ final class PayPlugGatewayConfigurationType extends AbstractType
 
                 $event->setData($data);
             })
-            ->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
-                // This listener will validate payplug ApiKey.
-                // @TODO remove it after merging projet-oney as there is now a Validator for this
-                $data = $event->getData();
-
-                try {
-                    Assert::notEmpty($data['secretKey']);
-                    \Payplug\Payplug::init(['secretKey' => $data['secretKey']]);
-                    \Payplug\Authentication::getPermissions();
-                } catch (UnauthorizedException $exception) {
-                    $event->getForm()->get('secretKey')->addError(new FormError(
-                        $this->translator->trans('payplug_sylius_payplug_plugin.secret_key.not_valid', [], 'validators')
-                    ));
-                } catch (\Throwable $exception) {
-                    // Do nothing
+            ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
+                /** @phpstan-ignore-next-line */
+                $formChannels = $event->getForm()->getParent()->getParent()->get('channels');
+                $dataFormChannels = $formChannels->getData();
+                /** @var ChannelInterface $dataFormChannel */
+                foreach ($dataFormChannels as $key => $dataFormChannel) {
+                    $baseCurrency = $dataFormChannel->getBaseCurrency();
+                    if ($baseCurrency === null) {
+                        continue;
+                    }
+                    $baseCurrencyCode = $baseCurrency->getCode();
+                    if ($baseCurrencyCode !== 'EUR') {
+                        $message = $this->translator->trans(
+                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
+                            ['#channel_code#' => $dataFormChannel->getCode()]
+                        );
+                        $formChannels->get($key)->addError(new FormError($message));
+                        $this->flashBag->add('error', $message);
+                    }
                 }
             })
         ;

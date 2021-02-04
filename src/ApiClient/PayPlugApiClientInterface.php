@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
+use Payplug\Payplug;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
@@ -16,11 +17,24 @@ interface PayPlugApiClientInterface
 
     public const STATUS_CAPTURED = 'captured';
 
+    public const STATUS_AUTHORIZED = 'authorized';
+
     public const FAILED = 'failed';
 
     public const REFUNDED = 'refunded';
 
+    /**
+     * @deprecated
+     */
     public function initialise(string $secretKey): void;
+
+    public function getConfiguration(): Payplug;
+
+    public function getAccount(): array;
+
+    public function getGatewayFactoryName(): string;
+
+    public function getPermissions(): array;
 
     public function createPayment(array $data): Payment;
 

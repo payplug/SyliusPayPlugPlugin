@@ -6,7 +6,6 @@ on:
         paths-ignore:
             - README.md
     pull_request:
-        branches: [develop, qa, master]
         paths-ignore:
             - README.md
 
@@ -121,8 +120,18 @@ jobs:
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
 
+          # FIX for sylius install error
+          #            - name: Composer - Install Sylius-Standard
+          #              run: composer create-project --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
             - name: Composer - Install Sylius-Standard
-              run: composer create-project --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
+              run: |
+                  composer create-project --no-progress --no-install --no-scripts sylius/sylius-standard sylius "${{ matrix.sylius }}"
+
+            - name: Composer - Update
+              working-directory: ./sylius
+              run: |
+                  composer req --no-update api-platform/core:2.5.10
+                  composer install
 
             - name: Composer - Add path repository
               working-directory: ./sylius
@@ -140,10 +149,6 @@ jobs:
               working-directory: ./sylius
               run: composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
 
-            - name: Composer - Security Checker
-              working-directory: ./sylius
-              run: composer require sensiolabs/security-checker --no-update
-
             - name: Composer - Restrict Symfony version
               working-directory: ./sylius
               run: composer config extra.symfony.require "${{ matrix.symfony }}"
@@ -159,7 +164,6 @@ jobs:
             - name: Sylius - Get services from Plugin
               working-directory: ./sylius
               run: |
-                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
                   cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/test/messenger.yaml
 
             - name: Sylius - Copy migration of Plugin
@@ -189,6 +193,11 @@ jobs:
                   mkdir -p templates/bundles/SyliusAdminBundle/
                   cp -R vendor/${{ env.package-name }}/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
 
+            - name: Sylius - Get routes from Plugin
+              working-directory: ./sylius
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/routes.yaml config/routes.yaml
+
             - name: Behat - Config Suite
               working-directory: ./sylius
               run: |
@@ -196,6 +205,7 @@ jobs:
                   sed -i "s#vendor/sylius/sylius/features#vendor/${{ env.package-name }}/features#g" behat.yml.dist
                   echo '    - { resource: "../vendor/${{ env.package-name }}/src/Resources/config/services.xml" }' >> config/services_test.yaml
                   echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
+                  echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml" }' >> config/services_test.yaml
                   echo '    - { resource: "../vendor/sylius/refund-plugin/src/Resources/config/services.xml" }' >> config/services_test.yaml
                   echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
 
@@ -205,6 +215,7 @@ jobs:
                   echo 'parameters:' >> config/services_test.yaml
                   echo '    sylius_refund.supported_gateways:' >> config/services_test.yaml
                   echo '        - payplug' >> config/services_test.yaml
+                  echo '        - payplug_oney' >> config/services_test.yaml
                   echo '        - cash_on_delivery' >> config/services_test.yaml
 
             - name: Sylius - Process translations
