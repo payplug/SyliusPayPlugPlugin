@@ -7,3 +7,4 @@ payplug_sylius_payplug_plugin:
         test_mode: Modalità TEST
         payplug_id: 'ID PayPlug : %paymentId%'
         oney: Oney
+        refund_minimum_amount_requirement_not_met: L'importo da rimborsare deve essere di almeno 0,10€

@@ -134,5 +134,21 @@
                  decorates="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface">
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider.inner"/>
         </service>
+
+
+        <service id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface" class="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator">
+            <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Creator\RefundUnitsCommandCreatorDecorator"
+                decorates="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator"
+                decoration-inner-name="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator.inner"
+                public="false"
+        >
+            <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator.inner"/>
+            <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator"/>
+        </service>
+
     </services>
 </container>
