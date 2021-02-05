@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Creator;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Repository\PaymentMethodRepositoryInterface;
 use Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculatorInterface;
@@ -18,13 +21,13 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
 {
     private const MINIMUM_REFUND_AMOUNT = 0.10;
 
-    /** @var \Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface */
+    /** @var RefundUnitsCommandCreatorInterface */
     private $decorated;
 
     /** @var UnitRefundTotalCalculatorInterface */
     private $unitRefundTotalCalculator;
 
-    /** @var \Sylius\Component\Payment\Repository\PaymentMethodRepositoryInterface */
+    /** @var PaymentMethodRepositoryInterface */
     private $paymentMethodRepository;
 
     /** @var \Symfony\Contracts\Translation\TranslatorInterface */
@@ -59,11 +62,11 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $this->paymentMethodRepository->find($paymentMethodId);
 
-        /** @var \Payum\Core\Model\GatewayConfigInterface $gateway */
+        /** @var GatewayConfigInterface $gateway */
         $gateway = $paymentMethod->getGatewayConfig();
 
-        if ($gateway->getFactoryName() !== \PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory::FACTORY_NAME &&
-            $gateway->getFactoryName() !== \PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory::FACTORY_NAME) {
+        if ($gateway->getFactoryName() !== PayPlugGatewayFactory::FACTORY_NAME &&
+            $gateway->getFactoryName() !== OneyGatewayFactory::FACTORY_NAME) {
             return $this->decorated->fromRequest($request);
         }
 
