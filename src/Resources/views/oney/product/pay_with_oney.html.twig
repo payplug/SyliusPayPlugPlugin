@@ -1,6 +1,6 @@
 {% if is_oney_enabled() %}
     {% set logo_name = '3x4x-alt.svg' %}
-    {% if oney_cart_eligible() %}
+    {% if oney_product_eligible() %}
         {% set logo_name = '3x4x.svg' %}
     {% endif %}
     <div class="oney-info">
@@ -9,7 +9,7 @@
         <div class="ui inverted dimmer">
             <div class="ui loader"></div>
         </div>
-        {% if oney_cart_eligible() %}
+        {% if oney_product_eligible() %}
             <div class="oney-popin enabled" data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}"></div>
         {% endif %}
     </div>

@@ -20,3 +20,9 @@ payplug_sylius_oney_simulation_popin:
     methods: ['GET']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin'
+
+payplug_sylius_oney_is_product_eligible:
+    path: /{_locale}/payplug/oney/is-product-eligible
+    methods: ['GET']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible'

@@ -9,10 +9,15 @@ use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\ProductInterface;
+use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
+use Webmozart\Assert\Assert;
 
 final class OneyRulesExtension extends AbstractExtension
 {
@@ -28,30 +33,44 @@ final class OneyRulesExtension extends AbstractExtension
     /** @var \Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface */
     private $moneyFormatter;
 
+    /** @var \Sylius\Component\Core\Repository\ProductRepositoryInterface */
+    private $productRepository;
+
+    /** @var \Symfony\Component\HttpFoundation\RequestStack */
+    private $requestStack;
+
     public function __construct(
         OneyCheckerInterface $oneyChecker,
         CartContextInterface $cartContext,
         PayPlugApiClientInterface $oneyClient,
-        MoneyFormatterInterface $moneyFormatter
+        MoneyFormatterInterface $moneyFormatter,
+        ProductRepositoryInterface $productRepository,
+        RequestStack $requestStack
     ) {
         $this->oneyChecker = $oneyChecker;
         $this->cartContext = $cartContext;
         $this->oneyClient = $oneyClient;
         $this->moneyFormatter = $moneyFormatter;
+        $this->productRepository = $productRepository;
+        $this->requestStack = $requestStack;
     }
 
     public function getFunctions(): array
     {
         return [
             new TwigFunction('oney_cart_eligible', [$this, 'isCartEligible']),
+            new TwigFunction('oney_product_eligible', [$this, 'isProductEligible']),
             new TwigFunction('oney_ineligible_reasons', [$this, 'getReasonsOfIneligibility']),
         ];
     }
 
-    public function isCartEligible(): bool
+    public function isCartEligible(?OrderInterface $currentCart = null): bool
     {
-        /** @var \Sylius\Component\Core\Model\Order $currentCart */
-        $currentCart = $this->cartContext->getCart();
+        if (null === $currentCart) {
+            /** @var \Sylius\Component\Core\Model\Order $currentCart */
+            $currentCart = $this->cartContext->getCart();
+        }
+
         if (!$this->oneyChecker->isNumberOfProductEligible($currentCart->getTotalQuantity())) {
             return false;
         }
@@ -79,12 +98,15 @@ final class OneyRulesExtension extends AbstractExtension
         return $this->oneyChecker->isPriceEligible($currentCart->getTotal(), $currencyCode);
     }
 
-    public function getReasonsOfIneligibility(): array
+    public function getReasonsOfIneligibility(?OrderInterface $currentCart = null): array
     {
         $data = [];
         $transParam = [];
-        /** @var \Sylius\Component\Core\Model\Order $currentCart */
-        $currentCart = $this->cartContext->getCart();
+
+        if (null === $currentCart) {
+            /** @var \Sylius\Component\Core\Model\Order $currentCart */
+            $currentCart = $this->cartContext->getCart();
+        }
 
         if (!$this->oneyChecker->isNumberOfProductEligible($currentCart->getTotalQuantity())) {
             $data[] = 'payplug_sylius_payplug_plugin.ui.too_much_quantity';
@@ -134,5 +156,61 @@ final class OneyRulesExtension extends AbstractExtension
             'reasons' => $data,
             'trans_params' => array_merge([], ...$transParam),
         ];
+    }
+
+    public function isProductEligible(): bool
+    {
+        /** @var \Sylius\Component\Core\Model\Order $currentCart */
+        $currentCart = $this->cartContext->getCart();
+
+        $request = $this->requestStack->getCurrentRequest();
+        if (null === $request || 'sylius_shop_product_show' !== $request->get('_route')) {
+            return false;
+        }
+
+        try {
+            $channel = $currentCart->getChannel();
+            if (!$channel instanceof ChannelInterface) {
+                throw new \LogicException('No channel found');
+            }
+
+            $currency = $channel->getBaseCurrency();
+            if (!$currency instanceof CurrencyInterface) {
+                throw new \LogicException('No currency found');
+            }
+
+            $currencyCode = $currency->getCode();
+            if (null === $currencyCode) {
+                throw new \LogicException('No currency code found');
+            }
+        } catch (\Throwable $throwable) {
+            // unable to find currency_code
+            return false;
+        }
+
+        Assert::notNull($currentCart->getLocaleCode());
+        $product = $this->productRepository->findOneByChannelAndSlug(
+            $channel,
+            $currentCart->getLocaleCode(),
+            $request->get('_route_params')['slug']
+        );
+        Assert::isInstanceOf($product, ProductInterface::class);
+
+        /** @var \Sylius\Component\Core\Model\ProductVariantInterface|null $firstVariant */
+        $firstVariant = $product->getEnabledVariants()->first();
+
+        if (null === $firstVariant) {
+            return false;
+        }
+
+        $pricing = $firstVariant->getChannelPricingForChannel($channel);
+
+        if (null === $pricing) {
+            return false;
+        }
+
+        Assert::notNull($pricing->getPrice());
+
+        return $this->oneyChecker->isPriceEligible($pricing->getPrice(), $currencyCode);
     }
 }
