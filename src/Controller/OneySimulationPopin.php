@@ -34,7 +34,7 @@ final class OneySimulationPopin extends AbstractOneyController
                 '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
                 [
                     'data' => $simulationData,
-                    'ineligibilityData' => [],
+                    'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($cart),
                 ]
             );
         }

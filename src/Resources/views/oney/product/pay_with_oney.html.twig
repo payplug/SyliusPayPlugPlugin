@@ -9,11 +9,22 @@
         <div class="ui inverted dimmer">
             <div class="ui loader"></div>
         </div>
-        {% if oney_product_eligible() %}
-            <div class="oney-popin enabled" data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}"></div>
-        {% endif %}
+        <div class="oney-popin {% if oney_product_eligible() %}enabled{% else %}disabled{% endif %}"
+             data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}">
+        </div>
     </div>
-
     <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">
+    <script type="text/javascript">//<![CDATA[
+      {% autoescape 'js' %}
+        var productMeta = {
+          product: "{{ product.code }}",
+          url: "{{ path('payplug_sylius_oney_is_product_eligible') }}",
+          img: {
+            true: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}",
+            false: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-alt.svg') }}",
+          }
+        }
+      {% endautoescape %}
+    //]]></script>
 {% endif %}
