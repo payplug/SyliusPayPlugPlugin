@@ -43,7 +43,7 @@ jobs:
                       php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-
 
             - name: Composer - Validate composer.json and composer.lock
-              run: composer validate --strict
+              run: composer validate
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
