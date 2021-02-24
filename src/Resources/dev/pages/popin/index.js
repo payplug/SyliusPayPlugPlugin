@@ -20,7 +20,9 @@ const Popin = {
       const $selectors = $(`[id*=${this.triggers[prop]}`);
       productMeta[prop] = $selectors.val();
       $selectors.on("input", (e) => {
+        e.preventDefault();
         productMeta[prop] = $(e.currentTarget).val();
+        this.toggleLoader();
         this.check();
       });
     }
@@ -28,20 +30,18 @@ const Popin = {
   },
   check() {
     const self = this;
-    $(this.handlers.info).find(".dimmer").addClass("active");
     $.ajax({
       url: this.productMeta.url,
       data: this.productMeta,
       success: function (res) {
-        $(self.handlers.info)
-          .find("img")
-          .attr("src", self.productMeta.img[res.isEligible]);
-        if (res.isEligible) {
-          $(self.handlers.popin).removeClass("disabled").addClass("enabled");
-        } else {
-          $(self.handlers.popin).removeClass("enabled").addClass("disabled");
-        }
-        $(self.handlers.info).find(".dimmer").removeClass("active");
+        self.load(() => {
+          $(self.handlers.info)
+            .find("img:first")
+            .attr("src", self.productMeta.img[res.isEligible]);
+          res.isEligible
+            ? $(self.handlers.popin).removeClass("disabled").addClass("enabled")
+            : $(self.handlers.popin).removeClass("enabled").addClass("disabled");
+        });
       },
     });
   },
@@ -55,23 +55,32 @@ const Popin = {
         $(this.handlers.popin).fadeIn();
         return;
       }
-      const self = this;
       // content not loaded yet
-      $(this.handlers.info).find(".dimmer").addClass("active");
-      $.ajax({
-        url: $(this.handlers.popin).data("popin-url"),
-        data: this.productMeta,
-        success: function (res) {
-          $(self.handlers.popin).html(res);
-          $(self.handlers.info).find(".dimmer").removeClass("active");
-          $(self.handlers.popin).fadeIn();
-          Popin.closeHandler();
-        },
-        error: function (res) {
-          console.log(res);
-        },
-      });
+      this.toggleLoader();
+      this.load();
     });
+  },
+  load(callback = null) {
+    const self = this;
+    $.ajax({
+      url: $(this.handlers.popin).data("popin-url"),
+      data: this.productMeta,
+      success: function (res) {
+        $(self.handlers.popin).html(res);
+        self.toggleLoader();
+        $(self.handlers.popin).fadeIn();
+        Popin.closeHandler();
+        if (callback !== null) {
+          callback();
+        }
+      },
+      error: function (res) {
+        console.log(res);
+      },
+    });
+  },
+  toggleLoader() {
+    $(this.handlers.info).find(".dimmer").toggleClass("active");
   },
   closeHandler() {
     $(this.handlers.popin)
