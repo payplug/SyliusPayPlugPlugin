@@ -13,3 +13,4 @@ payplug_sylius_payplug_plugin:
         refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least 0.10€
     form:
         base_currency_not_euro: "Channel #channel_code# : PayPlug paiements is only available for channel which base currency is EURO"
+        base_currency_not_euro_oney: "Channel #channel_code# : Oney By PayPlug is only available for channel which base currency is EURO"

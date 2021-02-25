@@ -248,6 +248,6 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     private function retrieveDeliveryType(ShipmentInterface $shipment): string
     {
         // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
-        return 'carrier';
+        return 'storepickup';
     }
 }
