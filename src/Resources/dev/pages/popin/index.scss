@@ -10,6 +10,7 @@
     top: 0;
     left: calc(-20em - 32px);
     transform: translateY(calc(-100% / 3 + 10px));
+    pointer-events: none;
 
     &:after {
         content: '';
@@ -64,6 +65,7 @@
     }
 
     &__header {
+        pointer-events: all;
         text-align: right;
 
         a.close {

@@ -12,9 +12,11 @@
   },
   "license": "MIT",
   "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
+    "> 2%",
+    "last 4 versions",
+    "ie > 8",
+    "not dead",
+    "not op_mob 59"
   ],
   "devDependencies": {
     "@babel/core": "^7.9.0",
