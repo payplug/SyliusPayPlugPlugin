@@ -15,6 +15,8 @@ abstract class AbstractGatewayFactory extends GatewayFactory
 
     public const FACTORY_TITLE = null;
 
+    public const BASE_CURRENCY_CODE = 'EUR';
+
     protected function populateConfig(ArrayObject $config): void
     {
         $config->defaults([
