@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Symfony\Component\Form\AbstractType;
@@ -66,10 +67,12 @@ final class PayPlugGatewayConfigurationType extends AbstractType
                         continue;
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();
-                    if ($baseCurrencyCode !== 'EUR') {
+                    if ($baseCurrencyCode !== PayPlugGatewayFactory::BASE_CURRENCY_CODE) {
                         $message = $this->translator->trans(
-                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
-                            ['#channel_code#' => $dataFormChannel->getCode()]
+                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro', [
+                                '#channel_code#' => $dataFormChannel->getCode(),
+                                '#payment_method#' => PayPlugGatewayFactory::FACTORY_TITLE
+                            ]
                         );
                         $formChannels->get($key)->addError(new FormError($message));
                         $this->flashBag->add('error', $message);

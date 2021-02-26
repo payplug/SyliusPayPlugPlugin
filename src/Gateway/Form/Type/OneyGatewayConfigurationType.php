@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -73,10 +74,12 @@ final class OneyGatewayConfigurationType extends AbstractType
                         continue;
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();
-                    if ($baseCurrencyCode !== 'EUR') {
+                    if ($baseCurrencyCode !== OneyGatewayFactory::BASE_CURRENCY_CODE) {
                         $message = $this->translator->trans(
-                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro_oney',
-                            ['#channel_code#' => $dataFormChannel->getCode()]
+                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro', [
+                                '#channel_code#' => $dataFormChannel->getCode(),
+                                '#payment_method#' => OneyGatewayFactory::FACTORY_TITLE
+                            ]
                         );
                         $formChannels->get($key)->addError(new FormError($message));
                         $this->flashBag->add('error', $message);
