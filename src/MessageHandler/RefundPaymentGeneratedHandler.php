@@ -33,7 +33,7 @@ use Webmozart\Assert\Assert;
 
 final class RefundPaymentGeneratedHandler
 {
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $entityManager;
 
     /** @var FactoryInterface */
