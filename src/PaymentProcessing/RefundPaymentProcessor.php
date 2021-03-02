@@ -76,7 +76,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
     public function processWithAmount(PaymentInterface $payment, int $amount, int $refundId): void
     {
-        Assert::isInstanceOf($payment, Payment::class);
         $this->prepare($payment);
         $details = $payment->getDetails();
 

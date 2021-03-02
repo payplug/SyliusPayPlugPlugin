@@ -50,6 +50,14 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->is_paid = true;
+        $payment->created_at = 1598273578;
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+
         $refund = \Mockery::mock('refund', Refund::class);
         $refund->amount = 34000;
         $refund->currency = 'EUR';
@@ -98,6 +106,40 @@ final class PayPlugApiMocker
             ->shouldReceive('treat')
             ->andReturn($payment)
         ;
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function mockApiRetrievePayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class
+        );
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
+        $payment->refundable_after = (new \DateTime())->sub(new \DateInterval('P1D'))->getTimestamp();
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function mockApiRetrieveNotRefundablePayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class
+        );
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
+        $payment->refundable_after = (new \DateTime())->add(new \DateInterval('P1D'))->getTimestamp();
         $mock
             ->shouldReceive('retrieve')
             ->andReturn($payment)

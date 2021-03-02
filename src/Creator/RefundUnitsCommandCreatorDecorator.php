@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Creator;
 
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Payment\Repository\PaymentMethodRepositoryInterface;
 use Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculatorInterface;
 use Sylius\RefundPlugin\Command\RefundUnits;
@@ -30,19 +34,29 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
     /** @var PaymentMethodRepositoryInterface */
     private $paymentMethodRepository;
 
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    /** @var OrderRepositoryInterface */
+    private $orderRepository;
+
+    /** @var TranslatorInterface */
     private $translator;
+
+    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
+    private $oneyClient;
 
     public function __construct(
         RefundUnitsCommandCreatorInterface $decorated,
         UnitRefundTotalCalculatorInterface $unitRefundTotalCalculator,
         PaymentMethodRepositoryInterface $paymentMethodRepository,
-        TranslatorInterface $translator
+        OrderRepositoryInterface $orderRepository,
+        TranslatorInterface $translator,
+        PayPlugApiClientInterface $oneyClient
     ) {
         $this->unitRefundTotalCalculator = $unitRefundTotalCalculator;
         $this->decorated = $decorated;
         $this->paymentMethodRepository = $paymentMethodRepository;
+        $this->orderRepository = $orderRepository;
         $this->translator = $translator;
+        $this->oneyClient = $oneyClient;
     }
 
     public function fromRequest(Request $request): RefundUnits
@@ -68,6 +82,14 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
         if ($gateway->getFactoryName() !== PayPlugGatewayFactory::FACTORY_NAME &&
             $gateway->getFactoryName() !== OneyGatewayFactory::FACTORY_NAME) {
             return $this->decorated->fromRequest($request);
+        }
+
+        if ($gateway->getFactoryName() === OneyGatewayFactory::FACTORY_NAME) {
+            /** @var OrderInterface|null $order */
+            $order = $this->orderRepository->findOneByNumber($request->get('orderNumber'));
+            Assert::isInstanceOf($order, OrderInterface::class);
+
+            $this->canOneyRefundBeMade($order);
         }
 
         $totalRefundRequest = $this->getTotalRefundAmount($units, $shipments);
@@ -115,5 +137,24 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
         Assert::keyExists($unit, 'amount');
 
         return (float) $unit['amount'];
+    }
+
+    private function canOneyRefundBeMade(OrderInterface $order): void
+    {
+        $lastPayment = $order->getLastPayment(PaymentInterface::STATE_COMPLETED);
+        Assert::isInstanceOf($lastPayment, PaymentInterface::class);
+
+        $data = $this->oneyClient->retrieve($lastPayment->getDetails()['payment_id']);
+
+        $now = new \DateTime();
+
+        if ($now->getTimestamp() < $data->refundable_until &&
+            $now->getTimestamp() > $data->refundable_after) {
+            return;
+        }
+
+        throw InvalidRefundAmountException::withValidationConstraint(
+            $this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours')
+        );
     }
 }
