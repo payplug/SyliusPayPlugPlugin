@@ -11,5 +11,9 @@
                  class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository"
                  parent="sylius.repository.payment" />
 
+        <service id="payplug_sylius_payplug_plugin.repository.product_variant"
+                 class="PayPlug\SyliusPayPlugPlugin\Repository\ProductVariantRepository"
+                 parent="sylius.repository.product_variant" />
+
     </services>
 </container>

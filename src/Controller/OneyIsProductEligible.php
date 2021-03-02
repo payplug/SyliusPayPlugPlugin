@@ -7,47 +7,38 @@ namespace PayPlug\SyliusPayPlugPlugin\Controller;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Webmozart\Assert\Assert;
 
-final class OneySimulationPopin extends AbstractOneyController
+final class OneyIsProductEligible extends AbstractOneyController
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request): JsonResponse
     {
         /** @var OrderInterface $cart */
         $cart = $this->cartContext->getCart();
 
-        /** @var string|null $productCode */
         $productCode = $request->get('product');
+        Assert::notNull($productCode);
 
         /** @var string|null $productOptionValue */
         $productOptionValue = $request->get('option');
 
         /** @var int|null $quantity */
         $quantity = (int) $request->get('quantity');
+        Assert::notNull($quantity);
 
-        if (null === $productCode || null === $quantity) {
-            $simulationData = $this->oneySimulationDataProvider->getForCart($cart);
-
-            return $this->render(
-                '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
-                [
-                    'data' => $simulationData,
-                    'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($cart),
-                ]
-            );
-        }
-
-        return $this->renderSimulateForProductVariant($cart, $productCode, $quantity, $productOptionValue);
+        return new JsonResponse([
+            'isEligible' => $this->isProductEligible($cart, $productCode, $quantity, $productOptionValue),
+        ]);
     }
 
-    private function renderSimulateForProductVariant(
+    private function isProductEligible(
         OrderInterface $cart,
         string $productCode,
         int $quantity,
         ?string $productOptionValue
-    ): Response {
+    ): bool {
         $productVariant = $this->getProductVariant($productCode, $productOptionValue);
         Assert::isInstanceOf($productVariant, ProductVariantInterface::class);
 
@@ -65,14 +56,6 @@ final class OneySimulationPopin extends AbstractOneyController
             $cart->getCurrencyCode()
         );
 
-        $simulationData = $this->oneySimulationDataProvider->getForCart($tempCart);
-
-        return $this->render(
-            '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
-            [
-                'data' => $simulationData,
-                'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($tempCart),
-            ]
-        );
+        return $this->oneyRulesExtension->isCartEligible($tempCart);
     }
 }

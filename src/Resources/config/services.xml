@@ -50,6 +50,13 @@
             <tag name="console.command" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin" class="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin">
+            <argument type="service" id="payplug_sylius_payplug_plugin.repository.product_variant" key="$productVariantRepository" />
+        </service>
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible" class="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible">
+            <argument type="service" id="payplug_sylius_payplug_plugin.repository.product_variant" key="$productVariantRepository" />
+        </service>
+
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator"
                 decorates="sylius.payment_methods_resolver"
