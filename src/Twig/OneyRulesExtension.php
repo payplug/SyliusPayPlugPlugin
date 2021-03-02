@@ -11,6 +11,7 @@ use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductInterface;
+use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
@@ -21,22 +22,22 @@ use Webmozart\Assert\Assert;
 
 final class OneyRulesExtension extends AbstractExtension
 {
-    /** @var \Sylius\Component\Order\Context\CartContextInterface */
+    /** @var CartContextInterface */
     private $cartContext;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface */
+    /** @var OneyCheckerInterface */
     private $oneyChecker;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
+    /** @var PayPlugApiClientInterface */
     private $oneyClient;
 
-    /** @var \Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface */
+    /** @var MoneyFormatterInterface */
     private $moneyFormatter;
 
-    /** @var \Sylius\Component\Core\Repository\ProductRepositoryInterface */
+    /** @var ProductRepositoryInterface */
     private $productRepository;
 
-    /** @var \Symfony\Component\HttpFoundation\RequestStack */
+    /** @var RequestStack */
     private $requestStack;
 
     public function __construct(
@@ -67,7 +68,7 @@ final class OneyRulesExtension extends AbstractExtension
     public function isCartEligible(?OrderInterface $currentCart = null): bool
     {
         if (null === $currentCart) {
-            /** @var \Sylius\Component\Core\Model\Order $currentCart */
+            /** @var OrderInterface $currentCart */
             $currentCart = $this->cartContext->getCart();
         }
 
@@ -104,7 +105,7 @@ final class OneyRulesExtension extends AbstractExtension
         $transParam = [];
 
         if (null === $currentCart) {
-            /** @var \Sylius\Component\Core\Model\Order $currentCart */
+            /** @var OrderInterface $currentCart */
             $currentCart = $this->cartContext->getCart();
         }
 
@@ -160,7 +161,7 @@ final class OneyRulesExtension extends AbstractExtension
 
     public function isProductEligible(): bool
     {
-        /** @var \Sylius\Component\Core\Model\Order $currentCart */
+        /** @var OrderInterface $currentCart */
         $currentCart = $this->cartContext->getCart();
 
         $request = $this->requestStack->getCurrentRequest();
@@ -196,7 +197,7 @@ final class OneyRulesExtension extends AbstractExtension
         );
         Assert::isInstanceOf($product, ProductInterface::class);
 
-        /** @var \Sylius\Component\Core\Model\ProductVariantInterface|null $firstVariant */
+        /** @var ProductVariantInterface|null $firstVariant */
         $firstVariant = $product->getEnabledVariants()->first();
 
         if (null === $firstVariant) {

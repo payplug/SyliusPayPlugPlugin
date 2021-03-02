@@ -15,7 +15,7 @@ final class OneySimulationPopin extends AbstractOneyController
 {
     public function __invoke(Request $request): Response
     {
-        /** @var \Sylius\Component\Core\Model\OrderInterface $cart */
+        /** @var OrderInterface $cart */
         $cart = $this->cartContext->getCart();
 
         /** @var string|null $productCode */

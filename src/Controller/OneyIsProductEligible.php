@@ -15,7 +15,7 @@ final class OneyIsProductEligible extends AbstractOneyController
 {
     public function __invoke(Request $request): JsonResponse
     {
-        /** @var \Sylius\Component\Core\Model\OrderInterface $cart */
+        /** @var OrderInterface $cart */
         $cart = $this->cartContext->getCart();
 
         $productCode = $request->get('product');

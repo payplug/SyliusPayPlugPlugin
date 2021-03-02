@@ -11,6 +11,7 @@ use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductRepository;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ChannelPricingInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
@@ -25,28 +26,28 @@ abstract class AbstractOneyController extends AbstractController
     /** @var OneySimulationDataProviderInterface */
     protected $oneySimulationDataProvider;
 
-    /** @var \Sylius\Component\Order\Context\CartContextInterface */
+    /** @var CartContextInterface */
     protected $cartContext;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\Repository\ProductVariantRepository */
+    /** @var ProductVariantRepository */
     protected $productVariantRepository;
 
-    /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
+    /** @var FactoryInterface */
     protected $cartFactory;
 
-    /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
+    /** @var FactoryInterface */
     protected $orderItemFactory;
 
-    /** @var \Sylius\Component\Order\Modifier\OrderModifierInterface */
+    /** @var OrderModifierInterface */
     protected $orderModifier;
 
-    /** @var \Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface */
+    /** @var OrderItemQuantityModifierInterface */
     protected $itemQuantityModifier;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\Twig\OneyRulesExtension */
+    /** @var OneyRulesExtension */
     protected $oneyRulesExtension;
 
-    /** @var \Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductRepository */
+    /** @var ProductRepository */
     protected $productRepository;
 
     public function __construct(
@@ -98,13 +99,13 @@ abstract class AbstractOneyController extends AbstractController
         string $localeCode,
         string $currencyCode
     ): OrderInterface {
-        /** @var \Sylius\Component\Core\Model\OrderInterface $tempCart */
+        /** @var OrderInterface $tempCart */
         $tempCart = $this->cartFactory->createNew();
         $tempCart->setChannel($channel);
         $tempCart->setLocaleCode($localeCode);
         $tempCart->setCurrencyCode($currencyCode);
 
-        /** @var \Sylius\Component\Core\Model\OrderItemInterface $orderItem */
+        /** @var OrderItemInterface $orderItem */
         $orderItem = $this->orderItemFactory->createNew();
         $orderItem->setVariant($productVariant);
 
