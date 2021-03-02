@@ -23,7 +23,6 @@ Feature: Refunding order's Oney payment
     Scenario: Should not be able to refund using oney payment before 48 hours
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
-        Then there should be "Cash on delivery" payment method
         Then I should still be able to refund order shipment with "Oney" payment
         When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment
         Then I should see an error message "Another transaction have been made less than 48 hours ago."
@@ -34,7 +33,6 @@ Feature: Refunding order's Oney payment
     Scenario: Should be able to refund using oney payment after 48 hours
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
-        Then there should be "Cash on delivery" payment method
         Then I should still be able to refund order shipment with "Oney" payment
         When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after 48 hours
         Then I should see a success message "Selected order units have been successfully refunded"
@@ -84,7 +82,6 @@ Feature: Refunding order's Oney payment
     Scenario: Should not be able to refund another item before last transaction exceed 48 hours
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
-        Then there should be "Cash on delivery" payment method
         Then I should still be able to refund order shipment with "Oney" payment
         When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after 48 hours
         Then I should see a success message "Selected order units have been successfully refunded"
@@ -99,7 +96,6 @@ Feature: Refunding order's Oney payment
     Scenario: Should be able to refund another item when last transaction is at least 48 hours old
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
-        Then there should be "Cash on delivery" payment method
         Then I should still be able to refund order shipment with "Oney" payment
         When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after 48 hours
         Then I should see a success message "Selected order units have been successfully refunded"

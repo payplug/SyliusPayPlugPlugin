@@ -94,6 +94,17 @@
             <argument>%sylius_refund.supported_gateways%</argument>
         </service>
 
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+
         <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction">
             <argument type="service" id="session" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
@@ -116,17 +127,6 @@
             <argument type="service" id="translator"/>
 
             <tag name="controller.service_arguments"/>
-        </service>
-
-        <service
-                id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
-                decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
-                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"
-                public="false"
-        >
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
-            <argument type="service" id="request_stack"/>
-            <argument type="service" id="sylius.repository.order"/>
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider" />
