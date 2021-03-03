@@ -13,7 +13,7 @@ payplug_sylius_payplug_plugin:
             J'ai intégré les mentions légales Oney aux CGV de mon site.
             <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: Une autre transaction a été faite il y a moins de 48 heures.
+        oney_transaction_less_than_forty_eight_hours: Le remboursement sera possible 48h après la dernière transaction de paiement ou de remboursement.
         or_pay_with_oney: Ou payez en
         pay: Paiement
         3x_payment: Paiement en 3x

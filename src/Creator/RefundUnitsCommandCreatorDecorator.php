@@ -40,7 +40,7 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
     /** @var TranslatorInterface */
     private $translator;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
+    /** @var PayPlugApiClientInterface */
     private $oneyClient;
 
     public function __construct(

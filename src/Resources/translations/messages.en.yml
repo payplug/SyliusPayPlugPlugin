@@ -9,7 +9,7 @@ payplug_sylius_payplug_plugin:
         payplug_refund_gateway_is_not_activated: PayPlug refund gateway is not activated
         impossible_to_refund_this_payment: Impossible to refund this payment
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: Another transaction have been made less than 48 hours ago.
+        oney_transaction_less_than_forty_eight_hours: The refund will be possible 48h after the last payment or refund transaction.
         refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least 0.10€
     form:
         base_currency_not_euro: "Channel #channel_code# : #payment_method# paiements is only available for channel which base currency is EURO"
