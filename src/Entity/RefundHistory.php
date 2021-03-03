@@ -8,7 +8,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
-use Sylius\Component\Core\Model\Payment;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Webmozart\Assert\Assert;
@@ -41,7 +41,7 @@ class RefundHistory implements ResourceInterface
     private $externalId;
 
     /**
-     * @var Payment|null
+     * @var PaymentInterface|null
      * @ORM\ManyToOne(targetEntity="\Sylius\Component\Core\Model\Payment")
      * @ORM\JoinColumn(name="payment_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      */
@@ -111,12 +111,12 @@ class RefundHistory implements ResourceInterface
         return $this;
     }
 
-    public function getPayment(): ?Payment
+    public function getPayment(): ?PaymentInterface
     {
         return $this->payment;
     }
 
-    public function setPayment(?Payment $payment): self
+    public function setPayment(?PaymentInterface $payment): self
     {
         $this->payment = $payment;
 

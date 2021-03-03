@@ -12,7 +12,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
-use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
@@ -20,7 +19,6 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Webmozart\Assert\Assert;
 
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
@@ -76,7 +74,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
     public function processWithAmount(PaymentInterface $payment, int $amount, int $refundId): void
     {
-        Assert::isInstanceOf($payment, Payment::class);
         $this->prepare($payment);
         $details = $payment->getDetails();
 

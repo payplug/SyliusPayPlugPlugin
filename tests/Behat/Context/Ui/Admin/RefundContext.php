@@ -79,10 +79,14 @@ final class RefundContext implements Context
         string $productName,
         string $paymentMethod
     ): void {
-        $this->payPlugApiMocker->mockApiRefundedWithAmountPayment(function () use (
+        $this->payPlugApiMocker->mockApiRetrieveNotRefundablePayment(function () use (
             $order, $unitNumber, $productName, $paymentMethod
         ) {
-            $this->refundingContext->decidedToRefundProduct($unitNumber, $productName, $order->getNumber(), $paymentMethod);
+            $this->payPlugApiMocker->mockApiRefundedWithAmountPayment(function () use (
+                $order, $unitNumber, $productName, $paymentMethod
+            ) {
+                $this->refundingContext->decidedToRefundProduct($unitNumber, $productName, $order->getNumber(), $paymentMethod);
+            });
         });
     }
 
@@ -141,23 +145,27 @@ final class RefundContext implements Context
         string $productName,
         string $paymentMethod
     ): void {
-        /** @var DateTime $createdAt */
-        $createdAt = $order->getLastPayment()->getCreatedAt();
-        $createdAt->modify('-48 hours');
+        $this->payPlugApiMocker->mockApiRetrievePayment(function () use (
+            $order, $unitNumber, $productName, $paymentMethod
+        ) {
+            /** @var DateTime $createdAt */
+            $createdAt = $order->getLastPayment()->getCreatedAt();
+            $createdAt->modify('-48 hours');
 
-        $payment = new Payment();
-        $payment->setCreatedAt($createdAt);
-        $payment->setAmount($order->getLastPayment()->getAmount());
-        $payment->setDetails($order->getLastPayment()->getDetails());
-        $payment->setCurrencyCode($order->getLastPayment()->getCurrencyCode());
-        $payment->setMethod($order->getLastPayment()->getMethod());
-        $payment->setOrder($order);
-        $payment->setState($order->getLastPayment()->getState());
+            $payment = new Payment();
+            $payment->setCreatedAt($createdAt);
+            $payment->setAmount($order->getLastPayment()->getAmount());
+            $payment->setDetails($order->getLastPayment()->getDetails());
+            $payment->setCurrencyCode($order->getLastPayment()->getCurrencyCode());
+            $payment->setMethod($order->getLastPayment()->getMethod());
+            $payment->setOrder($order);
+            $payment->setState($order->getLastPayment()->getState());
 
-        $this->entityManager->persist($payment);
-        $this->entityManager->flush();
+            $this->entityManager->persist($payment);
+            $this->entityManager->flush();
 
-        $this->decideToRefundProduct($order, $unitNumber, $productName, $paymentMethod);
+            $this->decideToRefundProduct($order, $unitNumber, $productName, $paymentMethod);
+        });
     }
 
     /**

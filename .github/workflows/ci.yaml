@@ -131,6 +131,7 @@ jobs:
               working-directory: ./sylius
               run: |
                   composer req --no-update api-platform/core:2.5.10
+                  composer req --no-update symfony/dependency-injection:v4.4.18
                   composer install
 
             - name: Composer - Add path repository

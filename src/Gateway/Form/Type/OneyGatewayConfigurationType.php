@@ -15,8 +15,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -78,7 +78,7 @@ final class OneyGatewayConfigurationType extends AbstractType
                         $message = $this->translator->trans(
                             'payplug_sylius_payplug_plugin.form.base_currency_not_euro', [
                                 '#channel_code#' => $dataFormChannel->getCode(),
-                                '#payment_method#' => OneyGatewayFactory::FACTORY_TITLE
+                                '#payment_method#' => OneyGatewayFactory::FACTORY_TITLE,
                             ]
                         );
                         $formChannels->get($key)->addError(new FormError($message));

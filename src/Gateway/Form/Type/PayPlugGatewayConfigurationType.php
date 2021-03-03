@@ -71,7 +71,7 @@ final class PayPlugGatewayConfigurationType extends AbstractType
                         $message = $this->translator->trans(
                             'payplug_sylius_payplug_plugin.form.base_currency_not_euro', [
                                 '#channel_code#' => $dataFormChannel->getCode(),
-                                '#payment_method#' => PayPlugGatewayFactory::FACTORY_TITLE
+                                '#payment_method#' => PayPlugGatewayFactory::FACTORY_TITLE,
                             ]
                         );
                         $formChannels->get($key)->addError(new FormError($message));
