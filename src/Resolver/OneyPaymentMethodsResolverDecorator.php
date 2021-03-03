@@ -59,7 +59,7 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
             $countryCodeShipping = null;
             $countryCodeBilling = null;
 
-            if(null !== $order->getShippingAddress() && null !== $order->getBillingAddress()) {
+            if (null !== $order->getShippingAddress() && null !== $order->getBillingAddress()) {
                 $countryCodeShipping = $order->getShippingAddress()->getCountryCode();
                 $countryCodeBilling = $order->getBillingAddress()->getCountryCode();
             }
