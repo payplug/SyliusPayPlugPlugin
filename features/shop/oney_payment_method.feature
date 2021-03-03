@@ -6,6 +6,7 @@ Feature: Paying with Oney during checkout
 
     Background:
         Given the store operates on a single channel in "United States"
+        And the store operates in "France"
         And that channel also allows to shop using the "EUR" currency
         And there is a user "john@bitbag.pl" identified by "password123"
         And I changed my currency to "EUR"
@@ -20,6 +21,7 @@ Feature: Paying with Oney during checkout
     Scenario: I can use Oney with cart of 100 euros
         Given the store has a product "PHP T-Shirt" priced at "€100.00"
         And I added product "PHP T-Shirt" to the cart
+        And I am at the checkout addressing step
         And I chose "DHL" shipping method
         Then I should be on the checkout payment step
         And I should be able to select "Oney" payment method
@@ -28,6 +30,7 @@ Feature: Paying with Oney during checkout
     Scenario: I can use Oney with cart of 3000 euros
         Given the store has a product "PHP T-Shirt" priced at "€3000"
         And I added product "PHP T-Shirt" to the cart
+        And I am at the checkout addressing step
         And I chose "DHL" shipping method
         Then I should be on the checkout payment step
         And I should be able to select "Oney" payment method
@@ -52,6 +55,7 @@ Feature: Paying with Oney during checkout
     Scenario: I can use Oney with cart of less than 999 items
         Given the store has a product "PHP T-Shirt" priced at "€1.00"
         And I add 998 of them to my cart
+        And I am at the checkout addressing step
         And I chose "DHL" shipping method
         Then I should be on the checkout payment step
         And I should be able to select "Oney" payment method
@@ -60,6 +64,7 @@ Feature: Paying with Oney during checkout
     Scenario: I can use Oney with cart 999 items
         Given the store has a product "PHP T-Shirt" priced at "€1.00"
         And I add 999 of them to my cart
+        And I am at the checkout addressing step
         And I chose "DHL" shipping method
         Then I should be on the checkout payment step
         And I should be able to select "Oney" payment method
