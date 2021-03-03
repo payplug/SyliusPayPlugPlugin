@@ -304,6 +304,10 @@ final class PayPlugApiMocker
                     'max_amounts' => [
                         'EUR' => 300000,
                     ],
+                    'allowed_countries' => [
+                        'FR',
+                        'US',
+                    ],
                 ],
             ]],
         ]);

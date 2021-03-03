@@ -6,9 +6,12 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Shop;
 
 use Behat\Behat\Context\Context;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use Sylius\Behat\Context\Ui\Shop\Checkout\CheckoutPaymentContext;
 use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
+use Sylius\Behat\Page\Shop\Checkout\SelectPaymentPageInterface;
 use Sylius\Behat\Page\Shop\Order\ShowPageInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\OrderCheckoutStates;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Shop\Payum\PaymentPageInterface;
 use Webmozart\Assert\Assert;
