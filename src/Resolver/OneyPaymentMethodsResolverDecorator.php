@@ -56,9 +56,18 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
                 continue;
             }
 
+            $countryCodeShipping = null;
+            $countryCodeBilling = null;
+
+            if (null !== $order->getShippingAddress() && null !== $order->getBillingAddress()) {
+                $countryCodeShipping = $order->getShippingAddress()->getCountryCode();
+                $countryCodeBilling = $order->getBillingAddress()->getCountryCode();
+            }
+
             if (!$this->oneyChecker->isEnabled() ||
                 !$this->oneyChecker->isPriceEligible($payment->getAmount() ?? 0, $activeCurrencyCode) ||
-                !$this->oneyChecker->isNumberOfProductEligible($order->getItemUnits()->count())) {
+                !$this->oneyChecker->isNumberOfProductEligible($order->getItemUnits()->count()) ||
+                !$this->oneyChecker->isCountryEligible($countryCodeShipping, $countryCodeBilling)) {
                 unset($supportedMethods[$key]);
             }
         }

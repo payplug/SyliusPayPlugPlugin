@@ -7,7 +7,6 @@ namespace PayPlug\SyliusPayPlugPlugin\MessageHandler;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Exception\ApiRefundException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -33,7 +32,7 @@ use Webmozart\Assert\Assert;
 
 final class RefundPaymentGeneratedHandler
 {
-    /** @var ObjectManager */
+    /** @var EntityManagerInterface */
     private $entityManager;
 
     /** @var FactoryInterface */

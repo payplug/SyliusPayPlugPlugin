@@ -17,4 +17,9 @@ interface OneyCheckerInterface
      * For x products, check if oney allow it
      */
     public function isNumberOfProductEligible(int $numberOfProduct): bool;
+
+    /**
+     * Check if shipping and / or billing address is in France
+     */
+    public function isCountryEligible(?string $shippingCountry, ?string $billingAddress): bool;
 }
