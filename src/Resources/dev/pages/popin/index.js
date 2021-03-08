@@ -22,7 +22,6 @@ const Popin = {
       $selectors.on("input", (e) => {
         e.preventDefault();
         productMeta[prop] = $(e.currentTarget).val();
-        this.toggleLoader();
         this.check();
       });
     }
@@ -34,14 +33,12 @@ const Popin = {
       url: this.productMeta.url,
       data: this.productMeta,
       success: function (res) {
-        self.load(() => {
-          $(self.handlers.info)
-            .find("img:first")
-            .attr("src", self.productMeta.img[res.isEligible]);
-          res.isEligible
-            ? $(self.handlers.popin).removeClass("disabled").addClass("enabled")
-            : $(self.handlers.popin).removeClass("enabled").addClass("disabled");
-        });
+        $(self.handlers.info)
+          .find("img:first")
+          .attr("src", self.productMeta.img[res.isEligible]);
+        res.isEligible
+          ? $(self.handlers.popin).removeClass("disabled").addClass("enabled")
+          : $(self.handlers.popin).removeClass("enabled").addClass("disabled");
       },
     });
   },
@@ -60,7 +57,7 @@ const Popin = {
       this.load();
     });
   },
-  load(callback = null) {
+  load() {
     const self = this;
     $.ajax({
       url: $(this.handlers.popin).data("popin-url"),
@@ -70,9 +67,6 @@ const Popin = {
         self.toggleLoader();
         $(self.handlers.popin).fadeIn();
         Popin.closeHandler();
-        if (callback !== null) {
-          callback();
-        }
       },
       error: function (res) {
         console.log(res);
