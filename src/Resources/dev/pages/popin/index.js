@@ -77,6 +77,12 @@ const Popin = {
     $(this.handlers.info).find(".dimmer").toggleClass("active");
   },
   closeHandler() {
+    $("html")
+      .not(this.handlers.popin)
+      .on("click", (e) => {
+        e.stopPropagation();
+        $(this.handlers.popin).fadeOut();
+      });
     $(this.handlers.popin)
       .find("a.close")
       .on("click", (e) => {
