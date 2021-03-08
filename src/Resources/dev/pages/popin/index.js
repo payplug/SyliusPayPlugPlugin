@@ -8,6 +8,7 @@ const Popin = {
     quantity: "cartItem_quantity",
   },
   productMeta: [],
+  storage: [],
   init() {
     if (typeof productMeta !== "undefined") {
       Popin.watch();
@@ -29,6 +30,7 @@ const Popin = {
   },
   check() {
     const self = this;
+    this.storage = [];
     $.ajax({
       url: this.productMeta.url,
       data: this.productMeta,
@@ -47,7 +49,7 @@ const Popin = {
       e.stopPropagation();
       if (
         !$(this.handlers.popin).is(":empty") &&
-        this.productMeta.length === 0
+        $(this.handlers.popin).text().trim() === this.storage
       ) {
         $(this.handlers.popin).fadeIn();
         return;
@@ -63,6 +65,7 @@ const Popin = {
       url: $(this.handlers.popin).data("popin-url"),
       data: this.productMeta,
       success: function (res) {
+        self.storage = $(res).text().trim();
         $(self.handlers.popin).html(res);
         self.toggleLoader();
         $(self.handlers.popin).fadeIn();
