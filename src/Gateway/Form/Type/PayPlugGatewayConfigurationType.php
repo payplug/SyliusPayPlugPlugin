@@ -36,13 +36,15 @@ final class PayPlugGatewayConfigurationType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $validationGroups = ['Default', 'sylius'];
+
         $builder
             ->add('secretKey', TextType::class, [
                 'label' => 'payplug_sylius_payplug_plugin.ui.secret_key',
+                'validation_groups' => $validationGroups,
                 'constraints' => [
                     new NotBlank([
                         'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
-                        'groups' => 'sylius',
                     ]),
                     new IsPayPlugSecretKeyValid(),
                 ],
