@@ -11,5 +11,6 @@ payplug_sylius_payplug_plugin:
         oney: Oney
         oney_transaction_less_than_forty_eight_hours: The refund will be possible 48h after the last payment or refund transaction.
         refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least 0.10€
+        oney_unavailable: Unavailable Oney payment service
     form:
         base_currency_not_euro: "Channel #channel_code# : #payment_method# paiements is only available for channel which base currency is EURO"

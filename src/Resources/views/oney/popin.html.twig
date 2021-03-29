@@ -52,12 +52,12 @@
             </div>
         </section>
         <div class="oney-popin__footer">
-                <p>
-                    {{ 'payplug_sylius_payplug_plugin.ui.popin_legal_mention'|trans({
-                        '%min_amount%': money.convertAndFormat(data['min_amount']),
-                        '%max_amount%': money.convertAndFormat(data['max_amount']),
-                    })|raw }}
-                </p>
-            </div>
+            <p>
+                {{ 'payplug_sylius_payplug_plugin.ui.popin_legal_mention'|trans({
+                    '%min_amount%': money.convertAndFormat(data['min_amount']),
+                    '%max_amount%': money.convertAndFormat(data['max_amount']),
+                })|raw }}
+            </p>
+        </div>
     </div>
 {% endif %}
