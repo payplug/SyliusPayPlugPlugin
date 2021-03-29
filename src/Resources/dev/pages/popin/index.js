@@ -46,6 +46,7 @@ const Popin = {
   },
   fade() {
     $(this.handlers.info).on("click", (e) => {
+      e.preventDefault();
       e.stopPropagation();
       if (
         !$(this.handlers.popin).is(":empty") &&
@@ -77,7 +78,10 @@ const Popin = {
     });
   },
   toggleLoader() {
-    $(this.handlers.info).find(".dimmer").toggleClass("active");
+    $(this.handlers.info)
+      .toggleClass("loading")
+      .find(".dimmer")
+      .toggleClass("active");
   },
   closeHandler() {
     $("html")

@@ -35,4 +35,8 @@
         vertical-align: middle;
         margin: 0 4px;
     }
+
+    &.loading {
+        pointer-events: none;
+    }
 }
