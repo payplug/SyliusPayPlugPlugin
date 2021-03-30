@@ -18,10 +18,8 @@
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
     {% set data = oney_simulation_data() %}
     {% import "@SyliusShop/Common/Macro/money.html.twig" as money %}
-
     <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
-
     <div class="oney-payment-choice__container">
         <div class="oney-payment-choice__tab">
             <a class="tablink" href="javascript:void(0);" data-id="oney_x3_with_fees">
@@ -36,20 +34,22 @@
             </a>
         </div>
         {% for keyChoice, choice in form.vars.choices %}
-            {% set nx_with_fees = (choice.value|split('_', 2))[1] %}
-            {% set grand_total = data[nx_with_fees]['down_payment_amount'] %}
+            {% if data is not empty %}
+                {% set nx_with_fees = (choice.value|split('_', 2))[1] %}
+                {% set grand_total = data[nx_with_fees]['down_payment_amount'] %}
+            {% endif %}
             <div class="oney-payment-choice__item oney-payment-choice__item--{{ choice.value }}" id="{{ choice.value }}">
                 <input
-                    type="radio"
-                    value="{{ choice.value }}"
-                    id="oney_choice_{{ keyChoice }}"
-                    name="{{ form.vars.full_name }}"
-                    class="oney-payment-choice__input"
-                    {% if form.vars.value is not empty %}
-                        {{ form.vars.value == choice.value ? 'checked="checked"' : '' }}
-                    {% elseif loop.index is same as(1) %}
-                        checked="checked"
-                    {% endif %}
+                        type="radio"
+                        value="{{ choice.value }}"
+                        id="oney_choice_{{ keyChoice }}"
+                        name="{{ form.vars.full_name }}"
+                        class="oney-payment-choice__input"
+                        {% if form.vars.value is not empty %}
+                            {{ form.vars.value == choice.value ? 'checked="checked"' : '' }}
+                        {% elseif loop.index is same as(1) %}
+                            checked="checked"
+                        {% endif %}
                 >
                 <label for="oney_choice_{{ keyChoice }}" class="oney-payment-choice__label">
                     <span class="oney-payment-choice__header">
@@ -57,18 +57,20 @@
                         <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
                         <p>{{ ('payplug_sylius_payplug_plugin.ui.' ~ choice.label ~ '_payment')|trans }}</p>
                     </span>
-                    <span class="oney-payment-choice__content">
-                        <p><span><strong>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.current_total'|trans }} : </strong></span><span><strong>{{ money.convertAndFormat(data['current_total']) }}</strong></span></p>
-                        <p>
-                            <span>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.down_payment_amount'|trans }} : </span><span><strong>{{ money.convertAndFormat(data[nx_with_fees]['down_payment_amount']) }}</strong></span>
-                            <small>({{ 'payplug_sylius_payplug_plugin.ui.payment_choice.total_cost'|trans }} : <strong>{{ money.convertAndFormat(data[nx_with_fees]['total_cost']) }}</strong> {{ 'payplug_sylius_payplug_plugin.ui.payment_choice.effective_annual_percentage_rate'|trans }} : <strong>{{ data[nx_with_fees]['effective_annual_percentage_rate'] ~ '%' }}</strong>)</small>
-                        </p>
-                        {% for key, installment in data[nx_with_fees]['installments'] %}
-                            {% set grand_total = grand_total + installment['amount'] %}
-                            <p><span>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.installment_amount'|trans }} {{ key + 1 }} :</span><span><strong>{{ money.convertAndFormat(installment.amount) }}</strong></span></p>
-                        {% endfor %}
-                        <p><span><strong>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.grand_total'|trans }} :</strong></span><span><strong>{{ money.convertAndFormat(grand_total) }}</strong></span></p>
-                    </span>
+                    {% if data is not empty %}
+                        <span class="oney-payment-choice__content">
+                            <p><span><strong>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.current_total'|trans }} : </strong></span><span><strong>{{ money.convertAndFormat(data['current_total']) }}</strong></span></p>
+                            <p>
+                                <span>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.down_payment_amount'|trans }} : </span><span><strong>{{ money.convertAndFormat(data[nx_with_fees]['down_payment_amount']) }}</strong></span>
+                                <small>({{ 'payplug_sylius_payplug_plugin.ui.payment_choice.total_cost'|trans }} : <strong>{{ money.convertAndFormat(data[nx_with_fees]['total_cost']) }}</strong> {{ 'payplug_sylius_payplug_plugin.ui.payment_choice.effective_annual_percentage_rate'|trans }} : <strong>{{ data[nx_with_fees]['effective_annual_percentage_rate'] ~ '%' }}</strong>)</small>
+                            </p>
+                            {% for key, installment in data[nx_with_fees]['installments'] %}
+                                {% set grand_total = grand_total + installment['amount'] %}
+                                <p><span>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.installment_amount'|trans }} {{ key + 1 }} :</span><span><strong>{{ money.convertAndFormat(installment.amount) }}</strong></span></p>
+                            {% endfor %}
+                            <p><span><strong>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.grand_total'|trans }} :</strong></span><span><strong>{{ money.convertAndFormat(grand_total) }}</strong></span></p>
+                        </span>
+                    {% endif %}
                 </label>
             </div>
         {% endfor %}
