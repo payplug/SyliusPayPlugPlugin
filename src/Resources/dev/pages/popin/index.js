@@ -85,12 +85,24 @@ const Popin = {
       success: function (res) {
         self.storage = $(res).text().trim();
         $(self.handlers.popin).html(res);
+      },
+      error: function () {
+        $(self.handlers.popin).removeClass("enabled").addClass("disabled")
+          .html(`
+            <div class="oney-popin__header">
+              <a class="close" href="javascript:void(0);" title="${translations.close}">
+                  <span></span><span></span>
+              </a>
+            </div>
+            <div class="oney-popin__content">
+              <p class="reasons">${translations.reason}</p>
+            </div>
+          `);
+      },
+      complete: function () {
         self.toggleLoader();
         $(self.handlers.popin).fadeIn();
         Popin.closeHandler();
-      },
-      error: function (res) {
-        console.log(res);
       },
     });
   },

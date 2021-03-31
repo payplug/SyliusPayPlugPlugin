@@ -27,6 +27,14 @@
         {% endif %}</div>
         <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/cart/index.js') }}"></script>
         <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
+        <script type="text/javascript">//<![CDATA[
+            {% autoescape 'js' %}
+              var translations = {
+                reason: "{{ 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans }}",
+                close: "{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}"
+              }
+            {% endautoescape %}
+          //]]></script>
         <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">
     </div>
 {% endif %}
