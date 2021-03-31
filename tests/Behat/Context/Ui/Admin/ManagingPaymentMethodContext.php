@@ -83,6 +83,9 @@ final class ManagingPaymentMethodContext implements Context
         $requestMock
             ->method('exec')
             ->willReturn(json_encode($response));
+        $requestMock
+            ->method('getInfo')
+            ->willReturn(200);
 
         \Payplug\Core\HttpClient::$REQUEST_HANDLER = $requestMock;
     }
