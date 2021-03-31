@@ -20,11 +20,14 @@ const Popin = {
     for (const prop in this.triggers) {
       const $selectors = $(`[id*=${this.triggers[prop]}`);
       productMeta[prop] = $selectors.val();
-      $selectors.on("input", (e) => {
-        e.preventDefault();
-        productMeta[prop] = $(e.currentTarget).val();
-        this.check();
-      });
+      $selectors.on(
+        "input",
+        this.debounce((e) => {
+          e.preventDefault();
+          productMeta[prop] = $(e.currentTarget).val();
+          this.check();
+        }, 500)
+      );
     }
     this.productMeta = productMeta;
   },
@@ -44,8 +47,23 @@ const Popin = {
       },
     });
   },
+  /**
+   * https://davidwalsh.name/javascript-debounce-function
+   */
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
   fade() {
     $(this.handlers.info).on("click", (e) => {
+      e.preventDefault();
       e.stopPropagation();
       if (
         !$(this.handlers.popin).is(":empty") &&
@@ -77,7 +95,10 @@ const Popin = {
     });
   },
   toggleLoader() {
-    $(this.handlers.info).find(".dimmer").toggleClass("active");
+    $(this.handlers.info)
+      .toggleClass("loading")
+      .find(".dimmer")
+      .toggleClass("active");
   },
   closeHandler() {
     $("html")
