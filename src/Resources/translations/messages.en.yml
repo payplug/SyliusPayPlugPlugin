@@ -8,9 +8,37 @@ payplug_sylius_payplug_plugin:
         payplug_id: 'PayPlug ID : %paymentId%'
         payplug_refund_gateway_is_not_activated: PayPlug refund gateway is not activated
         impossible_to_refund_this_payment: Impossible to refund this payment
+        oney_gateway_label: payplug_sylius_payplug_plugin.ui.oney_gateway_label
+        oney_cgv_added_label: payplug_sylius_payplug_plugin.ui.oney_cgv_added_label
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: The refund will be possible 48h after the last payment or refund transaction.
-        refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least 0.10€
-        oney_unavailable: Unavailable Oney payment service
+        oney_transaction_less_than_forty_eight_hours: payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours
+        or_pay_with_oney: payplug_sylius_payplug_plugin.ui.or_pay_with_oney
+        pay: payplug_sylius_payplug_plugin.ui.pay
+        3x_payment: payplug_sylius_payplug_plugin.ui.3x_payment
+        4x_payment: payplug_sylius_payplug_plugin.ui.4x_payment
+        by_credit_cart: payplug_sylius_payplug_plugin.ui.by_credit_cart
+        cancel: payplug_sylius_payplug_plugin.ui.cancel
+        popin_close: payplug_sylius_payplug_plugin.ui.popin_close
+        popin_paiement_desc: popin_paiement_desc
+        payment_choice:
+            current_total: payplug_sylius_payplug_plugin.ui.payment_choice.current_total
+            down_payment_amount: payplug_sylius_payplug_plugin.ui.payment_choice.down_payment_amount
+            effective_annual_percentage_rate: payplug_sylius_payplug_plugin.ui.payment_choice.effective_annual_percentage_rate
+            total_cost: payplug_sylius_payplug_plugin.ui.payment_choice.total_cost
+            installment_amount: payplug_sylius_payplug_plugin.ui.payment_choice.installment_amount
+            grand_total: payplug_sylius_payplug_plugin.ui.payment_choice.grand_total
+        popin_legal_mention: payplug_sylius_payplug_plugin.ui.popin_legal_mention
+        too_much_quantity: payplug_sylius_payplug_plugin.ui.too_much_quantity
+        invalid_cart_price: payplug_sylius_payplug_plugin.ui.invalid_cart_price
+        refund_minimum_amount_requirement_not_met: payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met
+        oney_unavailable: payplug_sylius_payplug_plugin.ui.oney_unavailable
     form:
+        oney_error: payplug_sylius_payplug_plugin.form.oney_error
+        complete_info:
+            missing_title: payplug_sylius_payplug_plugin.form.complete_info.missing_title
+            success_title: payplug_sylius_payplug_plugin.form.complete_info.success_title
+            success_instruction: payplug_sylius_payplug_plugin.form.complete_info.success_instruction
+            email: payplug_sylius_payplug_plugin.form.complete_info.email
+            phone: payplug_sylius_payplug_plugin.form.complete_info.phone
+            submit: payplug_sylius_payplug_plugin.form.complete_info.submit
         base_currency_not_euro: "Channel #channel_code# : #payment_method# paiements is only available for channel which base currency is EURO"

@@ -1,0 +1,7 @@
+payplug_sylius_payplug_plugin:
+    secret_key:
+        not_blank: payplug_sylius_payplug_plugin.secret_key.not_blank
+        not_valid: payplug_sylius_payplug_plugin.secret_key.not_valid
+    oney:
+        not_enabled: payplug_sylius_payplug_plugin.oney.not_enabled
+        not_valid_phone_number: payplug_sylius_payplug_plugin.oney.not_valid_phone_number

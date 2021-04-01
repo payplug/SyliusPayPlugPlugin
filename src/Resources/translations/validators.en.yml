@@ -6,3 +6,4 @@ payplug_sylius_payplug_plugin:
         not_enabled: |
             Be careful ! For use Oney by PayPlug in LIVE mode, please contact us
             at support@payplug.com
+        not_valid_phone_number: payplug_sylius_payplug_plugin.oney.not_valid_phone_number
