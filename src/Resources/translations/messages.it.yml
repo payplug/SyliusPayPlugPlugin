@@ -6,6 +6,8 @@ payplug_sylius_payplug_plugin:
         retrieve_secret_key_in_api_configuration_portal: Recupera le tue chiavi segrete LIVE e TEST nel tuo <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portale</a>
         test_mode: Modalità TEST
         payplug_id: 'ID PayPlug : %paymentId%'
+        payplug_refund_gateway_is_not_activated: payplug_sylius_payplug_plugin.ui.payplug_sylius_payplug_plugin.ui.oney_gateway_label
+        impossible_to_refund_this_payment: payplug_sylius_payplug_plugin.ui.impossible_to_refund_this_payment
         oney_gateway_label: payplug_sylius_payplug_plugin.ui.oney_gateway_label
         oney_cgv_added_label: payplug_sylius_payplug_plugin.ui.oney_cgv_added_label
         oney: Oney
@@ -30,13 +32,13 @@ payplug_sylius_payplug_plugin:
         invalid_cart_price: payplug_sylius_payplug_plugin.ui.invalid_cart_price
         refund_minimum_amount_requirement_not_met: payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met
         oney_unavailable: payplug_sylius_payplug_plugin.ui.oney_unavailable
-        form:
-            oney_error: payplug_sylius_payplug_plugin.form.oney_error
-            complete_info:
-                missing_title: payplug_sylius_payplug_plugin.form.complete_info.missing_title
-                success_title: payplug_sylius_payplug_plugin.form.complete_info.success_title
-                success_instruction: payplug_sylius_payplug_plugin.form.complete_info.success_instruction
-                email: payplug_sylius_payplug_plugin.form.complete_info.email
-                phone: payplug_sylius_payplug_plugin.form.complete_info.phone
-                submit: payplug_sylius_payplug_plugin.form.complete_info.submit
-            base_currency_not_euro: payplug_sylius_payplug_plugin.form.base_currency_not_euro
+    form:
+        oney_error: payplug_sylius_payplug_plugin.form.oney_error
+        complete_info:
+            missing_title: payplug_sylius_payplug_plugin.form.complete_info.missing_title
+            success_title: payplug_sylius_payplug_plugin.form.complete_info.success_title
+            success_instruction: payplug_sylius_payplug_plugin.form.complete_info.success_instruction
+            email: payplug_sylius_payplug_plugin.form.complete_info.email
+            phone: payplug_sylius_payplug_plugin.form.complete_info.phone
+            submit: payplug_sylius_payplug_plugin.form.complete_info.submit
+        base_currency_not_euro: payplug_sylius_payplug_plugin.form.base_currency_not_euro
