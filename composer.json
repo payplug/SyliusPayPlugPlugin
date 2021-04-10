@@ -66,8 +66,5 @@
             "@phpstan",
             "@phpunit"
         ]
-    },
-    "conflict": {
-        "symfony/dependency-injection": ">=v4.4.19"
     }
 }
