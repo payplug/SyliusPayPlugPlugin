@@ -26,6 +26,13 @@ In local environment, the plugin will not work properly because you will not be 
 #### ❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
 - [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
 
+## Requirements
+
+| | Version |
+| :--- | :--- |
+| PHP  | 7.3, 7.4 |
+| Sylius | 1.8, 1.9 |
+
 ## Installation
 
 1. If you don't use [**symfony/messenger**](https://packagist.org/packages/symfony/messenger) component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
