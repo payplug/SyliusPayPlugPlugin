@@ -72,6 +72,10 @@ jobs:
               run: symfony security:check
               if: always() && steps.end-of-setup.outcome == 'success'
 
+            - name: PHPunit - Run
+              run: vendor/bin/phpunit
+              if: always() && steps.end-of-setup.outcome == 'success'
+
     sylius:
         name: PHPUnit-Behat (PHP ${{ matrix.php }} Sylius ${{ matrix.sylius }})
         runs-on: ubuntu-18.04
@@ -249,14 +253,6 @@ jobs:
               run: |
                   php bin/console c:c
 
-            - name: PHPUnit - Configure
-              working-directory: ./sylius
-              run: |
-                  cp vendor/${{ env.package-name }}/phpunit.xml.dist phpunit.xml
-                  sed -i "s#tests/Application/config/bootstrap.php#config/bootstrap.php#g" phpunit.xml
-                  sed -i "s#<directory>tests</directory>#<directory>./vendor/${{ env.package-name }}/tests/PHPUnit</directory>#g" phpunit.xml
-                  sed -i "s#/tests/Application/Kernel.php#src/Kernel.php#g" phpunit.xml
-
             - name: Output PHP version for Symfony CLI
               working-directory: ./sylius
               run: php -v | head -n 1 | awk '{ print $2 }' > .php-version
@@ -277,11 +273,6 @@ jobs:
             - name: Doctrine Schema Validate - Run
               working-directory: ./sylius
               run: php bin/console doctrine:schema:validate --skip-sync
-              if: always() && steps.end-of-setup-sylius.outcome == 'success'
-
-            - name: PHPunit - Run
-              working-directory: ./sylius
-              run: vendor/bin/phpunit
               if: always() && steps.end-of-setup-sylius.outcome == 'success'
 
             - name: Run behat
