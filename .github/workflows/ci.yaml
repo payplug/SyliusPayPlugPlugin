@@ -158,6 +158,10 @@ jobs:
               working-directory: ./sylius
               run: composer sync-recipes
 
+            - name: Sylius - Configure for RefundPlugin # see https://github.com/Sylius/RefundPlugin#installation
+              working-directory: ./sylius
+              run: cp -r vendor/${{ env.package-name }}/tests/datas/Entity/* src/Entity
+
             - name: Behat - Config Suite
               working-directory: ./sylius
               run: |
