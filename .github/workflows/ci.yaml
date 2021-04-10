@@ -158,6 +158,28 @@ jobs:
               working-directory: ./sylius
               run: composer sync-recipes
 
+            - name: Sylius - Twig form Theme
+              working-directory: ./sylius
+              run: |
+                  sed -i "4a \ \ \ \ form_themes: ['form/form_gateway_config_row.html.twig']" config/packages/twig.yaml
+
+            - name: Sylius - Copy custom form row theme template
+              working-directory: ./sylius
+              run: |
+                  mkdir -p templates/form/
+                  cp -R vendor/${{ env.package-name }}/src/Resources/views/form/* templates/form/
+
+            - name: Sylius - Copy templates
+              working-directory: ./sylius
+              run: |
+                  mkdir -p templates/bundles/SyliusAdminBundle/
+                  cp -R vendor/${{ env.package-name }}/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+
+            - name: Sylius - Get routes from Plugin
+              working-directory: ./sylius
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/routes.yaml config/routes.yaml
+
             - name: Sylius - Configure for RefundPlugin # see https://github.com/Sylius/RefundPlugin#installation
               working-directory: ./sylius
               run: cp -r vendor/${{ env.package-name }}/tests/datas/Entity/* src/Entity
