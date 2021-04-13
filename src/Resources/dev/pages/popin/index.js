@@ -83,6 +83,9 @@ const Popin = {
       url: $(this.handlers.popin).data("popin-url"),
       data: this.productMeta,
       success: function (res) {
+        if (res.includes(translations.reason)) {
+          $(self.handlers.popin).removeClass("enabled").addClass("disabled");
+        }
         self.storage = $(res).text().trim();
         $(self.handlers.popin).html(res);
       },

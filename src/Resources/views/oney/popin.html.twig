@@ -10,6 +10,8 @@
     <div class="oney-popin__content">
         {% for reason in data.reasons %}
             <p class="reasons">{{ reason|trans(data.trans_params) }}</p>
+        {% else %}
+            <p class="reasons">{{ 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans }}</p>
         {% endfor %}
     </div>
 {% else %}
