@@ -28,8 +28,10 @@ final class OneyGatewayConfigurationType extends AbstractType
     /** @var FlashBagInterface */
     private $flashBag;
 
-    public function __construct(TranslatorInterface $translator, FlashBagInterface $flashBag)
-    {
+    public function __construct(
+        TranslatorInterface $translator,
+        FlashBagInterface $flashBag
+    ) {
         $this->translator = $translator;
         $this->flashBag = $flashBag;
     }

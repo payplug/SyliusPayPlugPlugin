@@ -15,6 +15,8 @@ use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin;
 use Sylius\Bundle\CoreBundle\Application\Kernel;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Contracts\Cache\CacheInterface;
 use Webmozart\Assert\Assert;
 
 class PayPlugApiClient implements PayPlugApiClientInterface
@@ -27,13 +29,21 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     /** @var string */
     private $factoryName;
 
-    public function __construct(string $secretKey, ?string $factoryName = null)
+    /** @var CacheInterface */
+    private $cache;
+
+    public function __construct(string $secretKey, ?string $factoryName = null, ?CacheInterface $cache = null)
     {
         $this->configuration = Payplug::init([
             'secretKey' => $secretKey,
             'apiVersion' => self::CURRENT_API_VERSION,
         ]);
         $this->factoryName = $factoryName ?? PayPlugGatewayFactory::FACTORY_NAME;
+
+        if (null === $cache) {
+            $cache = new ArrayAdapter();
+        }
+        $this->cache = $cache;
 
         HttpClient::addDefaultUserAgentProduct(
             'PayPlug-Sylius',
@@ -55,9 +65,15 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         );
     }
 
-    public function getAccount(): array
+    public function getAccount(bool $refresh = false): array
     {
-        return Authentication::getAccount($this->configuration)['httpResponse'] ?? [];
+        if ($refresh) {
+            $this->cache->delete('payplug_account_' . substr($this->configuration->getToken(), 8));
+        }
+
+        return $this->cache->get('payplug_account_' . substr($this->configuration->getToken(), 8), function (): array {
+            return Authentication::getAccount($this->configuration)['httpResponse'] ?? [];
+        });
     }
 
     public function getGatewayFactoryName(): string

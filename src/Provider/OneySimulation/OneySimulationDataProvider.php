@@ -41,7 +41,7 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
 
         try {
             $currency = $cart->getCurrencyCode();
-            $accountData = $this->oneyClient->getAccount();
+            $accountData = $this->oneyClient->getAccount(true);
             $simulationData = OneySimulation::getSimulations($data, $this->oneyClient->getConfiguration());
 
             $this->payplugLogger->debug('[PayPlug] Oney simulation response', $simulationData);
