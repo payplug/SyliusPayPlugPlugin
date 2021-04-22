@@ -67,11 +67,12 @@ class PayPlugApiClient implements PayPlugApiClientInterface
 
     public function getAccount(bool $refresh = false): array
     {
+        $cacheKey = 'payplug_account_' . substr($this->configuration->getToken(), 8);
         if ($refresh) {
-            $this->cache->delete('payplug_account_' . substr($this->configuration->getToken(), 8));
+            $this->cache->delete($cacheKey);
         }
 
-        return $this->cache->get('payplug_account_' . substr($this->configuration->getToken(), 8), function (): array {
+        return $this->cache->get($cacheKey, function (): array {
             return Authentication::getAccount($this->configuration)['httpResponse'] ?? [];
         });
     }
