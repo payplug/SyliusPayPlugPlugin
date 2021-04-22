@@ -65,7 +65,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         return $this->container->get($this->serviceName)->getConfiguration();
     }
 
-    public function getAccount(): array
+    public function getAccount(bool $refresh = false): array
     {
         return $this->container->get($this->serviceName)->getAccount();
     }

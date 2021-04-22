@@ -50,7 +50,6 @@ final class OneyChecker implements OneyCheckerInterface
         if ($shippingCountry === null || $billingAddress === null) {
             return false;
         }
-
         $allowedCountries = $this->client->getAccount()['configuration']['oney']['allowed_countries'];
 
         if (!in_array($shippingCountry, $allowedCountries, true) ||

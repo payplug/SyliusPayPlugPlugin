@@ -133,7 +133,6 @@ final class OneyRulesExtension extends AbstractExtension
             if (!$this->oneyChecker->isPriceEligible($currentCart->getTotal(), $currencyCode)) {
                 $data[] = 'payplug_sylius_payplug_plugin.ui.invalid_cart_price';
                 $account = $this->oneyClient->getAccount();
-
                 $transParam[] = [
                     '%min_amount%' => $this->moneyFormatter->format(
                         $account['configuration']['oney']['min_amounts'][$currencyCode],

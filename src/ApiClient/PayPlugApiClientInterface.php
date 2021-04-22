@@ -30,7 +30,7 @@ interface PayPlugApiClientInterface
 
     public function getConfiguration(): Payplug;
 
-    public function getAccount(): array;
+    public function getAccount(bool $refresh = false): array;
 
     public function getGatewayFactoryName(): string;
 

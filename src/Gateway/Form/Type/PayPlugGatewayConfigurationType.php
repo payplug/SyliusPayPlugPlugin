@@ -25,8 +25,10 @@ final class PayPlugGatewayConfigurationType extends AbstractType
     /** @var FlashBagInterface */
     private $flashBag;
 
-    public function __construct(TranslatorInterface $translator, FlashBagInterface $flashBag)
-    {
+    public function __construct(
+        TranslatorInterface $translator,
+        FlashBagInterface $flashBag
+    ) {
         $this->translator = $translator;
         $this->flashBag = $flashBag;
     }
@@ -53,7 +55,6 @@ final class PayPlugGatewayConfigurationType extends AbstractType
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
                 $data = $event->getData();
-
                 $data['payum.http_client'] = '@payplug_sylius_payplug_plugin.api_client.payplug';
 
                 $event->setData($data);
