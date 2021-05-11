@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\DependencyInjection;
 
+use Sylius\Bundle\CoreBundle\DependencyInjection\PrependDoctrineMigrationsTrait;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -12,6 +13,8 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
 final class PayPlugSyliusPayPlugExtension extends Extension implements PrependExtensionInterface
 {
+    use PrependDoctrineMigrationsTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -39,5 +42,24 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
             'paths' => $paths,
             'form_themes' => ['@PayPlugSyliusPayPlugPlugin/form/form_gateway_config_row.html.twig'],
         ]);
+
+        $this->prependDoctrineMigrations($container);
+    }
+
+    protected function getMigrationsNamespace(): string
+    {
+        return 'PayPlug\SyliusPayPlugPlugin\Migrations';
+    }
+
+    protected function getMigrationsDirectory(): string
+    {
+        return '@PayPlugSyliusPayPlugPlugin/Migrations';
+    }
+
+    protected function getNamespacesOfMigrationsExecutedBefore(): array
+    {
+        return [
+            'Sylius\Bundle\CoreBundle\Migrations',
+        ];
     }
 }

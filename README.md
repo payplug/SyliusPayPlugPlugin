@@ -22,9 +22,12 @@ In local environment, the plugin will not work properly because you will not be 
 > #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
 > More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
 
+## Requirements
 
-#### ❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
-- [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
+| | Version |
+| :--- | :--- |
+| PHP  | 7.3, 7.4 |
+| Sylius | 1.8, 1.9 |
 
 ## Installation
 
@@ -50,19 +53,9 @@ In local environment, the plugin will not work properly because you will not be 
     composer require payplug/sylius-payplug-plugin
     ```
 
-4. Copy and apply migrations
+4. Apply migrations to your database:
 
-    Update `config/packages/doctrine_migrations.yaml` by adding following config
-    ```yaml
-    doctrine_migrations:
-        migrations_paths:
-            ...
-            'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
-    ```
-
-    Copy migrations from `vendor/payplug/sylius-payplug-plugin/src/Migrations/` to your migrations directory (e.g. `src/Migrations`) and apply them to your database
     ```shell
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     bin/console doctrine:migrations:migrate
     ```
 
