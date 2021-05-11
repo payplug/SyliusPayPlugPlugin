@@ -56,7 +56,7 @@
         "sort-packages": true
     },
     "scripts": {
-        "ecs": "ecs check -c rulesets/easy-coding-standard.yml --ansi --clear-cache .",
+        "ecs": "ecs check -c rulesets/ecs.php --ansi --clear-cache .",
         "fix-ecs": "@ecs --fix",
         "phpmd": "phpmd src ansi rulesets/.php_md.xml",
         "phpstan": "phpstan analyse src -c rulesets/phpstan.neon",

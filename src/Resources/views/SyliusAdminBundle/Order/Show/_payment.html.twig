@@ -25,6 +25,9 @@
             {% if payment.details.is_live is defined and payment.details.is_live == false %}
                 <br /><i>{{ 'payplug_sylius_payplug_plugin.ui.test_mode'|trans }}</i>
             {% endif %}
+            {% if payment.details.failure is defined and payment.details.failure.message is defined %}
+                <br /><i>{{ payment.details.failure.message }}</i>
+            {% endif %}
         </div>
     {% endif %}
     {% if sm_can(payment, 'complete', 'sylius_payment') %}

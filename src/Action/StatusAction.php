@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
+use PayPlug\SyliusPayPlugPlugin\StateMachine\Transition\OrderPaymentTransitions;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
@@ -17,7 +18,6 @@ use Payum\Core\Request\GetToken;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Order\OrderTransitions;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface
 {
@@ -88,6 +88,11 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
                 $request->markCanceled();
 
                 break;
+            case PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY:
+                $request->markCanceled();
+                $this->markOrderPaymentAsAwaitingPayment($request);
+
+                break;
             case PayPlugApiClientInterface::STATUS_CREATED:
                 $request->markPending();
 
@@ -102,7 +107,6 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
                 break;
             case PayPlugApiClientInterface::FAILED:
                 $request->markFailed();
-                $this->cancelOrder($request);
 
                 break;
             case PayPlugApiClientInterface::REFUNDED:
@@ -119,22 +123,23 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
     /**
      * @param mixed $request
      */
-    private function cancelOrder($request): void
+    private function markOrderPaymentAsAwaitingPayment($request): void
     {
         /** @var PaymentInterface $payment */
         $payment = $request->getModel();
 
-        if (!isset($payment->getDetails()['failure']) ||
-            $payment->getDetails()['failure']['code'] !== 'timeout') {
-            return;
-        }
-
         /** @var OrderInterface $order */
         $order = $payment->getOrder();
 
+        $stateMachine = $this->stateMachineFactory->get($order, OrderPaymentTransitions::GRAPH);
+
+        if(!$stateMachine->can(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)) {
+            return;
+        }
+
         $this->stateMachineFactory
-            ->get($order, OrderTransitions::GRAPH)
-            ->apply(OrderTransitions::TRANSITION_CANCEL)
+            ->get($order, OrderPaymentTransitions::GRAPH)
+            ->apply(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)
         ;
     }
 }

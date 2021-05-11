@@ -15,6 +15,8 @@ interface PayPlugApiClientInterface
 
     public const STATUS_CANCELED = 'canceled';
 
+    public const STATUS_CANCELED_BY_ONEY = 'canceled_by_oney';
+
     public const STATUS_CAPTURED = 'captured';
 
     public const STATUS_AUTHORIZED = 'authorized';

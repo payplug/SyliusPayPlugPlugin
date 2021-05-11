@@ -1,2 +1,3 @@
 imports:
     - { resource: "state_machine/sylius_payment.yml" }
+    - { resource: "state_machine/sylius_order_payment.yaml" }
