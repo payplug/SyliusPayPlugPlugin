@@ -1,44 +1,69 @@
 payplug_sylius_payplug_plugin:
     ui:
-        secret_key: Chiave segreta
+        secret_key: ID segreto
         payplug_gateway_label: PayPlug
-        payment_refund_locally: Il rimborso del pagamento è stato effettuato solo localmente.
-        retrieve_secret_key_in_api_configuration_portal: Recupera le tue chiavi segrete LIVE e TEST nel tuo <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portale</a>
+        payment_refund_locally: Il rimborso del pagamento è stato effettuato solo a livello locale (interno).
+        retrieve_secret_key_in_api_configuration_portal: Trova il tuo ID segreto LIVE e TEST nel tuo <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portale PayPlug</a>
         test_mode: Modalità TEST
-        payplug_id: 'ID PayPlug : %paymentId%'
-        payplug_refund_gateway_is_not_activated: payplug_sylius_payplug_plugin.ui.payplug_sylius_payplug_plugin.ui.oney_gateway_label
-        impossible_to_refund_this_payment: payplug_sylius_payplug_plugin.ui.impossible_to_refund_this_payment
-        oney_gateway_label: payplug_sylius_payplug_plugin.ui.oney_gateway_label
-        oney_cgv_added_label: payplug_sylius_payplug_plugin.ui.oney_cgv_added_label
+        payplug_id: |
+            ID PayPlug : %paymentId%
+        payplug_refund_gateway_is_not_activated: PayPlug non è stato attivato come metodo di rimborso
+        impossible_to_refund_this_payment: Non è possibile rimborsare questo pagamento
+        oney_gateway_label: Oney by PayPlug
+        oney_cgv_added_label: |
+            Ho integrato le note legali Oney nelle CGV del mio sito web.
+            <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">Per saperne di più</a>
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours
-        or_pay_with_oney: payplug_sylius_payplug_plugin.ui.or_pay_with_oney
-        pay: payplug_sylius_payplug_plugin.ui.pay
-        3x_payment: payplug_sylius_payplug_plugin.ui.3x_payment
-        4x_payment: payplug_sylius_payplug_plugin.ui.4x_payment
-        by_credit_cart: payplug_sylius_payplug_plugin.ui.by_credit_cart
-        cancel: payplug_sylius_payplug_plugin.ui.cancel
-        popin_close: payplug_sylius_payplug_plugin.ui.popin_close
-        popin_paiement_desc: popin_paiement_desc
+        oney_transaction_less_than_forty_eight_hours: Il rimborso sarà possibile 48 ore dopo l’ultima operazione di pagamento o rimborso.
+        or_pay_with_oney: Oppure paga in
+        pay: Pagamento
+        3x_payment: Pagamento in 3x
+        4x_payment: Pagamento in 4x
+        by_credit_cart: Con carta di credito
+        cancel: Annulla
+        popin_close: Chiudi
+        popin_paiement_desc: |
+            <p><strong> Apporto: %apport% <br>
+            + %nb_mensuality% mensualità: %mensuality%</strong> <br>
+            di cui costo del finanziamento: %cost% TAEG : %percentage%%</p>
         payment_choice:
-            current_total: payplug_sylius_payplug_plugin.ui.payment_choice.current_total
-            down_payment_amount: payplug_sylius_payplug_plugin.ui.payment_choice.down_payment_amount
-            effective_annual_percentage_rate: payplug_sylius_payplug_plugin.ui.payment_choice.effective_annual_percentage_rate
-            total_cost: payplug_sylius_payplug_plugin.ui.payment_choice.total_cost
-            installment_amount: payplug_sylius_payplug_plugin.ui.payment_choice.installment_amount
-            grand_total: payplug_sylius_payplug_plugin.ui.payment_choice.grand_total
-        popin_legal_mention: payplug_sylius_payplug_plugin.ui.popin_legal_mention
-        too_much_quantity: payplug_sylius_payplug_plugin.ui.too_much_quantity
-        invalid_cart_price: payplug_sylius_payplug_plugin.ui.invalid_cart_price
-        refund_minimum_amount_requirement_not_met: payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met
-        oney_unavailable: payplug_sylius_payplug_plugin.ui.oney_unavailable
+            current_total: Per un importo di
+            down_payment_amount: Primo contributo di
+            effective_annual_percentage_rate: TAEG
+            total_cost: Costo del finanziamento
+            installment_amount: Mensilità n°
+            grand_total: Totale
+        popin_legal_mention: |
+            <small>
+                Offre de financement avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        too_much_quantity: Il tuo carrello deve contenere meno di %max_articles% articoli per poter pagare con Oney.
+        invalid_cart_price: L’importo totale del tuo carrello deve essere compreso tra %min_amount% e %max_amount% per poter pagare con Oney.
+        refund_minimum_amount_requirement_not_met: L’importo da rimborsare non può essere inferiore a 0.10€
+        oney_unavailable: La simulazione del tuo piano di finanziamento non è per il momento disponibile. Queste informazioni ti saranno fornite al momento del pagamento.
     form:
-        oney_error: payplug_sylius_payplug_plugin.form.oney_error
+        oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
         complete_info:
-            missing_title: payplug_sylius_payplug_plugin.form.complete_info.missing_title
-            success_title: payplug_sylius_payplug_plugin.form.complete_info.success_title
-            success_instruction: payplug_sylius_payplug_plugin.form.complete_info.success_instruction
-            email: payplug_sylius_payplug_plugin.form.complete_info.email
-            phone: payplug_sylius_payplug_plugin.form.complete_info.phone
-            submit: payplug_sylius_payplug_plugin.form.complete_info.submit
-        base_currency_not_euro: payplug_sylius_payplug_plugin.form.base_currency_not_euro
+            missing_title: Informazioni mancanti
+            success_title: Informazioni salvate
+            success_instruction: Clicca di nuovo su “Successivo” per continuare
+            email: |
+                Per favore, inserisci il tuo indirizzo e-mail:
+            phone: |
+                Per favore, inserisci il tuo numero di cellulare:
+            submit: Convalida e continua
+        base_currency_not_euro: |
+            Il canale #channel_code# : #payment_method# è disponibile solo per i canali la cui valuta è in EURO

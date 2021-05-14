@@ -5,7 +5,8 @@ payplug_sylius_payplug_plugin:
         payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
         retrieve_secret_key_in_api_configuration_portal: Retrouvez vos Secret Key LIVE et TEST dans votre <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portail PayPlug</a>
         test_mode: Mode TEST
-        payplug_id: 'ID PayPlug : %paymentId%'
+        payplug_id: |
+            ID PayPlug : %paymentId%
         payplug_refund_gateway_is_not_activated: PayPlug n'a pas été activé comme méthode de remboursement
         impossible_to_refund_this_payment: Impossible de rembourser ce paiement
         oney_gateway_label: Oney by PayPlug
@@ -52,16 +53,17 @@ payplug_sylius_payplug_plugin:
         too_much_quantity: Votre panier doit contenir moins de %max_articles% articles pour pouvoir payer avec Oney.
         invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
         refund_minimum_amount_requirement_not_met: Le montant à rembourser doit être d'au moins 0.10€
-        oney_unavailable: Paiement avec Oney indisponible
+        oney_unavailable: La simulation de votre échéancier est temporairement indisponible. Vous retrouverez cette information à l'étape du paiement.
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
             missing_title: Informations manquantes
-            success_title: Information enregistrées
+            success_title: Informations enregistrées
             success_instruction: Cliquez à nouveau sur "Suivant" pour continuer
             email: |
                 Merci de saisir votre adresse email :
             phone: |
-                Merci de saisir votre numéro de téléphone portable:
+                Merci de saisir votre numéro de téléphone portable :
             submit: Valider et continuer
-        base_currency_not_euro: "Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO"
+        base_currency_not_euro: |
+            Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
