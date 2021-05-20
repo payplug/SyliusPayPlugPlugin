@@ -14,4 +14,4 @@ Feature: PayPlug payment method validation
         Given I want to create a new PayPlug payment method
         When I name it "PayPlug" in "English (United States)"
         And I add it
-        Then I should be notified that "Secret key" fields cannot be blank
+        Then I should be notified that "Secret key" cannot be empty.
