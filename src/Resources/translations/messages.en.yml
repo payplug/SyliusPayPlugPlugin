@@ -2,15 +2,68 @@ payplug_sylius_payplug_plugin:
     ui:
         secret_key: Secret key
         payplug_gateway_label: PayPlug
-        payment_refund_locally: The payment refund was made only locally.
-        retrieve_secret_key_in_api_configuration_portal: Retrieve your LIVE and TEST Secret Key in your <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portal</a>
+        payment_refund_locally: The payment refund was made locally only.
+        retrieve_secret_key_in_api_configuration_portal: Find your LIVE and TEST Secret Keys in your <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portal</a>
         test_mode: TEST Mode
-        payplug_id: 'PayPlug ID : %paymentId%'
-        payplug_refund_gateway_is_not_activated: PayPlug refund gateway is not activated
-        impossible_to_refund_this_payment: Impossible to refund this payment
+        payplug_id: |
+            PayPlug ID: %paymentId%
+        payplug_refund_gateway_is_not_activated: PayPlug has not been activated as a refund method
+        impossible_to_refund_this_payment: This payment cannot be refunded
+        oney_gateway_label: Oney by PayPlug
+        oney_cgv_added_label: |
+            I've integrated the Oney legal notice into the T&Cs of my website.
+            <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">More info</a>
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: The refund will be possible 48h after the last payment or refund transaction.
-        refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least 0.10€
-        oney_unavailable: Unavailable Oney payment service
+        oney_transaction_less_than_forty_eight_hours: The refund will be possible 48 hours after the last payment or refund transaction.
+        or_pay_with_oney: Or pay in
+        pay: Payment
+        3x_payment: Pay in 3 installments
+        4x_payment: Pay in 4 installments
+        by_credit_cart: By credit card
+        cancel: Cancel
+        popin_close: Close
+        popin_paiement_desc: |
+            <p><strong>Downpayment: %apport% <br>
+            + %nb_mensuality% monthly installments of: %mensuality%</strong> <br>
+            Of which cost of financing: %cost% APR: %percentage%%</p>
+        payment_choice:
+            current_total: For an amount of
+            down_payment_amount: First installment of
+            effective_annual_percentage_rate: APR
+            total_cost: Financing cost
+            installment_amount: Instalment no.
+            grand_total: Total
+        popin_legal_mention: |
+            <small>
+                Offre de financement avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        too_much_quantity: To pay with Oney, your cart must contain less than %max_articles% items.
+        invalid_cart_price: To pay with Oney, the total amount of your cart must be between %min_amount% and %max_amount%.
+        refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least €0.10
+        oney_unavailable: Your payment schedule simulation is temporarily unavailable. You will find this information at the payment stage.
     form:
-        base_currency_not_euro: "Channel #channel_code# : #payment_method# paiements is only available for channel which base currency is EURO"
+        oney_error: Some missing information is required to pay using Oney by Payplug
+        complete_info:
+            missing_title: Missing information
+            success_title: Saved information
+            success_instruction: Click "Next" again to continue
+            email: |
+                Please enter your email address:
+            phone: |
+                Please enter your cell phone number:
+            submit: Confirm and continue
+        base_currency_not_euro: |
+            Channel #channel_code#: #payment_method# is only available on channels with EURO as a currency

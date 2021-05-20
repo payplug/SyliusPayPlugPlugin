@@ -28,7 +28,7 @@ final class ManagingPaymentMethodContext implements Context
     }
 
     /**
-     * @Then I should be notified that :fields fields cannot be blank
+     * @Then I should be notified that The :fields cannot be empty.
      */
     public function iShouldBeNotifiedThatCannotBeBlank(string $fields): void
     {
@@ -36,8 +36,8 @@ final class ManagingPaymentMethodContext implements Context
 
         foreach ($fields as $field) {
             Assert::true($this->createPage->containsErrorWithMessage(sprintf(
-                '%s cannot be blank.',
-                trim($field)
+                'The %s cannot be empty.',
+                strtolower(trim($field))
             )));
         }
     }
