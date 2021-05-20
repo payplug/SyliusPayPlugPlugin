@@ -15,6 +15,7 @@ use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Action\ActionInterface;
@@ -75,6 +76,17 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
 
             if ($this->isResourceIsAuthorized($resource)) {
                 $details['status'] = PayPlugApiClientInterface::STATUS_AUTHORIZED;
+
+                return;
+            }
+
+            if($this->isRefusedOneyPayment($resource)) {
+                $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY;
+
+                $details['failure'] = [
+                    'code' => $resource->failure->code ?? '',
+                    'message' => $resource->failure->message ?? '',
+                ];
 
                 return;
             }
@@ -150,6 +162,25 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
         }
 
         // Maybe other check
+
+        return false;
+    }
+
+    private function isRefusedOneyPayment(IVerifiableAPIResource $resource): bool
+    {
+        if (!$resource instanceof Payment) {
+            return false;
+        }
+
+        // Oney has reviewed the payer’s file and refused it
+        if (!$resource->is_paid &&
+            $resource->__isset('payment_method') &&
+            $resource->__get('payment_method') !== null &&
+            $resource->__get('payment_method')['is_pending'] === false &&
+            \in_array($resource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true)
+        ) {
+            return true;
+        }
 
         return false;
     }
