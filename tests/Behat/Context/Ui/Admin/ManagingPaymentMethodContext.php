@@ -28,7 +28,7 @@ final class ManagingPaymentMethodContext implements Context
     }
 
     /**
-     * @Then I should be notified that :fields cannot be empty
+     * @Then I should be notified that The :fields cannot be empty.
      */
     public function iShouldBeNotifiedThatCannotBeBlank(string $fields): void
     {
