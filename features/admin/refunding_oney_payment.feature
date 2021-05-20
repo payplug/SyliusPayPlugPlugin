@@ -24,7 +24,7 @@ Feature: Refunding order's Oney payment
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
         When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment
-        Then I should see an error message "The refund will be possible 48h after the last payment or refund transaction."
+        Then I should see an error message "The refund will be possible 48 hours after the last payment or refund transaction."
         Then this order refunded total should be "$0.00"
         And I should be able to refund 1 "Red Arrow" products
 
@@ -86,7 +86,7 @@ Feature: Refunding order's Oney payment
         And I should be able to refund 1 "Red Arrow" products
         When For this order I decide to refund 1st "Red Arrow" product with "Oney" payment
         Then this order refunded total should be "$10.00"
-        Then I should see an error message "The refund will be possible 48h after the last payment or refund transaction."
+        Then I should see an error message "The refund will be possible 48 hours after the last payment or refund transaction."
 
     @ui
     Scenario: Should be able to refund another item when last transaction is at least 48 hours old
@@ -99,4 +99,4 @@ Feature: Refunding order's Oney payment
         Then I wait 48 hours after the last refund of this order
         When For this order I decide to refund 1st "Red Arrow" product with "Oney" payment
         Then this order refunded total should be "$10.00"
-        Then I should see an error message "The refund will be possible 48h after the last payment or refund transaction."
+        Then I should see an error message "The refund will be possible 48 hours after the last payment or refund transaction."
