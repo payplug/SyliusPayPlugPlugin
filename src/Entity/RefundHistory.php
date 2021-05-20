@@ -29,8 +29,8 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var RefundPayment|null
-     * @ORM\OneToOne(targetEntity="\Sylius\RefundPlugin\Entity\RefundPayment")
-     * @ORM\JoinColumn(name="internal_id", referencedColumnName="id", nullable=true)
+     * @ORM\OneToOne(targetEntity="Sylius\RefundPlugin\Entity\RefundPayment")
+     * @ORM\JoinColumn(name="refund_payment_id", nullable=true)
      */
     private $refundPayment;
 

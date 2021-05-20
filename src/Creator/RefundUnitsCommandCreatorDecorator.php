@@ -16,7 +16,7 @@ use Sylius\Component\Payment\Repository\PaymentMethodRepositoryInterface;
 use Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculatorInterface;
 use Sylius\RefundPlugin\Command\RefundUnits;
 use Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface;
-use Sylius\RefundPlugin\Exception\InvalidRefundAmountException;
+use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
@@ -65,7 +65,7 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
         $shipments = $this->filterEmptyRefundUnits($request->request->get('sylius_refund_shipments', []));
 
         if (count($units) === 0 && count($shipments) === 0) {
-            throw InvalidRefundAmountException::withValidationConstraint(
+            throw InvalidRefundAmount::withValidationConstraint(
                 $this->translator->trans('sylius_refund.at_least_one_unit_should_be_selected_to_refund')
             );
         }
@@ -95,7 +95,7 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
         $totalRefundRequest = $this->getTotalRefundAmount($units, $shipments);
 
         if ($totalRefundRequest < self::MINIMUM_REFUND_AMOUNT) {
-            throw InvalidRefundAmountException::withValidationConstraint(
+            throw InvalidRefundAmount::withValidationConstraint(
                 $this->translator->trans('payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met')
             );
         }
@@ -153,7 +153,7 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
             return;
         }
 
-        throw InvalidRefundAmountException::withValidationConstraint(
+        throw InvalidRefundAmount::withValidationConstraint(
             $this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours')
         );
     }
