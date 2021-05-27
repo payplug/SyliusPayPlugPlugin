@@ -19,10 +19,12 @@ In the channel settings, the base currency must be set to **EUR** because the pa
 
 In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
 
-> #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
-> More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
+> #### ⚠️ Refunds requirements 
+> You need to make some adjustments in order to make our plugin worked normally due to a dependency to [refund-plugin](https://github.com/Sylius/RefundPlugin). Please follow those requirements:
+> 1. To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary as explain in [refund-pluging documentation # Pre-requirements](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements)
+> 2. To use proper traits and interfaces, apply changes as explain in [refund-plugin documentation # Installation - Step 4](https://github.com/Sylius/RefundPlugin/tree/master#installation) 
 
-## Requirements
+## Compatibility
 
 | | Version |
 | :--- | :--- |
