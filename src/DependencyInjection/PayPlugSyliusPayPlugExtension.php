@@ -60,6 +60,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
     {
         return [
             'Sylius\Bundle\CoreBundle\Migrations',
+            'Sylius\RefundPlugin\Migrations',
         ];
     }
 }
