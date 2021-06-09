@@ -1,6 +1,6 @@
 {
   "name": "sylius-payplug-plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Sylius Payplug Plugin",
   "main": "src/index.js",
   "scripts": {
