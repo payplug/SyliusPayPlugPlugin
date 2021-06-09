@@ -61,8 +61,14 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
 
     public function fromRequest(Request $request): RefundUnits
     {
-        $units = $this->filterEmptyRefundUnits($request->request->get('sylius_refund_units', []));
-        $shipments = $this->filterEmptyRefundUnits($request->request->get('sylius_refund_shipments', []));
+        Assert::true($request->attributes->has('orderNumber'), 'Refunded order number not provided');
+
+        $units = $this->filterEmptyRefundUnits(
+            $request->request->has('sylius_refund_units') ? $request->request->all()['sylius_refund_units'] : []
+        );
+        $shipments = $this->filterEmptyRefundUnits(
+            $request->request->has('sylius_refund_shipments') ? $request->request->all()['sylius_refund_shipments'] : []
+        );
 
         if (count($units) === 0 && count($shipments) === 0) {
             throw InvalidRefundAmount::withValidationConstraint(
