@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use Payplug\Resource\Refund;
 use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -14,7 +14,7 @@ use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculatorInterface;
 use Sylius\RefundPlugin\Command\RefundUnits;
 use Sylius\RefundPlugin\Entity\RefundPaymentInterface;
-use Sylius\RefundPlugin\Exception\InvalidRefundAmountException;
+use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Sylius\RefundPlugin\Model\OrderItemUnitRefund;
 use Sylius\RefundPlugin\Model\RefundType;
 use Sylius\RefundPlugin\Model\ShipmentRefund;
@@ -65,7 +65,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
         [$items, $shipments] = $this->dispatchRefundPrice($itemsRemainingPrice, $shippingRemainingPrice, $refund->amount);
 
         if (count($items) === 0 && count($shipments) === 0) {
-            throw new InvalidRefundAmountException();
+            throw new InvalidRefundAmount();
         }
 
         return new RefundUnits(

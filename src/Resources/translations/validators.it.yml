@@ -1,0 +1,9 @@
+payplug_sylius_payplug_plugin:
+    secret_key:
+        not_blank: Il campo dell’ID segreto non può essere vuoto.
+        not_valid: ID segreto PayPlug non valido.
+    oney:
+        not_enabled: |
+            Attenzione! Per utilizzare il metodo di pagamento “Oney by PayPlug” in modalità LIVE,
+            contattaci al seguente indirizzo: support@payplug.com
+        not_valid_phone_number: Numero di cellulare non valido.

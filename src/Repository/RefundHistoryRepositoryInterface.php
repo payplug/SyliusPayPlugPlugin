@@ -11,4 +11,6 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 interface RefundHistoryRepositoryInterface extends RepositoryInterface
 {
     public function findLastRefundForPayment(PaymentInterface $payment): ?RefundHistory;
+
+    public function findLastProcessedRefundForPayment(PaymentInterface $payment): ?RefundHistory;
 }

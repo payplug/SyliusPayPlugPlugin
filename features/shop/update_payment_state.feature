@@ -39,9 +39,9 @@ Feature: Paying with PayPlug during checkout
         And I leave my PayPlug payment page
         Then the latest order should have a payment with state "new"
         And PayPlug notified that the payment is expired
-        Then the latest order should have a payment with state "cancelled"
-        Then the latest order shipping state should be "cancelled"
-        Then the latest order state should be "cancelled"
+        Then the latest order should have a payment with state "new"
+        Then the latest order shipping state should be "ready"
+        Then the latest order state should be "new"
 
     @ui
     Scenario: Retrying the payment with success

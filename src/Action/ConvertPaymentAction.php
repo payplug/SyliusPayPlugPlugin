@@ -4,27 +4,41 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use DateInterval;
+use DateTime;
 use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
+use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Payum\Core\Action\ActionInterface;
+use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
-use Payum\Core\GatewayAwareInterface;
-use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Convert;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\Shipment;
+use Sylius\Component\Core\Model\ShipmentInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
-final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterface
+final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 {
-    use GatewayAwareTrait;
+    use ApiAwareTrait;
 
     private const DELIVERY_TYPE_BILLING = 'BILLING';
 
     private const DELIVERY_TYPE_NEW = 'NEW';
+
+    /** @var SessionInterface */
+    private $session;
+
+    public function __construct(SessionInterface $session)
+    {
+        $this->session = $session;
+    }
 
     public function execute($request): void
     {
@@ -40,7 +54,6 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         $customer = $order->getCustomer();
 
         $details = ArrayObject::ensureArrayObject($payment->getDetails());
-
         $details['amount'] = $payment->getAmount();
         $details['currency'] = $payment->getCurrencyCode();
 
@@ -60,6 +73,11 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         $this->addBillingInfo($billing, $customer, $order, $details);
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
+        if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
+            $details = $this->alterOneyDetails($details);
+            $details->offsetSet('payment_context', $this->getCartContext($order));
+        }
+
         $request->setResult((array) $details);
     }
 
@@ -69,13 +87,6 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
             $request instanceof Convert &&
             $request->getSource() instanceof PaymentInterface &&
             $request->getTo() === 'array';
-    }
-
-    public function formatTitle(CustomerInterface $customer): ?string
-    {
-        $gender = $customer->getGender();
-
-        return $gender === 'm' ? 'mr' : ($gender === 'f' ? 'mrs' : null);
     }
 
     public function formatNumber(string $phoneNumber, ?string $isoCode): array
@@ -98,7 +109,14 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
         ];
     }
 
-    public function formatLanguageCode(?string $languageCode): ?string
+    private function formatTitle(CustomerInterface $customer): ?string
+    {
+        $gender = $customer->getGender();
+
+        return $gender === 'm' ? 'mr' : ($gender === 'f' ? 'mrs' : null);
+    }
+
+    private function formatLanguageCode(?string $languageCode): ?string
     {
         if (null === $languageCode) {
             return null;
@@ -174,5 +192,62 @@ final class ConvertPaymentAction implements ActionInterface, GatewayAwareInterfa
             'language' => $this->formatLanguageCode($order->getLocaleCode()),
             'delivery_type' => $deliveryType,
         ];
+    }
+
+    private function alterOneyDetails(ArrayObject $details): ArrayObject
+    {
+        $details['payment_method'] = $this->session->get('oney_payment_method', 'oney_x3_with_fees');
+        $details['auto_capture'] = true;
+        $details['authorized_amount'] = $details['amount'];
+        unset($details['amount']);
+
+        $billing = $details['billing'];
+        if ($billing['company_name'] === null) {
+            $billing['company_name'] = \sprintf('%s %s', $billing['first_name'], $billing['last_name']);
+        }
+        $details['billing'] = $billing;
+
+        $shipping = $details['shipping'];
+        if ($shipping['company_name'] === null) {
+            $shipping['company_name'] = \sprintf('%s %s', $shipping['first_name'], $shipping['last_name']);
+        }
+        $details['shipping'] = $shipping;
+
+        return $details;
+    }
+
+    private function getCartContext(OrderInterface $order): array
+    {
+        /** @var Shipment $shipment */
+        $shipment = $order->getShipments()->current();
+
+        $expectedDeliveryDate = (new DateTime())->add(new DateInterval('P7D'))->format('Y-m-d');
+        $deliveryType = $this->retrieveDeliveryType($shipment);
+        $data = [];
+
+        foreach ($order->getItems() as $orderItem) {
+            $data[] = [
+                'delivery_label' => (null !== $shipment->getMethod()) ? $shipment->getMethod()->getName() : 'none',
+                'delivery_type' => $deliveryType,
+                'expected_delivery_date' => $expectedDeliveryDate,
+                'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode() : 'none',
+                'brand' => $orderItem->getProductName(),
+                'name' => $orderItem->getProductName() . ' ' . $orderItem->getVariantName(),
+                'total_amount' => $orderItem->getTotal(),
+                'price' => $orderItem->getUnitPrice(),
+                'quantity' => $orderItem->getQuantity(),
+            ];
+        }
+
+        return ['cart' => $data];
+    }
+
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    private function retrieveDeliveryType(ShipmentInterface $shipment): string
+    {
+        // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
+        return 'storepickup';
     }
 }

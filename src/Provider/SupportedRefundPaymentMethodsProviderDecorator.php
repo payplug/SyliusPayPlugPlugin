@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
-use PayPlug\SyliusPayPlugPlugin\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -64,7 +64,7 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
 
         if ($this->isPayPlugPayment($order)) {
             return array_filter($paymentMethods, function (PaymentMethodInterface $paymentMethod) use ($order): bool {
-                $lastPayment = $order->getLastPayment();
+                $lastPayment = $order->getLastPayment(PaymentInterface::STATE_COMPLETED);
                 if (!$lastPayment instanceof PaymentInterface) {
                     return false;
                 }
@@ -85,7 +85,10 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
         }
 
         foreach ($paymentMethods as $key => $paymentMethod) {
-            if (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getCode()) {
+            /** @var GatewayConfigInterface $gatewayConfig */
+            $gatewayConfig = $paymentMethod->getGatewayConfig();
+
+            if (PayPlugGatewayFactory::FACTORY_NAME !== $gatewayConfig->getFactoryName()) {
                 continue;
             }
             unset($paymentMethods[$key]);
@@ -96,7 +99,7 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
 
     private function isPayPlugPayment(OrderInterface $order): bool
     {
-        $lastPayment = $order->getLastPayment();
+        $lastPayment = $order->getLastPayment(PaymentInterface::STATE_COMPLETED);
         if (!$lastPayment instanceof PaymentInterface) {
             return false;
         }

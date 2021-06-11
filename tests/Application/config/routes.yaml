@@ -1,0 +1,2 @@
+sylius_payplug:
+    resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"

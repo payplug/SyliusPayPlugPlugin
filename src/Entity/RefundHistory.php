@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Entity;
 
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
-use Sylius\Component\Core\Model\Payment;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
+use Webmozart\Assert\Assert;
 
 /**
  * @ORM\Entity()
@@ -25,8 +29,8 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var RefundPayment|null
-     * @ORM\OneToOne(targetEntity="\Sylius\RefundPlugin\Entity\RefundPayment")
-     * @ORM\JoinColumn(name="internal_id", referencedColumnName="id", nullable=true)
+     * @ORM\OneToOne(targetEntity="Sylius\RefundPlugin\Entity\RefundPayment")
+     * @ORM\JoinColumn(name="refund_payment_id", nullable=true)
      */
     private $refundPayment;
 
@@ -37,9 +41,9 @@ class RefundHistory implements ResourceInterface
     private $externalId;
 
     /**
-     * @var Payment|null
+     * @var PaymentInterface|null
      * @ORM\ManyToOne(targetEntity="\Sylius\Component\Core\Model\Payment")
-     * @ORM\JoinColumn(name="payment_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="payment_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      */
     private $payment;
 
@@ -54,6 +58,17 @@ class RefundHistory implements ResourceInterface
      * @ORM\Column(type="boolean")
      */
     private $processed = false;
+
+    /**
+     * @var DateTimeInterface
+     * @ORM\Column(type="datetime")
+     */
+    private $createdAt;
+
+    public function __construct()
+    {
+        $this->createdAt = new DateTime();
+    }
 
     public function getId(): int
     {
@@ -96,12 +111,12 @@ class RefundHistory implements ResourceInterface
         return $this;
     }
 
-    public function getPayment(): ?Payment
+    public function getPayment(): ?PaymentInterface
     {
         return $this->payment;
     }
 
-    public function setPayment(?Payment $payment): self
+    public function setPayment(?PaymentInterface $payment): self
     {
         $this->payment = $payment;
 
@@ -116,6 +131,20 @@ class RefundHistory implements ResourceInterface
     public function setProcessed(bool $processed): self
     {
         $this->processed = $processed;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): DateTimeInterface
+    {
+        Assert::isInstanceOf($this->createdAt, DateTime::class);
+
+        return DateTimeImmutable::createFromMutable($this->createdAt);
+    }
+
+    public function setCreatedAt(DateTimeInterface $createdAt): self
+    {
+        $this->createdAt = $createdAt;
 
         return $this;
     }

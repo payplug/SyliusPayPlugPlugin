@@ -2,3 +2,8 @@ payplug_sylius_payplug_plugin:
     secret_key:
         not_blank: La clé secrète ne peut pas être vide.
         not_valid: Ce n'est pas une clé secrète PayPlug valide.
+    oney:
+        not_enabled: |
+            Attention ! Pour utiliser la méthode de paiement “Oney by PayPlug” en mode LIVE,
+            merci de nous contacter à support@payplug.com
+        not_valid_phone_number: Cette valeur n'est pas un numéro de téléphone portable valide.

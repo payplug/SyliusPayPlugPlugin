@@ -6,21 +6,24 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
+use PayPlug\SyliusPayPlugPlugin\StateMachine\Transition\OrderPaymentTransitions;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
+use Payum\Core\Reply\HttpRedirect;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
+use Payum\Core\Request\GetToken;
 use SM\Factory\FactoryInterface;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Order\OrderTransitions;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
 
-    /** @var \SM\Factory\FactoryInterface */
+    /** @var FactoryInterface */
     private $stateMachineFactory;
 
     /** @var RefundPaymentHandlerInterface */
@@ -43,7 +46,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
         $details = $payment->getDetails();
 
-        if (!isset($details['status']) || !isset($details['payment_id'])) {
+        if (!isset($details['status'], $details['payment_id'])) {
             $request->markNew();
 
             return;
@@ -51,7 +54,17 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
         $this->gateway->execute($httpRequest = new GetHttpRequest());
 
-        if (isset($httpRequest->query['status']) && PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
+        // notification Url didn't yet call. Let's refresh status
+        if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
+            && isset($httpRequest->query['payum_token'])) {
+            $this->gateway->execute($token = new GetToken($httpRequest->query['payum_token']));
+            \sleep(1);
+            // TODO: check if we can refresh status in a better way than redirect
+            throw new HttpRedirect($token->getToken()->getTargetUrl());
+        }
+
+        if (isset($httpRequest->query['status']) &&
+            PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
             $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
 
             $payment->setDetails($details);
@@ -68,14 +81,16 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
         ;
     }
 
-    /**
-     * @param mixed $request
-     */
-    private function markRequestAs(string $status, $request): void
+    private function markRequestAs(string $status, GetStatusInterface $request): void
     {
         switch ($status) {
             case PayPlugApiClientInterface::STATUS_CANCELED:
                 $request->markCanceled();
+
+                break;
+            case PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY:
+                $request->markCanceled();
+                $this->markOrderPaymentAsAwaitingPayment($request);
 
                 break;
             case PayPlugApiClientInterface::STATUS_CREATED:
@@ -86,9 +101,12 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
                 $request->markCaptured();
 
                 break;
+            case PayPlugApiClientInterface::STATUS_AUTHORIZED:
+                $request->markAuthorized();
+
+                break;
             case PayPlugApiClientInterface::FAILED:
                 $request->markFailed();
-                $this->cancelOrder($request);
 
                 break;
             case PayPlugApiClientInterface::REFUNDED:
@@ -105,22 +123,23 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
     /**
      * @param mixed $request
      */
-    private function cancelOrder($request): void
+    private function markOrderPaymentAsAwaitingPayment($request): void
     {
         /** @var PaymentInterface $payment */
         $payment = $request->getModel();
 
-        if (!isset($payment->getDetails()['failure']) ||
-            $payment->getDetails()['failure']['code'] !== 'timeout') {
+        /** @var OrderInterface $order */
+        $order = $payment->getOrder();
+
+        $stateMachine = $this->stateMachineFactory->get($order, OrderPaymentTransitions::GRAPH);
+
+        if(!$stateMachine->can(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)) {
             return;
         }
 
-        /** @var \Sylius\Component\Core\Model\OrderInterface $order */
-        $order = $payment->getOrder();
-
         $this->stateMachineFactory
-            ->get($order, OrderTransitions::GRAPH)
-            ->apply(OrderTransitions::TRANSITION_CANCEL)
+            ->get($order, OrderPaymentTransitions::GRAPH)
+            ->apply(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)
         ;
     }
 }

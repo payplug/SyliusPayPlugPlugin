@@ -7,6 +7,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker;
 use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Behat\Service\Mocker\MockerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -26,7 +27,7 @@ final class PayPlugApiMocker
 
     public function getPayPlugApiClient()
     {
-        return new PayPlugApiClient($this->container);
+        return new PayPlugApiClient($this->container, 'payplug_sylius_payplug_plugin.api_client.payplug');
     }
 
     public function mockApiRefundedPayment(callable $action): void
@@ -49,6 +50,14 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->is_paid = true;
+        $payment->created_at = 1598273578;
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+
         $refund = \Mockery::mock('refund', Refund::class);
         $refund->amount = 34000;
         $refund->currency = 'EUR';
@@ -88,13 +97,49 @@ final class PayPlugApiMocker
         $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
         $mock
             ->shouldReceive('initialise')
+            ->shouldReceive('createPayment')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->is_paid = true;
+        $payment->created_at = 1598273578;
         $mock
             ->shouldReceive('treat')
             ->andReturn($payment)
         ;
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function mockApiRetrievePayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class
+        );
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
+        $payment->refundable_after = (new \DateTime())->sub(new \DateInterval('P1D'))->getTimestamp();
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function mockApiRetrieveNotRefundablePayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class
+        );
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
+        $payment->refundable_after = (new \DateTime())->add(new \DateInterval('P1D'))->getTimestamp();
         $mock
             ->shouldReceive('retrieve')
             ->andReturn($payment)
@@ -227,5 +272,56 @@ final class PayPlugApiMocker
         ;
         $action();
         $this->mocker->unmockAll();
+    }
+
+    public function mockPayPlugApiGetGatewayFactoryName(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+        $mock
+            ->shouldReceive([
+                'getGatewayFactoryName' => PayPlugGatewayFactory::FACTORY_NAME,
+            ])
+        ;
+
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function enableOney(): void
+    {
+        $this->mocker->unmockAll();
+        $mock = $this->mocker->mockService(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class
+        );
+        $mock->shouldReceive([
+            'getPermissions' => ['can_use_oney' => true],
+            'getAccount' => ['configuration' => [
+                'oney' => [
+                    'min_amounts' => [
+                        'EUR' => 10000,
+                    ],
+                    'max_amounts' => [
+                        'EUR' => 300000,
+                    ],
+                    'allowed_countries' => [
+                        'FR',
+                        'US',
+                    ],
+                ],
+            ]],
+        ]);
+    }
+
+    public function disableOney(): void
+    {
+        $this->mocker->unmockAll();
+        $mock = $this->mocker->mockService(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class
+        );
+        $mock->shouldReceive([
+            'getPermissions' => ['can_use_oney' => false],
+        ]);
     }
 }

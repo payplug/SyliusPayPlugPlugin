@@ -1,0 +1,3 @@
+payplug_sylius_payplug_plugin:
+    error:
+        oney_not_enabled: Oney is not (or is no longer) activated on your account.

@@ -6,20 +6,19 @@ on:
         paths-ignore:
             - README.md
     pull_request:
-        branches: [develop, qa, master]
         paths-ignore:
             - README.md
 
 jobs:
     php:
-        name: PHP ${{ matrix.php }} ${{ matrix.prefer }}
+        name: PHP ${{ matrix.php }} Symfony ${{ matrix.symfony }}
         runs-on: ubuntu-18.04
 
         strategy:
             fail-fast: false
             matrix:
                 php: [7.3, 7.4]
-                symfony: [4.4.*]
+                symfony: [4.4.*, 5.2.*]
 
         steps:
             - uses: actions/checkout@v2
@@ -44,7 +43,7 @@ jobs:
                       php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-
 
             - name: Composer - Validate composer.json and composer.lock
-              run: composer validate --strict
+              run: composer validate
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
@@ -56,12 +55,13 @@ jobs:
               run: composer update --no-progress
               id: end-of-setup
 
-            - name: ECS - Run
-              run: if [ -f rulesets/easy-coding-standard.yml ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c rulesets/easy-coding-standard.yml ; else echo Ecs ruleset file does not exist, skipping step ; fi
-              if: always() && steps.end-of-setup.outcome == 'success'
+# Disable in cause of error occurs symplify/symplify#2873
+#            - name: ECS - Run
+#              run: if [ -f rulesets/ecs.php ]; then vendor/bin/ecs check src/ tests/Behat/ --no-progress-bar -c rulesets/ecs.php ; else echo Ecs rulesets file does not exist, skipping step ; fi
+#              if: always() && steps.end-of-setup.outcome == 'success'
 
             - name: PHPStan - Run
-              run: if [ -f rulesets/phpstan.neon ]; then vendor/bin/phpstan analyse -c rulesets/phpstan.neon src/ ; else echo PHPStan ruleset file does not exist, skipping step ; fi
+              run: if [ -f rulesets/phpstan.neon ]; then vendor/bin/phpstan analyse -c rulesets/phpstan.neon src/ ; else echo PHPStan rulesets file does not exist, skipping step ; fi
               if: always() && steps.end-of-setup.outcome == 'success'
 
             - name: PHPSpec - Run
@@ -72,14 +72,18 @@ jobs:
               run: symfony security:check
               if: always() && steps.end-of-setup.outcome == 'success'
 
+            - name: PHPunit - Run
+              run: vendor/bin/phpunit
+              if: always() && steps.end-of-setup.outcome == 'success'
+
     sylius:
-        name: Behat (PHP ${{ matrix.php }} Sylius ${{ matrix.sylius }})
+        name: PHPUnit-Behat (PHP ${{ matrix.php }} Sylius ${{ matrix.sylius }})
         runs-on: ubuntu-18.04
         strategy:
             fail-fast: false
             matrix:
                 php: [7.3, 7.4]
-                sylius: [1.8.*]
+                sylius: [1.8.*, 1.9.*]
                 symfony: [4.4.*]
                 node: [10.x]
 
@@ -112,11 +116,15 @@ jobs:
 
             - name: Composer - Set cache
               uses: actions/cache@v2
+              id: cache-composer
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json') }}
-                  restore-keys: |
-                      php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-
+                  restore-keys: php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-symfony-${{ matrix.symfony }}-composer-
+
+            - name: Composer - Create cache directory
+              run: mkdir -p /home/runner/.composer/cache
+              if: steps.cache-composer.outputs.cache-hit != 'true'
 
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
@@ -136,41 +144,23 @@ jobs:
                   composer config minimum-stability "dev"
                   composer config prefer-stable true
 
-            - name: Composer - Install plugin
-              working-directory: ./sylius
-              run: composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
-
-            - name: Composer - Security Checker
-              working-directory: ./sylius
-              run: composer require sensiolabs/security-checker --no-update
-
             - name: Composer - Restrict Symfony version
               working-directory: ./sylius
               run: composer config extra.symfony.require "${{ matrix.symfony }}"
 
+            - name: Composer - Install plugin
+              working-directory: ./sylius
+              run: composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
+
             - name: Sylius - Update dependencies # need to update sylius version
               working-directory: ./sylius
-              run: composer update --no-progress --no-suggest --prefer-dist -n -o
+              run: |
+                  composer update --no-progress --no-scripts --prefer-dist
+                  composer update --no-suggest -n -o
 
             - name: Sylius - Run Symfony flex
               working-directory: ./sylius
               run: composer sync-recipes
-
-            - name: Sylius - Get services from Plugin
-              working-directory: ./sylius
-              run: |
-                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml config/packages/test/payplug.yaml
-                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/messenger.yaml config/packages/test/messenger.yaml
-
-            - name: Sylius - Copy migration of Plugin
-              working-directory: ./sylius
-              run: |
-                  cp vendor/${{ env.package-name }}/src/Migrations/* src/Migrations
-
-            - name: Sylius - Migration config
-              working-directory: ./sylius
-              run: |
-                  echo '        'DoctrineMigrations': 'src/Migrations'' >> config/packages/doctrine_migrations.yaml
 
             - name: Sylius - Twig form Theme
               working-directory: ./sylius
@@ -189,6 +179,15 @@ jobs:
                   mkdir -p templates/bundles/SyliusAdminBundle/
                   cp -R vendor/${{ env.package-name }}/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
 
+            - name: Sylius - Get routes from Plugin
+              working-directory: ./sylius
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/routes.yaml config/routes.yaml
+
+            - name: Sylius - Configure for RefundPlugin # see https://github.com/Sylius/RefundPlugin#installation
+              working-directory: ./sylius
+              run: cp -r vendor/${{ env.package-name }}/tests/datas/Entity/* src/Entity
+
             - name: Behat - Config Suite
               working-directory: ./sylius
               run: |
@@ -196,6 +195,7 @@ jobs:
                   sed -i "s#vendor/sylius/sylius/features#vendor/${{ env.package-name }}/features#g" behat.yml.dist
                   echo '    - { resource: "../vendor/${{ env.package-name }}/src/Resources/config/services.xml" }' >> config/services_test.yaml
                   echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
+                  echo '    - { resource: "../vendor/${{ env.package-name }}/tests/Application/config/packages/test/payplug.yaml" }' >> config/services_test.yaml
                   echo '    - { resource: "../vendor/sylius/refund-plugin/src/Resources/config/services.xml" }' >> config/services_test.yaml
                   echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml
 
@@ -205,6 +205,7 @@ jobs:
                   echo 'parameters:' >> config/services_test.yaml
                   echo '    sylius_refund.supported_gateways:' >> config/services_test.yaml
                   echo '        - payplug' >> config/services_test.yaml
+                  echo '        - payplug_oney' >> config/services_test.yaml
                   echo '        - cash_on_delivery' >> config/services_test.yaml
 
             - name: Sylius - Process translations
@@ -229,10 +230,10 @@ jobs:
             - name: Yarn - Set Cache
               uses: actions/cache@v2
               with:
-                path: ${{ steps.yarn-cache.outputs.dir }}
-                key: node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
-                restore-keys: |
-                    node-${{ matrix.node }}-yarn-
+                  path: ${{ steps.yarn-cache.outputs.dir }}
+                  key: node-${{ matrix.node }}-yarn-${{ hashFiles('**/package.json **/yarn.lock') }}
+                  restore-keys: |
+                      node-${{ matrix.node }}-yarn-
 
             - name: Sylius - Assets
               working-directory: ./sylius
@@ -241,16 +242,16 @@ jobs:
             - name: Wkhtmltopdf - Install
               working-directory: ./sylius
               run: |
-                sudo apt-get update
-                sudo apt-get install xvfb libfontconfig wkhtmltopdf
-                printf '#!/bin/bash\nxvfb-run -a --server-args="-screen 0, 1024x768x24" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh
-                sudo chmod a+x /usr/bin/wkhtmltopdf.sh
-                sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
+                  sudo apt-get update
+                  sudo apt-get install xvfb libfontconfig wkhtmltopdf
+                  printf '#!/bin/bash\nxvfb-run -a --server-args="-screen 0, 1024x768x24" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh
+                  sudo chmod a+x /usr/bin/wkhtmltopdf.sh
+                  sudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf
 
             - name: Sylius - Cache clear
               working-directory: ./sylius
               run: |
-                php bin/console c:c
+                  php bin/console c:c
 
             - name: Output PHP version for Symfony CLI
               working-directory: ./sylius
@@ -268,6 +269,11 @@ jobs:
               working-directory: ./sylius
               run: symfony server:start --port=8080 --dir=public --daemon
               id: end-of-setup-sylius
+
+            - name: Doctrine Schema Validate - Run
+              working-directory: ./sylius
+              run: php bin/console doctrine:schema:validate --skip-sync
+              if: always() && steps.end-of-setup-sylius.outcome == 'success'
 
             - name: Run behat
               working-directory: ./sylius

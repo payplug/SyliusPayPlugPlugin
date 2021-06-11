@@ -6,6 +6,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit;
 
 use PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 final class phoneNumberFormatTest extends TestCase
 {
@@ -15,7 +16,7 @@ final class phoneNumberFormatTest extends TestCase
      */
     public function testFormatNumberMethod(string $input, string $isoCode, array $expectedOutput): void
     {
-        $convertPaymentAction = new ConvertPaymentAction();
+        $convertPaymentAction = new ConvertPaymentAction(new Session());
 
         self::assertEquals(
             $expectedOutput,

@@ -1,10 +1,28 @@
 sylius_refund_complete_refund_payment:
-  path: /admin/orders/{orderNumber}/refund-payments/{id}/complete
-  methods: [POST]
-  defaults:
-    _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction
+    path: /%sylius_admin.path_name%/orders/{orderNumber}/refund-payments/{id}/complete
+    methods: [POST]
+    defaults:
+        _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction
 
 sylius_refund_refund_units:
-  path: /admin/orders/{orderNumber}/refund-units
-  defaults:
-    _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction
+    path: /%sylius_admin.path_name%/orders/{orderNumber}/refund-units
+    defaults:
+        _controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction
+
+payplug_sylius_oney_complete_info:
+    path: /{_locale}/payplug/oney_complete_info
+    methods: ['GET', 'POST']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CompleteInfoController'
+
+payplug_sylius_oney_simulation_popin:
+    path: /{_locale}/payplug/oney_popin
+    methods: ['GET']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin'
+
+payplug_sylius_oney_is_product_eligible:
+    path: /{_locale}/payplug/oney/is-product-eligible
+    methods: ['GET']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible'

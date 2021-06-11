@@ -19,12 +19,17 @@ In the channel settings, the base currency must be set to **EUR** because the pa
 
 In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
 
-> #### ⚠️ To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary ⚠️
-> More info in [refund-plugin documentation](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements). 
+> #### ⚠️ Refunds requirements 
+> You need to make some adjustments in order to make our plugin worked normally due to a dependency to [refund-plugin](https://github.com/Sylius/RefundPlugin). Please follow those requirements:
+> 1. To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary as explain in [refund-pluging documentation # Pre-requirements](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements)
+> 2. To use proper traits and interfaces, apply changes as explain in [refund-plugin documentation # Installation - Step 4](https://github.com/Sylius/RefundPlugin/tree/master#installation) 
 
+## Compatibility
 
-#### ❗️Known issues about [refund-plugin](https://github.com/Sylius/RefundPlugin)❗️
-- [#234 - [UI/UX] Refund float price](https://github.com/Sylius/RefundPlugin/pull/234) : Decimals seperated by comma are taken into account.
+| | Version |
+| :--- | :--- |
+| PHP  | 7.3, 7.4 |
+| Sylius | 1.8, 1.9 |
 
 ## Installation
 
@@ -50,61 +55,43 @@ In local environment, the plugin will not work properly because you will not be 
     composer require payplug/sylius-payplug-plugin
     ```
 
-4. Import custom form row theme in your `config/packages/twig.yaml` file:
-    ```yaml
-    twig:
-        ...
-        form_themes: [
-            'form/form_gateway_config_row.html.twig'
-        ]
-    ```
-
-5. Copy custom form row theme template
+4. Apply migrations to your database:
 
     ```shell
-    mkdir -p templates/form/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/form/* templates/form/
-    ```
-
-6. Copy and apply migrations
-
-    Update `config/packages/doctrine_migrations.yaml` by adding following config
-    ```yaml
-    doctrine_migrations:
-        migrations_paths:
-            ...
-            'DoctrineMigrations': "%kernel.project_dir%/src/Migrations"
-    ```
-
-    Copy migrations from `vendor/payplug/sylius-payplug-plugin/src/Migrations/` to your migrations directory (e.g. `src/Migrations`) and apply them to your database
-    ```shell
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Migrations/* src/Migrations
     bin/console doctrine:migrations:migrate
     ```
 
-7. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
+5. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
     
     ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
-8. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+6. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
     ```yaml
     parameters:
         sylius_refund.supported_gateways:
             - payplug
+            - payplug_oney
     ```
 
-9. Process translations
+7. Add PayPlug routes in `config/routes.yaml`
+
+   ```yaml
+   sylius_payplug:
+      resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
+   ```
+
+8. Process translations
 
     ```bash
     php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
     php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
-10. Clear cache:
+9. Clear cache:
 
     ```shell
     php bin/console cache:clear
@@ -138,6 +125,20 @@ Run the below command to see what Symfony services are shared with this plugin:
 $ bin/console debug:container payplug_sylius_payplug_plugin
 ```
 
+### Template overriding
+
+This plugin override some sylius templates. 
+If you plan override them also, you should retrieve them in your application.
+
+Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
+
+   ```shell
+    mkdir -p templates/bundles/SyliusAdminBundle/
+    mkdir -p templates/bundles/SyliusShopBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
+    ```
+
 ## Testing
 
 ```bash
@@ -158,5 +159,10 @@ $ bin/phpspec run
 
 This library is under the MIT license.
 
+## Oney Integration
+
+For better Oney integration, you can check the [Oney enhancement documentation](doc/oney_enhancement.md).
+
 ## Doc
+- [Development](doc/development.md)
 - [Release Process](RELEASE.md)

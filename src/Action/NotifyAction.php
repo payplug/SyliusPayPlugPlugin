@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use ArrayAccess;
+use DateTimeImmutable;
+use LogicException;
+use Payplug\Exception\PayplugException;
+use Payplug\Resource\IVerifiableAPIResource;
+use Payplug\Resource\Payment;
+use Payplug\Resource\PaymentAuthorization;
+use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Action\ActionInterface;
@@ -54,17 +63,35 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
 
         try {
             if (!is_string($input)) {
-                throw new \LogicException('Input must be of type string.');
+                throw new LogicException('Input must be of type string.');
             }
             $resource = $this->payPlugApiClient->treat($input);
 
-            if ($resource instanceof \Payplug\Resource\Payment && $resource->is_paid) {
+            if ($resource instanceof Payment && $resource->is_paid) {
                 $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
+                $details['created_at'] = $resource->created_at;
 
                 return;
             }
 
-            if ($resource instanceof \Payplug\Resource\Refund) {
+            if ($this->isResourceIsAuthorized($resource)) {
+                $details['status'] = PayPlugApiClientInterface::STATUS_AUTHORIZED;
+
+                return;
+            }
+
+            if($this->isRefusedOneyPayment($resource)) {
+                $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY;
+
+                $details['failure'] = [
+                    'code' => $resource->failure->code ?? '',
+                    'message' => $resource->failure->message ?? '',
+                ];
+
+                return;
+            }
+
+            if ($resource instanceof Refund) {
                 $metadata = $resource->metadata;
                 if (isset($metadata['refund_from_sylius'])) {
                     return;
@@ -99,7 +126,7 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
                 'message' => $resource->failure->message ?? '',
             ];
             $details['status'] = PayPlugApiClientInterface::FAILED;
-        } catch (\Payplug\Exception\PayplugException $exception) {
+        } catch (PayplugException $exception) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
             $this->logger->error('[PayPlug] Notify action', ['error' => $exception->getMessage()]);
         }
@@ -109,7 +136,52 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
     {
         return
             $request instanceof Notify &&
-            $request->getModel() instanceof \ArrayAccess
+            $request->getModel() instanceof ArrayAccess
         ;
+    }
+
+    private function isResourceIsAuthorized(IVerifiableAPIResource $resource): bool
+    {
+        if (!$resource instanceof Payment) {
+            return false;
+        }
+
+        // Oney is reviewing the payer’s file
+        if ($resource->__isset('payment_method') &&
+            $resource->__get('payment_method') !== null &&
+            $resource->__get('payment_method')['is_pending'] === true) {
+            return true;
+        }
+
+        $now = new DateTimeImmutable();
+        if ($resource->__isset('authorization') &&
+            $resource->__get('authorization') instanceof PaymentAuthorization &&
+            $resource->__get('authorization')->__get('expires_at') !== null &&
+            $now < $now->setTimestamp($resource->__get('authorization')->__get('expires_at'))) {
+            return true;
+        }
+
+        // Maybe other check
+
+        return false;
+    }
+
+    private function isRefusedOneyPayment(IVerifiableAPIResource $resource): bool
+    {
+        if (!$resource instanceof Payment) {
+            return false;
+        }
+
+        // Oney has reviewed the payer’s file and refused it
+        if (!$resource->is_paid &&
+            $resource->__isset('payment_method') &&
+            $resource->__get('payment_method') !== null &&
+            $resource->__get('payment_method')['is_pending'] === false &&
+            \in_array($resource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true)
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }
