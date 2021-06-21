@@ -157,5 +157,21 @@
             <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator"/>
         </service>
 
+        <service
+            id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler"
+            public="false"
+        >
+            <argument type="service" id="monolog.logger.payum" />
+        </service>
+
+        <service
+            id="PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler"
+            public="false"
+        >
+            <argument type="service" id="payplug.repository.payplug_refund_history" />
+            <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
+            <argument type="service" id="sylius_refund_plugin.command_bus" />
+        </service>
+
     </services>
 </container>

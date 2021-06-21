@@ -5,19 +5,12 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use ArrayAccess;
-use DateTimeImmutable;
 use LogicException;
 use Payplug\Exception\PayplugException;
-use Payplug\Resource\IVerifiableAPIResource;
-use Payplug\Resource\Payment;
-use Payplug\Resource\PaymentAuthorization;
-use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
-use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
+use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
+use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -25,34 +18,28 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Notify;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait, ApiAwareTrait;
 
-    /** @var RefundPaymentHandlerInterface */
-    private $refundPaymentHandler;
-
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var MessageBusInterface */
-    private $commandBus;
+    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler */
+    private $paymentNotificationHandler;
 
-    /** @var RefundHistoryRepositoryInterface */
-    private $payplugRefundHistoryRepository;
+    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler */
+    private $refundNotificationHandler;
 
     public function __construct(
         LoggerInterface $logger,
-        RefundPaymentHandlerInterface $refundPaymentHandler,
-        MessageBusInterface $commandBus,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository
+        PaymentNotificationHandler $paymentNotificationHandler,
+        RefundNotificationHandler $refundNotificationHandler
     ) {
         $this->logger = $logger;
-        $this->refundPaymentHandler = $refundPaymentHandler;
-        $this->commandBus = $commandBus;
-        $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
+        $this->paymentNotificationHandler = $paymentNotificationHandler;
+        $this->refundNotificationHandler = $refundNotificationHandler;
     }
 
     public function execute($request): void
@@ -67,65 +54,8 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
             }
             $resource = $this->payPlugApiClient->treat($input);
 
-            if ($resource instanceof Payment && $resource->is_paid) {
-                $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
-                $details['created_at'] = $resource->created_at;
-
-                return;
-            }
-
-            if ($this->isResourceIsAuthorized($resource)) {
-                $details['status'] = PayPlugApiClientInterface::STATUS_AUTHORIZED;
-
-                return;
-            }
-
-            if($this->isRefusedOneyPayment($resource)) {
-                $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY;
-
-                $details['failure'] = [
-                    'code' => $resource->failure->code ?? '',
-                    'message' => $resource->failure->message ?? '',
-                ];
-
-                return;
-            }
-
-            if ($resource instanceof Refund) {
-                $metadata = $resource->metadata;
-                if (isset($metadata['refund_from_sylius'])) {
-                    return;
-                }
-
-                $details['status'] = PayPlugApiClientInterface::REFUNDED;
-                $refundUnits = $this->refundPaymentHandler->handle($resource, $request->getFirstModel());
-
-                /** @var RefundHistory|null $refundHistory */
-                $refundHistory = $this->payplugRefundHistoryRepository->findOneBy(['externalId' => $resource->id]);
-                if ($refundHistory instanceof RefundHistory) {
-                    return;
-                }
-
-                $refundHistory = new RefundHistory();
-                $refundHistory
-                    ->setExternalId($resource->id)
-                    ->setValue($resource->amount)
-                    ->setPayment($request->getFirstModel())
-                ;
-
-                $this->payplugRefundHistoryRepository->add($refundHistory);
-                $this->commandBus->dispatch($refundUnits);
-
-                return;
-            }
-
-            $this->logger->info('[PayPlug] Notify action', ['failure' => $resource->failure]);
-
-            $details['failure'] = [
-                'code' => $resource->failure->code ?? '',
-                'message' => $resource->failure->message ?? '',
-            ];
-            $details['status'] = PayPlugApiClientInterface::FAILED;
+            $this->paymentNotificationHandler->treat($resource, $details);
+            $this->refundNotificationHandler->treat($request, $resource, $details);
         } catch (PayplugException $exception) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
             $this->logger->error('[PayPlug] Notify action', ['error' => $exception->getMessage()]);
@@ -136,52 +66,6 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
     {
         return
             $request instanceof Notify &&
-            $request->getModel() instanceof ArrayAccess
-        ;
-    }
-
-    private function isResourceIsAuthorized(IVerifiableAPIResource $resource): bool
-    {
-        if (!$resource instanceof Payment) {
-            return false;
-        }
-
-        // Oney is reviewing the payer’s file
-        if ($resource->__isset('payment_method') &&
-            $resource->__get('payment_method') !== null &&
-            $resource->__get('payment_method')['is_pending'] === true) {
-            return true;
-        }
-
-        $now = new DateTimeImmutable();
-        if ($resource->__isset('authorization') &&
-            $resource->__get('authorization') instanceof PaymentAuthorization &&
-            $resource->__get('authorization')->__get('expires_at') !== null &&
-            $now < $now->setTimestamp($resource->__get('authorization')->__get('expires_at'))) {
-            return true;
-        }
-
-        // Maybe other check
-
-        return false;
-    }
-
-    private function isRefusedOneyPayment(IVerifiableAPIResource $resource): bool
-    {
-        if (!$resource instanceof Payment) {
-            return false;
-        }
-
-        // Oney has reviewed the payer’s file and refused it
-        if (!$resource->is_paid &&
-            $resource->__isset('payment_method') &&
-            $resource->__get('payment_method') !== null &&
-            $resource->__get('payment_method')['is_pending'] === false &&
-            \in_array($resource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true)
-        ) {
-            return true;
-        }
-
-        return false;
+            $request->getModel() instanceof ArrayAccess;
     }
 }

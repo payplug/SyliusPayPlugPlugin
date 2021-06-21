@@ -7,8 +7,8 @@ namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\NotifyAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
-use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
-use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
+use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
+use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\GatewayAwareInterface;
@@ -16,45 +16,42 @@ use Payum\Core\GatewayInterface;
 use Payum\Core\Request\Notify;
 use PhpSpec\ObjectBehavior;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 final class NotifyActionSpec extends ObjectBehavior
 {
-    function let(
+    public function let(
         LoggerInterface $logger,
-        RefundPaymentHandlerInterface $refundPaymentHandler,
-        MessageBusInterface $commandBus,
-        RefundHistoryRepositoryInterface $refundHistoryRepository
+        PaymentNotificationHandler $paymentNotificationHandler,
+        RefundNotificationHandler $refundNotificationHandler
     ): void {
         $this->beConstructedWith(
             $logger,
-            $refundPaymentHandler,
-            $commandBus,
-            $refundHistoryRepository
+            $paymentNotificationHandler,
+            $refundNotificationHandler
         );
     }
 
-    function it_is_initializable(): void
+    public function it_is_initializable(): void
     {
         $this->shouldHaveType(NotifyAction::class);
     }
 
-    function it_implements_action_interface(): void
+    public function it_implements_action_interface(): void
     {
         $this->shouldHaveType(ActionInterface::class);
     }
 
-    function it_implements_api_aware_interface(): void
+    public function it_implements_api_aware_interface(): void
     {
         $this->shouldHaveType(ApiAwareInterface::class);
     }
 
-    function it_implements_gateway_aware_interface(): void
+    public function it_implements_gateway_aware_interface(): void
     {
         $this->shouldHaveType(GatewayAwareInterface::class);
     }
 
-    function it_executes(
+    public function it_executes(
         Notify $request,
         \ArrayObject $arrayObject,
         GatewayInterface $gateway,
@@ -73,7 +70,7 @@ final class NotifyActionSpec extends ObjectBehavior
         $this->execute($request);
     }
 
-    function it_supports_only_notify_request_and_array_access(
+    public function it_supports_only_notify_request_and_array_access(
         Notify $request,
         \ArrayAccess $arrayAccess
     ): void {
