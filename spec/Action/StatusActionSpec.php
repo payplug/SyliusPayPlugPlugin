@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\StatusAction;
+use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\GatewayAwareInterface;
@@ -16,29 +17,30 @@ use Sylius\Component\Core\Model\PaymentInterface;
 
 final class StatusActionSpec extends ObjectBehavior
 {
-    function let(
+    public function let(
         FactoryInterface $stateMachineFactory,
-        RefundPaymentHandlerInterface $refundPaymentHandler
+        RefundPaymentHandlerInterface $refundPaymentHandler,
+        PaymentNotificationHandler $paymentNotificationHandler
     ): void {
-        $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler);
+        $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler, $paymentNotificationHandler);
     }
 
-    function it_is_initializable(): void
+    public function it_is_initializable(): void
     {
         $this->shouldHaveType(StatusAction::class);
     }
 
-    function it_implements_action_interface(): void
+    public function it_implements_action_interface(): void
     {
         $this->shouldHaveType(ActionInterface::class);
     }
 
-    function it_implements_gateway_aware_interface(): void
+    public function it_implements_gateway_aware_interface(): void
     {
         $this->shouldHaveType(GatewayAwareInterface::class);
     }
 
-    function it_executes(
+    public function it_executes(
         GetStatusInterface $request,
         PaymentInterface $payment,
         GatewayInterface $gateway
@@ -53,7 +55,7 @@ final class StatusActionSpec extends ObjectBehavior
         $this->execute($request);
     }
 
-    function it_supports_only_get_status_request_and_array_access(
+    public function it_supports_only_get_status_request_and_array_access(
         GetStatusInterface $request,
         PaymentInterface $payment
     ): void {

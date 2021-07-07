@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
+use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use PayPlug\SyliusPayPlugPlugin\StateMachine\Transition\OrderPaymentTransitions;
 use Payum\Core\Action\ActionInterface;
+use Payum\Core\ApiAwareInterface;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
-use Payum\Core\Reply\HttpRedirect;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
-use Payum\Core\Request\GetToken;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 
-final class StatusAction implements ActionInterface, GatewayAwareInterface
+final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
-    use GatewayAwareTrait;
+    use GatewayAwareTrait, ApiAwareTrait;
 
     /** @var FactoryInterface */
     private $stateMachineFactory;
@@ -29,12 +31,17 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
     /** @var RefundPaymentHandlerInterface */
     private $refundPaymentHandler;
 
+    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler */
+    private $paymentNotificationHandler;
+
     public function __construct(
         FactoryInterface $stateMachineFactory,
-        RefundPaymentHandlerInterface $refundPaymentHandler
+        RefundPaymentHandlerInterface $refundPaymentHandler,
+        PaymentNotificationHandler $paymentNotificationHandler
     ) {
         $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentHandler = $refundPaymentHandler;
+        $this->paymentNotificationHandler = $paymentNotificationHandler;
     }
 
     public function execute($request): void
@@ -44,7 +51,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
         /** @var PaymentInterface $payment */
         $payment = $request->getModel();
 
-        $details = $payment->getDetails();
+        $details = new ArrayObject($payment->getDetails());
 
         if (!isset($details['status'], $details['payment_id'])) {
             $request->markNew();
@@ -54,22 +61,19 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
         $this->gateway->execute($httpRequest = new GetHttpRequest());
 
-        // notification Url didn't yet call. Let's refresh status
+        //If we don't have received the notification when we reach this page, call the API manually to update the status
         if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
             && isset($httpRequest->query['payum_token'])) {
-            $this->gateway->execute($token = new GetToken($httpRequest->query['payum_token']));
-            \sleep(1);
-            // TODO: check if we can refresh status in a better way than redirect
-            throw new HttpRedirect($token->getToken()->getTargetUrl());
+            $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
+            $this->paymentNotificationHandler->treat($resource, $details);
         }
 
         if (isset($httpRequest->query['status']) &&
             PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
             $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
-
-            $payment->setDetails($details);
         }
 
+        $payment->setDetails($details->getArrayCopy());
         $this->markRequestAs($details['status'], $request);
     }
 
@@ -77,8 +81,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
     {
         return
             $request instanceof GetStatusInterface &&
-            $request->getModel() instanceof PaymentInterface
-        ;
+            $request->getModel() instanceof PaymentInterface;
     }
 
     private function markRequestAs(string $status, GetStatusInterface $request): void
@@ -133,13 +136,12 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface
 
         $stateMachine = $this->stateMachineFactory->get($order, OrderPaymentTransitions::GRAPH);
 
-        if(!$stateMachine->can(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)) {
+        if (!$stateMachine->can(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)) {
             return;
         }
 
         $this->stateMachineFactory
             ->get($order, OrderPaymentTransitions::GRAPH)
-            ->apply(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)
-        ;
+            ->apply(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT);
     }
 }
