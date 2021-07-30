@@ -10,9 +10,6 @@ payplug_sylius_payplug_plugin:
         payplug_refund_gateway_is_not_activated: PayPlug has not been activated as a refund method
         impossible_to_refund_this_payment: This payment cannot be refunded
         oney_gateway_label: Oney by PayPlug
-        oney_cgv_added_label: |
-            I've integrated the Oney legal notice into the T&Cs of my website.
-            <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">More info</a>
         oney: Oney
         oney_transaction_less_than_forty_eight_hours: The refund will be possible 48 hours after the last payment or refund transaction.
         or_pay_with_oney: Or pay in

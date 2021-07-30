@@ -10,9 +10,6 @@ payplug_sylius_payplug_plugin:
         payplug_refund_gateway_is_not_activated: PayPlug non è stato attivato come metodo di rimborso
         impossible_to_refund_this_payment: Non è possibile rimborsare questo pagamento
         oney_gateway_label: Oney by PayPlug
-        oney_cgv_added_label: |
-            Ho integrato le note legali Oney nelle CGV del mio sito web.
-            <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">Per saperne di più</a>
         oney: Oney
         oney_transaction_less_than_forty_eight_hours: Il rimborso sarà possibile 48 ore dopo l’ultima operazione di pagamento o rimborso.
         or_pay_with_oney: Oppure paga in
