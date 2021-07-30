@@ -21,54 +21,39 @@ In local environment, the plugin will not work properly because you will not be 
 
 > #### ⚠️ Refunds requirements 
 > You need to make some adjustments in order to make our plugin worked normally due to a dependency to [refund-plugin](https://github.com/Sylius/RefundPlugin). Please follow those requirements:
-> 1. To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary as explain in [refund-pluging documentation # Pre-requirements](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements)
-> 2. To use proper traits and interfaces, apply changes as explain in [refund-plugin documentation # Installation - Step 4](https://github.com/Sylius/RefundPlugin/tree/master#installation) 
+> 
+> To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary as explain in [refund-pluging documentation # Pre-requirements](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements)
 
 ## Compatibility
 
 | | Version |
 | :--- | :--- |
-| PHP  | 7.3, 7.4 |
-| Sylius | 1.8, 1.9 |
+| PHP  | 7.4, 8.0 |
+| Sylius | 1.9, 1.10 |
 
 ## Installation
 
-1. If you don't use [**symfony/messenger**](https://packagist.org/packages/symfony/messenger) component yet, it is required to configure one of the message buses as a default bus in file `config/packages/framework.yaml`:
-
-    ```yaml
-    framework:
-        messenger:
-            default_bus: sylius_refund_plugin.command_bus
-    ```
-
-2. As this plugin has a dependency to [**sylius/refund-plugin**](https://packagist.org/packages/sylius/refund-plugin) which does not yet have a stable release, configure your project to accept release candidate version.
-
-    ```bash
-    composer config minimum-stability rc
-    composer config prefer-stable true
-    ```
-
-3. Require the **payplug/sylius-payplug-plugin** :
+1. Require the **payplug/sylius-payplug-plugin** :
 
     ```bash
     composer config extra.symfony.allow-contrib true
     composer require payplug/sylius-payplug-plugin
     ```
 
-4. Apply migrations to your database:
+2. Apply migrations to your database:
 
     ```shell
     bin/console doctrine:migrations:migrate
     ```
 
-5. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
+3. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
     
     ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
-6. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+4. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
     ```yaml
     parameters:
@@ -77,7 +62,7 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug_oney
     ```
 
-7. Add PayPlug routes in `config/routes.yaml`
+5. Add PayPlug routes in `config/routes.yaml`
 
    ```yaml
    sylius_payplug:
