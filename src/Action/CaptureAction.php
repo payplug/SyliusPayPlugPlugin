@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use ArrayAccess;
+use Payplug\Exception\BadRequestException;
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -21,6 +23,8 @@ use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
 {
@@ -32,9 +36,20 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     /** @var LoggerInterface */
     private $logger;
 
-    public function __construct(LoggerInterface $logger)
-    {
+    /** @var \Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface */
+    private $flashBag;
+
+    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    private $translator;
+
+    public function __construct(
+        LoggerInterface $logger,
+        FlashBagInterface $flashBag,
+        TranslatorInterface $translator
+    ) {
         $this->logger = $logger;
+        $this->flashBag = $flashBag;
+        $this->translator = $translator;
     }
 
     public function setGenericTokenFactory(GenericTokenFactoryInterface $genericTokenFactory = null): void
@@ -47,6 +62,13 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         RequestNotSupportedException::assertSupports($this, $request);
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
+
+        if (isset($details['status']) && PayPlugApiClientInterface::FAILED === $details['status']) {
+            // Unset current status to allow to use payplug to change payment method
+            unset($details['status']);
+
+            return;
+        }
 
         if (isset($details['status'], $details['payment_id'])) {
             if (PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
@@ -88,11 +110,27 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             unset($details['status']);
         }
 
-        $payment = $this->createPayment($details);
+        try {
+            $payment = $this->createPayment($details);
+            $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
-        $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
+            throw new HttpRedirect($payment->hosted_payment->payment_url);
+        } catch (BadRequestException $badRequestException) {
+            $errorObject = $badRequestException->getErrorObject();
+            if (null === $errorObject || [] === $errorObject) {
+                $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
 
-        throw new HttpRedirect($payment->hosted_payment->payment_url);
+                return;
+            }
+
+            $this->notifyErrors($errorObject);
+
+            throw new HttpRedirect($details['hosted_payment']['cancel_url']);
+        } catch (UnknownApiErrorException $unknownApiErrorException) {
+            $this->flashBag->add('error', $this->translator->trans($unknownApiErrorException->getMessage()));
+
+            throw new HttpRedirect($details['hosted_payment']['cancel_url']);
+        }
     }
 
     public function supports($request): bool
@@ -120,14 +158,49 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
     private function createPayment(ArrayObject $details): Payment
     {
-        $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
-        $details['payment_id'] = $payment->id;
-        $details['is_live'] = $payment->is_live;
+        try {
+            $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
+            $details['payment_id'] = $payment->id;
+            $details['is_live'] = $payment->is_live;
 
-        $this->logger->debug('[PayPlug] Create payment', [
-            'payment_id' => $payment->id,
-        ]);
+            $this->logger->debug('[PayPlug] Create payment', [
+                'payment_id' => $payment->id,
+            ]);
 
-        return $payment;
+            return $payment;
+        } catch (BadRequestException $badRequestException) {
+            $details['status'] = PayPlugApiClientInterface::FAILED;
+
+            throw $badRequestException;
+        } catch (\Throwable $throwable) {
+            $details['status'] = PayPlugApiClientInterface::FAILED;
+
+            throw new UnknownApiErrorException(
+                'payplug_sylius_payplug_plugin.error.api_unknow_error',
+                $throwable->getCode(),
+                $throwable,
+            );
+        }
+    }
+
+    private function notifyErrors(array $errorDetails): void
+    {
+        if (!isset($errorDetails['details'])) {
+            return;
+        }
+
+        foreach ($errorDetails['details'] as $formPart => $errors) {
+            foreach ($errors as $field => $error) {
+                $this->flashBag->add(
+                    'error',
+                    $this->translator->trans(\sprintf(
+                        '%s.%s: %s',
+                        $formPart,
+                        $field,
+                        $error
+                    ))
+                );
+            }
+        }
     }
 }
