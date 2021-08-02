@@ -18,28 +18,24 @@ final class OneyIsProductEligible extends AbstractOneyController
         /** @var OrderInterface $cart */
         $cart = $this->cartContext->getCart();
 
-        $productCode = $request->get('product');
-        Assert::notNull($productCode);
-
-        /** @var string|null $productOptionValue */
-        $productOptionValue = $request->get('option');
+        $productVariantCode = $request->get('product_variant_code');
+        Assert::notNull($productVariantCode);
 
         /** @var int|null $quantity */
         $quantity = (int) $request->get('quantity');
         Assert::notNull($quantity);
 
         return new JsonResponse([
-            'isEligible' => $this->isProductEligible($cart, $productCode, $quantity, $productOptionValue),
+            'isEligible' => $this->isProductEligible($cart, $productVariantCode, $quantity),
         ]);
     }
 
     private function isProductEligible(
         OrderInterface $cart,
-        string $productCode,
-        int $quantity,
-        ?string $productOptionValue
+        string $productVariantCode,
+        int $quantity
     ): bool {
-        $productVariant = $this->getProductVariant($productCode, $productOptionValue);
+        $productVariant = $this->productVariantRepository->findOneBy(['code' => $productVariantCode]);
         Assert::isInstanceOf($productVariant, ProductVariantInterface::class);
 
         $channel = $cart->getChannel();

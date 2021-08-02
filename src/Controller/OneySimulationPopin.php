@@ -18,16 +18,13 @@ final class OneySimulationPopin extends AbstractOneyController
         /** @var OrderInterface $cart */
         $cart = $this->cartContext->getCart();
 
-        /** @var string|null $productCode */
-        $productCode = $request->get('product');
-
-        /** @var string|null $productOptionValue */
-        $productOptionValue = $request->get('option');
+        /** @var string|null $productVariantCode */
+        $productVariantCode = $request->get('product_variant_code');
 
         /** @var int|null $quantity */
         $quantity = (int) $request->get('quantity');
 
-        if (null === $productCode || null === $quantity) {
+        if (null === $productVariantCode || null === $quantity) {
             $simulationData = $this->oneySimulationDataProvider->getForCart($cart);
 
             return $this->render(
@@ -39,16 +36,15 @@ final class OneySimulationPopin extends AbstractOneyController
             );
         }
 
-        return $this->renderSimulateForProductVariant($cart, $productCode, $quantity, $productOptionValue);
+        return $this->renderSimulateForProductVariant($cart, $productVariantCode, $quantity);
     }
 
     private function renderSimulateForProductVariant(
         OrderInterface $cart,
-        string $productCode,
-        int $quantity,
-        ?string $productOptionValue
+        string $productVariantCode,
+        int $quantity
     ): Response {
-        $productVariant = $this->getProductVariant($productCode, $productOptionValue);
+        $productVariant = $this->productVariantRepository->findOneBy(['code' => $productVariantCode]);
         Assert::isInstanceOf($productVariant, ProductVariantInterface::class);
 
         $channel = $cart->getChannel();

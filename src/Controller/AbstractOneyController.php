@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface;
-use PayPlug\SyliusPayPlugPlugin\Repository\ProductVariantRepository;
 use PayPlug\SyliusPayPlugPlugin\Twig\OneyRulesExtension;
 use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductRepository;
+use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductVariantRepository;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ChannelPricingInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
-use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
@@ -29,7 +28,7 @@ abstract class AbstractOneyController extends AbstractController
     /** @var CartContextInterface */
     protected $cartContext;
 
-    /** @var ProductVariantRepository */
+    /** @var \Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductVariantRepository */
     protected $productVariantRepository;
 
     /** @var FactoryInterface */
@@ -70,26 +69,6 @@ abstract class AbstractOneyController extends AbstractController
         $this->itemQuantityModifier = $itemQuantityModifier;
         $this->oneyRulesExtension = $oneyRulesExtension;
         $this->productRepository = $productRepository;
-    }
-
-    protected function getProductVariant(string $productCode, ?string $productOptionValue): ?ProductVariantInterface
-    {
-        $product = $this->productRepository->findOneByCode($productCode);
-        Assert::isInstanceOf($product, ProductInterface::class);
-
-        $firstVariant = $product->getEnabledVariants()->first();
-        Assert::isInstanceOf($firstVariant, ProductVariantInterface::class);
-
-        if ($product->isSimple()) {
-            return $firstVariant;
-        }
-
-        Assert::notNull($productOptionValue);
-
-        return $this->productVariantRepository->findVariantByProductCodeAndProductOptionValue(
-            $productCode,
-            $productOptionValue
-        );
     }
 
     protected function createTempCart(
