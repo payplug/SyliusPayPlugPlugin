@@ -64,3 +64,4 @@ payplug_sylius_payplug_plugin:
             submit: Valider et continuer
         base_currency_not_euro: |
             Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
+        only_one_gateway_allowed: Attention, le moyen de paiement %gateway_title% existe déjà. Pour le modifier, rendez-vous sur vos <a href="/admin/payment-methods/" target="_blank">moyens de paiement</a>.
