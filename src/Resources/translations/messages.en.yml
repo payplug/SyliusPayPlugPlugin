@@ -64,3 +64,4 @@ payplug_sylius_payplug_plugin:
             submit: Confirm and continue
         base_currency_not_euro: |
             Channel #channel_code#: #payment_method# is only available on channels with EURO as a currency
+        only_one_gateway_allowed: Please note that the %gateway_title% payment method has already been set. To change it, go to your <a href="/admin/payment-methods/" target="_blank">payment methods</a>.
