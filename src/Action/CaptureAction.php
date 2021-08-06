@@ -127,7 +127,8 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
             throw new HttpRedirect($details['hosted_payment']['cancel_url']);
         } catch (UnknownApiErrorException $unknownApiErrorException) {
-            $this->flashBag->add('error', $this->translator->trans($unknownApiErrorException->getMessage()));
+            $details['status'] = PayPlugApiClientInterface::FAILED;
+            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.api_unknow_error'));
 
             throw new HttpRedirect($details['hosted_payment']['cancel_url']);
         }
