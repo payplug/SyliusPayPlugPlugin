@@ -36,10 +36,10 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var \Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface */
+    /** @var FlashBagInterface */
     private $flashBag;
 
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    /** @var TranslatorInterface */
     private $translator;
 
     public function __construct(
