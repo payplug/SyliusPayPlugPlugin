@@ -12,13 +12,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class AbstractGatewayConfigurationType extends AbstractType
 {
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
+    /** @var TranslatorInterface */
     protected $translator;
 
     /** @var FlashBagInterface */
     protected $flashBag;
     /**
-     * @var \Sylius\Component\Resource\Repository\RepositoryInterface
+     * @var RepositoryInterface
      */
     private $gatewayConfigRepository;
 
