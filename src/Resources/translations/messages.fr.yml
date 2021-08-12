@@ -1,5 +1,7 @@
 payplug_sylius_payplug_plugin:
     ui:
+        'billing.postcode: The postcode is too long. The maximum length is 16 characters.': Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
+        'shipping.postcode: The postcode is too long. The maximum length is 16 characters.': Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
         secret_key: Clé secrète
         payplug_gateway_label: PayPlug
         payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
