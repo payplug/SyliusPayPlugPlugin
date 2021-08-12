@@ -2,6 +2,7 @@ const Popin = {
   handlers: {
     info: ".oney-info",
     popin: ".oney-popin",
+    codes: "#payplug-product-variant-codes",
   },
   triggers: {
     option: "cartItem_variant",
@@ -19,17 +20,35 @@ const Popin = {
   watch() {
     for (const prop in this.triggers) {
       const $selectors = $(`[id*=${this.triggers[prop]}`);
+      this.handleProductOptionsChange($selectors, prop);
       productMeta[prop] = $selectors.val();
       $selectors.on(
         "input",
         this.debounce((e) => {
           e.preventDefault();
+          this.handleProductOptionsChange($selectors, prop);
           productMeta[prop] = $(e.currentTarget).val();
           this.check();
         }, 500)
       );
     }
     this.productMeta = productMeta;
+  },
+  /**
+   * @see Sylius/Bundle/ShopBundle/Resources/private/js/sylius-variants-prices.js
+   * @param $selectors
+   * @param prop
+   */
+  handleProductOptionsChange($selectors, prop) {
+    if (prop === 'option') {
+      let selector = '';
+      $selectors.each((k, v) => {
+        const select = $(v);
+        const option = select.find('option:selected').val();
+        selector += `[data-${select.attr('data-option')}="${option}"]`;
+      })
+      return productMeta.product_variant_code = $(this.handlers.codes).find(selector).attr('data-value');
+    }
   },
   check() {
     const self = this;

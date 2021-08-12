@@ -15,10 +15,15 @@
     </div>
     <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">
+    <div id="payplug-product-variant-codes">
+        {% for variantCodes in sylius_product_variant_codes(product, sylius.channel) %}
+            <div {% for key, option in variantCodes %}data-{{ key }}="{{ option }}"{% endfor %}></div>
+        {% endfor %}
+    </div>
     <script type="text/javascript">//<![CDATA[
       {% autoescape 'js' %}
         var productMeta = {
-          product: "{{ product.code }}",
+          product_variant_code: "{{ (product|sylius_resolve_variant).code }}",
           url: "{{ path('payplug_sylius_oney_is_product_eligible') }}",
           img: {
             true: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}",
