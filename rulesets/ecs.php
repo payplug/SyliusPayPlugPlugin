@@ -11,14 +11,14 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
     $parameters = $containerConfigurator->parameters();
     $parameters->set(Option::PATHS, [
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
-        __DIR__ . '/spec',
+        dirname(__DIR__, 1) . '/src',
+        dirname(__DIR__, 1) . '/tests/Behat',
+        dirname(__DIR__, 1) . '/tests/PHPUnit',
+        dirname(__DIR__, 1) . '/spec',
     ]);
     $parameters->set(Option::SKIP, [
         __DIR__ . '/tests/Application',
     ]);
-    $parameters->set(Option::SETS, [
-        SetList::SYMFONY,
-    ]);
+
+    $containerConfigurator->import(SetList::SYMFONY);
 };
