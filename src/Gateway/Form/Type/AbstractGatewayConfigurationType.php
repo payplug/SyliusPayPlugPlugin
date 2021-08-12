@@ -36,7 +36,7 @@ class AbstractGatewayConfigurationType extends AbstractType
     {
         $alreadyExists = $this->gatewayConfigRepository->findOneBy(['factoryName' => $factoryName]);
 
-        return !$alreadyExists instanceof GatewayConfigInterface
+        return !$alreadyExists instanceof GatewayConfigInterface;
     }
 
     protected function checkCreationRequirements(
