@@ -9,6 +9,14 @@
     </div>
 {% endblock %}
 
+{% block _sylius_payment_method_enabled_errors %}
+    {% for error in errors %}
+        <div class="ui red pointing label sylius-validation-error">
+            {{ error.message|raw }}
+        </div>
+    {% endfor %}
+{% endblock %}
+
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
     {% set data = oney_simulation_data() %}
     {% import "@SyliusShop/Common/Macro/money.html.twig" as money %}

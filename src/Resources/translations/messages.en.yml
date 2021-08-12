@@ -1,5 +1,7 @@
 payplug_sylius_payplug_plugin:
     ui:
+        'billing.postcode: The postcode is too long. The maximum length is 16 characters.': An error occurred. Please retry in few seconds.
+        'shipping.postcode: The postcode is too long. The maximum length is 16 characters.': An error occurred. Please retry in few seconds.
         secret_key: Secret key
         payplug_gateway_label: PayPlug
         payment_refund_locally: The payment refund was made locally only.
@@ -64,3 +66,4 @@ payplug_sylius_payplug_plugin:
             submit: Confirm and continue
         base_currency_not_euro: |
             Channel #channel_code#: #payment_method# is only available on channels with EURO as a currency
+        only_one_gateway_allowed: Please note that the %gateway_title% payment method has already been set. To change it, go to your <a href="/admin/payment-methods/" target="_blank">payment methods</a>.

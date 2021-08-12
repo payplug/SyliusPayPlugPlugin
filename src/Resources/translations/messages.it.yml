@@ -1,5 +1,7 @@
 payplug_sylius_payplug_plugin:
     ui:
+        'billing.postcode: The postcode is too long. The maximum length is 16 characters.': C'è stato un errore. Per favore riprova tra qualche secondo.
+        'shipping.postcode: The postcode is too long. The maximum length is 16 characters.': C'è stato un errore. Per favore riprova tra qualche secondo.
         secret_key: ID segreto
         payplug_gateway_label: PayPlug
         payment_refund_locally: Il rimborso del pagamento è stato effettuato solo a livello locale (interno).
@@ -64,3 +66,4 @@ payplug_sylius_payplug_plugin:
             submit: Convalida e continua
         base_currency_not_euro: |
             Il canale #channel_code# : #payment_method# è disponibile solo per i canali la cui valuta è in EURO
+        only_one_gateway_allowed: 'Attenzione: il metodo di pagamento %gateway_title% è già definito. Per modificarlo, vai ai tuoi <a href="/admin/payment-methods/" target="_blank">metodi di pagamento</a>.'

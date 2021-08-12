@@ -195,7 +195,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 $this->flashBag->add(
                     'error',
                     $this->translator->trans(\sprintf(
-                        '%s.%s: %s',
+                        'payplug_sylius_payplug_plugin.ui.%s.%s: %s',
                         $formPart,
                         $field,
                         $error
