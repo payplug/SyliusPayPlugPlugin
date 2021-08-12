@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Model\OneyCompleteInfoDTO;
 use PayPlug\SyliusPayPlugPlugin\Validator\OneyInvalidDataRetriever;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
@@ -101,7 +102,7 @@ final class CompleteInfoController extends AbstractController
     {
         $customer = $this->customerRepository->findOneBy(['email' => $email]);
 
-        if (null !== $customer) {
+        if ($customer instanceof CustomerInterface) {
             $order->setCustomer($customer);
 
             return;
