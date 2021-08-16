@@ -20,16 +20,20 @@ const Popin = {
   watch() {
     for (const prop in this.triggers) {
       const $selectors = $(`[id*=${this.triggers[prop]}`);
-      this.handleProductOptionsChange($selectors, prop);
+      if ($selectors.length > 0) {
+        this.handleProductOptionsChange($selectors, prop);
+      }
       productMeta[prop] = $selectors.val();
       $selectors.on(
-        "input",
-        this.debounce((e) => {
-          e.preventDefault();
-          this.handleProductOptionsChange($selectors, prop);
-          productMeta[prop] = $(e.currentTarget).val();
-          this.check();
-        }, 500)
+          "input",
+          this.debounce((e) => {
+            e.preventDefault();
+            if ($selectors.length > 0) {
+              this.handleProductOptionsChange($selectors, prop);
+            }
+            productMeta[prop] = $(e.currentTarget).val();
+            this.check();
+          }, 500)
       );
     }
     this.productMeta = productMeta;
