@@ -123,7 +123,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 return;
             }
 
-            $this->notifyErrors($errorObject);
+            $this->notifyErrors($details, $errorObject);
 
             throw new HttpRedirect($details['hosted_payment']['cancel_url']);
         } catch (UnknownApiErrorException $unknownApiErrorException) {
@@ -184,24 +184,33 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         }
     }
 
-    private function notifyErrors(array $errorDetails): void
+    private function notifyErrors(ArrayObject $details, array $errorDetails): void
     {
         if (!isset($errorDetails['details'])) {
             return;
         }
 
-        foreach ($errorDetails['details'] as $formPart => $errors) {
-            foreach ($errors as $field => $error) {
-                $this->flashBag->add(
-                    'error',
-                    $this->translator->trans(\sprintf(
-                        'payplug_sylius_payplug_plugin.ui.%s.%s: %s',
-                        $formPart,
-                        $field,
-                        $error
-                    ))
-                );
-            }
+        if (isset($errorDetails['details']['billing']['postcode'])) {
+            $this->flashBag->add(
+                'error',
+                $this->translator->trans('payplug_sylius_payplug_plugin.ui.error.billing.postcode', [
+                    '%postalCode%' => $details['billing']['postcode'],
+                ])
+            );
+        }
+
+        if (isset($errorDetails['details']['shipping']['postcode'])) {
+            $this->flashBag->add(
+                'error',
+                $this->translator->trans('payplug_sylius_payplug_plugin.ui.error.shipping.postcode', [
+                    '%postalCode%' => $details['shipping']['postcode'],
+                ])
+            );
+        }
+
+        if (!isset($errorDetails['details']['billing']['postcode']) &&
+            !isset($errorDetails['details']['shipping']['postcode'])) {
+            $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
         }
     }
 }

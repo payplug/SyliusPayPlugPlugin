@@ -1,7 +1,8 @@
 payplug_sylius_payplug_plugin:
     ui:
-        'billing.postcode: The postcode is too long. The maximum length is 16 characters.': C'è stato un errore. Per favore riprova tra qualche secondo.
-        'shipping.postcode: The postcode is too long. The maximum length is 16 characters.': C'è stato un errore. Per favore riprova tra qualche secondo.
+        error:
+            billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
+            shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido
         secret_key: ID segreto
         payplug_gateway_label: PayPlug
         payment_refund_locally: Il rimborso del pagamento è stato effettuato solo a livello locale (interno).
