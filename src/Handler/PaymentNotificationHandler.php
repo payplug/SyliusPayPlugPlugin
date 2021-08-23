@@ -9,20 +9,43 @@ use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use Payum\Core\Request\Generic;
 use Psr\Log\LoggerInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Customer\Context\CustomerContextInterface;
+use Sylius\Component\Resource\Factory\FactoryInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 class PaymentNotificationHandler
 {
     /** @var \Psr\Log\LoggerInterface */
     private $logger;
 
-    public function __construct(LoggerInterface $logger)
-    {
+    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
+    private $payplugCardRepository;
+
+    /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
+    private $payplugCardFactory;
+
+    /** @var \Sylius\Component\Customer\Context\CustomerContextInterface */
+    private $customerContext;
+
+    public function __construct(
+        LoggerInterface $logger,
+        RepositoryInterface $payplugCardRepository,
+        FactoryInterface $payplugCardFactory,
+        CustomerContextInterface $customerContext
+    ) {
         $this->logger = $logger;
+        $this->payplugCardRepository = $payplugCardRepository;
+        $this->payplugCardFactory = $payplugCardFactory;
+        $this->customerContext = $customerContext;
     }
 
-    public function treat(IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
+    public function treat(Generic $request, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
     {
         if (!$paymentResource instanceof Payment) {
             return;
@@ -31,6 +54,8 @@ class PaymentNotificationHandler
         if ($paymentResource->is_paid) {
             $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
             $details['created_at'] = $paymentResource->created_at;
+
+            $this->saveCard($request->getFirstModel(), $paymentResource);
 
             return;
         }
@@ -58,6 +83,58 @@ class PaymentNotificationHandler
             'message' => $paymentResource->failure->message ?? '',
         ];
         $details['status'] = PayPlugApiClientInterface::FAILED;
+    }
+
+    private function saveCard(PaymentInterface $payment, IVerifiableAPIResource $paymentResource): void
+    {
+        if (!$paymentResource instanceof Payment) {
+            return;
+        }
+
+        /** @var \Sylius\Component\Core\Model\CustomerInterface|null $customer */
+        $customer = $this->customerContext->getCustomer();
+
+        if (!$customer instanceof CustomerInterface) {
+            return;
+        }
+
+        if (!$paymentResource->__isset('card') || null === $paymentResource->__get('card')) {
+            //TODO: check save_card: true
+            return;
+        }
+
+        if ($paymentResource->__get('card')->id === null) {
+            //TODO: check save_card: true
+            return;
+        }
+
+        $card = $this->payplugCardRepository->findOneBy([
+            'externalId' => $paymentResource->__get('card')->id,
+            'isLive' => $paymentResource->is_live,
+        ]);
+
+        if ($card instanceof Card) {
+            return;
+        }
+
+        /** @var \Sylius\Component\Core\Model\PaymentMethodInterface $paymentMethod */
+        $paymentMethod = $payment->getMethod();
+
+        /** @var Card $card */
+        $card = $this->payplugCardFactory->createNew();
+        $card
+            ->setCustomer($customer)
+            ->setPaymentMethod($paymentMethod)
+            ->setExternalId($paymentResource->__get('card')->id)
+            ->setBrand($paymentResource->__get('card')->brand)
+            ->setCountryCode($paymentResource->__get('card')->country)
+            ->setLast4($paymentResource->__get('card')->last4)
+            ->setExpirationMonth($paymentResource->__get('card')->exp_month)
+            ->setExpirationYear($paymentResource->__get('card')->exp_year)
+            ->setIsLive($paymentResource->is_live)
+        ;
+
+        $this->payplugCardRepository->add($card);
     }
 
     private function isResourceIsAuthorized(IVerifiableAPIResource $paymentResource): bool

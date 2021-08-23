@@ -162,6 +162,8 @@
             public="false"
         >
             <argument type="service" id="monolog.logger.payum" />
+            <argument type="service" id="payplug.repository.payplug_card" />
+            <argument type="service" id="payplug.factory.payplug_card" />
         </service>
 
         <service
