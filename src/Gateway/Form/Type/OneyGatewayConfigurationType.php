@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCards;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -14,7 +15,6 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationType
@@ -38,6 +38,15 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                     new IsOneyEnabled(),
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
+                'help_html' => true,
+            ])
+            ->add('oneClick', CheckboxType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
+                'validation_groups' => $validationGroups,
+                'constraints' => [
+                    new IsCanSaveCards(),
+                ],
+                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.form.one_click_help'),
                 'help_html' => true,
             ])
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {

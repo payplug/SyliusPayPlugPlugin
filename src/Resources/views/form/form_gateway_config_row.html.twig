@@ -9,6 +9,24 @@
     </div>
 {% endblock %}
 
+{% block _sylius_payment_method_gatewayConfig_config_oneClick_row %}
+    <div style="margin-left: 2rem;" class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %} ui toggle checkbox">
+       <div class="ui toggle checkbox" style="margin-top: 2rem; margin-bottom: 0.8rem;">
+           {{- form_label(form) -}}
+           {{- form_widget(form) -}}
+       </div>
+
+        <span style="font-size: 0.8rem; font-style: italic;">
+            {{- form_help(form) -}}
+        </span>
+        {% for error in errors %}
+            <div class="ui red pointing label sylius-validation-error">
+                {{ error.message|raw }}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
 {% block _sylius_payment_method_enabled_errors %}
     {% for error in errors %}
         <div class="ui red pointing label sylius-validation-error">

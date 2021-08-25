@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCards;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -34,6 +36,15 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
                     new IsPayPlugSecretKeyValid(),
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
+                'help_html' => true,
+            ])
+            ->add('oneClick', CheckboxType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
+                'validation_groups' => $validationGroups,
+                'constraints' => [
+                    new IsCanSaveCards(),
+                ],
+                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.form.one_click_help'),
                 'help_html' => true,
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
