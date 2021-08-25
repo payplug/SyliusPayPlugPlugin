@@ -12,6 +12,7 @@ use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -79,11 +80,11 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $this->addBillingInfo($billing, $customer, $order, $details);
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
-
         $paymentMethod = $payment->getMethod();
 
-        if ($paymentMethod instanceof PaymentMethodInterface && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
-            $details['allow_save_card'] = true;
+        if (PayPlugGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName() &&
+            $paymentMethod instanceof PaymentMethodInterface) {
+            $details = $this->alterPayPlugDetails($paymentMethod, $details);
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
@@ -205,6 +206,26 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
             'language' => $this->formatLanguageCode($order->getLocaleCode()),
             'delivery_type' => $deliveryType,
         ];
+    }
+
+    private function alterPayPlugDetails(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
+    {
+        if (!$this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            return $details;
+        }
+
+        $cardId = $this->session->get('payplug_card_id');
+
+        if(null !== $cardId) {
+            $details['payment_method'] = $cardId;
+            $details['initiator'] = 'PAYER';
+        }
+
+        if (null === $cardId && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            $details['allow_save_card'] = true;
+        }
+
+        return $details;
     }
 
     private function alterOneyDetails(ArrayObject $details): ArrayObject
