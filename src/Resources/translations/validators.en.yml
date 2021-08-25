@@ -7,3 +7,7 @@ payplug_sylius_payplug_plugin:
             Attention. To use the payment method “Oney by PayPlug“ in LIVE mode,
             please contact us at support@payplug.com
         not_valid_phone_number: This is not a valid cell phone number.
+    one_click:
+        can_not_save_cards: |
+            You do not have access to this feature. For more information,
+            please contact us at: <a href="mailto:support@payplug.com" target="_blank" style="color:black;">suppport@payplug.com</a>
