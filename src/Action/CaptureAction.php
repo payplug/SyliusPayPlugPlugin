@@ -116,7 +116,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
             throw new HttpRedirect($payment->hosted_payment->payment_url);
-        } catch (ForbiddenException $exception) {
+        } catch (ForbiddenException $forbiddenException) {
             $accountData = $this->payPlugApiClient->getAccount(true);
             $canSaveCard = (bool) $accountData['permissions']['can_save_cards'];
 
