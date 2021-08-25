@@ -6,6 +6,7 @@ namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
+use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Request\Convert;
@@ -18,9 +19,9 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
-    function let(SessionInterface $session): void
+    function let(SessionInterface $session, CanSaveCardCheckerInterface $canSaveCardChecker): void
     {
-        $this->beConstructedWith($session);
+        $this->beConstructedWith($session, $canSaveCardChecker);
     }
 
     function it_is_initializable(): void
@@ -46,6 +47,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $address = $this->getAddress($address);
         $order = $this->getOrder($order, $customer, $address, $address);
         $payment = $this->getPayment($payment, $order);
+        $payment->getMethod();
 
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
@@ -110,6 +112,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $otherAddress = $this->getOtherAddress($otherAddress);
         $order = $this->getOrder($order, $customer, $address, $otherAddress);
         $payment = $this->getPayment($payment, $order);
+        $payment->getMethod();
 
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
