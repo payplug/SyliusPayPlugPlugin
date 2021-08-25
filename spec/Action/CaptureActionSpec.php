@@ -18,12 +18,14 @@ use Payum\Core\Security\GenericTokenFactory;
 use Payum\Core\Security\TokenInterface;
 use PhpSpec\ObjectBehavior;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CaptureActionSpec extends ObjectBehavior
 {
-    function let(LoggerInterface $logger): void
+    function let(LoggerInterface $logger, FlashBagInterface $flashBag, TranslatorInterface $translator): void
     {
-        $this->beConstructedWith($logger);
+        $this->beConstructedWith($logger, $flashBag, $translator);
     }
 
     function it_is_initializable(): void

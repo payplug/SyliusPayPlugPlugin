@@ -1,5 +1,8 @@
 payplug_sylius_payplug_plugin:
     ui:
+        error:
+            billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
+            shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
         secret_key: Clé secrète
         payplug_gateway_label: PayPlug
         payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
@@ -10,9 +13,6 @@ payplug_sylius_payplug_plugin:
         payplug_refund_gateway_is_not_activated: PayPlug n'a pas été activé comme méthode de remboursement
         impossible_to_refund_this_payment: Impossible de rembourser ce paiement
         oney_gateway_label: Oney by PayPlug
-        oney_cgv_added_label: |
-            J'ai intégré les mentions légales Oney aux CGV de mon site.
-            <a href="https://support.payplug.com/hc/fr/articles/360015899980" target="_blank" rel="noopener,noreferrer">Plus d'info</a>
         oney: Oney
         oney_transaction_less_than_forty_eight_hours: Le remboursement sera possible 48h après la dernière transaction de paiement ou de remboursement.
         or_pay_with_oney: Ou payez en
@@ -67,3 +67,4 @@ payplug_sylius_payplug_plugin:
             submit: Valider et continuer
         base_currency_not_euro: |
             Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
+        only_one_gateway_allowed: Attention, le moyen de paiement %gateway_title% existe déjà. Pour le modifier, rendez-vous sur vos <a href="/admin/payment-methods/" target="_blank">moyens de paiement</a>.

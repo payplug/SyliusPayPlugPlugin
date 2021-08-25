@@ -9,11 +9,13 @@
     </div>
 {% endblock %}
 
-{% block _sylius_payment_method_gatewayConfig_config_cgv_added_label -%}
-    <{{ element|default('label') }}{% if label_attr %}{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}>
-        {{- label|trans(label_translation_parameters, translation_domain)|raw -}}
-    </{{ element|default('label') }}>
-{%- endblock %}
+{% block _sylius_payment_method_enabled_errors %}
+    {% for error in errors %}
+        <div class="ui red pointing label sylius-validation-error">
+            {{ error.message|raw }}
+        </div>
+    {% endfor %}
+{% endblock %}
 
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
     {% set data = oney_simulation_data() %}
