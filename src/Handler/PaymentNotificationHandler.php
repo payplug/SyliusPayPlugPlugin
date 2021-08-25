@@ -18,6 +18,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 
 class PaymentNotificationHandler
 {
@@ -33,16 +34,21 @@ class PaymentNotificationHandler
     /** @var \Sylius\Component\Customer\Context\CustomerContextInterface */
     private $customerContext;
 
+    /** @var \Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface */
+    private $flashBag;
+
     public function __construct(
         LoggerInterface $logger,
         RepositoryInterface $payplugCardRepository,
         FactoryInterface $payplugCardFactory,
-        CustomerContextInterface $customerContext
+        CustomerContextInterface $customerContext,
+        FlashBagInterface $flashBag
     ) {
         $this->logger = $logger;
         $this->payplugCardRepository = $payplugCardRepository;
         $this->payplugCardFactory = $payplugCardFactory;
         $this->customerContext = $customerContext;
+        $this->flashBag = $flashBag;
     }
 
     public function treat(Generic $request, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
@@ -99,12 +105,12 @@ class PaymentNotificationHandler
         }
 
         if (!$paymentResource->__isset('card') || null === $paymentResource->__get('card')) {
-            //TODO: check save_card: true
             return;
         }
 
+        // Payment has been successfully made, but card was not saved
         if ($paymentResource->__get('card')->id === null) {
-            //TODO: check save_card: true
+            $this->flashBag->add('info', 'payplug_sylius_payplug_plugin.warning.payment_success_no_card_saved');
             return;
         }
 

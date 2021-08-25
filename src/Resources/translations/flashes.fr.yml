@@ -2,3 +2,5 @@ payplug_sylius_payplug_plugin:
     error:
         oney_not_enabled: Oney n'est pas ou plus activé sur votre compte.
         api_unknow_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
+    warning:
+        payment_success_no_card_saved: Le paiement a été effectué avec succès, mais nous n'avons pas pu enregistrer votre carte bleue.
