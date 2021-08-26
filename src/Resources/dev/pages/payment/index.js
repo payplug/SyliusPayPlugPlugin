@@ -22,14 +22,16 @@ const Payment = {
     Payment.tabsHandler();
   },
   toggleGateway() {
-    if ($(`#${$(this.options.trigger).data("payment-input-id")}`).is(":checked")) {
-      $(this.options.trigger).show();
+    const paymentMethodInputId = $(this.options.trigger).data("payment-input-id");
+    const checkedPaymentMethodInput = $(`#${paymentMethodInputId}:checked`);
+    if (checkedPaymentMethodInput.length) {
+      $('.payment-method-choice[data-payment-input-id="' + paymentMethodInputId + '"]').show();
     }
     $("input[id*=sylius_checkout_select_payment]").on("change", function (event) {
       const clickedPaymentMethodId = $(event.currentTarget).attr("id");
       const gateway = $(`label[for=${clickedPaymentMethodId}]`).data("gateway");
       $('.payment-method-choice').slideUp();
-      if (gateway === "oney" || gateway === "payplug") {
+      if (typeof gateway !== 'undefined' && (gateway === "oney" || gateway === "payplug")) {
         $('.payment-method-choice[data-payment-input-id="' + clickedPaymentMethodId + '"]').slideDown();
       }
     });
