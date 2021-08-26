@@ -20,6 +20,8 @@ payplug_sylius_payplug_plugin:
         3x_payment: Paiement en 3x
         4x_payment: Paiement en 4x
         by_credit_cart: Par carte bancaire
+        card_expires_on: "Expire le :"
+        pay_with_another_card: Payer avec une autre carte
         cancel: Annuler
         popin_close: Fermer
         popin_paiement_desc: |
