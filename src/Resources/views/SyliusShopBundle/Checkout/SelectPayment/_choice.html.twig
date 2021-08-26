@@ -1,6 +1,7 @@
-{% set factoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+{% set oneyFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+{% set payplugFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayplugGatewayFactory::FACTORY_NAME') %}
 
-<div class="item" {{ sylius_test_html_attribute('payment-item') }}>
+<div class="item payment-item" {{ sylius_test_html_attribute('payment-item') }}>
     <div class="field">
         <div class="ui radio checkbox" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
             {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
@@ -8,10 +9,12 @@
     </div>
     <div class="content">
         <a class="header">
-            {% if method.gatewayConfig.factoryName == factoryName %}
+            {% if method.gatewayConfig.factoryName == oneyFactoryName %}
                 <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
                     <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
                 </label>
+            {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
+                {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
             {% else %}
                 {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
             {% endif %}
@@ -21,17 +24,21 @@
                 <p>{{ method.description }}</p>
             </div>
         {% endif %}
-        {% if method.gatewayConfig.factoryName == factoryName and form.parent.parent.oney_payment_choice is defined %}
-            <div class="oney-payment-choice" data-oney-input-id="{{ form.vars.id }}">
+        {% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
+            <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.oney_payment_choice) }}
             </div>
-            {% if app.session is not null and app.session.get('oney_has_error') == true %}
-                <script type="text/javascript">
-                    /* <![CDATA[ */
-                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
-                    /* ]] */
-                </script>
-            {% endif %}
+        {% if app.session is not null and app.session.get('oney_has_error') == true %}
+            <script type="text/javascript">
+                /* <![CDATA[ */
+                var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                /* ]] */
+            </script>
+        {% endif %}
+            {% elseif is_granted('ROLE_USER') and method.gatewayConfig.factoryName == payplugFactoryName and sylius.customer.cards is iterable and sylius.customer.cards is not empty %}
+            <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
+                {{ form_row(form.parent.parent.payplug_card_choice) }}
+            </div>
         {% endif %}
     </div>
 </div>

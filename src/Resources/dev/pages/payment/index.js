@@ -1,12 +1,16 @@
 const Payment = {
   options: {
-    trigger: ".oney-payment-choice",
+    trigger: ".payment-method-choice",
     completeInfo: {
       modal: ".oney-complete-info-popin",
       area: ".ui.steps + .ui.grid",
     },
   },
-  init() {
+  init(options) {
+    if (typeof options === 'undefined') {
+      options = this.options;
+    }
+    this.options = $.extend(true, {}, options);
     Payment.toggleGateway();
     if (typeof completeInfoRoute !== "undefined") {
       Payment.modalAppear();
@@ -18,15 +22,15 @@ const Payment = {
     Payment.tabsHandler();
   },
   toggleGateway() {
-    const self = this;
-    if ($(`#${$(this.options.trigger).data("oney-input-id")}`).is(":checked")) {
+    if ($(`#${$(this.options.trigger).data("payment-input-id")}`).is(":checked")) {
       $(this.options.trigger).show();
     }
-    $("input[id*=sylius_checkout_select_payment]").on("change", function () {
-      if ($(`label[for=${$(this).attr("id")}]`).data("gateway") === "oney") {
-        $(self.options.trigger).slideDown();
-      } else {
-        $(self.options.trigger).slideUp();
+    $("input[id*=sylius_checkout_select_payment]").on("change", function (event) {
+      const clickedPaymentMethodId = $(event.currentTarget).attr("id");
+      const gateway = $(`label[for=${clickedPaymentMethodId}]`).data("gateway");
+      $('.payment-method-choice').slideUp();
+      if (gateway === "oney" || gateway === "payplug") {
+        $('.payment-method-choice[data-payment-input-id="' + clickedPaymentMethodId + '"]').slideDown();
       }
     });
   },
@@ -110,4 +114,13 @@ const Payment = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", Payment.init, false);
+const onDocumentLoad = function (event) {
+  Payment.init();
+
+  $('form[name="sylius_checkout_select_payment"] button[type="submit"]').on('click', function(event) {
+    $('input#payplug_choice_card_other').attr('disabled', true);
+    $('form[name="sylius_checkout_select_payment"]').submit();
+  });
+};
+
+document.addEventListener("DOMContentLoaded", onDocumentLoad, false);
