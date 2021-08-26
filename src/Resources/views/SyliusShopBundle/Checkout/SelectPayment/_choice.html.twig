@@ -28,14 +28,14 @@
             <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.oney_payment_choice) }}
             </div>
-        {% if app.session is not null and app.session.get('oney_has_error') == true %}
-            <script type="text/javascript">
-                /* <![CDATA[ */
-                var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
-                /* ]] */
-            </script>
-        {% endif %}
-            {% elseif is_granted('ROLE_USER') and method.gatewayConfig.factoryName == payplugFactoryName and sylius.customer.cards is iterable and sylius.customer.cards is not empty %}
+            {% if app.session is not null and app.session.get('oney_has_error') == true %}
+                <script type="text/javascript">
+                    /* <![CDATA[ */
+                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                    /* ]] */
+                </script>
+            {% endif %}
+        {% elseif is_granted('ROLE_USER') and not is_save_card_enabled(method) and method.gatewayConfig.factoryName == payplugFactoryName and sylius.customer.cards is iterable and sylius.customer.cards is not empty %}
             <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.payplug_card_choice) }}
             </div>
