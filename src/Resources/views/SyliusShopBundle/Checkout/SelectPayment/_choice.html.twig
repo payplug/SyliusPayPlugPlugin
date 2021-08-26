@@ -13,7 +13,7 @@
 {% set showOther = false %}
 {% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
     {% set showOney = true %}
-{% elseif is_granted('ROLE_USER') and method.gatewayConfig.factoryName == payplugFactoryName and form.parent.parent.payplug_card_choice is defined %}
+{% elseif is_granted('ROLE_USER') and is_save_card_enabled(method) and method.gatewayConfig.factoryName == payplugFactoryName and form.parent.parent.payplug_card_choice is defined %}
     {% set showPayplug = true %}
 {% elseif method.gatewayConfig.factoryName != oneyFactoryName and method.gatewayConfig.factoryName != payplugFactoryName %}
     {% set showOther = true %}
