@@ -56,6 +56,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
             ])
             ->add('payplug_card_choice', TextType::class, [
                 'mapped' => false,
+                'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (): void {
                 // Remove on preset data, it'll be readded if needed in post_submit
@@ -76,13 +77,13 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 }
 
                 if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() &&
-                    false === $event->getForm()->has('payplug_card_choice')) {
+                    (false === $event->getForm()->has('payplug_card_choice') || null === $event->getForm()->get('payplug_card_choice')->getData())) {
                     return;
                 }
 
-                if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName()) {
-                    $data = $event->getForm()->get('payplug_card_choice')->getData();
-                    $this->session->set('payplug_payment_method', $data);
+                if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() && null !== $event->getForm()->get('payplug_card_choice')->getData()) {
+                    $payplugCardId = $event->getForm()->get('payplug_card_choice')->getData();
+                    $this->session->set('payplug_payment_method', $payplugCardId);
 
                     return;
                 }

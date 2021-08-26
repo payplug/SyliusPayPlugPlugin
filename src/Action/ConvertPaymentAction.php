@@ -11,6 +11,7 @@ use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
@@ -25,6 +26,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Core\Model\ShipmentInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
@@ -41,10 +43,17 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     /** @var \PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface */
     private $canSaveCardChecker;
 
-    public function __construct(SessionInterface $session, CanSaveCardCheckerInterface $canSaveCard)
-    {
+    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
+    private $payplugCardRepository;
+
+    public function __construct(
+        SessionInterface $session,
+        CanSaveCardCheckerInterface $canSaveCard,
+        RepositoryInterface $payplugCardRepository
+    ) {
         $this->session = $session;
         $this->canSaveCardChecker = $canSaveCard;
+        $this->payplugCardRepository = $payplugCardRepository;
     }
 
     public function execute($request): void
@@ -84,6 +93,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         if (PayPlugGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName() &&
             $paymentMethod instanceof PaymentMethodInterface) {
+            $details['allow_save_card'] = false;
             $details = $this->alterPayPlugDetails($paymentMethod, $details);
         }
 
@@ -214,14 +224,23 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
             return $details;
         }
 
-        $cardId = $this->session->get('payplug_card_id');
+        /** @var null|string $cardId */
+        $cardId = $this->session->get('payplug_payment_method');
 
-        if(null !== $cardId) {
-            $details['payment_method'] = $cardId;
-            $details['initiator'] = 'PAYER';
+        if (null === $cardId) {
+            return $details;
         }
 
-        if (null === $cardId && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+        $card = $this->payplugCardRepository->find($cardId);
+
+        if(!$card instanceof Card) {
+            return $details;
+        }
+
+        $details['payment_method'] = $card->getExternalId();
+        $details['initiator'] = 'PAYER';
+
+        if ($this->canSaveCardChecker->isAllowed($paymentMethod)) {
             $details['allow_save_card'] = true;
         }
 
