@@ -15,9 +15,9 @@
 {% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
     {% set showOney = true %}
 {% elseif is_granted('ROLE_USER')
-    and method.gatewayConfig.factoryName == payplugFactoryName
-    and form.parent.parent.payplug_card_choice is defined
-    and is_save_card_enabled(method)
+      and method.gatewayConfig.factoryName == payplugFactoryName
+      and form.parent.parent.payplug_card_choice is defined
+      and is_save_card_enabled(method)
 %}
     {% set showPayplug = true %}
 {% elseif method.gatewayConfig.factoryName != oneyFactoryName and method.gatewayConfig.factoryName != payplugFactoryName %}
@@ -48,18 +48,18 @@
                     <p>{{ method.description }}</p>
                 </div>
             {% endif %}
-            {% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
+            {% if showOney %}
                 <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                     {{ form_row(form.parent.parent.oney_payment_choice) }}
                 </div>
-            {% if app.session is not null and app.session.get('oney_has_error') == true %}
-                <script type="text/javascript">
-                    /* <![CDATA[ */
-                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
-                    /* ]] */
-                </script>
-            {% endif %}
-                {% elseif showPayplug %}
+                {% if app.session is not null and app.session.get('oney_has_error') == true %}
+                    <script type="text/javascript">
+                        /* <![CDATA[ */
+                        var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                        /* ]] */
+                    </script>
+                {% endif %}
+            {% elseif showPayplug %}
                 <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                     {{ form_row(form.parent.parent.payplug_card_choice) }}
                 </div>
