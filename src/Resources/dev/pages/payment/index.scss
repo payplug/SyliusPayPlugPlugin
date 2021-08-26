@@ -1,15 +1,19 @@
 @import "../../settings/constants.scss";
 
-.oney-payment-choice {
+.oney-payment-choice,
+.payplug-payment-choice {
     display: none;
-
-    &__tab {
-        display: none;
-    }
 
     &__container {
         display: flex;
         margin: 1rem 0;
+    }
+
+    &__header {
+        p {
+            margin: .5em 0 !important;
+            color: $black;
+        }
     }
 
     &__item {
@@ -47,16 +51,6 @@
         }
     }
 
-    &__header {
-        margin: 0 auto;
-        text-align: center;
-
-        p {
-            margin: .5em 0 !important;
-            color: $black;
-        }
-    }
-
     &__content {
         display: contents;
 
@@ -85,6 +79,44 @@
             font: {
                 size: 80%;
             }
+        }
+    }
+}
+
+.oney-payment-choice {
+    &__tab {
+        display: none;
+    }
+
+    &__header {
+        margin: 0 auto;
+        text-align: center;
+    }
+}
+
+.payplug-payment-choice {
+    &__container {
+        flex-direction: column;
+    }
+
+    &__item {
+        margin-bottom: 1em;
+
+        &--card-other {
+            .payplug-payment-choice__label {
+                font-weight: 700;
+            }
+        }
+    }
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .card-type,
+        .card-expiry span {
+            font-weight: 700;
         }
     }
 }
@@ -175,6 +207,19 @@
 }
 
 @media screen and (max-width: 991px) {
+    .oney-payment-choice,
+    .payplug-payment-choice {
+        &__container {
+            display: block;
+        }
+
+        &__content {
+            small {
+                width: 100%;
+            }
+        }
+    }
+
     .oney-payment-choice {
         &__tab {
             display: flex;
@@ -205,16 +250,6 @@
             display: none;
         }
 
-        &__container {
-            display: block;
-        }
-
-        &__content {
-            small {
-                width: 100%;
-            }
-        }
-
         &__item {
             display: none;
 
@@ -233,6 +268,17 @@
                 margin-right: 0;
                 display: block;
             }
+        }
+    }
+}
+
+@media screen and (max-width: 380px) {
+    .payplug-payment-choice {
+        &__header,
+        &__header .card-type,
+        &__header .card-expiry {
+            display: block;
+            text-align: center;
         }
     }
 }
