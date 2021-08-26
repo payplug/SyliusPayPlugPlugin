@@ -64,7 +64,7 @@
                         value="{{ choice.value }}"
                         id="oney_choice_{{ keyChoice }}"
                         name="{{ form.vars.full_name }}"
-                        class="oney-payment-choice__input"
+                        class="oney-payment-choice__input payment-choice__input"
                         {% if form.vars.value is not empty %}
                             {{ form.vars.value == choice.value ? 'checked="checked"' : '' }}
                         {% elseif loop.index is same as(1) %}
@@ -107,7 +107,7 @@
                            value="{{ card.id }}"
                            id="payplug_choice_card_{{ card.id }}"
                            name="{{ form.vars.full_name }}"
-                           class="payplug-payment-choice__input"
+                           class="payplug-payment-choice__input payment-choice__input"
                            {% if form.vars.value is not empty %}
                                {{ form.vars.value == card.id ? 'checked="checked"' : '' }}
                            {% elseif loop.index is same as(1) %}
@@ -128,7 +128,7 @@
                    value="other"
                    id="payplug_choice_card_other"
                    name="{{ form.vars.full_name }}"
-                   class="payplug-payment-choice__input"
+                   class="payplug-payment-choice__input payment-choice__input"
                    {% if form.vars.value is not empty %}
                        {{ form.vars.value == 'other' ? 'checked="checked"' : '' }}
                    {% elseif sylius.customer.cards is empty %}

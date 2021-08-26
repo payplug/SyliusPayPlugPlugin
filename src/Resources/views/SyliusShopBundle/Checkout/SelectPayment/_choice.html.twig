@@ -1,9 +1,15 @@
 {% set oneyFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
 {% set payplugFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayplugGatewayFactory::FACTORY_NAME') %}
+{% set checkboxClass = '' %}
+{% if method.gatewayConfig.factoryName == oneyFactoryName %}
+    {% set checkboxClass = 'checkbox-oney' %}
+{% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
+    {% set checkboxClass = 'checkbox-payplug' %}
+{% endif %}
 
 <div class="item payment-item" {{ sylius_test_html_attribute('payment-item') }}>
     <div class="field">
-        <div class="ui radio checkbox" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
+        <div class="ui radio checkbox {{ checkboxClass }}" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
             {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
         </div>
     </div>

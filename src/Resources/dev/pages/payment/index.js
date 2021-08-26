@@ -120,6 +120,12 @@ const onDocumentLoad = function (event) {
   Payment.init();
 
   $('form[name="sylius_checkout_select_payment"] button[type="submit"]').on('click', function(event) {
+    if ($('.checkbox-oney :radio:checked').length) {
+      $('.checkbox-payplug').closest('.payment-item').find('.payment-choice__input:checked').prop('checked', false);
+    } else if ($('.checkbox-payplug :radio:checked').length) {
+      $('.checkbox-oney').closest('.payment-item').find('.payment-choice__input:checked').prop('checked', false);
+    }
+
     $('input#payplug_choice_card_other').attr('disabled', true);
     $('form[name="sylius_checkout_select_payment"]').submit();
   });
