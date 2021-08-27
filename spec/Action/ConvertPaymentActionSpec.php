@@ -15,13 +15,17 @@ use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
-    function let(SessionInterface $session, CanSaveCardCheckerInterface $canSaveCardChecker): void
-    {
-        $this->beConstructedWith($session, $canSaveCardChecker);
+    function let(
+        SessionInterface $session,
+        CanSaveCardCheckerInterface $canSaveCardChecker,
+        RepositoryInterface $payplugCardRepository
+    ): void {
+        $this->beConstructedWith($session, $canSaveCardChecker, $payplugCardRepository);
     }
 
     function it_is_initializable(): void
