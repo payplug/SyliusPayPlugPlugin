@@ -26,3 +26,15 @@ payplug_sylius_oney_is_product_eligible:
     methods: ['GET']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible'
+
+payplug_sylius_card_account_index:
+    path: /{_locale}/account/saved-cards
+    methods: ['GET']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CardController::indexAction'
+
+payplug_sylius_card_account_delete:
+    path: /{_locale}/account/saved-cards/delete/{id}
+    methods: ['DELETE']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CardController::deleteAction'

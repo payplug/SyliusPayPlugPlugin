@@ -1,5 +1,13 @@
 payplug_sylius_payplug_plugin:
     ui:
+        account:
+            saved_cards:
+                title: Cartes sauvegardées
+                sub_title: Gérer vos cartes sauvegardées
+                brand: Marque
+                mask: Masque
+                expire: Expire le
+                expired: Expiré
         error:
             billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
             shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
