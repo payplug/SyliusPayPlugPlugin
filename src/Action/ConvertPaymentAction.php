@@ -227,6 +227,12 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         /** @var null|string $cardId */
         $cardId = $this->session->get('payplug_payment_method');
 
+        if (null === $cardId && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            $details['allow_save_card'] = true;
+
+            return $details;
+        }
+
         if (null === $cardId) {
             return $details;
         }
@@ -239,10 +245,6 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         $details['payment_method'] = $card->getExternalId();
         $details['initiator'] = 'PAYER';
-
-        if ($this->canSaveCardChecker->isAllowed($paymentMethod)) {
-            $details['allow_save_card'] = true;
-        }
 
         return $details;
     }
