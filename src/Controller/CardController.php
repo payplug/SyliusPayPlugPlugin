@@ -55,9 +55,7 @@ final class CardController extends AbstractController
 
         $savedCards = $this->payplugCardRepository->findBy(['customer' => $customer], ['id' => 'DESC']);
 
-        return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
-            'savedCards' => $savedCards,
-        ]);
+        return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', ['savedCards' => $savedCards]);
     }
 
     public function deleteAction(int $id): Response
