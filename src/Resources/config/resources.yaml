@@ -5,3 +5,7 @@ sylius_resource:
             classes:
                 model: PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory
                 repository: PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepository
+        payplug.payplug_card:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\Card

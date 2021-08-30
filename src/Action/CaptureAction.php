@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use ArrayAccess;
 use Payplug\Exception\BadRequestException;
+use Payplug\Exception\ForbiddenException;
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
@@ -115,6 +116,17 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
             throw new HttpRedirect($payment->hosted_payment->payment_url);
+        } catch (ForbiddenException $forbiddenException) {
+            $accountData = $this->payPlugApiClient->getAccount(true);
+            $canSaveCard = (bool) $accountData['permissions']['can_save_cards'];
+
+            /** @var \Sylius\Component\Core\Model\PaymentMethod $paymentMethod */
+            $paymentMethod = $request->getFirstModel()->getMethod();
+            /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface $gatewayConfig */
+            $gatewayConfig = $paymentMethod->getGatewayConfig();
+            $config = $gatewayConfig->getConfig();
+            $config['oneClick'] = $canSaveCard;
+            $gatewayConfig->setConfig($config);
         } catch (BadRequestException $badRequestException) {
             $errorObject = $badRequestException->getErrorObject();
             if (null === $errorObject || [] === $errorObject) {

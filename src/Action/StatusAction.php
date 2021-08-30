@@ -65,7 +65,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
             && isset($httpRequest->query['payum_token'])) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
-            $this->paymentNotificationHandler->treat($resource, $details);
+            $this->paymentNotificationHandler->treat($request, $resource, $details);
         }
 
         if (isset($httpRequest->query['status']) &&
