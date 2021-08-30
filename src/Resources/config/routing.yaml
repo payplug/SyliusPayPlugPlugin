@@ -35,6 +35,6 @@ payplug_sylius_card_account_index:
 
 payplug_sylius_card_account_delete:
     path: /{_locale}/account/saved-cards/delete/{id}
-    methods: ['GET']
+    methods: ['DELETE']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CardController::deleteAction'
