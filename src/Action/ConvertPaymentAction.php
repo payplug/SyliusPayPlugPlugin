@@ -10,6 +10,7 @@ use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
+use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
@@ -20,6 +21,7 @@ use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -35,9 +37,13 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     /** @var SessionInterface */
     private $session;
 
-    public function __construct(SessionInterface $session)
+    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface */
+    private $canSaveCardChecker;
+
+    public function __construct(SessionInterface $session, CanSaveCardCheckerInterface $canSaveCard)
     {
         $this->session = $session;
+        $this->canSaveCardChecker = $canSaveCard;
     }
 
     public function execute($request): void
@@ -72,6 +78,13 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         $this->addBillingInfo($billing, $customer, $order, $details);
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
+
+
+        $paymentMethod = $payment->getMethod();
+
+        if ($paymentMethod instanceof PaymentMethodInterface && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            $details['allow_save_card'] = true;
+        }
 
         if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
             $details = $this->alterOneyDetails($details);
