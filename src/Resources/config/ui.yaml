@@ -27,7 +27,10 @@ sylius_ui:
                     template: "@SyliusUi/Block/_legacySonataEvent.html.twig"
                     context:
                         event: sylius.shop.account.saved_cards.index.header
-
+        sylius.shop.account.saved_cards.layout.stylesheets:
+            blocks:
+                saved_cards:
+                    template: '@PayPlugSyliusPayPlugPlugin/stylesheets/saved_cards.html.twig'
         sylius.shop.account.saved_cards.index.subcontent:
             blocks:
                 header:

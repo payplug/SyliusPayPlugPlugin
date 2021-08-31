@@ -1,5 +1,10 @@
 {% extends '@SyliusShop/Account/layout.html.twig' %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    {{ sylius_template_event('sylius.shop.account.saved_cards.layout.stylesheets') }}
+{% endblock %}
+
 {% block content %}
     {% block breadcrumb %}
         <div class="ui breadcrumb">
