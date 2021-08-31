@@ -1,5 +1,18 @@
 payplug_sylius_payplug_plugin:
     ui:
+        account:
+            saved_cards:
+                title: Carte di credito salvate
+                sub_title: Gestisci le tue carte salvate
+                brand: Marca
+                mask: Maschera
+                expire: Scade il
+                expired: Scaduto
+                no_results_to_display: Non hai una carta salvata
+                mobile:
+                    brand: "Marca :"
+                    mask: "Maschera :"
+                    expire: "Scade il :"
         error:
             billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
             shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido
