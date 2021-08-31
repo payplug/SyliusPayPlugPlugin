@@ -1,5 +1,14 @@
 payplug_sylius_payplug_plugin:
     ui:
+        account:
+            saved_cards:
+                title: Credit cards
+                sub_title: Manage your saved cards
+                brand: Brand
+                mask: Mask
+                expire: Expire
+                expired: Expired
+                no_results_to_display: You do not have saved cards
         error:
             billing.postcode: The postal code %postalCode% entered for the billing address is invalid
             shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
