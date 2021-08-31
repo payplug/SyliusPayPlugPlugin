@@ -13,6 +13,7 @@ payplug_sylius_payplug_plugin:
                     brand: "Marque :"
                     mask: "Masque :"
                     expire: "Expire le :"
+
         error:
             billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
             shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
