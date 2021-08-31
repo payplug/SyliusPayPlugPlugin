@@ -175,5 +175,9 @@
             <argument type="service" id="sylius_refund_plugin.command_bus" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\EventListener\AccountMenuListener">
+            <tag name="kernel.event_listener" event="sylius.menu.shop.account" method="addAccountMenuItems" />
+        </service>
+
     </services>
 </container>
