@@ -8,6 +8,7 @@ payplug_sylius_payplug_plugin:
                 mask: Maschera
                 expire: Scade il
                 expired: Scaduto
+                no_results_to_display: Non hai una carta salvata
         error:
             billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
             shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido

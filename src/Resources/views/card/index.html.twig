@@ -6,58 +6,5 @@
 {% block title %}{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.title'|trans }} | {{ parent() }}{% endblock %}
 
 {% block subcontent %}
-    <div class="ui stackable two column grid">
-        <div class="column">
-            <h1 class="ui header">
-                {{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.title'|trans }}
-                <div class="sub header">{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.sub_title'|trans }}</div>
-            </h1>
-        </div>
-    </div>
-    <div style="margin-top: 3rem;">
-        <div class="ui segment spaceless sylius-grid-table-wrapper">
-            {% if savedCards|length == 0 %}
-                {{ messages.info('sylius.ui.no_results_to_display') }}
-            {% else %}
-                <table class="ui stackable very basic celled table">
-                    <thead>
-                    <tr>
-                        <th>{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.brand'|trans }}</th>
-                        <th>{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.mask'|trans }}</th>
-                        <th>{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.expire'|trans }}</th>
-                        <th class="sylius-table-column-actions">{{ 'sylius.ui.action'|trans }}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for savedCard in savedCards %}
-                        <tr>
-                            <td>
-                                {{ savedCard.brand }}
-                            </td>
-                            <td>
-                                {{ savedCard.last4 }}
-                            </td>
-
-                            {% if "now"|date("Y") > savedCard.expirationYear or ("now"|date("Y") == savedCard.expirationYear and "now"|date("m") > savedCard.expirationMonth)  %}
-                                <td style="color: crimson">
-                                    {{ savedCard.expirationMonth }}/{{ savedCard.expirationYear|slice(2, 2) }}
-                                    ({{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.expired'|trans }})
-                                </td>
-                                {% else %}
-                                    <td>
-                                        {{ savedCard.expirationMonth }}/{{ savedCard.expirationYear|slice(2, 2) }}
-                                    </td>
-                            {% endif %}
-                            <td>
-                                <div class="ui icon labeled buttons">
-                                    {{ buttons.delete(path('payplug_sylius_card_account_delete', {'id': savedCard.id}), null, true, savedCard.id) }}
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            {% endif %}
-        </div>
-    </div>
+    {{ sylius_template_event('sylius.shop.account.saved_cards.index.subcontent', {'savedCards': savedCards}) }}
 {% endblock %}
