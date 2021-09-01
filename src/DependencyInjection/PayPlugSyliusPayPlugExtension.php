@@ -36,6 +36,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         $paths = [
             $viewsPath . 'SyliusShopBundle' => 'SyliusShop',
             $viewsPath . 'SyliusAdminBundle' => 'SyliusAdmin',
+            $viewsPath . 'SyliusUiBundle' => 'SyliusUi',
         ];
 
         $container->prependExtensionConfig('twig', [
