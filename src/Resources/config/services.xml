@@ -179,5 +179,9 @@
             <tag name="kernel.event_listener" event="sylius.menu.shop.account" method="addAccountMenuItems" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\CardController">
+            <argument type="service" key="$payPlugApiClient" id="payplug_sylius_payplug_plugin.api_client.payplug" />
+        </service>
+
     </services>
 </container>

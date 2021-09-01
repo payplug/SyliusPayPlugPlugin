@@ -13,6 +13,8 @@ payplug_sylius_payplug_plugin:
                     brand: "Marca :"
                     mask: "Maschera :"
                     expire: "Scade il :"
+                deleted_successfully: La carta é stata eliminata con successo.
+                deleted_error: C'è stato un errore. Per favore riprova tra qualche secondo.
         error:
             billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
             shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
 use Payplug\Authentication;
+use Payplug\Card;
 use Payplug\Core\HttpClient;
 use Payplug\Exception\UnauthorizedException;
 use Payplug\Notification;
@@ -136,5 +137,10 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         Assert::isInstanceOf($payment, Payment::class);
 
         return $payment;
+    }
+
+    public function deleteCard(string $card): void
+    {
+        Card::delete($card, $this->configuration);
     }
 }

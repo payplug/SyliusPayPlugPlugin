@@ -2,7 +2,7 @@ payplug_sylius_payplug_plugin:
     ui:
         account:
             saved_cards:
-                title: Credit cards
+                title: Saved cards
                 sub_title: Manage your saved cards
                 brand: Brand
                 mask: Mask
@@ -13,6 +13,8 @@ payplug_sylius_payplug_plugin:
                     brand: "Brand:"
                     mask: "Mask:"
                     expire: "Expire:"
+                deleted_successfully: Card successfully deleted.
+                deleted_error: An error occurred. Please retry in few seconds.
         error:
             billing.postcode: The postal code %postalCode% entered for the billing address is invalid
             shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
