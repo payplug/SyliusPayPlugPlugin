@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -30,7 +31,7 @@ final class GetCurrentRouteExtension extends AbstractExtension
 
     public function payplugGetCurrentRoute(): string
     {
-        if (!$this->request) {
+        if (!$this->request instanceof Request) {
             return '';
         }
         
