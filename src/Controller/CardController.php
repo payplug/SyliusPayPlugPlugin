@@ -103,7 +103,7 @@ final class CardController extends AbstractController
         $entityManager->remove($card);
         $entityManager->flush();
 
-        $this->flashBag->add('success', $this->translator->trans('sylius.ui.deleted'));
+        $this->flashBag->add('success', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_successfully'));
 
         return $this->redirectToRoute('payplug_sylius_card_account_index');
     }
