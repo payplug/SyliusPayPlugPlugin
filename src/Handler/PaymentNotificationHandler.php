@@ -15,7 +15,7 @@ use Payum\Core\Request\Generic;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Customer\Context\CustomerContextInterface;
+use Sylius\Component\Core\Repository\CustomerRepositoryInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
@@ -31,24 +31,24 @@ class PaymentNotificationHandler
     /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
     private $payplugCardFactory;
 
-    /** @var \Sylius\Component\Customer\Context\CustomerContextInterface */
-    private $customerContext;
-
     /** @var \Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface */
     private $flashBag;
+
+    /** @var \Sylius\Component\Core\Repository\CustomerRepositoryInterface */
+    private $customerRepository;
 
     public function __construct(
         LoggerInterface $logger,
         RepositoryInterface $payplugCardRepository,
         FactoryInterface $payplugCardFactory,
-        CustomerContextInterface $customerContext,
+        CustomerRepositoryInterface $customerRepository,
         FlashBagInterface $flashBag
     ) {
         $this->logger = $logger;
         $this->payplugCardRepository = $payplugCardRepository;
         $this->payplugCardFactory = $payplugCardFactory;
-        $this->customerContext = $customerContext;
         $this->flashBag = $flashBag;
+        $this->customerRepository = $customerRepository;
     }
 
     public function treat(Generic $request, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
@@ -97,8 +97,17 @@ class PaymentNotificationHandler
             return;
         }
 
+        if (
+            !$paymentResource->__isset('metadata') ||
+            null === $paymentResource->__get('metadata') ||
+            !isset($paymentResource->__get('metadata')['customer_id']) ||
+            !is_int($paymentResource->__get('metadata')['customer_id'])
+        ) {
+            return;
+        }
+
         /** @var \Sylius\Component\Core\Model\CustomerInterface|null $customer */
-        $customer = $this->customerContext->getCustomer();
+        $customer = $this->customerRepository->find($paymentResource->__get('metadata')['customer_id']);
 
         if (!$customer instanceof CustomerInterface) {
             return;
