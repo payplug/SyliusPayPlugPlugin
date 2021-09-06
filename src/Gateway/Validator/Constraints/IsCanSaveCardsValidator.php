@@ -6,7 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
-use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardsChecker;
+use PayPlug\SyliusPayPlugPlugin\Checker\PermissionCanSaveCardsChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -42,7 +42,7 @@ final class IsCanSaveCardsValidator extends ConstraintValidator
 
         try {
             if (true === $value) {
-                $checker = new CanSaveCardsChecker($this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey));
+                $checker = new PermissionCanSaveCardsChecker($this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey));
                 if (false === $checker->isEnabled()) {
                     $this->context->buildViolation($constraint->message)->addViolation();
                 }

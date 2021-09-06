@@ -6,7 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 
-final class CanSaveCardsChecker
+final class PermissionCanSaveCardsChecker
 {
     private const CAN_SAVE_CARDS_PERMISSION_FIELD = 'can_save_cards';
 
