@@ -37,6 +37,8 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
+    private const PAYPLUG_CARD_ID_OTHER = 'other';
+
     /** @var SessionInterface */
     private $session;
 
@@ -227,7 +229,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         /** @var null|string $cardId */
         $cardId = $this->session->get('payplug_payment_method');
 
-        if (null === $cardId && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER ===  $cardId) && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
             $details['allow_save_card'] = true;
 
             return $details;
