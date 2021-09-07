@@ -84,18 +84,42 @@ In local environment, the plugin will not work properly because you will not be 
       resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
    ```
 
-8. Process translations
+8. Add CustomerTrait to App\Entity\Customer\Customer
+
+   ```php
+   <?php
+
+   declare(strict_types=1);
+
+   namespace App\Entity\Customer;
+
+   use Doctrine\ORM\Mapping as ORM;
+   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
+   use Sylius\Component\Core\Model\Customer as BaseCustomer;
+
+   /**
+   * @ORM\Entity
+   * @ORM\Table(name="sylius_customer")
+   */
+   class Customer extends BaseCustomer
+   {
+      use CustomerTrait;
+   }
+   
+   ``` 
+
+9. Process translations
 
     ```bash
     php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
     php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
-9. Clear cache:
+10. Clear cache:
 
-    ```shell
-    php bin/console cache:clear
-    ```
+     ```shell
+     php bin/console cache:clear
+     ```
 
 🎉 You are now ready to add Payplug Payment method.
 In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**PayPlug**".
