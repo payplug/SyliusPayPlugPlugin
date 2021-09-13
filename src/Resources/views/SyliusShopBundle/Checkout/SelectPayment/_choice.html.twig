@@ -28,7 +28,7 @@
     <div class="item payment-item" {{ sylius_test_html_attribute('payment-item') }}>
         <div class="field">
             <div class="ui radio checkbox {{ checkboxClass }}" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
-                {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
+                {{ form_widget(form, {'attr': { 'data-test-payment-method-select' : ''}}) }}
             </div>
         </div>
         <div class="content">
