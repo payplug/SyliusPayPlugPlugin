@@ -11,7 +11,9 @@ use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -24,6 +26,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Core\Model\ShipmentInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
@@ -34,16 +37,25 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
+    private const PAYPLUG_CARD_ID_OTHER = 'other';
+
     /** @var SessionInterface */
     private $session;
 
     /** @var \PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface */
     private $canSaveCardChecker;
 
-    public function __construct(SessionInterface $session, CanSaveCardCheckerInterface $canSaveCard)
-    {
+    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
+    private $payplugCardRepository;
+
+    public function __construct(
+        SessionInterface $session,
+        CanSaveCardCheckerInterface $canSaveCard,
+        RepositoryInterface $payplugCardRepository
+    ) {
         $this->session = $session;
         $this->canSaveCardChecker = $canSaveCard;
+        $this->payplugCardRepository = $payplugCardRepository;
     }
 
     public function execute($request): void
@@ -79,11 +91,12 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         $this->addBillingInfo($billing, $customer, $order, $details);
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
-
         $paymentMethod = $payment->getMethod();
 
-        if ($paymentMethod instanceof PaymentMethodInterface && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
-            $details['allow_save_card'] = true;
+        if (PayPlugGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName() &&
+            $paymentMethod instanceof PaymentMethodInterface) {
+            $details['allow_save_card'] = false;
+            $details = $this->alterPayPlugDetails($paymentMethod, $details);
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
@@ -205,6 +218,37 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
             'language' => $this->formatLanguageCode($order->getLocaleCode()),
             'delivery_type' => $deliveryType,
         ];
+    }
+
+    private function alterPayPlugDetails(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
+    {
+        if (!$this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            return $details;
+        }
+
+        /** @var null|string $cardId */
+        $cardId = $this->session->get('payplug_payment_method');
+
+        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER ===  $cardId) && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            $details['allow_save_card'] = true;
+
+            return $details;
+        }
+
+        if (null === $cardId) {
+            return $details;
+        }
+
+        $card = $this->payplugCardRepository->find($cardId);
+
+        if(!$card instanceof Card) {
+            return $details;
+        }
+
+        $details['payment_method'] = $card->getExternalId();
+        $details['initiator'] = 'PAYER';
+
+        return $details;
     }
 
     private function alterOneyDetails(ArrayObject $details): ArrayObject

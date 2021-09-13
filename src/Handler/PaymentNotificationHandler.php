@@ -101,7 +101,7 @@ class PaymentNotificationHandler
             !$paymentResource->__isset('metadata') ||
             null === $paymentResource->__get('metadata') ||
             !isset($paymentResource->__get('metadata')['customer_id']) ||
-            !is_int($paymentResource->__get('metadata')['customer_id'])
+            !\is_int($paymentResource->__get('metadata')['customer_id'])
         ) {
             return;
         }
