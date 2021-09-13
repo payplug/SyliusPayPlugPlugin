@@ -75,16 +75,16 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 if (null === $paymentMethod || !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface) {
                     return;
                 }
-
+    
                 if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() &&
                     (false === $event->getForm()->has('payplug_card_choice') || null === $event->getForm()->get('payplug_card_choice')->getData())) {
                     return;
                 }
-
+    
                 if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() && null !== $event->getForm()->get('payplug_card_choice')->getData()) {
                     $payplugCardId = $event->getForm()->get('payplug_card_choice')->getData();
                     $this->session->set('payplug_payment_method', $payplugCardId);
-
+        
                     return;
                 }
 
