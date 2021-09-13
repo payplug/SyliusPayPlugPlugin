@@ -79,7 +79,9 @@
     </div>
 {% endblock %}
 
-{% block _sylius_checkout_select_payment_payments_entry_payplug_payment_choice_row %}
+{% block _sylius_checkout_select_payment_payments_entry_payplug_card_choice_row %}
+    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
     <div class="payplug-payment-choice__container">
         {% for card in sylius.customer.cards %}
             <div class="payplug-payment-choice__item payplug-payment-choice__item--card-{{ card.id }}" id="card-{{ card.id }}">
