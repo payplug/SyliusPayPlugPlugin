@@ -11,10 +11,10 @@
 
 {% block _sylius_payment_method_gatewayConfig_config_oneClick_row %}
     <div style="margin-left: 2rem;" class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %} ui toggle checkbox">
-       <div class="ui toggle checkbox" style="margin-top: 2rem; margin-bottom: 0.8rem;">
-           {{- form_label(form) -}}
-           {{- form_widget(form) -}}
-       </div>
+        <div class="ui toggle checkbox" style="margin-top: 2rem; margin-bottom: 0.8rem;">
+            {{- form_label(form) -}}
+            {{- form_widget(form) -}}
+        </div>
 
         <span style="font-size: 0.8rem; font-style: italic;">
             {{- form_help(form) -}}
@@ -98,6 +98,8 @@
 {% endblock %}
 
 {% block _sylius_checkout_select_payment_payments_entry_payplug_card_choice_row %}
+    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
     <div class="payplug-payment-choice__container">
         {% for card in sylius.customer.cards %}
             {% set cardExpirationDate = ("%04d"|format(card.expirationYear) ~ '-' ~ "%02d"|format(card.expirationMonth))|date("Y-m") %}
