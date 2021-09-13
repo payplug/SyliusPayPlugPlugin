@@ -10,7 +10,6 @@
 
 {% set showOney = false %}
 {% set showPayplug = false %}
-{% set showOther = false %}
 
 {% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
     {% set showOney = true %}
@@ -20,50 +19,46 @@
       and is_save_card_enabled(method)
 %}
     {% set showPayplug = true %}
-{% elseif method.gatewayConfig.factoryName != oneyFactoryName and method.gatewayConfig.factoryName != payplugFactoryName %}
-    {% set showOther = true %}
 {% endif %}
 
-{% if showOney or showPayplug or showOther %}
-    <div class="item payment-item" {{ sylius_test_html_attribute('payment-item') }}>
-        <div class="field">
-            <div class="ui radio checkbox {{ checkboxClass }}" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
-                {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
-            </div>
-        </div>
-        <div class="content">
-            <a class="header">
-                {% if method.gatewayConfig.factoryName == oneyFactoryName %}
-                    <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
-                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
-                    </label>
-                {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
-                    {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
-                {% else %}
-                    {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
-                {% endif %}
-            </a>
-            {% if method.description is not null %}
-                <div class="description">
-                    <p>{{ method.description }}</p>
-                </div>
-            {% endif %}
-            {% if showOney %}
-                <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
-                    {{ form_row(form.parent.parent.oney_payment_choice) }}
-                </div>
-                {% if app.session is not null and app.session.get('oney_has_error') == true %}
-                    <script type="text/javascript">
-                        /* <![CDATA[ */
-                        var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
-                        /* ]] */
-                    </script>
-                {% endif %}
-            {% elseif showPayplug %}
-                <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
-                    {{ form_row(form.parent.parent.payplug_card_choice) }}
-                </div>
-            {% endif %}
+<div class="item payment-item" {{ sylius_test_html_attribute('payment-item') }}>
+    <div class="field">
+        <div class="ui radio checkbox {{ checkboxClass }}" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
+            {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
         </div>
     </div>
-{% endif %}
+    <div class="content">
+        <a class="header">
+            {% if method.gatewayConfig.factoryName == oneyFactoryName %}
+                <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
+                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
+                </label>
+            {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
+                {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
+            {% else %}
+                {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
+            {% endif %}
+        </a>
+        {% if method.description is not null %}
+            <div class="description">
+                <p>{{ method.description }}</p>
+            </div>
+        {% endif %}
+        {% if showOney %}
+            <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
+                {{ form_row(form.parent.parent.oney_payment_choice) }}
+            </div>
+            {% if app.session is not null and app.session.get('oney_has_error') == true %}
+                <script type="text/javascript">
+                    /* <![CDATA[ */
+                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                    /* ]] */
+                </script>
+            {% endif %}
+        {% elseif showPayplug %}
+            <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
+                {{ form_row(form.parent.parent.payplug_card_choice) }}
+            </div>
+        {% endif %}
+    </div>
+</div>
