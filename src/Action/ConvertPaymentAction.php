@@ -219,35 +219,35 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
             'delivery_type' => $deliveryType,
         ];
     }
-    
+
     private function alterPayPlugDetails(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
     {
         if (!$this->canSaveCardChecker->isAllowed($paymentMethod)) {
             return $details;
         }
-        
+
         /** @var null|string $cardId */
         $cardId = $this->session->get('payplug_payment_method');
-        
+
         if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER ===  $cardId) && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
             $details['allow_save_card'] = true;
-            
+
             return $details;
         }
-        
+
         if (null === $cardId) {
             return $details;
         }
-        
+
         $card = $this->payplugCardRepository->find($cardId);
-        
+
         if(!$card instanceof Card) {
             return $details;
         }
-        
+
         $details['payment_method'] = $card->getExternalId();
         $details['initiator'] = 'PAYER';
-        
+
         return $details;
     }
 
