@@ -29,11 +29,8 @@ const Payment = {
     }
     $("input[id*=sylius_checkout_select_payment]").on("change", function (event) {
       const clickedPaymentMethodId = $(event.currentTarget).attr("id");
-      const gateway = $(`label[for=${clickedPaymentMethodId}]`).data("gateway");
       $('.payment-method-choice').slideUp();
-      if (typeof gateway !== 'undefined' && (gateway === "oney" || gateway === "payplug")) {
-        $('.payment-method-choice[data-payment-input-id="' + clickedPaymentMethodId + '"]').slideDown();
-      }
+      $('.payment-method-choice[data-payment-input-id="' + clickedPaymentMethodId + '"]').slideDown();
     });
   },
   tabs() {

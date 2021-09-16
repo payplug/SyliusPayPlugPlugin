@@ -38,8 +38,6 @@
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
     {% set data = oney_simulation_data() %}
     {% import "@SyliusShop/Common/Macro/money.html.twig" as money %}
-    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
     <div class="oney-payment-choice__container">
         <div class="oney-payment-choice__tab">
             <a class="tablink" href="javascript:void(0);" data-id="oney_x3_with_fees">
@@ -98,8 +96,6 @@
 {% endblock %}
 
 {% block _sylius_checkout_select_payment_payments_entry_payplug_card_choice_row %}
-    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
     <div class="payplug-payment-choice__container">
         {% for card in sylius.customer.cards %}
             {% set cardExpirationDate = ("%04d"|format(card.expirationYear) ~ '-' ~ "%02d"|format(card.expirationMonth))|date("Y-m") %}
