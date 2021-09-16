@@ -16,6 +16,8 @@
 {% elseif is_granted('ROLE_USER')
       and method.gatewayConfig.factoryName == payplugFactoryName
       and form.parent.parent.payplug_card_choice is defined
+      and is_save_card_enabled(method)
+      and sylius.customer.cards is not empty
 %}
     {% set showPayplug = true %}
 {% endif %}
@@ -56,9 +58,7 @@
             {% endif %}
         {% elseif showPayplug %}
             <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
-                {% if is_save_card_enabled(method) %}
-                    {{ form_row(form.parent.parent.payplug_card_choice) }}
-                {% endif %}
+                {{ form_row(form.parent.parent.payplug_card_choice) }}
             </div>
         {% endif %}
     </div>
