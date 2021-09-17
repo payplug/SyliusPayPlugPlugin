@@ -84,7 +84,7 @@ final class CardController extends AbstractController
         }
 
         if (true === $this->isCardExpired($card)) {
-            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_error'));
+            $this->removeCard($card);
 
             return $this->redirectToRoute('payplug_sylius_card_account_index');
         }
@@ -99,13 +99,18 @@ final class CardController extends AbstractController
             return $this->redirectToRoute('payplug_sylius_card_account_index');
         }
 
+        $this->removeCard($card);
+
+        return $this->redirectToRoute('payplug_sylius_card_account_index');
+    }
+
+    private function removeCard(Card $card): void
+    {
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->remove($card);
         $entityManager->flush();
 
         $this->flashBag->add('success', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_successfully'));
-
-        return $this->redirectToRoute('payplug_sylius_card_account_index');
     }
 
     private function isCardExpired(Card $card): bool
