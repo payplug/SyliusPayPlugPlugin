@@ -226,10 +226,10 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
             return $details;
         }
 
-        /** @var null|string $cardId */
+        /** @var string|null $cardId */
         $cardId = $this->session->get('payplug_payment_method');
 
-        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER ===  $cardId) && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
             $details['allow_save_card'] = true;
 
             return $details;
@@ -241,7 +241,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         $card = $this->payplugCardRepository->find($cardId);
 
-        if(!$card instanceof Card) {
+        if (!$card instanceof Card) {
             return $details;
         }
 

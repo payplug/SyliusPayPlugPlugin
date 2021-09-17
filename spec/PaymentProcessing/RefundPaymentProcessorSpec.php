@@ -20,7 +20,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessorSpec extends ObjectBehavior
 {
-    function let(
+    public function let(
         Session $session,
         PayPlugApiClientInterface $payPlugApiClient,
         LoggerInterface $logger,
@@ -38,17 +38,17 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
         );
     }
 
-    function it_is_initializable(): void
+    public function it_is_initializable(): void
     {
         $this->shouldHaveType(RefundPaymentProcessor::class);
     }
 
-    function it_implements_payment_processor_interface(): void
+    public function it_implements_payment_processor_interface(): void
     {
         $this->shouldHaveType(PaymentProcessorInterface::class);
     }
 
-    function it_processes(
+    public function it_processes(
         PaymentInterface $payment,
         PaymentMethodInterface $paymentMethod,
         GatewayConfigInterface $gatewayConfig,

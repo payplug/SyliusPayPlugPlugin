@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 final class PayPlugGatewayConfigurationType extends AbstractGatewayConfigurationType
 {
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -72,7 +72,8 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
                     $baseCurrencyCode = $baseCurrency->getCode();
                     if ($baseCurrencyCode !== PayPlugGatewayFactory::BASE_CURRENCY_CODE) {
                         $message = $this->translator->trans(
-                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro', [
+                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
+                            [
                                 '#channel_code#' => $dataFormChannel->getCode(),
                                 '#payment_method#' => PayPlugGatewayFactory::FACTORY_TITLE,
                             ]

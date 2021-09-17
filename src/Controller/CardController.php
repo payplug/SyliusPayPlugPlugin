@@ -17,25 +17,19 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CardController extends AbstractController
 {
-    /**
-     * @var CustomerContextInterface
-     */
+    /** @var CustomerContextInterface */
     private $customerContext;
-    /**
-     * @var EntityRepository
-     */
+
+    /** @var EntityRepository */
     private $payplugCardRepository;
-    /**
-     * @var FlashBagInterface
-     */
+
+    /** @var FlashBagInterface */
     private $flashBag;
-    /**
-     * @var TranslatorInterface
-     */
+
+    /** @var TranslatorInterface */
     private $translator;
-    /**
-     * @var PayPlugApiClientInterface
-     */
+
+    /** @var PayPlugApiClientInterface */
     private $payPlugApiClient;
 
     public function __construct(
@@ -116,13 +110,13 @@ final class CardController extends AbstractController
     private function isCardExpired(Card $card): bool
     {
         $now = new \DateTime();
-        $currentYear = $now->format("Y");
+        $currentYear = $now->format('Y');
         $expirationYear = (string) $card->getExpirationYear();
 
         if (
             ($currentYear < $expirationYear) ||
-            ($currentYear === $expirationYear && $now->format("n") <= (string) $card->getExpirationMonth())
-        ){
+            ($currentYear === $expirationYear && $now->format('n') <= (string) $card->getExpirationMonth())
+        ) {
             return false;
         }
 

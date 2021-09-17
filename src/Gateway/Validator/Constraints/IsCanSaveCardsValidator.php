@@ -47,8 +47,8 @@ final class IsCanSaveCardsValidator extends ConstraintValidator
                     $this->context->buildViolation($constraint->message)->addViolation();
                 }
             }
-            return;
 
+            return;
         } catch (UnauthorizedException $exception) {
             return;
         }

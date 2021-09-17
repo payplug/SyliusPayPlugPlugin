@@ -120,6 +120,7 @@ class PaymentNotificationHandler
         // Payment has been successfully made, but card was not saved
         if ($paymentResource->__get('card')->id === null) {
             $this->flashBag->add('info', 'payplug_sylius_payplug_plugin.warning.payment_success_no_card_saved');
+
             return;
         }
 

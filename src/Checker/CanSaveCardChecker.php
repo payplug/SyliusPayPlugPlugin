@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;

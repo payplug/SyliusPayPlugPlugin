@@ -10,7 +10,7 @@ final class PermissionCanSaveCardsChecker
 {
     private const CAN_SAVE_CARDS_PERMISSION_FIELD = 'can_save_cards';
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
+    /** @var PayPlugApiClientInterface */
     private $client;
 
     public function __construct(PayPlugApiClientInterface $apiClient)

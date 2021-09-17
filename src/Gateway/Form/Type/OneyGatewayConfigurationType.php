@@ -8,7 +8,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -19,7 +18,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationType
 {
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -58,7 +57,8 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                     $baseCurrencyCode = $baseCurrency->getCode();
                     if ($baseCurrencyCode !== OneyGatewayFactory::BASE_CURRENCY_CODE) {
                         $message = $this->translator->trans(
-                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro', [
+                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
+                            [
                                 '#channel_code#' => $dataFormChannel->getCode(),
                                 '#payment_method#' => OneyGatewayFactory::FACTORY_TITLE,
                             ]

@@ -16,7 +16,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
     use PrependDoctrineMigrationsTrait;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function load(array $config, ContainerBuilder $container): void
     {

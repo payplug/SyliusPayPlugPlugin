@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\StateMachine\Transition;
 
 interface OrderPaymentTransitions

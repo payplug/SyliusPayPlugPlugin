@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventListener;
 
 use Sylius\Bundle\UiBundle\Menu\Event\MenuBuilderEvent;
-use Sylius\Component\Core\Model\CustomerInterface;
-use Sylius\Component\Customer\Context\CustomerContextInterface;
 
 final class AccountMenuListener
 {
@@ -15,8 +13,8 @@ final class AccountMenuListener
         $menu = $event->getMenu();
 
         $menu->addChild('card', [
-            'route' => 'payplug_sylius_card_account_index',
-        ])
+                'route' => 'payplug_sylius_card_account_index',
+            ])
             ->setAttribute('type', 'link')
             ->setLabel('payplug_sylius_payplug_plugin.ui.account.saved_cards.title')
             ->setLabelAttribute('icon', 'credit card')

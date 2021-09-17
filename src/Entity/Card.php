@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -58,7 +60,7 @@ class Card implements ResourceInterface
     private $brand;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="is_live", type="boolean")
      */
     private $isLive;
@@ -178,17 +180,11 @@ class Card implements ResourceInterface
         return $this;
     }
 
-    /**
-     * @return \Sylius\Component\Core\Model\PaymentMethodInterface
-     */
     public function getPaymentMethod(): PaymentMethodInterface
     {
         return $this->paymentMethod;
     }
 
-    /**
-     * @param \Sylius\Component\Core\Model\PaymentMethodInterface $paymentMethod
-     */
     public function setPaymentMethod(PaymentMethodInterface $paymentMethod): self
     {
         $this->paymentMethod = $paymentMethod;

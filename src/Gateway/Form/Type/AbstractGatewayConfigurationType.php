@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
@@ -17,9 +19,8 @@ class AbstractGatewayConfigurationType extends AbstractType
 
     /** @var FlashBagInterface */
     protected $flashBag;
-    /**
-     * @var RepositoryInterface
-     */
+
+    /** @var RepositoryInterface */
     private $gatewayConfigRepository;
 
     public function __construct(
@@ -46,7 +47,6 @@ class AbstractGatewayConfigurationType extends AbstractType
     ): void {
         /** @phpstan-ignore-next-line */
         $paymentMethod = $form->getParent()->getParent()->getData();
-
 
         if (null !== $paymentMethod->getId()) {
             return;

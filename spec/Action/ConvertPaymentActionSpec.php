@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
-    function let(
+    public function let(
         SessionInterface $session,
         CanSaveCardCheckerInterface $canSaveCardChecker,
         RepositoryInterface $payplugCardRepository
@@ -28,17 +28,17 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $this->beConstructedWith($session, $canSaveCardChecker, $payplugCardRepository);
     }
 
-    function it_is_initializable(): void
+    public function it_is_initializable(): void
     {
         $this->shouldHaveType(ConvertPaymentAction::class);
     }
 
-    function it_implements_action_interface(): void
+    public function it_implements_action_interface(): void
     {
         $this->shouldHaveType(ActionInterface::class);
     }
 
-    function it_executes(
+    public function it_executes(
         Convert $request,
         PaymentInterface $payment,
         OrderInterface $order,
@@ -101,7 +101,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $this->execute($request);
     }
 
-    function it_executes_with_different_address(
+    public function it_executes_with_different_address(
         Convert $request,
         PaymentInterface $payment,
         OrderInterface $order,
@@ -166,7 +166,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $this->execute($request);
     }
 
-    function it_supports_only_convert_request_payment_source_and_array_to(
+    public function it_supports_only_convert_request_payment_source_and_array_to(
         Convert $request,
         PaymentInterface $payment
     ): void {

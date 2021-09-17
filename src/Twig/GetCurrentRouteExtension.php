@@ -11,11 +11,9 @@ use Twig\TwigFunction;
 
 final class GetCurrentRouteExtension extends AbstractExtension
 {
-    /**
-     * @var \Symfony\Component\HttpFoundation\Request|null
-     */
+    /** @var \Symfony\Component\HttpFoundation\Request|null */
     private $request;
-    
+
     public function __construct(
         RequestStack $requestStack
     ) {
@@ -34,7 +32,7 @@ final class GetCurrentRouteExtension extends AbstractExtension
         if (!$this->request instanceof Request) {
             return '';
         }
-        
+
         return $this->request->get('_route');
     }
 }

@@ -95,6 +95,7 @@ final class CompleteRefundPaymentAction
 
         return new RedirectResponse($this->router->generate(
             'sylius_admin_order_show',
-            ['id' => $order->getId()]));
+            ['id' => $order->getId()]
+        ));
     }
 }

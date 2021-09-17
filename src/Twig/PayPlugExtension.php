@@ -14,7 +14,8 @@ final class PayPlugExtension extends AbstractExtension
     /** @var \PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface */
     private $canSaveCardChecker;
 
-    public function __construct(CanSaveCardCheckerInterface $canSaveCardChecker) {
+    public function __construct(CanSaveCardCheckerInterface $canSaveCardChecker)
+    {
         $this->canSaveCardChecker = $canSaveCardChecker;
     }
 

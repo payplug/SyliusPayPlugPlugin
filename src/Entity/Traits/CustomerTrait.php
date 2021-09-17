@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Entity\Traits;
 
 use Doctrine\Common\Collections\Collection;
