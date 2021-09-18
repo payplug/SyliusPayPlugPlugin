@@ -26,6 +26,7 @@ use Payum\Core\Security\TokenInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Webmozart\Assert\Assert;
 
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
 {
@@ -60,6 +61,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
     public function execute($request): void
     {
+        Assert::isInstanceOf($this->tokenFactory, GenericTokenFactoryInterface::class);
         RequestNotSupportedException::assertSupports($this, $request);
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
@@ -114,6 +116,36 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         try {
             $payment = $this->createPayment($details);
             $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
+
+            // Pay with a saved card: https://docs.payplug.com/api/guide-savecard-en.html
+            if ('PAYER' === $details['initiator']) {
+                //if is_paid is true, you can consider the payment as being fully paid,
+                if ($payment->is_paid) {
+                    //TODO: redirect to thank you page or self
+                    return;
+                }
+
+                //if both fields authorization and authorized_at are present and filled, the authorization was successful
+
+                //if you got a failure, well you got a failed payment
+
+                //otherwise you’ll have a hosted_payment.payment_url where the payer has to be redirected to complete the payment.
+
+                $details['status'] = PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK;
+                $details['hosted_payment'] = [
+                    'payment_url' => $payment->hosted_payment->payment_url,
+                    'return_url' => $token->getAfterUrl(),
+                    'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
+                ];
+
+                $oneClickToken = $this->tokenFactory->createCaptureToken(
+                    $token->getGatewayName(),
+                    $token->getDetails(),
+                    'payplug_sylius_oneclick_verification'
+                );
+
+                throw new HttpRedirect($oneClickToken->getAfterUrl());
+            }
 
             throw new HttpRedirect($payment->hosted_payment->payment_url);
         } catch (ForbiddenException $forbiddenException) {

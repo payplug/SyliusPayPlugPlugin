@@ -38,3 +38,9 @@ payplug_sylius_card_account_delete:
     methods: ['DELETE']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\CardController::deleteAction'
+
+payplug_sylius_oneclick_verification:
+    path: /{_locale}/payment/capture/{payum_token}/1-click-checkup
+    methods: ['GET']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction'

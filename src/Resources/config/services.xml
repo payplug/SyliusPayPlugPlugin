@@ -56,6 +56,9 @@
         <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible" class="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible">
             <argument type="service" id="sylius.repository.product_variant" key="$productVariantRepository" />
         </service>
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction" class="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction">
+            <argument type="service" id="sylius.repository.payment" key="$paymentRepository" />
+        </service>
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator"

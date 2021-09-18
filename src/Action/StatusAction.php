@@ -73,6 +73,11 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
             $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
         }
 
+        if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
+            $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
+            $this->paymentNotificationHandler->treat($request, $resource, $details);
+        }
+
         $payment->setDetails($details->getArrayCopy());
         $this->markRequestAs($details['status'], $request);
     }

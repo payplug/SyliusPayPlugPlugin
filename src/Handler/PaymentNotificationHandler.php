@@ -113,7 +113,8 @@ class PaymentNotificationHandler
             return;
         }
 
-        if (!$paymentResource->__isset('card') || null === $paymentResource->__get('card')) {
+        if (!$paymentResource->__isset('card') || null === $paymentResource->__get('card') ||
+            ($paymentResource->__isset('save_card') && false === $paymentResource->__get('save_card'))) {
             return;
         }
 

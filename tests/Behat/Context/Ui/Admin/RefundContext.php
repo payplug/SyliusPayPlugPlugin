@@ -80,10 +80,16 @@ final class RefundContext implements Context
         string $paymentMethod
     ): void {
         $this->payPlugApiMocker->mockApiRetrieveNotRefundablePayment(function () use (
-            $order, $unitNumber, $productName, $paymentMethod
+            $order,
+            $unitNumber,
+            $productName,
+            $paymentMethod
         ) {
             $this->payPlugApiMocker->mockApiRefundedWithAmountPayment(function () use (
-                $order, $unitNumber, $productName, $paymentMethod
+                $order,
+                $unitNumber,
+                $productName,
+                $paymentMethod
             ) {
                 $this->refundingContext->decidedToRefundProduct($unitNumber, $productName, $order->getNumber(), $paymentMethod);
             });
@@ -146,7 +152,10 @@ final class RefundContext implements Context
         string $paymentMethod
     ): void {
         $this->payPlugApiMocker->mockApiRetrievePayment(function () use (
-            $order, $unitNumber, $productName, $paymentMethod
+            $order,
+            $unitNumber,
+            $productName,
+            $paymentMethod
         ) {
             /** @var DateTime $createdAt */
             $createdAt = $order->getLastPayment()->getCreatedAt();
