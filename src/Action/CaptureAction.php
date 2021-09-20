@@ -121,15 +121,8 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             if ('PAYER' === $details['initiator']) {
                 //if is_paid is true, you can consider the payment as being fully paid,
                 if ($payment->is_paid) {
-                    //TODO: redirect to thank you page or self
                     return;
                 }
-
-                //if both fields authorization and authorized_at are present and filled, the authorization was successful
-
-                //if you got a failure, well you got a failed payment
-
-                //otherwise you’ll have a hosted_payment.payment_url where the payer has to be redirected to complete the payment.
 
                 $details['status'] = PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK;
                 $details['hosted_payment'] = [

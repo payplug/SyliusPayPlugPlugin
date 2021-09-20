@@ -43,7 +43,8 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
         $this->payPlugApiClientFactory = $payPlugApiClientFactory;
     }
 
-    public function __invoke(Request $request): Response {
+    public function __invoke(Request $request): Response
+    {
         $token = $this->payum->getHttpRequestVerifier()->verify($request);
 
         /** @var PaymentInterface $payment */
