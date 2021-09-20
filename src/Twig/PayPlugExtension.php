@@ -11,7 +11,7 @@ use Twig\TwigFunction;
 
 final class PayPlugExtension extends AbstractExtension
 {
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface */
+    /** @var CanSaveCardCheckerInterface */
     private $canSaveCardChecker;
 
     public function __construct(CanSaveCardCheckerInterface $canSaveCardChecker)

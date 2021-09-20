@@ -11,7 +11,7 @@ use Twig\TwigFunction;
 
 final class GetCurrentRouteExtension extends AbstractExtension
 {
-    /** @var \Symfony\Component\HttpFoundation\Request|null */
+    /** @var Request|null */
     private $request;
 
     public function __construct(
