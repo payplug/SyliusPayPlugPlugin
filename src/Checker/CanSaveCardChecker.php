@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -31,10 +32,10 @@ class CanSaveCardChecker implements CanSaveCardCheckerInterface
             return false;
         }
 
-        if (!\array_key_exists('oneClick', $gatewayConfiguration->getConfig())) {
+        if (!\array_key_exists(PayPlugGatewayFactory::ONE_CLICK, $gatewayConfiguration->getConfig())) {
             return false;
         }
 
-        return (bool) $gatewayConfiguration->getConfig()['oneClick'] ?? false;
+        return (bool) $gatewayConfiguration->getConfig()[PayPlugGatewayFactory::ONE_CLICK] ?? false;
     }
 }

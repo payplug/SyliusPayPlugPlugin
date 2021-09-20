@@ -11,6 +11,7 @@ use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -150,7 +151,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface $gatewayConfig */
             $gatewayConfig = $paymentMethod->getGatewayConfig();
             $config = $gatewayConfig->getConfig();
-            $config['oneClick'] = $canSaveCard;
+            $config[PayPlugGatewayFactory::ONE_CLICK] = $canSaveCard;
             $gatewayConfig->setConfig($config);
         } catch (BadRequestException $badRequestException) {
             $errorObject = $badRequestException->getErrorObject();
