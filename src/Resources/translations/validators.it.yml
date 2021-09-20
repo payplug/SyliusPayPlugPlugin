@@ -10,4 +10,4 @@ payplug_sylius_payplug_plugin:
     one_click:
         can_not_save_cards: |
             Non hai accesso a questa funzionalità. Per ulteriori informazioni,
-            contattaci al seguente indirizzo e-mail: <a href="mailto:support@payplug.com" target="_blank" style="color:black;">suppport@payplug.com</a>
+            contattaci al seguente indirizzo e-mail: <a href="mailto:support@payplug.com" target="_blank" style="color:black;">support@payplug.com</a>
