@@ -175,7 +175,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     private function displayGenericError(ArrayObject $details): void
     {
         if ('PAYER' === $details['initiator']) {
-            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.warning.payment_success_no_card_saved'));
+            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.transaction_failed_1click'));
 
             return;
         }
