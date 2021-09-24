@@ -89,6 +89,7 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
         //otherwise you’ll have a hosted_payment.payment_url where the payer has to be redirected to complete the payment.
         return $this->render('@PayPlugSyliusPayPlugPlugin/shop/1click.html.twig', [
             'payment_url' => $payment->getDetails()['hosted_payment']['payment_url'],
+            'cancel_url' => $payment->getDetails()['hosted_payment']['cancel_url'],
         ]);
     }
 }
