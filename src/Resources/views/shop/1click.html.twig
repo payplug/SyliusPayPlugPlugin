@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-<script type="text/javascript" src="https://api-qa.payplug.com/js/1/form.latest.js"></script>
+<script type="text/javascript" src="{{ payplug_get_api_url() }}/js/1/form.latest.js"></script>
 <script>
     Payplug.showPayment('{{ payment_url }}', true)
 </script>
