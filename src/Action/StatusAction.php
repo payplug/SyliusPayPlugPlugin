@@ -76,13 +76,12 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
 
         if (isset($httpRequest->query['status']) &&
             PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
-            $oldStatus = $details['status'];
-            $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
-
             // we need to show a specific error message when the payment is cancelled using the 1click feature
-            if ($oldStatus === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
+            if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
                 $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
             }
+
+            $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
         }
 
         if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
