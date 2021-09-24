@@ -84,7 +84,9 @@ In local environment, the plugin will not work properly because you will not be 
       resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
    ```
 
-8. Add CustomerTrait to App\Entity\Customer\Customer
+8. Add Traits for Customer and PaymentMethod entities
+
+* App\Entity\Customer\Customer
 
    ```php
    <?php
@@ -105,7 +107,35 @@ In local environment, the plugin will not work properly because you will not be 
    {
       use CustomerTrait;
    }
+   ``` 
+
+* App\Entity\Payment\PaymentMethod
+
+   ```php
+   <?php
    
+   declare(strict_types=1);
+   
+   namespace App\Entity\Payment;
+   
+   use Doctrine\ORM\Mapping as ORM;
+   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
+   use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
+   use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
+   
+   /**
+    * @ORM\Entity
+    * @ORM\Table(name="sylius_payment_method")
+    */
+   class PaymentMethod extends BasePaymentMethod
+   {
+       use PaymentMethodTrait;
+   
+       protected function createTranslation(): PaymentMethodTranslationInterface
+       {
+           return new PaymentMethodTranslation();
+       }
+   }
    ``` 
 
 9. Process translations
