@@ -19,6 +19,7 @@ use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Request\Convert;
+use function sprintf;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -42,10 +43,10 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
     /** @var SessionInterface */
     private $session;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface */
+    /** @var CanSaveCardCheckerInterface */
     private $canSaveCardChecker;
 
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
+    /** @var RepositoryInterface */
     private $payplugCardRepository;
 
     public function __construct(
@@ -86,7 +87,8 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         /** @var AddressInterface $billing */
         $billing = $order->getBillingAddress();
 
-        $deliveryType = $shipping->getId() === $billing->getId() ? self::DELIVERY_TYPE_BILLING : self::DELIVERY_TYPE_NEW;
+        $deliveryType = $shipping->getId() === $billing->getId(
+        ) ? self::DELIVERY_TYPE_BILLING : self::DELIVERY_TYPE_NEW;
 
         $this->addBillingInfo($billing, $customer, $order, $details);
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
@@ -172,10 +174,17 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         }
     }
 
-    private function addBillingInfo(AddressInterface $billing, CustomerInterface $customer, OrderInterface $order, ArrayObject &$details): void
-    {
+    private function addBillingInfo(
+        AddressInterface $billing,
+        CustomerInterface $customer,
+        OrderInterface $order,
+        ArrayObject &$details
+    ): void {
         //Sylius does not require any phone number so we have to considere it null
-        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(), $billing->getCountryCode()) : null;
+        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber(
+            $billing->getPhoneNumber(),
+            $billing->getCountryCode()
+        ) : null;
         $this->loadPhoneNumbers($billingPhone, $billingMobilePhone, $billingLandingPhone);
 
         $details['billing'] = [
@@ -196,9 +205,17 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         ];
     }
 
-    private function addShippingInfo(AddressInterface $shipping, CustomerInterface $customer, OrderInterface $order, string $deliveryType, ArrayObject &$details): void
-    {
-        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(), $shipping->getCountryCode()) : null;
+    private function addShippingInfo(
+        AddressInterface $shipping,
+        CustomerInterface $customer,
+        OrderInterface $order,
+        string $deliveryType,
+        ArrayObject &$details
+    ): void {
+        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber(
+            $shipping->getPhoneNumber(),
+            $shipping->getCountryCode()
+        ) : null;
         $this->loadPhoneNumbers($shippingPhone, $shippingMobilePhone, $shippingLandingPhone);
 
         $details['shipping'] = [
@@ -229,7 +246,9 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         /** @var string|null $cardId */
         $cardId = $this->session->get('payplug_payment_method');
 
-        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed($paymentMethod)) {
+        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
+            $paymentMethod
+        )) {
             $details['allow_save_card'] = true;
 
             return $details;
@@ -260,13 +279,13 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         $billing = $details['billing'];
         if ($billing['company_name'] === null) {
-            $billing['company_name'] = \sprintf('%s %s', $billing['first_name'], $billing['last_name']);
+            $billing['company_name'] = sprintf('%s %s', $billing['first_name'], $billing['last_name']);
         }
         $details['billing'] = $billing;
 
         $shipping = $details['shipping'];
         if ($shipping['company_name'] === null) {
-            $shipping['company_name'] = \sprintf('%s %s', $shipping['first_name'], $shipping['last_name']);
+            $shipping['company_name'] = sprintf('%s %s', $shipping['first_name'], $shipping['last_name']);
         }
         $details['shipping'] = $shipping;
 
@@ -287,7 +306,8 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
                 'delivery_label' => (null !== $shipment->getMethod()) ? $shipment->getMethod()->getName() : 'none',
                 'delivery_type' => $deliveryType,
                 'expected_delivery_date' => $expectedDeliveryDate,
-                'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode() : 'none',
+                'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode(
+                ) : 'none',
                 'brand' => $orderItem->getProductName(),
                 'name' => $orderItem->getProductName() . ' ' . $orderItem->getVariantName(),
                 'total_amount' => $orderItem->getTotal(),

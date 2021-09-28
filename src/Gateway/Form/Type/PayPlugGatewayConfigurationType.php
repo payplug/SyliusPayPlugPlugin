@@ -38,7 +38,7 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
             ])
-            ->add('oneClick', CheckboxType::class, [
+            ->add(PayPlugGatewayFactory::ONE_CLICK, CheckboxType::class, [
                 'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
                 'validation_groups' => $validationGroups,
                 'constraints' => [

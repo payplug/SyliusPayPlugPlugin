@@ -11,6 +11,8 @@ use Payplug\Resource\Refund;
 
 interface PayPlugApiClientInterface
 {
+    public const INTERNAL_STATUS_ONE_CLICK = 'one_click';
+
     public const LIVE_KEY_PREFIX = 'sk_live';
 
     public const TEST_KEY_PREFIX = 'sk_test';

@@ -23,7 +23,7 @@ trait CustomerTrait
     {
         return $this->cards->filter(function (Card $card): bool {
             $now = new \DateTime();
-            $now->setDate($now->format('Y'), $now->format('m'), 1);
+            $now->setDate((int) $now->format('Y'), (int) $now->format('m'), 1);
             $expires = \DateTime::createFromFormat('n/Y', $card->getExpirationMonth() . '/' . $card->getExpirationYear());
 
             if ($expires < $now) {

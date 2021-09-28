@@ -88,6 +88,11 @@ class PaymentNotificationHandler
             'code' => $paymentResource->failure->code ?? '',
             'message' => $paymentResource->failure->message ?? '',
         ];
+
+        if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
+            $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
+        }
+
         $details['status'] = PayPlugApiClientInterface::FAILED;
     }
 
@@ -113,7 +118,9 @@ class PaymentNotificationHandler
             return;
         }
 
-        if (!$paymentResource->__isset('card') || null === $paymentResource->__get('card')) {
+        if (!$paymentResource->__isset('card') ||
+            null === $paymentResource->__get('card') ||
+            (null !== $paymentResource->__get('card') && null === $paymentResource->__get('card')->id)) {
             return;
         }
 
