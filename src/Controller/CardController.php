@@ -56,10 +56,9 @@ final class CardController extends AbstractController
             ]);
         }
 
-        $savedCards = $this->payplugCardRepository->findBy(['customer' => $customer], ['id' => 'DESC']);
-
         return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
-            'savedCards' => $savedCards,
+            /** @phpstan-ignore-next-line */
+            'savedCards' => $customer->getCards(),
         ]);
     }
 
