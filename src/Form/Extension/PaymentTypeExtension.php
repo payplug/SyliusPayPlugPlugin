@@ -88,7 +88,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     return;
                 }
 
-                if (OneyGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() ||
+                if (OneyGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName() ||
                     false === $event->getForm()->has('oney_payment_choice')) {
                     return;
                 }
