@@ -15,3 +15,4 @@ parameters:
         # ignore false positive
         - '#Access to an undefined property Payplug\\Resource\\[a-zA-Z0-9]+::\$#'
         - '#Call to static method getSimulations\(\) on an unknown class Payplug\\OneySimulation.#'
+        - '#Strict comparison using !== between null and mixed will always evaluate to true.#'

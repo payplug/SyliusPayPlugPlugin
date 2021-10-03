@@ -10,18 +10,24 @@ use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
+use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Request\Convert;
+use function sprintf;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Core\Model\ShipmentInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
@@ -32,12 +38,25 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
+    private const PAYPLUG_CARD_ID_OTHER = 'other';
+
     /** @var SessionInterface */
     private $session;
 
-    public function __construct(SessionInterface $session)
-    {
+    /** @var CanSaveCardCheckerInterface */
+    private $canSaveCardChecker;
+
+    /** @var RepositoryInterface */
+    private $payplugCardRepository;
+
+    public function __construct(
+        SessionInterface $session,
+        CanSaveCardCheckerInterface $canSaveCard,
+        RepositoryInterface $payplugCardRepository
+    ) {
         $this->session = $session;
+        $this->canSaveCardChecker = $canSaveCard;
+        $this->payplugCardRepository = $payplugCardRepository;
     }
 
     public function execute($request): void
@@ -68,10 +87,19 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         /** @var AddressInterface $billing */
         $billing = $order->getBillingAddress();
 
-        $deliveryType = $shipping->getId() === $billing->getId() ? self::DELIVERY_TYPE_BILLING : self::DELIVERY_TYPE_NEW;
+        $deliveryType = $shipping->getId() === $billing->getId(
+        ) ? self::DELIVERY_TYPE_BILLING : self::DELIVERY_TYPE_NEW;
 
         $this->addBillingInfo($billing, $customer, $order, $details);
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
+
+        $paymentMethod = $payment->getMethod();
+
+        if (PayPlugGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName() &&
+            $paymentMethod instanceof PaymentMethodInterface) {
+            $details['allow_save_card'] = false;
+            $details = $this->alterPayPlugDetails($paymentMethod, $details);
+        }
 
         if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
             $details = $this->alterOneyDetails($details);
@@ -146,10 +174,17 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         }
     }
 
-    private function addBillingInfo(AddressInterface $billing, CustomerInterface $customer, OrderInterface $order, ArrayObject &$details): void
-    {
+    private function addBillingInfo(
+        AddressInterface $billing,
+        CustomerInterface $customer,
+        OrderInterface $order,
+        ArrayObject &$details
+    ): void {
         //Sylius does not require any phone number so we have to considere it null
-        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber($billing->getPhoneNumber(), $billing->getCountryCode()) : null;
+        $billingPhone = $billing->getPhoneNumber() !== null ? $this->formatNumber(
+            $billing->getPhoneNumber(),
+            $billing->getCountryCode()
+        ) : null;
         $this->loadPhoneNumbers($billingPhone, $billingMobilePhone, $billingLandingPhone);
 
         $details['billing'] = [
@@ -170,9 +205,17 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         ];
     }
 
-    private function addShippingInfo(AddressInterface $shipping, CustomerInterface $customer, OrderInterface $order, string $deliveryType, ArrayObject &$details): void
-    {
-        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber($shipping->getPhoneNumber(), $shipping->getCountryCode()) : null;
+    private function addShippingInfo(
+        AddressInterface $shipping,
+        CustomerInterface $customer,
+        OrderInterface $order,
+        string $deliveryType,
+        ArrayObject &$details
+    ): void {
+        $shippingPhone = $shipping->getPhoneNumber() !== null ? $this->formatNumber(
+            $shipping->getPhoneNumber(),
+            $shipping->getCountryCode()
+        ) : null;
         $this->loadPhoneNumbers($shippingPhone, $shippingMobilePhone, $shippingLandingPhone);
 
         $details['shipping'] = [
@@ -194,6 +237,39 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         ];
     }
 
+    private function alterPayPlugDetails(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
+    {
+        if (!$this->canSaveCardChecker->isAllowed($paymentMethod)) {
+            return $details;
+        }
+
+        /** @var string|null $cardId */
+        $cardId = $this->session->get('payplug_payment_method');
+
+        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
+            $paymentMethod
+        )) {
+            $details['allow_save_card'] = true;
+
+            return $details;
+        }
+
+        if (null === $cardId) {
+            return $details;
+        }
+
+        $card = $this->payplugCardRepository->find($cardId);
+
+        if (!$card instanceof Card) {
+            return $details;
+        }
+
+        $details['payment_method'] = $card->getExternalId();
+        $details['initiator'] = 'PAYER';
+
+        return $details;
+    }
+
     private function alterOneyDetails(ArrayObject $details): ArrayObject
     {
         $details['payment_method'] = $this->session->get('oney_payment_method', 'oney_x3_with_fees');
@@ -203,13 +279,13 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 
         $billing = $details['billing'];
         if ($billing['company_name'] === null) {
-            $billing['company_name'] = \sprintf('%s %s', $billing['first_name'], $billing['last_name']);
+            $billing['company_name'] = sprintf('%s %s', $billing['first_name'], $billing['last_name']);
         }
         $details['billing'] = $billing;
 
         $shipping = $details['shipping'];
         if ($shipping['company_name'] === null) {
-            $shipping['company_name'] = \sprintf('%s %s', $shipping['first_name'], $shipping['last_name']);
+            $shipping['company_name'] = sprintf('%s %s', $shipping['first_name'], $shipping['last_name']);
         }
         $details['shipping'] = $shipping;
 
@@ -230,7 +306,8 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
                 'delivery_label' => (null !== $shipment->getMethod()) ? $shipment->getMethod()->getName() : 'none',
                 'delivery_type' => $deliveryType,
                 'expected_delivery_date' => $expectedDeliveryDate,
-                'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode() : 'none',
+                'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode(
+                ) : 'none',
                 'brand' => $orderItem->getProductName(),
                 'name' => $orderItem->getProductName() . ' ' . $orderItem->getVariantName(),
                 'total_amount' => $orderItem->getTotal(),

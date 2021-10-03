@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit;
 
-use PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction;
+use libphonenumber\PhoneNumberType;
+use libphonenumber\PhoneNumberUtil;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpFoundation\Session\Session;
 
 final class phoneNumberFormatTest extends TestCase
 {
@@ -16,12 +16,10 @@ final class phoneNumberFormatTest extends TestCase
      */
     public function testFormatNumberMethod(string $input, string $isoCode, array $expectedOutput): void
     {
-        $convertPaymentAction = new ConvertPaymentAction(new Session());
+        $phoneNumberUtil = PhoneNumberUtil::getInstance();
+        $parsed = $phoneNumberUtil->parse($input, $isoCode);
 
-        self::assertEquals(
-            $expectedOutput,
-            $convertPaymentAction->formatNumber($input, $isoCode)
-        );
+        self::assertEquals($expectedOutput['is_mobile'], $phoneNumberUtil->getNumberType($parsed) === PhoneNumberType::MOBILE);
     }
 
     public function landlinePhoneNumbersDataProvider(): \Generator

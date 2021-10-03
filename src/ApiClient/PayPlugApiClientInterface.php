@@ -11,6 +11,12 @@ use Payplug\Resource\Refund;
 
 interface PayPlugApiClientInterface
 {
+    public const INTERNAL_STATUS_ONE_CLICK = 'one_click';
+
+    public const LIVE_KEY_PREFIX = 'sk_live';
+
+    public const TEST_KEY_PREFIX = 'sk_test';
+
     public const STATUS_CREATED = 'created';
 
     public const STATUS_CANCELED = 'canceled';
@@ -47,4 +53,6 @@ interface PayPlugApiClientInterface
     public function treat(string $input): IVerifiableAPIResource;
 
     public function retrieve(string $paymentId): Payment;
+
+    public function deleteCard(string $card): void;
 }

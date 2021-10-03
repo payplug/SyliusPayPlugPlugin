@@ -9,6 +9,24 @@
     </div>
 {% endblock %}
 
+{% block _sylius_payment_method_gatewayConfig_config_oneClick_row %}
+    <div style="margin-left: 2rem;" class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %} ui toggle checkbox">
+        <div class="ui toggle checkbox" style="margin-top: 2rem; margin-bottom: 0.8rem;">
+            {{- form_label(form) -}}
+            {{- form_widget(form) -}}
+        </div>
+
+        <span style="font-size: 0.8rem; font-style: italic;">
+            {{- form_help(form) -}}
+        </span>
+        {% for error in errors %}
+            <div class="ui red pointing label sylius-validation-error">
+                {{ error.message|raw }}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
 {% block _sylius_payment_method_enabled_errors %}
     {% for error in errors %}
         <div class="ui red pointing label sylius-validation-error">
@@ -20,8 +38,6 @@
 {% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
     {% set data = oney_simulation_data() %}
     {% import "@SyliusShop/Common/Macro/money.html.twig" as money %}
-    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/payment/index.css') }}">
     <div class="oney-payment-choice__container">
         <div class="oney-payment-choice__tab">
             <a class="tablink" href="javascript:void(0);" data-id="oney_x3_with_fees">
@@ -46,7 +62,7 @@
                         value="{{ choice.value }}"
                         id="oney_choice_{{ keyChoice }}"
                         name="{{ form.vars.full_name }}"
-                        class="oney-payment-choice__input"
+                        class="oney-payment-choice__input payment-choice__input"
                         {% if form.vars.value is not empty %}
                             {{ form.vars.value == choice.value ? 'checked="checked"' : '' }}
                         {% elseif loop.index is same as(1) %}
@@ -76,5 +92,50 @@
                 </label>
             </div>
         {% endfor %}
+    </div>
+{% endblock %}
+
+{% block _sylius_checkout_select_payment_payments_entry_payplug_card_choice_row %}
+    <div class="payplug-payment-choice__container">
+        {% for card in sylius.customer.cards %}
+            {% set cardExpirationDate = ("%04d"|format(card.expirationYear) ~ '-' ~ "%02d"|format(card.expirationMonth))|date("Y-m") %}
+            {% if cardExpirationDate >= "now"|date("Y-m") %}
+                <div class="payplug-payment-choice__item payplug-payment-choice__item--card-{{ card.id }}" id="card-{{ card.id }}">
+                    <input type="radio"
+                           value="{{ card.id }}"
+                           id="payplug_choice_card_{{ card.id }}"
+                           name="{{ form.vars.full_name }}"
+                           class="payplug-payment-choice__input payment-choice__input"
+                           {% if form.vars.value is not empty %}
+                               {{ form.vars.value == card.id ? 'checked="checked"' : '' }}
+                           {% elseif loop.index is same as(1) %}
+                               checked="checked"
+                           {% endif %}
+                    >
+                    <label for="payplug_choice_card_{{ card.id }}" class="payplug-payment-choice__label">
+                        <span class="payplug-payment-choice__header">
+                            <span class="card-type">{{ card.brand|e }} ****{{ card.last4|e }}</span>
+                            <span class="card-expiry">{{ ('payplug_sylius_payplug_plugin.ui.card_expires_on')|trans }} <span>{{ "%02d"|format(card.expirationMonth) ~ '/' ~ "%04d"|format(card.expirationYear) }}</span></span>
+                        </span>
+                    </label>
+                </div>
+            {% endif %}
+        {% endfor %}
+        <div class="payplug-payment-choice__item payplug-payment-choice__item--card-other" id="card-other">
+            <input type="radio"
+                   value="other"
+                   id="payplug_choice_card_other"
+                   name="{{ form.vars.full_name }}"
+                   class="payplug-payment-choice__input payment-choice__input"
+                   {% if form.vars.value is not empty %}
+                       {{ form.vars.value == 'other' ? 'checked="checked"' : '' }}
+                   {% elseif sylius.customer.cards is empty %}
+                       checked="checked"
+                   {% endif %}
+            >
+            <label for="payplug_choice_card_other" class="payplug-payment-choice__label">
+                <span class="payplug-payment-choice__header">{{ ('payplug_sylius_payplug_plugin.ui.pay_with_another_card')|trans }}</span>
+            </label>
+        </div>
     </div>
 {% endblock %}

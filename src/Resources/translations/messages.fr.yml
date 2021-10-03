@@ -1,5 +1,22 @@
 payplug_sylius_payplug_plugin:
     ui:
+        account:
+            saved_cards:
+                title: Cartes sauvegardées
+                sub_title: Gérer vos cartes sauvegardées
+                brand: Marque
+                mask: Masque
+                expire: Expire le
+                expired: Expirée
+                no_results_to_display: Vous n'avez aucune carte sauvegardée
+                mobile:
+                    brand: "Marque :"
+                    mask: "Masque :"
+                    expire: "Expire le :"
+                deleted_successfully: Carte supprimée avec succès.
+                deleted_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
+                confirmation_modal:
+                    confirm_card_deletion: Êtes-vous sûr(e) de vouloir supprimer cette carte ?
         error:
             billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
             shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
@@ -20,6 +37,8 @@ payplug_sylius_payplug_plugin:
         3x_payment: Paiement en 3x
         4x_payment: Paiement en 4x
         by_credit_cart: Par carte bancaire
+        card_expires_on: "Expire le :"
+        pay_with_another_card: Payer avec une autre carte
         cancel: Annuler
         popin_close: Fermer
         popin_paiement_desc: |
@@ -68,3 +87,7 @@ payplug_sylius_payplug_plugin:
         base_currency_not_euro: |
             Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
         only_one_gateway_allowed: Attention, le moyen de paiement %gateway_title% existe déjà. Pour le modifier, rendez-vous sur vos <a href="/admin/payment-methods/" target="_blank">moyens de paiement</a>.
+        one_click_enable: Activer le One click
+        one_click_help: |
+            Permettez à vos clients d'enregistrer leurs coordonnées de carte de paiement pour effectuer ultérieurement
+            d'autres transactions

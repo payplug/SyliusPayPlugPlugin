@@ -1,12 +1,16 @@
 const Payment = {
   options: {
-    trigger: ".oney-payment-choice",
+    trigger: ".payment-method-choice",
     completeInfo: {
       modal: ".oney-complete-info-popin",
       area: ".ui.steps + .ui.grid",
     },
   },
-  init() {
+  init(options) {
+    if (typeof options === 'undefined') {
+      options = this.options;
+    }
+    this.options = $.extend(true, {}, options);
     Payment.toggleGateway();
     if (typeof completeInfoRoute !== "undefined") {
       Payment.modalAppear();
@@ -18,16 +22,15 @@ const Payment = {
     Payment.tabsHandler();
   },
   toggleGateway() {
-    const self = this;
-    if ($(`#${$(this.options.trigger).data("oney-input-id")}`).is(":checked")) {
-      $(this.options.trigger).show();
+    const paymentMethodInputId = $(this.options.trigger).data("payment-input-id");
+    const checkedPaymentMethodInput = $(`#${paymentMethodInputId}:checked`);
+    if (checkedPaymentMethodInput.length) {
+      $('.payment-method-choice[data-payment-input-id="' + paymentMethodInputId + '"]').show();
     }
-    $("input[id*=sylius_checkout_select_payment]").on("change", function () {
-      if ($(`label[for=${$(this).attr("id")}]`).data("gateway") === "oney") {
-        $(self.options.trigger).slideDown();
-      } else {
-        $(self.options.trigger).slideUp();
-      }
+    $("input[id*=sylius_checkout_select_payment]").on("change", function (event) {
+      const clickedPaymentMethodId = $(event.currentTarget).attr("id");
+      $('.payment-method-choice').slideUp();
+      $('.payment-method-choice[data-payment-input-id="' + clickedPaymentMethodId + '"]').slideDown();
     });
   },
   tabs() {
@@ -110,4 +113,19 @@ const Payment = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", Payment.init, false);
+const onDocumentLoad = function (event) {
+  Payment.init();
+
+  $('form[name="sylius_checkout_select_payment"] button[type="submit"]').on('click', function(event) {
+    if ($('.checkbox-oney :radio:checked').length) {
+      $('.checkbox-payplug').closest('.payment-item').find('.payment-choice__input:checked').prop('checked', false);
+    } else if ($('.checkbox-payplug :radio:checked').length) {
+      $('.checkbox-oney').closest('.payment-item').find('.payment-choice__input:checked').prop('checked', false);
+    }
+
+    $('input#payplug_choice_card_other').attr('disabled', true);
+    $('form[name="sylius_checkout_select_payment"]').submit();
+  });
+};
+
+document.addEventListener("DOMContentLoaded", onDocumentLoad, false);

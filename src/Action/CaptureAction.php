@@ -6,10 +6,12 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use ArrayAccess;
 use Payplug\Exception\BadRequestException;
+use Payplug\Exception\ForbiddenException;
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -25,6 +27,7 @@ use Payum\Core\Security\TokenInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Webmozart\Assert\Assert;
 
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
 {
@@ -59,6 +62,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
     public function execute($request): void
     {
+        Assert::isInstanceOf($this->tokenFactory, GenericTokenFactoryInterface::class);
         RequestNotSupportedException::assertSupports($this, $request);
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
@@ -114,7 +118,41 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $payment = $this->createPayment($details);
             $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
+            // Pay with a saved card: https://docs.payplug.com/api/guide-savecard-en.html
+            if ('PAYER' === $details['initiator']) {
+                //if is_paid is true, you can consider the payment as being fully paid,
+                if ($payment->is_paid) {
+                    return;
+                }
+
+                $details['status'] = PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK;
+                $details['hosted_payment'] = [
+                    'payment_url' => $payment->hosted_payment->payment_url,
+                    'return_url' => $token->getAfterUrl(),
+                    'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
+                ];
+
+                $oneClickToken = $this->tokenFactory->createCaptureToken(
+                    $token->getGatewayName(),
+                    $token->getDetails(),
+                    'payplug_sylius_oneclick_verification'
+                );
+
+                throw new HttpRedirect($oneClickToken->getAfterUrl());
+            }
+
             throw new HttpRedirect($payment->hosted_payment->payment_url);
+        } catch (ForbiddenException $forbiddenException) {
+            $accountData = $this->payPlugApiClient->getAccount(true);
+            $canSaveCard = (bool) $accountData['permissions']['can_save_cards'];
+
+            /** @var \Sylius\Component\Core\Model\PaymentMethod $paymentMethod */
+            $paymentMethod = $request->getFirstModel()->getMethod();
+            /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface $gatewayConfig */
+            $gatewayConfig = $paymentMethod->getGatewayConfig();
+            $config = $gatewayConfig->getConfig();
+            $config[PayPlugGatewayFactory::ONE_CLICK] = $canSaveCard;
+            $gatewayConfig->setConfig($config);
         } catch (BadRequestException $badRequestException) {
             $errorObject = $badRequestException->getErrorObject();
             if (null === $errorObject || [] === $errorObject) {
@@ -128,10 +166,21 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             throw new HttpRedirect($details['hosted_payment']['cancel_url']);
         } catch (UnknownApiErrorException $unknownApiErrorException) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
-            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.api_unknow_error'));
+            $this->displayGenericError($details);
 
             throw new HttpRedirect($details['hosted_payment']['cancel_url']);
         }
+    }
+
+    private function displayGenericError(ArrayObject $details): void
+    {
+        if ('PAYER' === $details['initiator']) {
+            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.transaction_failed_1click'));
+
+            return;
+        }
+
+        $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.api_unknow_error'));
     }
 
     public function supports($request): bool

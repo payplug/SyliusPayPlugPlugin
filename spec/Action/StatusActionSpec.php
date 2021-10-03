@@ -14,15 +14,17 @@ use Payum\Core\Request\GetStatusInterface;
 use PhpSpec\ObjectBehavior;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 
 final class StatusActionSpec extends ObjectBehavior
 {
     public function let(
         FactoryInterface $stateMachineFactory,
         RefundPaymentHandlerInterface $refundPaymentHandler,
-        PaymentNotificationHandler $paymentNotificationHandler
+        PaymentNotificationHandler $paymentNotificationHandler,
+        FlashBagInterface $flashBag
     ): void {
-        $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler, $paymentNotificationHandler);
+        $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler, $paymentNotificationHandler, $flashBag);
     }
 
     public function it_is_initializable(): void

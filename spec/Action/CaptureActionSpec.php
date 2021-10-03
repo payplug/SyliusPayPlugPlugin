@@ -23,32 +23,32 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CaptureActionSpec extends ObjectBehavior
 {
-    function let(LoggerInterface $logger, FlashBagInterface $flashBag, TranslatorInterface $translator): void
+    public function let(LoggerInterface $logger, FlashBagInterface $flashBag, TranslatorInterface $translator): void
     {
         $this->beConstructedWith($logger, $flashBag, $translator);
     }
 
-    function it_is_initializable(): void
+    public function it_is_initializable(): void
     {
         $this->shouldHaveType(CaptureAction::class);
     }
 
-    function it_implements_action_interface(): void
+    public function it_implements_action_interface(): void
     {
         $this->shouldHaveType(ActionInterface::class);
     }
 
-    function it_implements_api_aware_interface(): void
+    public function it_implements_api_aware_interface(): void
     {
         $this->shouldHaveType(ApiAwareInterface::class);
     }
 
-    function it_implements_gateway_aware_interface(): void
+    public function it_implements_gateway_aware_interface(): void
     {
         $this->shouldHaveType(GatewayAwareInterface::class);
     }
 
-    function it_executes(
+    public function it_executes(
         Capture $request,
         ArrayObject $arrayObject,
         TokenInterface $token,
@@ -82,6 +82,7 @@ final class CaptureActionSpec extends ObjectBehavior
         $notifyToken->getHash()->willReturn('test');
         $payPlugApiClient->createPayment([])->willReturn($payment);
         $arrayObject->offsetGet('order_number')->willReturn('000001');
+        $arrayObject->offsetGet('initiator')->shouldBeCalled();
 
         $arrayObject->offsetExists('status')->shouldBeCalled();
         $arrayObject->offsetSet('hosted_payment', ['return_url' => 'url', 'cancel_url' => 'url?&status=canceled'])->shouldBeCalled();
@@ -96,7 +97,7 @@ final class CaptureActionSpec extends ObjectBehavior
         ;
     }
 
-    function it_supports_only_capture_request_and_array_access(
+    public function it_supports_only_capture_request_and_array_access(
         Capture $request,
         \ArrayAccess $arrayAccess
     ): void {

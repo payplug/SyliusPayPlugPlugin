@@ -56,6 +56,9 @@
         <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible" class="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible">
             <argument type="service" id="sylius.repository.product_variant" key="$productVariantRepository" />
         </service>
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction" class="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction">
+            <argument type="service" id="sylius.repository.payment" key="$paymentRepository" />
+        </service>
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator"
@@ -162,6 +165,8 @@
             public="false"
         >
             <argument type="service" id="monolog.logger.payum" />
+            <argument type="service" id="payplug.repository.payplug_card" />
+            <argument type="service" id="payplug.factory.payplug_card" />
         </service>
 
         <service
@@ -171,6 +176,14 @@
             <argument type="service" id="payplug.repository.payplug_refund_history" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
             <argument type="service" id="sylius_refund_plugin.command_bus" />
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\EventListener\AccountMenuListener">
+            <tag name="kernel.event_listener" event="sylius.menu.shop.account" method="addAccountMenuItems" />
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\CardController">
+            <argument type="service" key="$payPlugApiClient" id="payplug_sylius_payplug_plugin.api_client.payplug" />
         </service>
 
     </services>
