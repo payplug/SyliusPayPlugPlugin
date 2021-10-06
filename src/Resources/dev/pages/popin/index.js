@@ -25,15 +25,15 @@ const Popin = {
       }
       productMeta[prop] = $selectors.val();
       $selectors.on(
-          "input",
-          this.debounce((e) => {
-            e.preventDefault();
-            if ($selectors.length > 0) {
-              this.handleProductOptionsChange($selectors, prop);
-            }
-            productMeta[prop] = $(e.currentTarget).val();
-            this.check();
-          }, 500)
+        "input",
+        this.debounce((e) => {
+          e.preventDefault();
+          if ($selectors.length > 0) {
+            this.handleProductOptionsChange($selectors, prop);
+          }
+          productMeta[prop] = $(e.currentTarget).val();
+          this.check();
+        }, 500)
       );
     }
     this.productMeta = productMeta;
@@ -44,14 +44,14 @@ const Popin = {
    * @param prop
    */
   handleProductOptionsChange($selectors, prop) {
-    if (prop === 'option') {
-      let selector = '';
+    if (prop === "option") {
+      let selector = "";
       $selectors.each((k, v) => {
         const select = $(v);
-        const option = select.find('option:selected').val();
-        selector += `[data-${select.attr('data-option')}="${option}"]`;
-      })
-      return productMeta.product_variant_code = $(this.handlers.codes).find(selector).attr('data-value');
+        const option = select.find("option:selected").val();
+        selector += `[data-${select.attr("data-option")}="${option}"]`;
+      });
+      return (productMeta.product_variant_code = $(this.handlers.codes).find(selector).attr("data-value"));
     }
   },
   check() {
@@ -61,9 +61,7 @@ const Popin = {
       url: this.productMeta.url,
       data: this.productMeta,
       success: function (res) {
-        $(self.handlers.info)
-          .find("img:first")
-          .attr("src", self.productMeta.img[res.isEligible]);
+        $(self.handlers.info).find("img:first").attr("src", self.productMeta.img[res.isEligible]);
         res.isEligible
           ? $(self.handlers.popin).removeClass("disabled").addClass("enabled")
           : $(self.handlers.popin).removeClass("enabled").addClass("disabled");
@@ -88,10 +86,7 @@ const Popin = {
     $(this.handlers.info).on("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (
-        !$(this.handlers.popin).is(":empty") &&
-        $(this.handlers.popin).text().trim() === this.storage
-      ) {
+      if (!$(this.handlers.popin).is(":empty") && $(this.handlers.popin).text().trim() === this.storage) {
         $(this.handlers.popin).fadeIn();
         return;
       }
@@ -113,8 +108,7 @@ const Popin = {
         $(self.handlers.popin).html(res);
       },
       error: function () {
-        $(self.handlers.popin).removeClass("enabled").addClass("disabled")
-          .html(`
+        $(self.handlers.popin).removeClass("enabled").addClass("disabled").html(`
             <div class="oney-popin__header">
               <a class="close" href="javascript:void(0);" title="${translations.close}">
                   <span></span><span></span>
@@ -133,10 +127,7 @@ const Popin = {
     });
   },
   toggleLoader() {
-    $(this.handlers.info)
-      .toggleClass("loading")
-      .find(".dimmer")
-      .toggleClass("active");
+    $(this.handlers.info).toggleClass("loading").find(".dimmer").toggleClass("active");
   },
   closeHandler() {
     $("html")

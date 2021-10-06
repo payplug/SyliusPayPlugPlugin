@@ -13,6 +13,15 @@
     "es6": true
   },
   "rules": {
-    "prettier/prettier": "error"
+    "prettier/prettier": [
+      "error", {
+        "tabWidth": 2,
+        "bracketSpacing": true,
+        "eslintIntegration": true,
+        "printWidth": 120
+      }
+    ],
+    "prefer-template": "error",
+    "prefer-arrow-callback": "error"
   }
 }
