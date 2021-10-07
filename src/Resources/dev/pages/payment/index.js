@@ -7,7 +7,7 @@ const Payment = {
     },
   },
   init(options) {
-    if (typeof options === 'undefined') {
+    if (typeof options === "undefined") {
       options = this.options;
     }
     this.options = $.extend(true, {}, options);
@@ -16,7 +16,7 @@ const Payment = {
       Payment.modalAppear();
     }
     Payment.tabs();
-    $(window).on("resize", function () {
+    $(window).on("resize", () => {
       setTimeout(Payment.tabs, 100);
     });
     Payment.tabsHandler();
@@ -25,18 +25,18 @@ const Payment = {
     const paymentMethodInputId = $(this.options.trigger).data("payment-input-id");
     const checkedPaymentMethodInput = $(`#${paymentMethodInputId}:checked`);
     if (checkedPaymentMethodInput.length) {
-      $('.payment-method-choice[data-payment-input-id="' + paymentMethodInputId + '"]').show();
+      $(`.payment-method-choice[data-payment-input-id="${paymentMethodInputId}"]`).show();
     }
-    $("input[id*=sylius_checkout_select_payment]").on("change", function (event) {
+    $("input[id*=sylius_checkout_select_payment]").on("change", (event) => {
       const clickedPaymentMethodId = $(event.currentTarget).attr("id");
-      $('.payment-method-choice').slideUp();
-      $('.payment-method-choice[data-payment-input-id="' + clickedPaymentMethodId + '"]').slideDown();
+      $(".payment-method-choice").slideUp();
+      $(`.payment-method-choice[data-payment-input-id="${clickedPaymentMethodId}"]`).slideDown();
     });
   },
   tabs() {
     if (window.innerWidth <= 991) {
       $(".oney-payment-choice__item").hide();
-      setTimeout(function () {
+      setTimeout(() => {
         $.each($(".oney-payment-choice__input"), (k, el) => {
           if ($(el).is(":checked")) {
             $(el).parent().show();
@@ -63,7 +63,7 @@ const Payment = {
   modalAppear() {
     const self = this;
     let path = completeInfoRoute;
-    $.get(path).then(function (data) {
+    $.get(path).then((data) => {
       $("body .pusher").append("<div class='overlay'></div>");
       $(self.options.completeInfo.area).addClass("inactive");
       $(self.options.completeInfo.area).parent().append(data);
@@ -87,8 +87,8 @@ const Payment = {
       data: $(evt.currentTarget).serialize(),
       success: function (res) {
         if (Array.isArray(res)) {
-          $(self.options.completeInfo.modal + "__content").fadeOut(function () {
-            $(self.options.completeInfo.modal + "__success").show();
+          $(`${self.options.completeInfo.modal}__content`).fadeOut(() => {
+            $(`${self.options.completeInfo.modal}__success`).show();
           });
           setTimeout(() => {
             self.modalFadeaway();
@@ -116,14 +116,14 @@ const Payment = {
 const onDocumentLoad = function (event) {
   Payment.init();
 
-  $('form[name="sylius_checkout_select_payment"] button[type="submit"]').on('click', function(event) {
-    if ($('.checkbox-oney :radio:checked').length) {
-      $('.checkbox-payplug').closest('.payment-item').find('.payment-choice__input:checked').prop('checked', false);
-    } else if ($('.checkbox-payplug :radio:checked').length) {
-      $('.checkbox-oney').closest('.payment-item').find('.payment-choice__input:checked').prop('checked', false);
+  $('form[name="sylius_checkout_select_payment"] button[type="submit"]').on("click", (event) => {
+    if ($(".checkbox-oney :radio:checked").length) {
+      $(".checkbox-payplug").closest(".payment-item").find(".payment-choice__input:checked").prop("checked", false);
+    } else if ($(".checkbox-payplug :radio:checked").length) {
+      $(".checkbox-oney").closest(".payment-item").find(".payment-choice__input:checked").prop("checked", false);
     }
 
-    $('input#payplug_choice_card_other').attr('disabled', true);
+    $("input#payplug_choice_card_other").attr("disabled", true);
     $('form[name="sylius_checkout_select_payment"]').submit();
   });
 };

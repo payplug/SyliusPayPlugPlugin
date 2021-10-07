@@ -1,4 +1,5 @@
 @import "../../settings/constants.scss";
+
 .sylius-customer-account-saved-cards-grid {
     .ui {
         &.table {
@@ -84,7 +85,7 @@
                     tr {
                         > td {
                             display: block;
-                            font-weight: 600;
+                            font-weight: normal;
 
                             &.actions {
                                 text-align: right;

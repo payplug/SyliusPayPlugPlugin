@@ -49,7 +49,7 @@ final class IsCanSaveCardsValidator extends ConstraintValidator
             }
 
             return;
-        } catch (UnauthorizedException $exception) {
+        } catch (UnauthorizedException|\LogicException $exception) {
             return;
         }
     }
