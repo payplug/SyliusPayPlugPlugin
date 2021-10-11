@@ -27,8 +27,13 @@
             display: none;
 
             &:checked + label {
-                border-color: $paymentgreen;
-                background-color: transparentize($paymentgreen, .87)
+                border-color: $green;
+                background-color: transparentize($green, .87);
+
+                &.payplug-payment-choice__label {
+                    border-color: $paypluggreen;
+                    background-color: transparentize($paypluggreen, .87)
+                }
             }
         }
 
