@@ -8,8 +8,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Sylius\Component\Core\Model\AdjustmentInterface as BaseAdjustmentInterface;
 use Sylius\Component\Core\Model\Shipment as BaseShipment;
-use Sylius\RefundPlugin\Entity\ShipmentTrait;
 use Sylius\RefundPlugin\Entity\ShipmentInterface as RefundShipmentInterface;
+use Sylius\RefundPlugin\Entity\ShipmentTrait;
 
 /**
  * @ORM\Entity

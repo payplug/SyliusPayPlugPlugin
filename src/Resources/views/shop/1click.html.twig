@@ -1,0 +1,22 @@
+<html lang="{{ app.request.locale|slice(0, 2) }}">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{ sylius.channel.name }} - {{ 'sylius.ui.payment'|trans }}</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <style>
+        body {
+            background-color: #f9fAfb;
+        }
+        #wrapper-close-3ds {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript" src="{{ payplug_get_api_url() }}/js/1/form.latest.js"></script>
+<script>
+    Payplug.showPayment('{{ payment_url }}', true)
+</script>
+</body>
+</html>

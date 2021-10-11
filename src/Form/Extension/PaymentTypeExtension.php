@@ -6,11 +6,13 @@ namespace PayPlug\SyliusPayPlugPlugin\Form\Extension;
 
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
 use Sylius\Component\Core\Model\OrderInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
@@ -40,7 +42,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -52,9 +54,14 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     '4x' => 'oney_x4_with_fees',
                 ],
             ])
+            ->add('payplug_card_choice', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+            ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (): void {
                 // Remove on preset data, it'll be readded if needed in post_submit
                 $this->session->remove('oney_has_error');
+                $this->session->remove('payplug_payment_method');
             })
             ->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event): void {
                 if ($this->session->has('oney_payment_method')) {
@@ -66,6 +73,18 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 $paymentMethod = $event->getForm()->get('method')->getData();
 
                 if (null === $paymentMethod || !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface) {
+                    return;
+                }
+
+                if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() &&
+                    (false === $event->getForm()->has('payplug_card_choice') || null === $event->getForm()->get('payplug_card_choice')->getData())) {
+                    return;
+                }
+
+                if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() && null !== $event->getForm()->get('payplug_card_choice')->getData()) {
+                    $payplugCardId = $event->getForm()->get('payplug_card_choice')->getData();
+                    $this->session->set('payplug_payment_method', $payplugCardId);
+
                     return;
                 }
 

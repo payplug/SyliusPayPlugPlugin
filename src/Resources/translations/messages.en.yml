@@ -1,5 +1,22 @@
 payplug_sylius_payplug_plugin:
     ui:
+        account:
+            saved_cards:
+                title: Saved cards
+                sub_title: Manage your saved cards
+                brand: Brand
+                mask: Mask
+                expire: Expire
+                expired: Expired
+                no_results_to_display: You do not have saved cards
+                mobile:
+                    brand: "Brand:"
+                    mask: "Mask:"
+                    expire: "Expire:"
+                deleted_successfully: Card successfully deleted.
+                deleted_error: An error occurred. Please retry in few seconds.
+                confirmation_modal:
+                    confirm_card_deletion: Are you sure you want to delete this card?
         error:
             billing.postcode: The postal code %postalCode% entered for the billing address is invalid
             shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
@@ -68,3 +85,6 @@ payplug_sylius_payplug_plugin:
         base_currency_not_euro: |
             Channel #channel_code#: #payment_method# is only available on channels with EURO as a currency
         only_one_gateway_allowed: Please note that the %gateway_title% payment method has already been set. To change it, go to your <a href="/admin/payment-methods/" target="_blank">payment methods</a>.
+        one_click_enable: Enable One click
+        one_click_help: |
+            Allow your customers to save their credit card details for later

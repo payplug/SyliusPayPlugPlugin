@@ -6,6 +6,7 @@ namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
+use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Request\Convert;
@@ -14,26 +15,30 @@ use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
-    function let(SessionInterface $session): void
-    {
-        $this->beConstructedWith($session);
+    public function let(
+        SessionInterface $session,
+        CanSaveCardCheckerInterface $canSaveCardChecker,
+        RepositoryInterface $payplugCardRepository
+    ): void {
+        $this->beConstructedWith($session, $canSaveCardChecker, $payplugCardRepository);
     }
 
-    function it_is_initializable(): void
+    public function it_is_initializable(): void
     {
         $this->shouldHaveType(ConvertPaymentAction::class);
     }
 
-    function it_implements_action_interface(): void
+    public function it_implements_action_interface(): void
     {
         $this->shouldHaveType(ActionInterface::class);
     }
 
-    function it_executes(
+    public function it_executes(
         Convert $request,
         PaymentInterface $payment,
         OrderInterface $order,
@@ -46,6 +51,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $address = $this->getAddress($address);
         $order = $this->getOrder($order, $customer, $address, $address);
         $payment = $this->getPayment($payment, $order);
+        $payment->getMethod();
 
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
@@ -95,7 +101,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $this->execute($request);
     }
 
-    function it_executes_with_different_address(
+    public function it_executes_with_different_address(
         Convert $request,
         PaymentInterface $payment,
         OrderInterface $order,
@@ -110,6 +116,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $otherAddress = $this->getOtherAddress($otherAddress);
         $order = $this->getOrder($order, $customer, $address, $otherAddress);
         $payment = $this->getPayment($payment, $order);
+        $payment->getMethod();
 
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
@@ -159,7 +166,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         $this->execute($request);
     }
 
-    function it_supports_only_convert_request_payment_source_and_array_to(
+    public function it_supports_only_convert_request_payment_source_and_array_to(
         Convert $request,
         PaymentInterface $payment
     ): void {

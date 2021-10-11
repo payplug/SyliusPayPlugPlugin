@@ -74,4 +74,9 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     {
         return $this->container->get($this->serviceName)->getGatewayFactoryName();
     }
+
+    public function deleteCard(string $card): void
+    {
+        return;
+    }
 }
