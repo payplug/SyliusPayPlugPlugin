@@ -1,4 +1,4 @@
-{% if is_oney_enabled() %}
+{% if is_oney_enabled() and can_show_mea() %}
     {% set logo_name = '3x4x-alt.svg' %}
     {% set data = [] %}
     {% if oney_cart_eligible() %}
