@@ -11,18 +11,18 @@ use Twig\TwigFunction;
 
 final class ShowMeaExtension extends AbstractExtension
 {
-    /** @var string */
-    public $localeCode;
-
     /** @var PayPlugApiClientInterface */
     private $oneyClient;
 
+    /** @var LocaleContextInterface */
+    private $localeContext;
+
+    /** @var string */
+    public $localeCode;
+
     public function __construct(LocaleContextInterface $localeContext, PayPlugApiClientInterface $oneyClient)
     {
-        $this->localeCode = \strtoupper($localeContext->getLocaleCode());
-        if (\mb_strlen($this->localeCode) === 5) {
-            $this->localeCode = \mb_substr($this->localeCode, 0, 2);
-        }
+        $this->localeContext = $localeContext;
         $this->oneyClient = $oneyClient;
     }
 
@@ -42,10 +42,24 @@ final class ShowMeaExtension extends AbstractExtension
             return false;
         }
 
-        if ($this->localeCode === $this->oneyClient->getAccount()['country']) {
+        if ($this->getLocaleCode() === $this->oneyClient->getAccount()['country']) {
             return true;
         }
 
         return false;
+    }
+
+    private function getLocaleCode(): string
+    {
+        if (null !== $this->localeCode) {
+            return $this->localeCode;
+        }
+
+        $this->localeCode = \strtoupper($this->localeContext->getLocaleCode());
+        if (5 === \mb_strlen($this->localeCode)) {
+            $this->localeCode = \mb_substr($this->localeCode, 0, 2);
+        }
+
+        return $this->localeCode;
     }
 }
