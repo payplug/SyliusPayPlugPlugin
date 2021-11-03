@@ -45,15 +45,20 @@ final class OneyChecker implements OneyCheckerInterface
         return $numberOfProduct <= OneyGatewayFactory::MAX_ITEMS;
     }
 
-    public function isCountryEligible(?string $shippingCountry, ?string $billingAddress): bool
+    public function isCountryEligible(?string $shippingCountry, ?string $billingCountry): bool
     {
-        if ($shippingCountry === null || $billingAddress === null) {
+        if ($shippingCountry === null || $billingCountry === null) {
             return false;
         }
+
+        if ($shippingCountry !== $billingCountry) {
+            return false;
+        }
+
         $allowedCountries = $this->client->getAccount()['configuration']['oney']['allowed_countries'];
 
         if (!in_array($shippingCountry, $allowedCountries, true) ||
-            !in_array($billingAddress, $allowedCountries, true)) {
+            !in_array($billingCountry, $allowedCountries, true)) {
             return false;
         }
 
