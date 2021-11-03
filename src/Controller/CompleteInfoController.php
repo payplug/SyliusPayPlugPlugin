@@ -100,6 +100,7 @@ final class CompleteInfoController extends AbstractController
 
     private function handleEmail(OrderInterface $order, string $email): void
     {
+        /** @var CustomerInterface|null $customer */
         $customer = $this->customerRepository->findOneBy(['email' => $email]);
 
         if ($customer instanceof CustomerInterface) {

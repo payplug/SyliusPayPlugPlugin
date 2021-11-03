@@ -98,5 +98,5 @@ Feature: Refunding order's Oney payment
         And I should be able to refund 1 "Red Arrow" products
         Then I wait 48 hours after the last refund of this order
         When For this order I decide to refund 1st "Red Arrow" product with "Oney" payment
-        Then this order refunded total should be "$10.00"
-        Then I should see an error message "The refund will be possible 48 hours after the last payment or refund transaction."
+        Then this order refunded total should be "$340.00"
+        And this order refunded total should be "$340.00"

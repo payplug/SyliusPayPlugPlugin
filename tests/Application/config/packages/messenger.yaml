@@ -1,6 +1,0 @@
-framework:
-    messenger:
-        default_bus: sylius_refund_plugin.event_bus
-        buses:
-            sylius_refund_plugin.event_bus: ~
-            sylius_invoicing_plugin.command_bus: ~
