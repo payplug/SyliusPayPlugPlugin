@@ -22,14 +22,6 @@ trait CustomerTrait
     public function getCards(): Collection
     {
         return $this->cards->filter(function (Card $card): bool {
-            $now = new \DateTime();
-            $now->setDate((int) $now->format('Y'), (int) $now->format('m'), 1);
-            $expires = \DateTime::createFromFormat('n/Y', $card->getExpirationMonth() . '/' . $card->getExpirationYear());
-
-            if ($expires < $now) {
-                return false;
-            }
-
             $secretKeyPrefix = \substr($card->getPaymentMethod()->getGatewayConfig()->getConfig()['secretKey'], 0, 7);
             if (($card->isLive() && $secretKeyPrefix === PayPlugApiClientInterface::LIVE_KEY_PREFIX) ||
                 (!$card->isLive() && $secretKeyPrefix === PayPlugApiClientInterface::TEST_KEY_PREFIX)) {

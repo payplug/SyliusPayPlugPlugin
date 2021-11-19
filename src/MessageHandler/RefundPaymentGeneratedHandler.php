@@ -24,6 +24,7 @@ use Sylius\Component\Core\Repository\PaymentRepositoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Sylius\RefundPlugin\Event\RefundPaymentGenerated;
+use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentTransitions;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -128,6 +129,11 @@ final class RefundPaymentGeneratedHandler
             $this->checkOneyRequirements($payment, $message);
 
             $this->processRefund($payment, $message);
+        } catch (InvalidRefundAmount $exception) {
+            $this->session->getFlashBag()->add('error', $exception->getMessage());
+            $this->logger->error($exception->getMessage());
+
+            throw new ApiRefundException($exception->getMessage(), $exception->getCode(), $exception);
         } catch (Throwable $throwable) {
             $this->logger->critical($throwable->getMessage());
 
@@ -196,7 +202,9 @@ final class RefundPaymentGeneratedHandler
 
         if ($payment->getMethod()->getGatewayConfig()->getFactoryName() === OneyGatewayFactory::FACTORY_NAME &&
             $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())) {
-            throw new ApiRefundException($this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours'));
+            throw InvalidRefundAmount::withValidationConstraint(
+                $this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours')
+            );
         }
     }
 }

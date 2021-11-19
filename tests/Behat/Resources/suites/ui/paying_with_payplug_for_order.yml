@@ -44,4 +44,4 @@ default:
 
                 - payplug_sylius_payplug_plugin.behat.context.ui.shop.checkout
             filters:
-                tags: "@paying_with_payplug_for_order && @ui"
+                tags: "@paying_with_payplug_for_order&&@ui"

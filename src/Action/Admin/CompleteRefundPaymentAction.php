@@ -78,7 +78,7 @@ final class CompleteRefundPaymentAction
         try {
             $this->messageBus->dispatch(new RefundPaymentGenerated(
                 $refundPayment->getId(),
-                $refundPayment->getOrderNumber(),
+                $refundPayment->getOrder()->getNumber() ?? '',
                 $refundPayment->getAmount(),
                 $refundPayment->getCurrencyCode(),
                 $refundPayment->getPaymentMethod()->getId(),

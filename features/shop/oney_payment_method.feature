@@ -10,7 +10,7 @@ Feature: Paying with Oney during checkout
         And there is a user "john@bitbag.pl" identified by "password123"
         And I changed my currency to "EUR"
         And the store has a payment method "PayPlug" with a code "payplug" and PayPlug payment gateway
-        And the store has a payment method "Oney" with a code "oney" and Oney payment gateway
+        And the store has a payment method "Oney" with a code "payplug_oney" and Oney payment gateway
         And the store ships everywhere for free
         And the store has "DHL" shipping method with "$0.00" fee
         And I am logged in as "john@bitbag.pl"
