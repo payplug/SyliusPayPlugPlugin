@@ -6,23 +6,25 @@ namespace PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation;
 
 use Payplug\OneySimulation;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 
 final class OneySimulationDataProvider implements OneySimulationDataProviderInterface
 {
-    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
-    private $oneyClient;
+    private PayPlugApiClientInterface $oneyClient;
+    private LoggerInterface $payplugLogger;
 
-    /** @var \Psr\Log\LoggerInterface */
-    private $payplugLogger;
+    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
 
     public function __construct(
         PayPlugApiClientInterface $oneyClient,
-        LoggerInterface $payplugLogger
+        LoggerInterface $payplugLogger,
+        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
     ) {
         $this->oneyClient = $oneyClient;
         $this->payplugLogger = $payplugLogger;
+        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     public function getForCart(OrderInterface $cart): array
@@ -32,10 +34,7 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
         $data = [
             'amount' => $cart->getTotal(),
             'country' => $country,
-            'operations' => [
-                'x3_with_fees',
-                'x4_with_fees',
-            ],
+            'operations' => $this->oneySupportedPaymentChoiceProvider->getSupportedPaymentChoices(),
         ];
         $this->payplugLogger->debug('[PayPlug] Call oney simulation with following data', $data);
 

@@ -6,6 +6,7 @@ parameters:
     excludes_analyse:
         # Makes PHPStan crash
         - ../src/DependencyInjection/Configuration.php
+        - ../src/Repository/PaymentMethodRepository.php
         - ../src/Migrations/
 
         # Test dependencies

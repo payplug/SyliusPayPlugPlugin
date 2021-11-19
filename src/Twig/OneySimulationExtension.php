@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface;
+use PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
@@ -27,22 +28,27 @@ final class OneySimulationExtension extends AbstractExtension
     /** @var \Sylius\Component\Core\Repository\OrderRepositoryInterface */
     private $orderRepository;
 
+    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
+
     public function __construct(
         CartContextInterface $cartContext,
         OneySimulationDataProviderInterface $oneySimulationDataProvider,
         RequestStack $requestStack,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
     ) {
         $this->cartContext = $cartContext;
         $this->oneySimulationDataProvider = $oneySimulationDataProvider;
         $this->requestStack = $requestStack;
         $this->orderRepository = $orderRepository;
+        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     public function getFunctions(): array
     {
         return [
             new TwigFunction('oney_simulation_data', [$this, 'getSimulationData']),
+            new TwigFunction('oney_supported_choices', [$this, 'getSupportedPaymentChoices']),
         ];
     }
 
@@ -55,7 +61,7 @@ final class OneySimulationExtension extends AbstractExtension
     {
         $currentRequest = $this->requestStack->getCurrentRequest();
 
-        if (!$currentRequest instanceof Request || $currentRequest->get('_route') !== 'sylius_shop_order_show') {
+        if (!$currentRequest instanceof Request || 'sylius_shop_order_show' !== $currentRequest->get('_route')) {
             /** @var OrderInterface $cart */
             $cart = $this->cartContext->getCart();
 
@@ -69,5 +75,10 @@ final class OneySimulationExtension extends AbstractExtension
         }
 
         return $order;
+    }
+
+    public function getSupportedPaymentChoices(): array
+    {
+        return $this->oneySupportedPaymentChoiceProvider->getSupportedPaymentChoices();
     }
 }

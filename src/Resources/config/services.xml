@@ -180,5 +180,15 @@
             <argument type="service" key="$payPlugApiClient" id="payplug_sylius_payplug_plugin.api_client.payplug" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider" />
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface"
+                class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepository"
+                decorates="sylius.repository.payment_method"
+                public="false"
+        >
+<!--            <argument type="service" id="sylius.repository.payment_method.inner"/>-->
+        </service>
+
     </services>
 </container>

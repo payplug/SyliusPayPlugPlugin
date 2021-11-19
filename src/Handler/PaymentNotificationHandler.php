@@ -89,7 +89,7 @@ class PaymentNotificationHandler
             'message' => $paymentResource->failure->message ?? '',
         ];
 
-        if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
+        if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
             $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
         }
 
@@ -125,7 +125,7 @@ class PaymentNotificationHandler
         }
 
         // Payment has been successfully made, but card was not saved
-        if ($paymentResource->__get('card')->id === null) {
+        if (null === $paymentResource->__get('card')->id) {
             $this->flashBag->add('info', 'payplug_sylius_payplug_plugin.warning.payment_success_no_card_saved');
 
             return;
@@ -168,15 +168,15 @@ class PaymentNotificationHandler
 
         // Oney is reviewing the payer’s file
         if ($paymentResource->__isset('payment_method') &&
-            $paymentResource->__get('payment_method') !== null &&
-            $paymentResource->__get('payment_method')['is_pending'] === true) {
+            null !== $paymentResource->__get('payment_method') &&
+            true === $paymentResource->__get('payment_method')['is_pending']) {
             return true;
         }
 
         $now = new DateTimeImmutable();
         if ($paymentResource->__isset('authorization') &&
             $paymentResource->__get('authorization') instanceof PaymentAuthorization &&
-            $paymentResource->__get('authorization')->__get('expires_at') !== null &&
+            null !== $paymentResource->__get('authorization')->__get('expires_at') &&
             $now < $now->setTimestamp($paymentResource->__get('authorization')->__get('expires_at'))) {
             return true;
         }
@@ -193,8 +193,8 @@ class PaymentNotificationHandler
         // Oney has reviewed the payer’s file and refused it
         if (!$paymentResource->is_paid &&
             $paymentResource->__isset('payment_method') &&
-            $paymentResource->__get('payment_method') !== null &&
-            $paymentResource->__get('payment_method')['is_pending'] === false &&
+            null !== $paymentResource->__get('payment_method') &&
+            false === $paymentResource->__get('payment_method')['is_pending'] &&
             \in_array($paymentResource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true)
         ) {
             return true;
