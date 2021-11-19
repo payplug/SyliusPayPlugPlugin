@@ -8,6 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -38,6 +39,18 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
             ])
+            ->add('fees_for', ChoiceType::class, [
+                'label' => 'Les frais sont : ',
+                'choices' => [
+                    'Répartis entre vous et le client' => 'client',
+                    'A votre charge' => 'merchant',
+                ],
+                'expanded' => true,
+                'validation_groups' => $validationGroups,
+                'constraints' => [
+                    new NotBlank([]),
+                ],
+            ])
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
                 $this->checkCreationRequirements(
                     OneyGatewayFactory::FACTORY_TITLE,
@@ -55,7 +68,7 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                         continue;
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();
-                    if ($baseCurrencyCode !== OneyGatewayFactory::BASE_CURRENCY_CODE) {
+                    if (OneyGatewayFactory::BASE_CURRENCY_CODE !== $baseCurrencyCode) {
                         $message = $this->translator->trans(
                             'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
                             [
