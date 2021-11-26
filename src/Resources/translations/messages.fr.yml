@@ -34,8 +34,11 @@ payplug_sylius_payplug_plugin:
         oney_transaction_less_than_forty_eight_hours: Le remboursement sera possible 48h après la dernière transaction de paiement ou de remboursement.
         or_pay_with_oney: Ou payez en
         pay: Paiement
-        3x_payment: Paiement en 3x
-        4x_payment: Paiement en 4x
+        without_fees: sans frais
+        oney_x3_with_fees_payment: Paiement en 3x
+        oney_x4_with_fees_payment: Paiement en 4x
+        oney_x3_without_fees_payment: Paiement en 3x sans frais
+        oney_x4_without_fees_payment: Paiement en 4x sans frais
         by_credit_cart: Par carte bancaire
         card_expires_on: "Expire le :"
         pay_with_another_card: Payer avec une autre carte

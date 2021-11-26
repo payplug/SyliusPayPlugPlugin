@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface;
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -49,6 +50,7 @@ final class OneySimulationExtension extends AbstractExtension
         return [
             new TwigFunction('oney_simulation_data', [$this, 'getSimulationData']),
             new TwigFunction('oney_supported_choices', [$this, 'getSupportedPaymentChoices']),
+            new TwigFunction('is_oney_without_fees', [$this, 'isPaymentChoiceWithoutFees']),
         ];
     }
 
@@ -80,5 +82,13 @@ final class OneySimulationExtension extends AbstractExtension
     public function getSupportedPaymentChoices(): array
     {
         return $this->oneySupportedPaymentChoiceProvider->getSupportedPaymentChoices();
+    }
+
+    public function isPaymentChoiceWithoutFees(): bool
+    {
+        return \count(\array_filter(
+            $this->getSupportedPaymentChoices(),
+            fn(string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true)
+        )) > 0;
     }
 }

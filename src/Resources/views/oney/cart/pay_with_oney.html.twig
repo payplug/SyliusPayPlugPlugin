@@ -1,14 +1,23 @@
 {% if is_oney_enabled() and can_show_mea() %}
-    {% set logo_name = '3x4x-alt.svg' %}
     {% set data = [] %}
+    {% set logo_disabled = '3x4x-alt.svg' %}
+    {% set logo_enabled = '3x4x.svg' %}
+    {% if is_oney_without_fees() %}
+        {% set logo_enabled = '3x4x-without-fees.svg' %}
+        {% set logo_disabled = '3x4x-without-fees-alt.svg' %}
+    {% endif %}
     {% if oney_cart_eligible() %}
-        {% set logo_name = '3x4x.svg' %}
+        {% set logo_name = logo_enabled %}
+        {% if is_oney_without_fees() %}
+            {% set logo_enabled = '3x4x-without-fees.svg' %}
+        {% endif %}
     {% else %}
         {% set data = oney_ineligible_reasons() %}
+        {% set logo_name = logo_disabled %}
     {% endif %}
     <div class="oney-info">
         <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" class="oney-logo" alt="oney-logo"/>
         <div class="ui inverted dimmer">
             <div class="ui loader"></div>
         </div>
