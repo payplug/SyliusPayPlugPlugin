@@ -71,6 +71,14 @@ payplug_sylius_payplug_plugin:
         invalid_cart_price: L’importo totale del tuo carrello deve essere compreso tra %min_amount% e %max_amount% per poter pagare con Oney.
         refund_minimum_amount_requirement_not_met: L’importo da rimborsare non può essere inferiore a 0.10€
         oney_unavailable: La simulazione del tuo piano di finanziamento non è per il momento disponibile. Queste informazioni ti saranno fornite al momento del pagamento.
+        oney_gateway_config:
+            info: |
+                Permetti ai tuoi clienti di pagare i loro acquisti in 3x, 4x a partire da 100€ fino a 3000€.
+                <a href="%link%" target="_blank">Per saperne di più</a>.
+            fees_for:
+                title: 'Le spece sono :'
+                client: Spartite tra te e il tuo cliente
+                merchant: Al tuo carico
     form:
         oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
         complete_info:
