@@ -1,10 +1,44 @@
+{% block _sylius_payment_method_gatewayConfig_factoryName_row %}
+    <div class="field">
+        <div class="ui message positive">
+            <div class="content">
+                <div class="header">{{ ('payplug_sylius_payplug_plugin.ui.oney_gateway_config.info')|trans({'%link%': 'https://github.com/paylpug/SyliusPayPlugPlugin'})|raw }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="{% if required %}required {% endif %}{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
+        {{- form_row(form) -}}
+    </div>
+{% endblock %}
+
 {% block _sylius_payment_method_gatewayConfig_config_secretKey_row %}
+    </div>{# close previous <div.two.fields> to avoid 2 columns #}
     <div class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
         {{- form_label(form) -}}
         {{- form_widget(form) -}}
         <span style="font-size: 0.8rem; font-style: italic">
             {{- form_help(form) -}}
         </span>
+        {{- form_errors(form) -}}
+    </div>
+    <div class="required field">
+{% endblock %}
+
+{% block _sylius_payment_method_gatewayConfig_config_fees_for_row %}
+    <div {{ block('widget_container_attributes') }}>
+        <div class="inline fields">
+            <div class="field {% if required %}required {% endif %}">
+                {{ form_label(form) }}
+            </div>
+            {%- for child in form %}
+                <div class="field">
+                    <div class="ui radio checkbox">
+                        {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
+                        {{- form_widget(child, sylius_test_form_attribute('option')) -}}
+                    </div>
+                </div>
+            {% endfor -%}
+        </div>
         {{- form_errors(form) -}}
     </div>
 {% endblock %}
@@ -71,9 +105,9 @@
                 >
                 <label for="oney_choice_{{ keyChoice }}" class="oney-payment-choice__label">
                     <span class="oney-payment-choice__header">
-                        <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ choice.label ~ '.svg') }}">
+                        <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ choice.value ~ '.svg') }}">
                         <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
-                        <p>{{ ('payplug_sylius_payplug_plugin.ui.' ~ choice.label ~ '_payment')|trans }}</p>
+                        <p>{{ ('payplug_sylius_payplug_plugin.ui.' ~ choice.value ~ '_payment')|trans }}</p>
                     </span>
                     {% if data is not empty %}
                         <span class="oney-payment-choice__content">

@@ -73,6 +73,14 @@ payplug_sylius_payplug_plugin:
         invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
         refund_minimum_amount_requirement_not_met: Le montant à rembourser doit être d'au moins 0.10€
         oney_unavailable: La simulation de votre échéancier est temporairement indisponible. Vous retrouverez cette information à l'étape du paiement.
+        oney_gateway_config:
+            info: |
+                Permettez à vos clients d’échelonner le paiement de leurs commandes en 3x, 4x à partir de 100€ jusqu’à 3000€.
+                <a href="%link%" target="_blank">En savoir plus</a>.
+            fees_for:
+                title: 'Les frais sont :'
+                client: Répartis entre vous et le client
+                merchant: À votre charge
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:

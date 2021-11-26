@@ -36,14 +36,14 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                     new IsPayPlugSecretKeyValid(),
                     new IsOneyEnabled(),
                 ],
-                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
+                'help' => 'payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal',
                 'help_html' => true,
             ])
             ->add('fees_for', ChoiceType::class, [
-                'label' => 'Les frais sont : ',
+                'label' => 'payplug_sylius_payplug_plugin.ui.oney_gateway_config.fees_for.title',
                 'choices' => [
-                    'Répartis entre vous et le client' => 'client',
-                    'A votre charge' => 'merchant',
+                    'payplug_sylius_payplug_plugin.ui.oney_gateway_config.fees_for.client' => 'client',
+                    'payplug_sylius_payplug_plugin.ui.oney_gateway_config.fees_for.merchant' => 'merchant',
                 ],
                 'expanded' => true,
                 'validation_groups' => $validationGroups,
