@@ -19,7 +19,8 @@
     &__item {
         flex: 1 1 auto;
 
-        &--oney_x3_with_fees {
+        &--oney_x3_with_fees,
+        &--oney_x3_without_fees {
             margin-right: 1em;
         }
 
@@ -76,6 +77,10 @@
                 margin-top: auto !important;
                 border: none;
                 margin-bottom: 0 !important;
+            }
+
+            &.oney-without-fees-financing {
+                display: inline-block;
             }
         }
 
@@ -241,6 +246,10 @@
                 &:first-of-type {
                     border-right: 0;
                 }
+
+                > .oney-payment__image {
+                    max-width: 120px
+                }
             }
         }
 
@@ -261,7 +270,8 @@
                 border-top-left-radius: 0;
             }
 
-            &--oney_x3_with_fees {
+            &--oney_x3_with_fees,
+            &--oney_x3_without_fees {
                 margin-bottom: 1rem;
                 margin-right: 0;
                 display: block;
