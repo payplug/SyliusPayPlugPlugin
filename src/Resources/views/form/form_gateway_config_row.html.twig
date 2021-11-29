@@ -1,11 +1,13 @@
 {% block _sylius_payment_method_gatewayConfig_factoryName_row %}
-    <div class="field">
-        <div class="ui message positive">
-            <div class="content">
-                <div class="header">{{ ('payplug_sylius_payplug_plugin.ui.oney_gateway_config.info')|trans({'%link%': 'https://github.com/paylpug/SyliusPayPlugPlugin'})|raw }}</div>
+    {% if constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') in form.vars.value %}
+        <div class="field">
+            <div class="ui message positive">
+                <div class="content">
+                    <div class="header">{{ ('payplug_sylius_payplug_plugin.ui.oney_gateway_config.info')|trans({'%link%': 'https://github.com/paylpug/SyliusPayPlugPlugin'})|raw }}</div>
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
     <div class="{% if required %}required {% endif %}{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
         {{- form_row(form) -}}
     </div>
