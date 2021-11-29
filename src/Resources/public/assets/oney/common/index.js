@@ -1,1 +1,1 @@
-!function(){"use strict";WebFont.load({google:{families:["Poppins:400,600"]}})}();
+WebFont.load({google:{families:["Poppins:400,600"]}});
