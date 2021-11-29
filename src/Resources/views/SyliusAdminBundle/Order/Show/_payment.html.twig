@@ -3,7 +3,7 @@
 
 <div class="item">
     <div class="right floated content">
-        {{ label.default(('sylius.ui.'~payment.state)|trans) }}
+        {{ label.default(('sylius.ui.' ~ payment.state)|trans) }}
     </div>
     <i class="large payment icon"></i>
     <div class="content">
@@ -14,26 +14,30 @@
             {{ money.format(payment.amount, payment.order.currencyCode) }}
         </div>
     </div>
+
     {% if (payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayPlugGatewayFactory::FACTORY_NAME')
-                or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME'))
-                and payment.details.payment_id is defined %}
+        or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME'))
+        and payment.details.payment_id is defined %}
         <div class="ui" style="word-break: break-word">
             {{ 'payplug_sylius_payplug_plugin.ui.payplug_id'|trans({'%paymentId%': payment.details.payment_id}) }}
-                {% if payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
-                    <br />{{ 'payplug_sylius_payplug_plugin.ui.oney'|trans }} {% if payment.details.payment_method is defined %}({{ payment.details.payment_method }}){% endif %}
+            {% if payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+                <br/>{{ 'payplug_sylius_payplug_plugin.ui.oney'|trans }}
+                {% if payment.details.payment_method is defined %}
+                    ({{ 'payplug_sylius_payplug_plugin.ui.' ~ payment.details.payment_method ~ '_payment'|trans }})
                 {% endif %}
+            {% endif %}
             {% if payment.details.is_live is defined and payment.details.is_live == false %}
-                <br /><i>{{ 'payplug_sylius_payplug_plugin.ui.test_mode'|trans }}</i>
+                <br/><i>{{ 'payplug_sylius_payplug_plugin.ui.test_mode'|trans }}</i>
             {% endif %}
             {% if payment.details.failure is defined and payment.details.failure.message is defined %}
-                <br /><i>{{ payment.details.failure.message }}</i>
+                <br/><i>{{ payment.details.failure.message }}</i>
             {% endif %}
         </div>
     {% endif %}
     {% if sm_can(payment, 'complete', 'sylius_payment') %}
         <div class="ui segment">
             <form action="{{ path('sylius_admin_order_payment_complete', {'orderId': order.id, 'id': payment.id}) }}" method="post" novalidate>
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token(payment.id) }}" />
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token(payment.id) }}"/>
                 <input type="hidden" name="_method" value="PUT">
                 <button type="submit" class="ui icon labeled tiny blue fluid loadable button"><i class="check icon"></i> {{ 'sylius.ui.complete'|trans }}</button>
             </form>
