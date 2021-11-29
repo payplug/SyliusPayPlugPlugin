@@ -52,7 +52,7 @@
         {% endfor %}
         <div class="oney-popin__footer">
             <p>
-                {{ 'payplug_sylius_payplug_plugin.ui.popin_legal_mention'|trans({
+                {{ (('payplug_sylius_payplug_plugin.ui.popin_legal_mention') ~ (is_oney_without_fees() ? '_without_fees' : ''))|trans({
                     '%min_amount%': money.convertAndFormat(data['min_amount']),
                     '%max_amount%': money.convertAndFormat(data['max_amount']),
                 })|raw }}

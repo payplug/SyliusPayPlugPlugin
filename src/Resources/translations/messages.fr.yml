@@ -72,6 +72,23 @@ payplug_sylius_payplug_plugin:
                 Correspondance : CS 60 006 - 59895
                 Lille Cedex - www.oney.fr
             </small>
+        popin_legal_mention_without_fees: |
+            <small>
+                Offre de financement sans assurance avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
         too_much_quantity: Votre panier doit contenir moins de %max_articles% articles pour pouvoir payer avec Oney.
         invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
         refund_minimum_amount_requirement_not_met: Le montant à rembourser doit être d'au moins 0.10€
