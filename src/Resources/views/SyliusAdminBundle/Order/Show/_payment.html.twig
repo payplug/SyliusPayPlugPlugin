@@ -21,9 +21,8 @@
         <div class="ui" style="word-break: break-word">
             {{ 'payplug_sylius_payplug_plugin.ui.payplug_id'|trans({'%paymentId%': payment.details.payment_id}) }}
             {% if payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
-                <br/>{{ 'payplug_sylius_payplug_plugin.ui.oney'|trans }}
                 {% if payment.details.payment_method is defined %}
-                    ({{ 'payplug_sylius_payplug_plugin.ui.' ~ payment.details.payment_method ~ '_payment'|trans }})
+                    <br/>{{ ('payplug_sylius_payplug_plugin.ui.' ~ payment.details.payment_method ~ '_payment')|trans }}
                 {% endif %}
             {% endif %}
             {% if payment.details.is_live is defined and payment.details.is_live == false %}
