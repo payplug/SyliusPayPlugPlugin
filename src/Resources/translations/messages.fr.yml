@@ -1,4 +1,10 @@
 payplug_sylius_payplug_plugin:
+    admin:
+        ui:
+            oney_x3_with_fees_payment: Oney 3x
+            oney_x4_with_fees_payment: Oney 4x
+            oney_x3_without_fees_payment: Oney 3x Sans Frais
+            oney_x4_without_fees_payment: Oney 4x Sans Frais
     ui:
         account:
             saved_cards:
