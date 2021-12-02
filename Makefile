@@ -32,7 +32,7 @@ sylius: sylius-standard update-dependencies install-plugin install-sylius
 .PHONY: sylius
 
 sylius-standard:
-	${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}"
+	SYMFONY_REQUIRE=${SYMFONY_VERSION}.* ${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}"
 
 update-dependencies:
 	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
