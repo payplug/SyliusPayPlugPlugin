@@ -98,7 +98,7 @@ jobs:
                   php-version: "${{ matrix.php }}"
                   ini-values: date.timezone=UTC
                   extensions: intl
-                  tools: symfony
+                  tools: symfony, flex
                   coverage: none
 
             - name: Setup Node
@@ -131,7 +131,8 @@ jobs:
 
             - name: Composer - Install Sylius-Standard
               run: composer create-project --no-progress sylius/sylius-standard sylius "${{ matrix.sylius }}"
-
+              env:
+                SYMFONY_REQUIRE: ${{ matrix.symfony }}
             - name: Composer - Add path repository
               working-directory: ./sylius
               run: |
@@ -151,12 +152,6 @@ jobs:
             - name: Composer - Install plugin
               working-directory: ./sylius
               run: composer req "${{ env.package-name }}:*" --prefer-source --no-scripts
-
-            - name: Sylius - Update dependencies # need to update sylius version
-              working-directory: ./sylius
-              run: |
-                  composer update --no-progress --no-scripts --prefer-dist
-                  composer update --no-suggest -n -o
 
             - name: Sylius - Run Symfony flex
               working-directory: ./sylius
@@ -183,6 +178,12 @@ jobs:
               working-directory: ./sylius
               run: |
                   cp vendor/${{ env.package-name }}/tests/Application/config/routes.yaml config/routes.yaml
+
+            - name: Sylius - Get services from Plugin
+              working-directory: ./sylius
+              run: |
+                  cp vendor/${{ env.package-name }}/tests/Application/config/services_payplug.yaml config/services_payplug.yaml
+                  cp vendor/${{ env.package-name }}/tests/Application/config/packages/sylius_payplug.yaml config/packages/sylius_payplug.yaml
 
             - name: Sylius - Configure for RefundPlugin # see https://github.com/Sylius/RefundPlugin#installation
               working-directory: ./sylius
