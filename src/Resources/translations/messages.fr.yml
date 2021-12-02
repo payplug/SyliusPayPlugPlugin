@@ -41,10 +41,10 @@ payplug_sylius_payplug_plugin:
         or_pay_with_oney: Ou payez en
         pay: Paiement
         without_fees: sans frais
-        oney_x3_with_fees_payment: Oney 3x
-        oney_x4_with_fees_payment: Oney 4x
-        oney_x3_without_fees_payment: Oney 3x Sans Frais
-        oney_x4_without_fees_payment: Oney 4x Sans Frais
+        oney_x3_with_fees_payment: Paiement en 3x
+        oney_x4_with_fees_payment: Paiement en 4x
+        oney_x3_without_fees_payment: Paiement en 3x sans frais
+        oney_x4_without_fees_payment: Paiement en 4x sans frais
         by_credit_cart: Par carte bancaire
         card_expires_on: "Expire le :"
         pay_with_another_card: Payer avec une autre carte
