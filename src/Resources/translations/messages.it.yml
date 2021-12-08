@@ -79,7 +79,7 @@ payplug_sylius_payplug_plugin:
         oney_unavailable: La simulazione del tuo piano di finanziamento non è per il momento disponibile. Queste informazioni ti saranno fornite al momento del pagamento.
         oney_gateway_config:
             info: |
-                Permetti ai tuoi clienti di pagare i loro acquisti in 3x, 4x a partire da 100€ fino a 3000€.
+                Permetti ai tuoi clienti di scaglionare il pagamento dei loro ordini in 3x, 4x a partire da 100€ e fino a 3000€.
                 <a href="%link%" target="_blank">Per saperne di più</a>.
             fees_for:
                 title: 'Le spece sono :'
