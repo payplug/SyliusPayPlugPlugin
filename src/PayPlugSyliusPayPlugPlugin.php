@@ -9,7 +9,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 final class PayPlugSyliusPayPlugPlugin extends Bundle
 {
-    public const VERSION = '1.2.0';
+    public const VERSION = '1.3.0';
 
     use SyliusPluginTrait;
 }
