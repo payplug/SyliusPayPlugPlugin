@@ -296,20 +296,23 @@ final class PayPlugApiMocker
         );
         $mock->shouldReceive([
             'getPermissions' => ['can_use_oney' => true],
-            'getAccount' => ['configuration' => [
-                'oney' => [
-                    'min_amounts' => [
-                        'EUR' => 10000,
-                    ],
-                    'max_amounts' => [
-                        'EUR' => 300000,
-                    ],
-                    'allowed_countries' => [
-                        'FR',
-                        'US',
+            'getAccount' => [
+                'country' => 'FR',
+                'configuration' => [
+                    'oney' => [
+                        'min_amounts' => [
+                            'EUR' => 10000,
+                        ],
+                        'max_amounts' => [
+                            'EUR' => 300000,
+                        ],
+                        'allowed_countries' => [
+                            'FR',
+                            'US',
+                        ],
                     ],
                 ],
-            ]],
+            ],
         ]);
     }
 

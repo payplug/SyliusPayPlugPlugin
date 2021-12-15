@@ -56,4 +56,4 @@ default:
                 - payplug_sylius_payplug_plugin.behat.context.ui.admin.refund
                 - Tests\Sylius\RefundPlugin\Behat\Context\Ui\RefundingContext
             filters:
-                tags: "@refunding_payplug_payment && @ui"
+                tags: "@refunding_payplug_payment&&@ui"

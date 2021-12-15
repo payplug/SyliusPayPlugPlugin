@@ -18,4 +18,4 @@ default:
                 - payplug_sylius_payplug_plugin.behat.context.setup.payplug
 
             filters:
-                tags: "@update_payment_state && @cli"
+                tags: "@update_payment_state&&@cli"

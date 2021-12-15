@@ -88,7 +88,7 @@
             <argument type="service" id="session" />
             <argument type="service" id="sylius.repository.order" />
             <argument type="service" id="translator.default" />
-            <tag name="messenger.message_handler" bus="sylius_refund_plugin.event_bus" />
+            <tag name="messenger.message_handler" bus="sylius.event_bus" />
         </service>
 
         <service
@@ -121,7 +121,7 @@
             <argument type="service" id="sylius.repository.order" />
             <argument type="service" id="Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplier" />
             <argument type="service" id="router" />
-            <argument type="service" id="sylius_refund_plugin.event_bus" />
+            <argument type="service" id="sylius.event_bus" />
             <argument type="service" id="Sylius\RefundPlugin\Provider\RelatedPaymentIdProviderInterface" />
             <argument type="service" id="translator"/>
 
@@ -129,7 +129,7 @@
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction">
-            <argument type="service" id="sylius_refund_plugin.command_bus" />
+            <argument type="service" id="sylius.command_bus" />
             <argument type="service" id="session" />
             <argument type="service" id="router" />
             <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator" />
@@ -145,11 +145,6 @@
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider.inner"/>
         </service>
 
-
-        <service id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface" class="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator">
-            <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator"/>
-        </service>
-
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Creator\RefundUnitsCommandCreatorDecorator"
                 decorates="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator"
@@ -157,7 +152,6 @@
                 public="false"
         >
             <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator.inner"/>
-            <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator"/>
         </service>
 
         <service
@@ -175,7 +169,7 @@
         >
             <argument type="service" id="payplug.repository.payplug_refund_history" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
-            <argument type="service" id="sylius_refund_plugin.command_bus" />
+            <argument type="service" id="sylius.command_bus" />
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\EventListener\AccountMenuListener">
