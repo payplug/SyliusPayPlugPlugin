@@ -15,3 +15,65 @@
 6. Execute the new migration
 
 `php bin/console doctrine:migration:migrate`
+
+# Upgrading to 1.2.0
+
+Add Traits for Customer and PaymentMethod entities
+
+1. `App\Entity\Customer\Customer`
+
+
+   ```php
+   <?php
+
+   declare(strict_types=1);
+
+   namespace App\Entity\Customer;
+
+   use Doctrine\ORM\Mapping as ORM;
+   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
+   use Sylius\Component\Core\Model\Customer as BaseCustomer;
+
+   /**
+   * @ORM\Entity
+   * @ORM\Table(name="sylius_customer")
+   */
+   class Customer extends BaseCustomer
+   {
+      use CustomerTrait;
+   }
+   ``` 
+
+2. `App\Entity\Payment\PaymentMethod`
+
+
+   ```php
+   <?php
+   
+   declare(strict_types=1);
+   
+   namespace App\Entity\Payment;
+   
+   use Doctrine\ORM\Mapping as ORM;
+   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
+   use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
+   use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
+   
+   /**
+    * @ORM\Entity
+    * @ORM\Table(name="sylius_payment_method")
+    */
+   class PaymentMethod extends BasePaymentMethod
+   {
+       use PaymentMethodTrait;
+   
+       protected function createTranslation(): PaymentMethodTranslationInterface
+       {
+           return new PaymentMethodTranslation();
+       }
+   }
+   ``` 
+
+Run the migration migrate utility to keep the database up to date
+
+`php bin/console doctrine:migration:migrate`
