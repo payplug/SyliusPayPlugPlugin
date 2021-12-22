@@ -46,6 +46,7 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.form.one_click_help'),
                 'help_html' => true,
+                'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
                 $data = $event->getData();
