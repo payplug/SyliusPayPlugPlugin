@@ -32,7 +32,11 @@
         <a class="header">
             {% if method.gatewayConfig.factoryName == oneyFactoryName %}
                 <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
-                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" alt="oney-logo"/>
+                    {% if ((form.parent.parent.oney_payment_choice.vars.choices|last).value|split('oney_')|last) not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
+                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" class="oney-logo" alt="Oney"/>
+                    {% else %}
+                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-without-fees.svg') }}" class="oney-logo" alt="Oney Sans Frais"/>
+                    {% endif %}
                 </label>
             {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
                 {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}

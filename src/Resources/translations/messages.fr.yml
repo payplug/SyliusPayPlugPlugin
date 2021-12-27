@@ -1,4 +1,10 @@
 payplug_sylius_payplug_plugin:
+    admin:
+        ui:
+            oney_x3_with_fees_payment: Oney 3x
+            oney_x4_with_fees_payment: Oney 4x
+            oney_x3_without_fees_payment: Oney 3x Sans Frais
+            oney_x4_without_fees_payment: Oney 4x Sans Frais
     ui:
         account:
             saved_cards:
@@ -34,8 +40,11 @@ payplug_sylius_payplug_plugin:
         oney_transaction_less_than_forty_eight_hours: Le remboursement sera possible 48h après la dernière transaction de paiement ou de remboursement.
         or_pay_with_oney: Ou payez en
         pay: Paiement
-        3x_payment: Paiement en 3x
-        4x_payment: Paiement en 4x
+        without_fees: sans frais
+        oney_x3_with_fees_payment: Paiement en 3x
+        oney_x4_with_fees_payment: Paiement en 4x
+        oney_x3_without_fees_payment: Paiement en 3x sans frais
+        oney_x4_without_fees_payment: Paiement en 4x sans frais
         by_credit_cart: Par carte bancaire
         card_expires_on: "Expire le :"
         pay_with_another_card: Payer avec une autre carte
@@ -69,10 +78,35 @@ payplug_sylius_payplug_plugin:
                 Correspondance : CS 60 006 - 59895
                 Lille Cedex - www.oney.fr
             </small>
+        popin_legal_mention_without_fees: |
+            <small>
+                Offre de financement sans assurance avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
         too_much_quantity: Votre panier doit contenir moins de %max_articles% articles pour pouvoir payer avec Oney.
         invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
         refund_minimum_amount_requirement_not_met: Le montant à rembourser doit être d'au moins 0.10€
         oney_unavailable: La simulation de votre échéancier est temporairement indisponible. Vous retrouverez cette information à l'étape du paiement.
+        oney_gateway_config:
+            info: |
+                Permettez à vos clients d’échelonner le paiement de leurs commandes en 3x, 4x à partir de 100€ jusqu’à 3000€.
+                <a href="%link%" target="_blank">En savoir plus</a>.
+            fees_for:
+                title: 'Les frais sont :'
+                client: Répartis entre vous et le client
+                merchant: À votre charge
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:

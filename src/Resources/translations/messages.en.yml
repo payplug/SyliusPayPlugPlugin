@@ -1,4 +1,10 @@
 payplug_sylius_payplug_plugin:
+    admin:
+        ui:
+            oney_x3_with_fees_payment: Oney 3x
+            oney_x4_with_fees_payment: Oney 4x
+            oney_x3_without_fees_payment: Oney 3x Without Fees
+            oney_x4_without_fees_payment: Oney 4x Without Fees
     ui:
         account:
             saved_cards:
@@ -71,6 +77,14 @@ payplug_sylius_payplug_plugin:
         invalid_cart_price: To pay with Oney, the total amount of your cart must be between %min_amount% and %max_amount%.
         refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least €0.10
         oney_unavailable: Your payment schedule simulation is temporarily unavailable. You will find this information at the payment stage.
+        oney_gateway_config:
+            info: |
+                Allow customers to spread out payments over 3 or 4 installments from 100€ to 3000€.
+                <a href="%link%" target="_blank">Learn more</a>.
+            fees_for:
+                title: 'Fees for:'
+                client: Beetween customer and merchant
+                merchant: At your expense
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
