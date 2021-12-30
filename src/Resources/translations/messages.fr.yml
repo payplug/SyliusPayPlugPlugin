@@ -105,7 +105,7 @@ payplug_sylius_payplug_plugin:
                 <a href="%link%" target="_blank">En savoir plus</a>.
             fees_for:
                 title: 'Les frais sont :'
-                client: Répartis entre vous et le client
+                client: Répartis entre vous et vos clients
                 merchant: À votre charge
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug

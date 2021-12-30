@@ -82,9 +82,9 @@ payplug_sylius_payplug_plugin:
                 Permetti ai tuoi clienti di scaglionare il pagamento dei loro ordini in 3x, 4x a partire da 100€ e fino a 3000€.
                 <a href="%link%" target="_blank">Per saperne di più</a>.
             fees_for:
-                title: 'Le spece sono :'
-                client: Spartite tra te e il tuo cliente
-                merchant: Al tuo carico
+                title: 'Le spese sono:'
+                client: Ripartite tra te e i tuoi clienti
+                merchant: A tuo carico
     form:
         oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
         complete_info:
