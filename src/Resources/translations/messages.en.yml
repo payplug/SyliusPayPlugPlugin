@@ -82,9 +82,9 @@ payplug_sylius_payplug_plugin:
                 Allow customers to spread out payments over 3 or 4 installments from 100€ to 3000€.
                 <a href="%link%" target="_blank">Learn more</a>.
             fees_for:
-                title: 'Fees for:'
-                client: Beetween customer and merchant
-                merchant: At your expense
+                title: 'The fees are:'
+                client: Split between you and your customers
+                merchant: For you
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
