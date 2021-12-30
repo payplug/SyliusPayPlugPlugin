@@ -42,6 +42,10 @@ payplug_sylius_payplug_plugin:
         pay: Pagamento
         3x_payment: Pagamento in 3x
         4x_payment: Pagamento in 4x
+        oney_x3_with_fees_payment: Pagamento in 3x
+        oney_x4_with_fees_payment: Pagamento in 4x
+        oney_x3_without_fees_payment: Pagamento in 3x senza nessuna commissione
+        oney_x4_without_fees_payment: Pagamento in 4x senza nessuna commissione
         by_credit_cart: Con carta di credito
         cancel: Annulla
         popin_close: Chiudi
