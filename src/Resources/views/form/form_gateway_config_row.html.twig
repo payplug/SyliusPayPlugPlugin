@@ -43,6 +43,11 @@
         </div>
         {{- form_errors(form) -}}
     </div>
+    <style>
+        {{ '#' ~ form.vars.id }} .ui.radio.checkbox input:checked ~ label:after {
+            background-color: #1abb9c;
+        }
+    </style>
 {% endblock %}
 
 {% block _sylius_payment_method_gatewayConfig_config_oneClick_row %}
