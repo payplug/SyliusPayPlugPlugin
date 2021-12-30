@@ -84,7 +84,7 @@ payplug_sylius_payplug_plugin:
         oney_gateway_config:
             info: |
                 Allow customers to spread out payments over 3 or 4 installments from 100€ to 3000€.
-                <a href="%link%" target="_blank">Learn more</a>.
+                <a href="%link%" target="_blank">Learn more</a>
             fees_for:
                 title: 'The fees are:'
                 client: Split between you and your customers
