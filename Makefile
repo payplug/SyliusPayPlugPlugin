@@ -45,6 +45,7 @@ endif
 ifeq ($(SYLIUS_VERSION), 1.8.0)
 	${COMPOSER} update --no-progress --no-scripts --prefer-dist -n
 endif
+	${COMPOSER} require symfony/asset --no-scripts --no-update
 	${COMPOSER} update --no-progress -n
 
 install-plugin:
