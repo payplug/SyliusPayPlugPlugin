@@ -197,6 +197,12 @@ jobs:
                   name: logs
                   path: ./tests/Application/etc/build
 
+            - uses: actions/upload-artifact@v2.1.4
+              if: failure()
+              with:
+                  name: config
+                  path: ./tests/Application/config
+
         services:
             mariadb:
                 image: mariadb:10.4.11
