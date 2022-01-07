@@ -20,17 +20,8 @@ class OneySupportedPaymentChoiceProvider
 
     public function getSupportedPaymentChoices(bool $useOneyPrefix = false): array
     {
-        try{
-            $paymentMethod = $this->paymentMethodRepository->findOneByGatewayName(OneyGatewayFactory::FACTORY_NAME);
-
-            if (!$paymentMethod instanceof PaymentMethodInterface) {
-                return [];
-            }
-
-            /** @var GatewayConfigInterface $gateway */
-            $gateway = $paymentMethod->getGatewayConfig();
-
-            $config = $gateway->getConfig();
+        try {
+            $config = $this->getPaymentGatewayConfig();
 
             $values = OneyGatewayFactory::PAYMENT_CHOICES_FEES_FOR[$config['fees_for'] ?? OneyGatewayFactory::CLIENT_FEES];
 
@@ -39,12 +30,31 @@ class OneySupportedPaymentChoiceProvider
             }
 
             $values = array_map(function ($data): string {
-                return 'oney_' . $data;
+                return 'oney_'.$data;
             }, $values);
 
             return $values;
-        } catch(\Exception $exception) {
+        } catch (\Exception $exception) {
             return [];
         }
+    }
+
+    public function getFeesFor(): string
+    {
+        return $this->getPaymentGatewayConfig()['fees_for'] ?? '';
+    }
+
+    private function getPaymentGatewayConfig(): array
+    {
+        $paymentMethod = $this->paymentMethodRepository->findOneByGatewayName(OneyGatewayFactory::FACTORY_NAME);
+
+        if (!$paymentMethod instanceof PaymentMethodInterface) {
+            return [];
+        }
+
+        /** @var GatewayConfigInterface $gateway */
+        $gateway = $paymentMethod->getGatewayConfig();
+
+        return $gateway->getConfig();
     }
 }

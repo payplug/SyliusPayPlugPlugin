@@ -42,6 +42,10 @@ payplug_sylius_payplug_plugin:
         pay: Payment
         3x_payment: Pay in 3 installments
         4x_payment: Pay in 4 installments
+        oney_x3_with_fees_payment: Payment in 3x
+        oney_x4_with_fees_payment: Payment in 4x
+        oney_x3_without_fees_payment: Payment in 3x without fees
+        oney_x4_without_fees_payment: Payment in 4x without fees
         by_credit_cart: By credit card
         cancel: Cancel
         popin_close: Close
@@ -80,11 +84,11 @@ payplug_sylius_payplug_plugin:
         oney_gateway_config:
             info: |
                 Allow customers to spread out payments over 3 or 4 installments from 100€ to 3000€.
-                <a href="%link%" target="_blank">Learn more</a>.
+                <a href="%link%" target="_blank">Learn more</a>
             fees_for:
-                title: 'Fees for:'
-                client: Beetween customer and merchant
-                merchant: At your expense
+                title: 'The fees are:'
+                client: Split between you and your customers
+                merchant: For you
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:

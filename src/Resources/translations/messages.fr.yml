@@ -102,10 +102,10 @@ payplug_sylius_payplug_plugin:
         oney_gateway_config:
             info: |
                 Permettez à vos clients d’échelonner le paiement de leurs commandes en 3x, 4x à partir de 100€ jusqu’à 3000€.
-                <a href="%link%" target="_blank">En savoir plus</a>.
+                <a href="%link%" target="_blank">En savoir plus</a>
             fees_for:
                 title: 'Les frais sont :'
-                client: Répartis entre vous et le client
+                client: Répartis entre vous et vos clients
                 merchant: À votre charge
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
