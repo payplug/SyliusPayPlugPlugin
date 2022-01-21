@@ -33,6 +33,6 @@ final class GetCurrentRouteExtension extends AbstractExtension
             return '';
         }
 
-        return $this->request->get('_route');
+        return $this->request->get('_route', '');
     }
 }
