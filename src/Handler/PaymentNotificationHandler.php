@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Handler;
 
 use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
@@ -19,6 +20,7 @@ use Sylius\Component\Core\Repository\CustomerRepositoryInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\Lock\LockFactory;
 
 class PaymentNotificationHandler
 {
@@ -37,23 +39,42 @@ class PaymentNotificationHandler
     /** @var \Sylius\Component\Core\Repository\CustomerRepositoryInterface */
     private $customerRepository;
 
+    private EntityManagerInterface $entityManager;
+
+    private LockFactory $lockFactory;
+
     public function __construct(
         LoggerInterface $logger,
         RepositoryInterface $payplugCardRepository,
         FactoryInterface $payplugCardFactory,
         CustomerRepositoryInterface $customerRepository,
-        FlashBagInterface $flashBag
+        FlashBagInterface $flashBag,
+        EntityManagerInterface $entityManager,
+        LockFactory $lockFactory
     ) {
         $this->logger = $logger;
         $this->payplugCardRepository = $payplugCardRepository;
         $this->payplugCardFactory = $payplugCardFactory;
         $this->flashBag = $flashBag;
         $this->customerRepository = $customerRepository;
+        $this->entityManager = $entityManager;
+        $this->lockFactory = $lockFactory;
     }
 
     public function treat(Generic $request, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
     {
         if (!$paymentResource instanceof Payment) {
+            return;
+        }
+
+        $lock = $this->lockFactory->createLock('payment_'.$paymentResource->id);
+        $lock->acquire(true);
+
+        $this->entityManager->refresh($request->getFirstModel());
+
+        if (PayPlugApiClientInterface::STATUS_CREATED === $request->getFirstModel()->getDetails()) {
+            $lock->release();
+
             return;
         }
 
@@ -63,11 +84,15 @@ class PaymentNotificationHandler
 
             $this->saveCard($request->getFirstModel(), $paymentResource);
 
+            $lock->release();
+
             return;
         }
 
         if ($this->isResourceIsAuthorized($paymentResource)) {
             $details['status'] = PayPlugApiClientInterface::STATUS_AUTHORIZED;
+
+            $lock->release();
 
             return;
         }
@@ -79,6 +104,8 @@ class PaymentNotificationHandler
                 'code' => $paymentResource->failure->code ?? '',
                 'message' => $paymentResource->failure->message ?? '',
             ];
+
+            $lock->release();
 
             return;
         }
@@ -94,6 +121,7 @@ class PaymentNotificationHandler
         }
 
         $details['status'] = PayPlugApiClientInterface::FAILED;
+        $lock->release();
     }
 
     private function saveCard(PaymentInterface $payment, IVerifiableAPIResource $paymentResource): void
