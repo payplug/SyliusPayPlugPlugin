@@ -44,6 +44,8 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
 
     public function execute($request): void
     {
+        // Put notification asleep to prevent double processing while user is redirected manually
+        sleep(10);
         $details = ArrayObject::ensureArrayObject($request->getModel());
 
         $input = file_get_contents('php://input');
