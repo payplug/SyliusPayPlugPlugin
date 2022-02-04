@@ -104,6 +104,12 @@
     }
 }
 
+.payment-item {
+    .oney-logo[src*=without-fees] {
+        max-width: 200px;
+    }
+}
+
 .payplug-payment-choice {
     &__container {
         flex-direction: column;
