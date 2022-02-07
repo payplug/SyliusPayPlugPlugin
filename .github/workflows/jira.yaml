@@ -5,7 +5,7 @@ on:
 name: Create Jira Issue
 
 jobs:
-  build:
+  create_jira_issue:
     name: Create Jira issue
     runs-on: ubuntu-latest
     steps:
