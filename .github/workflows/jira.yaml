@@ -5,7 +5,7 @@ on:
 name: Create Jira Issue
 
 jobs:
-  create_jira_issue:
+  build:
     name: Create Jira issue
     runs-on: ubuntu-latest
     steps:
@@ -28,5 +28,5 @@ jobs:
             Compare branch
     #      fields: '{"customfield_10171": "test"}'
 
-    - name: Log created JIRA issue
-      run: echo "Issue ${{ steps.create.outputs.issue }} was created"
+      - name: Log created JIRA issue
+        run: echo "Issue ${{ steps.create.outputs.issue }} was created"
