@@ -1,4 +1,4 @@
-name: CREATE JIRA ISSUE
+name: JIRA ISSUE 
 
 on:
   issues:
