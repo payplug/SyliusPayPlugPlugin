@@ -51,6 +51,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 1;
         $payment->is_paid = true;
         $payment->created_at = 1598273578;
         $mock
@@ -100,6 +101,7 @@ final class PayPlugApiMocker
             ->shouldReceive('createPayment')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 1;
         $payment->is_paid = true;
         $payment->created_at = 1598273578;
         $mock
@@ -192,6 +194,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 1;
         $payment->status = 'created';
         $payment->is_paid = false;
         $mock
