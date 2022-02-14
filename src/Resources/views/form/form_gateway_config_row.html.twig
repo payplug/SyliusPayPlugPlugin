@@ -14,7 +14,10 @@
 {% endblock %}
 
 {% block _sylius_payment_method_gatewayConfig_config_secretKey_row %}
-    </div>{# close previous <div.two.fields> to avoid 2 columns #}
+    {% set isOney = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayPlugGatewayFactory::ONE_CLICK') not in form.parent.children|keys %}
+    {% if isOney %}
+        </div>{# close previous <div.two.fields> to avoid 2 columns #}
+    {% endif %}
     <div class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
         {{- form_label(form) -}}
         {{- form_widget(form) -}}
@@ -23,7 +26,9 @@
         </span>
         {{- form_errors(form) -}}
     </div>
-    <div class="required field">
+    {% if isOney %}
+        <div class="required field">
+    {% endif %}
 {% endblock %}
 
 {% block _sylius_payment_method_gatewayConfig_config_fees_for_row %}
