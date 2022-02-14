@@ -171,15 +171,23 @@ If you plan override them also, you should retrieve them in your application.
 
 Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
 
-   ```shell
-    mkdir -p templates/bundles/SyliusAdminBundle/
-    mkdir -p templates/bundles/SyliusShopBundle/
-    mkdir -p templates/bundles/SyliusUiBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusUiBundle/* templates/bundles/SyliusUiBundle/
-    ```
+```shell
+mkdir -p templates/bundles/SyliusAdminBundle/
+mkdir -p templates/bundles/SyliusShopBundle/
+mkdir -p templates/bundles/SyliusUiBundle/
+cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
+cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusUiBundle/* templates/bundles/SyliusUiBundle/
+```
 
+You also need to edit your twig config to add your path to avoid our configuration to be prepended :
+```yaml
+twig:
+  paths:
+    '%kernel.project_dir%/templates/bundles/SyliusAdminBundle': SyliusAdmin
+    '%kernel.project_dir%/templates/bundles/SyliusShopBundle': SyliusShop
+    '%kernel.project_dir%/templates/bundles/SyliusUiBundle': SyliusUi
+```
 ## Development
 
 See [How to contribute](CONTRIBUTING.md).
