@@ -1,5 +1,6 @@
 {% block _sylius_payment_method_gatewayConfig_factoryName_row %}
-    {% if constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') in form.vars.value %}
+    {% set isOney = constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') in form.vars.value %}
+    {% if isOney %}
         <div class="field">
             <div class="ui message positive">
                 <div class="content">
@@ -9,7 +10,7 @@
         </div>
     {% endif %}
     <div class="{% if required %}required {% endif %}{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
-        {{- form_row(form) -}}
+        {{- form_row(form, not isOney ? {'attr': {'style': 'margin: 0 0 1rem;'}} : {}) -}}
     </div>
 {% endblock %}
 
