@@ -18,7 +18,7 @@ jobs:
             fail-fast: false
             matrix:
                 php: [7.4, 8.0]
-                symfony: [4.4.*, 5.2.*]
+                symfony: [4.4.*, 5.2.*, 5.3.*]
 
         env:
             APP_ENV: test
@@ -88,6 +88,9 @@ jobs:
                 exclude:
                     - sylius: 1.9.0
                       php: 8.0
+                    - sylius: 1.9.0
+                      symfony: 5.2
+                      php: 7.4
                     - sylius: 1.9.0
                       symfony: 5.3
                     - sylius: 1.10.0
