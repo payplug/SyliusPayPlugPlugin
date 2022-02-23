@@ -18,7 +18,7 @@ jobs:
             fail-fast: false
             matrix:
                 php: [7.4, 8.0]
-                symfony: [4.4.*, 5.2.*]
+                symfony: [4.4.*, 5.2.*, 5.3.*]
 
         env:
             APP_ENV: test
@@ -83,13 +83,21 @@ jobs:
             matrix:
                 php: [7.4, 8.0]
                 sylius: [1.9.0, 1.10.0]
-                symfony: [4.4, 5.2]
+                symfony: [4.4, 5.2, 5.3]
                 node: [10.x]
                 exclude:
                     - sylius: 1.9.0
                       php: 8.0
+                    - sylius: 1.9.0
+                      symfony: 5.2
+                      php: 7.4
+                    - sylius: 1.9.0
+                      symfony: 5.3
                     - sylius: 1.10.0
                       symfony: 4.4
+#TODO: rollback this exclusion when fixed
+                    - sylius: 1.10.0
+                      symfony: 5.2
 
         env:
             APP_ENV: test
@@ -102,7 +110,7 @@ jobs:
                   php-version: "${{ matrix.php }}"
                   ini-values: date.timezone=UTC
                   extensions: intl
-                  tools: symfony
+                  tools: symfony, flex
                   coverage: none
 
             - name: Setup Node
@@ -152,6 +160,8 @@ jobs:
                       node-${{ matrix.node }}-yarn-
 
             - name: Install Sylius-Standard and Plugin
+              env:
+                SYMFONY_REQUIRE: ${{ matrix.symfony }}.*
               run: make install -e SYLIUS_VERSION=${{ matrix.sylius }} SYMFONY_VERSION=${{ matrix.symfony }}
 
             - name: Output PHP version for Symfony CLI

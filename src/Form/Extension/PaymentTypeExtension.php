@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Form\Extension;
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider;
 use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -31,28 +32,31 @@ final class PaymentTypeExtension extends AbstractTypeExtension
     /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker */
     private $orderChecker;
 
+    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
+
     public function __construct(
         SessionInterface $session,
         TranslatorInterface $translator,
-        OneyOrderChecker $orderChecker
+        OneyOrderChecker $orderChecker,
+        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
     ) {
         $this->session = $session;
         $this->translator = $translator;
         $this->orderChecker = $orderChecker;
+        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     /**
      * @inheritdoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options): void
-    {
+    public function buildForm(
+        FormBuilderInterface $builder,
+        array $options
+    ): void {
         $builder
             ->add('oney_payment_choice', ChoiceType::class, [
                 'mapped' => false,
-                'choices' => [
-                    '3x' => 'oney_x3_with_fees',
-                    '4x' => 'oney_x4_with_fees',
-                ],
+                'choices' => $this->oneySupportedPaymentChoiceProvider->getSupportedPaymentChoices(true),
             ])
             ->add('payplug_card_choice', TextType::class, [
                 'mapped' => false,

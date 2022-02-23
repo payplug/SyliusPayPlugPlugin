@@ -1,11 +1,21 @@
 {% if is_oney_enabled() and can_show_mea() %}
-    {% set logo_name = '3x4x-alt.svg' %}
+    {% set logo_disabled = '3x4x-alt.svg' %}
+    {% set logo_enabled = '3x4x.svg' %}
+    {% if is_oney_without_fees() %}
+        {% set logo_enabled = '3x4x-without-fees.svg' %}
+        {% set logo_disabled = '3x4x-without-fees-alt.svg' %}
+    {% endif %}
     {% if oney_product_eligible() %}
-        {% set logo_name = '3x4x.svg' %}
+        {% set logo_name = logo_enabled %}
+        {% if is_oney_without_fees() %}
+            {% set logo_enabled = '3x4x-without-fees.svg' %}
+        {% endif %}
+    {% else %}
+        {% set logo_name = logo_disabled %}
     {% endif %}
     <div class="oney-info">
         <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" alt="oney-logo"/>
+        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" class="oney-logo" alt="oney-logo"/>
         <div class="ui inverted dimmer">
             <div class="ui loader"></div>
         </div>
@@ -26,8 +36,8 @@
           product_variant_code: "{{ (product|sylius_resolve_variant).code }}",
           url: "{{ path('payplug_sylius_oney_is_product_eligible') }}",
           img: {
-            true: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}",
-            false: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-alt.svg') }}",
+            true: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_enabled) }}",
+            false: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_disabled) }}",
           }
         }
         var translations = {

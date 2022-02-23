@@ -6,8 +6,8 @@ CONSOLE=cd tests/Application && php bin/console -e test
 COMPOSER=cd tests/Application && composer
 YARN=cd tests/Application && yarn
 
-SYLIUS_VERSION=1.9.0
-SYMFONY_VERSION=4.4
+SYLIUS_VERSION=1.10.0
+SYMFONY_VERSION=5.2
 PLUGIN_NAME=payplug/sylius-payplug-plugin
 
 ###
@@ -32,7 +32,7 @@ sylius: sylius-standard update-dependencies install-plugin install-sylius
 .PHONY: sylius
 
 sylius-standard:
-	${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}"
+	SYMFONY_REQUIRE=${SYMFONY_VERSION}.* ${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}"
 
 update-dependencies:
 	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
@@ -45,6 +45,7 @@ endif
 ifeq ($(SYLIUS_VERSION), 1.8.0)
 	${COMPOSER} update --no-progress --no-scripts --prefer-dist -n
 endif
+	${COMPOSER} require symfony/asset --no-scripts --no-update
 	${COMPOSER} update --no-progress -n
 
 install-plugin:
@@ -84,11 +85,11 @@ behat-configure: ## Configure Behat
 	(cd ${TEST_DIRECTORY} && cp behat.yml.dist behat.yml)
 	(cd ${TEST_DIRECTORY} && sed -i "s#vendor/sylius/sylius/src/Sylius/Behat/Resources/config/suites.yml#vendor/${PLUGIN_NAME}/tests/Behat/Resources/suites.yml#g" behat.yml)
 	(cd ${TEST_DIRECTORY} && sed -i "s#vendor/sylius/sylius/features#vendor/${PLUGIN_NAME}/features#g" behat.yml)
-	(cd ${TEST_DIRECTORY} && echo '    - { resource: "../vendor/${PLUGIN_NAME}/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml)
-	(cd ${TEST_DIRECTORY} && echo '    - { resource: "../vendor/${PLUGIN_NAME}/src/Resources/config/services.xml" }' >> config/services_test.yaml)
-	(cd ${TEST_DIRECTORY} && echo '    - { resource: "../vendor/sylius/refund-plugin/src/Resources/config/services.xml" }' >> config/services_test.yaml)
-	(cd ${TEST_DIRECTORY} && echo '    - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' >> config/services_test.yaml)
-	(cd ${TEST_DIRECTORY} && echo '    - { resource: "services_payplug.yaml" }' >> config/services_test.yaml)
+	(cd ${TEST_DIRECTORY} && sed -i '2i \ \ \ \ - { resource: "../vendor/${PLUGIN_NAME}/tests/Behat/Resources/services.xml\" }' config/services_test.yaml)
+	(cd ${TEST_DIRECTORY} && sed -i '3i \ \ \ \ - { resource: "../vendor/${PLUGIN_NAME}/src/Resources/config/services.xml" }' config/services_test.yaml)
+	(cd ${TEST_DIRECTORY} && sed -i '4i \ \ \ \ - { resource: "../vendor/sylius/refund-plugin/src/Resources/config/services.xml" }' config/services_test.yaml)
+	(cd ${TEST_DIRECTORY} && sed -i '5i \ \ \ \ - { resource: "../vendor/sylius/refund-plugin/tests/Behat/Resources/services.xml" }' config/services_test.yaml)
+	(cd ${TEST_DIRECTORY} && sed -i '6i \ \ \ \ - { resource: "services_payplug.yaml" }' config/services_test.yaml)
 
 grumphp:
 	vendor/bin/grumphp run
