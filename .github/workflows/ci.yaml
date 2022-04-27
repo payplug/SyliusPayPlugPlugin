@@ -82,8 +82,8 @@ jobs:
             fail-fast: false
             matrix:
                 php: [7.4, 8.0]
-                sylius: [1.9.0, 1.10.0]
-                symfony: [4.4, 5.2, 5.3]
+                sylius: [1.9.0, 1.10.0, 1.11.0]
+                symfony: [4.4, 5.2, 5.3, 5.4]
                 node: [10.x]
                 exclude:
                     - sylius: 1.9.0
@@ -95,9 +95,10 @@ jobs:
                       symfony: 5.3
                     - sylius: 1.10.0
                       symfony: 4.4
-#TODO: rollback this exclusion when fixed
                     - sylius: 1.10.0
                       symfony: 5.2
+                    - sylius: 1.11.0
+                      php: 7.4
 
         env:
             APP_ENV: test
@@ -110,7 +111,7 @@ jobs:
                   php-version: "${{ matrix.php }}"
                   ini-values: date.timezone=UTC
                   extensions: intl
-                  tools: symfony, flex
+                  tools: symfony
                   coverage: none
 
             - name: Setup Node

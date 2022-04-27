@@ -57,7 +57,13 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "symfony/flex": true,
+            "symfony/thanks": true
+        }
     },
     "scripts": {
         "ecs": "ecs check -c rulesets/ecs.php --ansi --clear-cache .",

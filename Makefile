@@ -6,8 +6,8 @@ CONSOLE=cd tests/Application && php bin/console -e test
 COMPOSER=cd tests/Application && composer
 YARN=cd tests/Application && yarn
 
-SYLIUS_VERSION=1.10.0
-SYMFONY_VERSION=5.2
+SYLIUS_VERSION=1.11.0
+SYMFONY_VERSION=5.4
 PLUGIN_NAME=payplug/sylius-payplug-plugin
 
 ###
@@ -32,7 +32,8 @@ sylius: sylius-standard update-dependencies install-plugin install-sylius
 .PHONY: sylius
 
 sylius-standard:
-	SYMFONY_REQUIRE=${SYMFONY_VERSION}.* ${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}"
+	${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}" --no-install --no-scripts
+	${COMPOSER} require sylius/sylius:"~${SYLIUS_VERSION}"
 
 update-dependencies:
 	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
@@ -70,8 +71,8 @@ install-sylius:
 	${CONSOLE} sylius:install -n -s default
 	${YARN} install
 	${YARN} build
-	${CONSOLE} translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
-	${CONSOLE} translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
+	${CONSOLE} translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+	${CONSOLE} translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
 	${CONSOLE} cache:clear
 
 phpunit-configure:
