@@ -9,10 +9,10 @@
         "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^3.1",
         "sylius/refund-plugin": "^1.0.0",
-        "sylius/sylius": "^1.9.0 || ^1.10.0",
-        "symfony/asset": "^4.3|^5.0",
-        "symfony/lock": "^4.3|^5.0",
-        "symfony/validator": "^4.3|^5.0"
+        "sylius/sylius": "^1.9.0 || ^1.10.0 || ^1.11.0",
+        "symfony/asset": "^4.4|^5.0",
+        "symfony/lock": "^4.4|^5.0",
+        "symfony/validator": "^4.4|^5.0"
     },
     "require-dev": {
         "behat/behat": "^3.7",
@@ -57,7 +57,13 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "symfony/flex": true,
+            "symfony/thanks": true
+        }
     },
     "scripts": {
         "ecs": "ecs check -c rulesets/ecs.php --ansi --clear-cache .",
