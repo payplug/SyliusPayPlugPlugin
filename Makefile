@@ -2,8 +2,8 @@
 SHELL=/bin/bash
 COMPOSER_ROOT=composer
 PLUGIN_NAME=payplug/sylius-payplug-plugin
-SYLIUS_VERSION=1.10.0
-SYMFONY_VERSION=5.3
+SYLIUS_VERSION=1.11.0
+SYMFONY_VERSION=5.4
 PHP_VERSION=8.0
 TEST_DIRECTORY=tests/Application
 YARN=cd tests/Application && yarn
@@ -14,7 +14,7 @@ COMPOSER=cd tests/Application && composer
 ### DEVELOPMENT
 ### ¯¯¯¯¯¯¯¯¯¯¯
 
-install: sylius ## Install Plugin on Sylius [SyliusVersion=1.9] [SymfonyVersion=5.2] [PHP_VERSION=8.0]
+install: sylius ## Install Plugin on Sylius [SyliusVersion=1.11] [SymfonyVersion=5.4] [PHP_VERSION=8.0]
 .PHONY: install
 
 reset: ## Remove dependencies
@@ -62,6 +62,7 @@ install-plugin:
 	mkdir -p ${TEST_DIRECTORY}/templates/form/
 	cp -R src/Resources/views/form/* ${TEST_DIRECTORY}/templates/form/
 
+# As of sylius/refund-plugin 1.2 the folder does not exist anymore
 ifneq ($(PHP_VERSION), 8)
 	mkdir -p ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
 	cp -R src/Resources/views/SyliusAdminBundle/* ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
