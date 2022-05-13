@@ -20,7 +20,7 @@ jobs:
         id: create
         uses: atlassian/gajira-create@master
         with:
-          project: SPD
+          project: SMP
           issuetype: Sylius Technical Support
           summary: "${{ github.event.issue.title }} #${{ github.event.issue.number }}"
           # Valeur par default "from github" en MVP
