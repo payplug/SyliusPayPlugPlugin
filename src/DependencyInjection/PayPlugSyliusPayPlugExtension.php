@@ -32,12 +32,20 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         }
 
         $viewsPath = dirname(__DIR__) . '/Resources/views/';
-        // This add our override in twig paths with correct namespace. No need for final user to copy it
+        // This add our override in twig paths with correct namespace if there are not already overridden. No need for final user to copy it
         $paths = [
             $viewsPath . 'SyliusShopBundle' => 'SyliusShop',
             $viewsPath . 'SyliusAdminBundle' => 'SyliusAdmin',
             $viewsPath . 'SyliusUiBundle' => 'SyliusUi',
         ];
+
+        $twigConfig = $container->getExtensionConfig('twig');
+
+        foreach ($paths as $key => $path) {
+            if ($this->isPathAlreadyInConfiguration($path, $twigConfig)) {
+                unset($paths[$key]);
+            }
+        }
 
         $container->prependExtensionConfig('twig', [
             'paths' => $paths,
@@ -48,6 +56,27 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         ]);
 
         $this->prependDoctrineMigrations($container);
+    }
+
+    /**
+     * Verify if a given namespace is alreay extented
+     *
+     * @param string $namespace The namespace to verify
+     * @param array  $configurations The given configurations
+     *
+     * @return bool
+     */
+    protected function isPathAlreadyInConfiguration(string $namespace, array $configurations): bool
+    {
+        foreach ($configurations as $configuration) {
+            foreach ($configuration as $parameter => $values) {
+                if ('paths' === $parameter && in_array($namespace, $values, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     protected function getMigrationsNamespace(): string
