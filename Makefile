@@ -41,7 +41,7 @@ update-dependencies:
 # FIX since https://github.com/Sylius/Sylius/pull/13215 is not merged
 	${COMPOSER} require doctrine/dbal:"^2.6" doctrine/orm:"^2.9" --no-scripts --no-update
 ifeq ($(shell [[ $(SYMFONY_VERSION) == 4.4 && $(PHP_VERSION) == 7.4 ]] && echo true ),true)
-	${COMPOSER} require sylius/admin-api-bundle --no-scripts --no-update
+	${COMPOSER} require sylius/admin-api-bundle:1.10 --no-scripts --no-update
 endif
 ifeq ($(SYLIUS_VERSION), 1.8.0)
 	${COMPOSER} update --no-progress --no-scripts --prefer-dist -n
