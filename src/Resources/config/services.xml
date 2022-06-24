@@ -36,6 +36,10 @@
             <argument type="service" id="payplug.repository.payplug_refund_history" />
         </service>
 
+        <service id="payplug_sylius_payplug_plugin.payment_processing.abort" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor" public="true">
+            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
+        </service>
+
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
             <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator" />
             <argument type="service" id="Sylius\RefundPlugin\Provider\RemainingTotalProvider" />

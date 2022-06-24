@@ -105,6 +105,14 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         return $payment;
     }
 
+    public function abortPayment(string $paymentId): Payment
+    {
+        $payment = \Payplug\Payment::abort($paymentId, $this->configuration);
+        Assert::isInstanceOf($payment, Payment::class);
+
+        return $payment;
+    }
+
     public function refundPayment(string $paymentId): Refund
     {
         /** @var Refund|null $refund */

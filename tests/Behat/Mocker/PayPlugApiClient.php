@@ -40,6 +40,11 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         return $this->container->get($this->serviceName)->createPayment($data);
     }
 
+    public function abortPayment(string $paymentId): Payment
+    {
+        return $this->container->get($this->serviceName)->abortPayment($paymentId);
+    }
+
     public function refundPayment(string $paymentId): Refund
     {
         return $this->container->get($this->serviceName)->refundPayment($paymentId);

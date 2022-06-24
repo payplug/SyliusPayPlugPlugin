@@ -46,6 +46,8 @@ interface PayPlugApiClientInterface
 
     public function createPayment(array $data): Payment;
 
+    public function abortPayment(string $paymentId): Payment;
+
     public function refundPayment(string $paymentId): Refund;
 
     public function refundPaymentWithAmount(string $paymentId, int $amount, int $refundId): Refund;
