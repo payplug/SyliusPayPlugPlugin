@@ -51,7 +51,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
-        $payment->id = 1;
+        $payment->id = 'pay_1';
         $payment->is_paid = true;
         $payment->created_at = 1598273578;
         $mock
@@ -80,7 +80,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
-        $payment->id = 1;
+        $payment->id = 'pay_1';
         $payment->is_live = false;
         $payment->hosted_payment = (object) [
             'payment_url' => 'test',
@@ -101,7 +101,7 @@ final class PayPlugApiMocker
             ->shouldReceive('createPayment')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
-        $payment->id = 1;
+        $payment->id = 'pay_1';
         $payment->is_paid = true;
         $payment->created_at = 1598273578;
         $mock
@@ -194,7 +194,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
-        $payment->id = 1;
+        $payment->id = 'pay_1';
         $payment->status = 'created';
         $payment->is_paid = false;
         $mock
@@ -266,7 +266,7 @@ final class PayPlugApiMocker
         $refund = \Mockery::mock('refund', Refund::class);
         $refund->amount = $amount;
         $refund->currency = 'EUR';
-        $refund->id = \bin2hex(\random_bytes(10));
+        $refund->id = 'pay_' . \bin2hex(\random_bytes(10));
         $refund->payment_id = 'pay_2PykkdCqJLzJ7nYM5gV4RZ';
         $refund->metadata = ['requested_by' => 'payplug'];
         $mock

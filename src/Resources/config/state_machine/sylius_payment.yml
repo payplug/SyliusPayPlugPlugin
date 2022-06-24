@@ -6,3 +6,7 @@ winzou_state_machine:
                     on: ["refund"]
                     do: ["@payplug_sylius_payplug_plugin.payment_processing.refund", "process"]
                     args: ["object"]
+                payplug_sylius_payplug_plugin_failed_process:
+                    on: ["fail"]
+                    do: ["@payplug_sylius_payplug_plugin.payment_processing.abort", "process"]
+                    args: ["object"]
