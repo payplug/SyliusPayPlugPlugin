@@ -12,6 +12,7 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -25,6 +26,7 @@ use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
 use Psr\Log\LoggerInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
@@ -45,13 +47,17 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
     private RequestStack $requestStack;
 
+    private AbortPaymentProcessor $abortPaymentProcessor;
+
     public function __construct(
         LoggerInterface $logger,
         TranslatorInterface $translator,
+        AbortPaymentProcessor $abortPaymentProcessor,
         RequestStack $requestStack
     ) {
         $this->logger = $logger;
         $this->translator = $translator;
+        $this->abortPaymentProcessor = $abortPaymentProcessor;
         $this->requestStack = $requestStack;
     }
 
@@ -74,27 +80,17 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             return;
         }
 
-        if (isset($details['status'], $details['payment_id'])) {
-            if (PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
-                return;
-            }
+        if (isset($details['status'], $details['payment_id']) &&
+            PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
+            return;
+        }
 
-            $times = 0;
+        /** @var PaymentInterface $paymentModel */
+        $paymentModel = $request->getFirstModel();
 
-            do {
-                $payment = $this->payPlugApiClient->retrieve((string) $details['payment_id']);
-
-                if ($payment->is_paid) {
-                    $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
-
-                    return;
-                }
-
-                sleep(1);
-
-                ++$times;
-            } while ($times < 3);
-
+        /** @var Capture $request */
+        if (array_key_exists('status', $paymentModel->getDetails())
+            && $paymentModel->getDetails()['status'] === PayPlugApiClientInterface::STATUS_CAPTURED) {
             return;
         }
 
@@ -115,7 +111,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         }
 
         try {
-            $payment = $this->createPayment($details);
+            $payment = $this->createPayment($details, $request);
             $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
             // Pay with a saved card: https://docs.payplug.com/api/guide-savecard-en.html
@@ -205,10 +201,23 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         return $details;
     }
 
-    private function createPayment(ArrayObject $details): Payment
+    /**
+     * @throws UnknownApiErrorException
+     * @throws BadRequestException
+     */
+    private function createPayment(ArrayObject $details, Capture $request): Payment
     {
         try {
-            $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
+            $detailsCopy = $details->getArrayCopy();
+
+            if (array_key_exists('payment_id', $detailsCopy)
+                && array_key_exists('status', $detailsCopy)) {
+                $this->abortPaymentProcessor->process($request->getFirstModel());
+                unset($detailsCopy['status'], $detailsCopy['payment_id'], $detailsCopy['is_live']);
+                $details = new ArrayObject($detailsCopy);
+            }
+
+            $payment = $this->payPlugApiClient->createPayment($detailsCopy);
             $details['payment_id'] = $payment->id;
             $details['is_live'] = $payment->is_live;
 

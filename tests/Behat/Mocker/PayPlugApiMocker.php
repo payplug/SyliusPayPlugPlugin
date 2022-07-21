@@ -211,6 +211,17 @@ final class PayPlugApiMocker
         $mock
             ->shouldReceive('initialise')
         ;
+
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->state = 'abort';
+        $payment->is_paid = false;
+
+        $mock
+            ->shouldReceive('abortPayment')
+            ->withArgs(['paymentId' => '123456'])
+            ->andReturn($payment)
+        ;
+
         $action();
         $this->mocker->unmockAll();
     }
