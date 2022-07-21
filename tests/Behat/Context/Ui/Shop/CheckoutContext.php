@@ -70,9 +70,11 @@ final class CheckoutContext implements Context
      */
     public function iHaveFailedPayPlugPayment()
     {
-        $this->payPlugApiMocker->mockApiFailedPayment(function () {
-            $this->paymentPage->notify(['id' => 1]);
-            $this->paymentPage->capture();
+        $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+            $this->payPlugApiMocker->mockApiFailedPayment(function () {
+                $this->paymentPage->notify(['id' => 1]);
+                $this->paymentPage->capture();
+            });
         });
     }
 
@@ -115,7 +117,9 @@ final class CheckoutContext implements Context
     {
         $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
             $this->payPlugApiMocker->mockApiCreatePayment(function () {
-                $this->orderDetails->pay();
+                $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+                    $this->orderDetails->pay();
+                });
             });
         });
     }

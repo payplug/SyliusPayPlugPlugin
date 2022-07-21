@@ -6,6 +6,7 @@
 
         <service id="payplug_sylius_payplug_plugin.action.capture" class="PayPlug\SyliusPayPlugPlugin\Action\CaptureAction">
             <argument type="service" id="monolog.logger.payum" />
+            <argument type="service" key="$abortPaymentProcessor" id="payplug_sylius_payplug_plugin.payment_processing.abort" />
             <tag name="payum.action" factory="payplug" alias="payum.action.capture" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.capture" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.capture" />
