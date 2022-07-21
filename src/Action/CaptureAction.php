@@ -12,6 +12,7 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -44,15 +45,18 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
     /** @var TranslatorInterface */
     private $translator;
+    private AbortPaymentProcessor $abortPaymentProcessor;
 
     public function __construct(
         LoggerInterface $logger,
         FlashBagInterface $flashBag,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        AbortPaymentProcessor $abortPaymentProcessor
     ) {
         $this->logger = $logger;
         $this->flashBag = $flashBag;
         $this->translator = $translator;
+        $this->abortPaymentProcessor = $abortPaymentProcessor;
     }
 
     public function setGenericTokenFactory(GenericTokenFactoryInterface $genericTokenFactory = null): void
@@ -78,24 +82,6 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             if (PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
                 return;
             }
-
-            $times = 0;
-
-            do {
-                $payment = $this->payPlugApiClient->retrieve((string) $details['payment_id']);
-
-                if ($payment->is_paid) {
-                    $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
-
-                    return;
-                }
-
-                sleep(1);
-
-                ++$times;
-            } while ($times < 3);
-
-            return;
         }
 
         /** @var TokenInterface $token */
@@ -115,7 +101,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         }
 
         try {
-            $payment = $this->createPayment($details);
+            $payment = $this->createPayment($details, $request);
             $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
 
             // Pay with a saved card: https://docs.payplug.com/api/guide-savecard-en.html
@@ -206,9 +192,13 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         return $details;
     }
 
-    private function createPayment(ArrayObject $details): Payment
+    private function createPayment(ArrayObject $details, Capture $request): Payment
     {
         try {
+            if (array_key_exists('payment_id', $details->toUnsafeArray())) {
+                $this->abortPaymentProcessor->process($request->getFirstModel());
+                unset($details['status'], $details['payment_id'], $details['is_live']);
+            }
             $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
             $details['payment_id'] = $payment->id;
             $details['is_live'] = $payment->is_live;
