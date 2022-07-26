@@ -1,20 +1,20 @@
 .DEFAULT_GOAL := help
 SHELL=/bin/bash
 COMPOSER_ROOT=composer
+PLUGIN_NAME=payplug/sylius-payplug-plugin
+SYLIUS_VERSION=1.11.0
+SYMFONY_VERSION=5.4
+PHP_VERSION=8.0
 TEST_DIRECTORY=tests/Application
+YARN=cd tests/Application && yarn
 CONSOLE=cd tests/Application && php bin/console -e test
 COMPOSER=cd tests/Application && composer
-YARN=cd tests/Application && yarn
-
-SYLIUS_VERSION=1.10.0
-SYMFONY_VERSION=5.2
-PLUGIN_NAME=payplug/sylius-payplug-plugin
 
 ###
 ### DEVELOPMENT
 ### ¯¯¯¯¯¯¯¯¯¯¯
 
-install: sylius ## Install Plugin on Sylius [SyliusVersion=1.9] [SymfonyVersion=5.2]
+install: sylius ## Install Plugin on Sylius [SyliusVersion=1.11] [SymfonyVersion=5.4] [PHP_VERSION=8.0]
 .PHONY: install
 
 reset: ## Remove dependencies
@@ -32,20 +32,21 @@ sylius: sylius-standard update-dependencies install-plugin install-sylius
 .PHONY: sylius
 
 sylius-standard:
-	SYMFONY_REQUIRE=${SYMFONY_VERSION}.* ${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}"
+	${COMPOSER_ROOT} create-project sylius/sylius-standard ${TEST_DIRECTORY} "~${SYLIUS_VERSION}" --no-install --no-scripts
+	${COMPOSER} require sylius/sylius:"~${SYLIUS_VERSION}"
 
 update-dependencies:
 	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
 	${COMPOSER} require --dev donatj/mock-webserver:^2.1 --no-scripts --no-update
 # FIX since https://github.com/Sylius/Sylius/pull/13215 is not merged
 	${COMPOSER} require doctrine/dbal:"^2.6" doctrine/orm:"^2.9" --no-scripts --no-update
-ifeq ($(SYMFONY_VERSION), 4.4)
-	${COMPOSER} require sylius/admin-api-bundle --no-scripts --no-update
+ifeq ($(shell [[ $(SYMFONY_VERSION) == 4.4 && $(PHP_VERSION) == 7.4 ]] && echo true ),true)
+	${COMPOSER} require sylius/admin-api-bundle:1.10 --no-scripts --no-update
 endif
 ifeq ($(SYLIUS_VERSION), 1.8.0)
 	${COMPOSER} update --no-progress --no-scripts --prefer-dist -n
 endif
-	${COMPOSER} require symfony/asset --no-scripts --no-update
+	${COMPOSER} require symfony/asset:^${SYMFONY_VERSION} --no-scripts --no-update
 	${COMPOSER} update --no-progress -n
 
 install-plugin:
@@ -60,18 +61,27 @@ install-plugin:
 	sed -i "4a \ \ \ \ form_themes: ['form/form_gateway_config_row.html.twig']" ${TEST_DIRECTORY}/config/packages/twig.yaml
 	mkdir -p ${TEST_DIRECTORY}/templates/form/
 	cp -R src/Resources/views/form/* ${TEST_DIRECTORY}/templates/form/
+
+# As of sylius/refund-plugin 1.2 the folder does not exist anymore
+ifneq ($(PHP_VERSION), 8)
 	mkdir -p ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
 	cp -R src/Resources/views/SyliusAdminBundle/* ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
-
 	# For Refund Plugin
 	cp -R ${TEST_DIRECTORY}/vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
+endif
 
 install-sylius:
 	${CONSOLE} sylius:install -n -s default
 	${YARN} install
 	${YARN} build
+ifeq ($(shell expr $(value) \<= 5.3), 1)
 	${CONSOLE} translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
 	${CONSOLE} translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
+else ifeq ($(shell expr $(value) \>= 5.4), 1)
+	${CONSOLE} translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+	${CONSOLE} translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
+endif
+
 	${CONSOLE} cache:clear
 
 phpunit-configure:
