@@ -152,6 +152,9 @@ jobs:
             - name: Composer - Github Auth
               run: composer config -g github-oauth.github.com ${{ github.token }}
 
+            - name: Composer - Allow all plugins
+              run: composer config allow-plugins true
+
             - name: Yarn - Get cache directory
               id: yarn-cache
               run: echo "::set-output name=dir::$(yarn cache dir)"
