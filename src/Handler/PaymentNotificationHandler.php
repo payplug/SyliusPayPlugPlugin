@@ -70,6 +70,10 @@ class PaymentNotificationHandler
 
         $this->entityManager->refresh($payment);
 
+        if ($details['status'] === PayPlugApiClientInterface::STATUS_ABORTED) {
+            return;
+        }
+
         if ($paymentResource->is_paid) {
             $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
             $details['created_at'] = $paymentResource->created_at;

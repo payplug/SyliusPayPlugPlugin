@@ -115,9 +115,9 @@ final class CheckoutContext implements Context
      */
     public function iTryToPayAgainPayPlugPayment(): void
     {
-        $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
-            $this->payPlugApiMocker->mockApiCreatePayment(function () {
-                $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+        $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+            $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
+                $this->payPlugApiMocker->mockApiCreatePayment(function () {
                     $this->orderDetails->pay();
                 });
             });
