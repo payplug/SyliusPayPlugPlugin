@@ -217,8 +217,8 @@ final class PayPlugApiMocker
         $payment->is_paid = false;
 
         $mock
-            ->shouldReceive('abortPayment')
-            ->withArgs(['paymentId' => '123456'])
+            ->shouldReceive('abortPayment')->once()
+            ->withArgs(['123456'])
             ->andReturn($payment)
         ;
 
