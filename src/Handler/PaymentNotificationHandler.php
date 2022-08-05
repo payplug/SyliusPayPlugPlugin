@@ -71,6 +71,8 @@ class PaymentNotificationHandler
         $this->entityManager->refresh($payment);
 
         if ($details['status'] === PayPlugApiClientInterface::STATUS_ABORTED) {
+            $lock->release();
+
             return;
         }
 
