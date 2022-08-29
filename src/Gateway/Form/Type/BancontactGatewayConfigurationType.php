@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveBancontactMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCards;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -35,6 +36,7 @@ final class BancontactGatewayConfigurationType extends AbstractGatewayConfigurat
                         'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
                     ]),
                     new IsPayPlugSecretKeyValid(),
+                    new IsCanSaveBancontactMethod(),
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,

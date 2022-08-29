@@ -11,3 +11,7 @@ payplug_sylius_payplug_plugin:
         can_not_save_cards: |
             Non hai accesso a questa funzionalità. Per ulteriori informazioni,
             contattaci al seguente indirizzo e-mail: <a href="mailto:support@payplug.com" target="_blank" style="color:black;">support@payplug.com</a>
+    bancontact:
+        can_not_save_method_with_test_key: |
+            Il metodo di pagamento Bancontact non è disponibile in modalità TEST. 
+            Attiva la modalità LIVE utilizzando la chiave segreta corrispondente.
