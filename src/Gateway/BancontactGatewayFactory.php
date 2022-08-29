@@ -10,10 +10,5 @@ final class BancontactGatewayFactory extends AbstractGatewayFactory
 
     public const FACTORY_TITLE = 'Bancontact by PayPlug';
 
-    public const AUTHORIZED_CURRENCIES = [
-        'EUR' => [
-            'min_amount' => 99,
-            'max_amount' => 2000000,
-        ],
-    ];
+    public const PAYMENT_METHOD_BANCONTACT = 'bancontact';
 }

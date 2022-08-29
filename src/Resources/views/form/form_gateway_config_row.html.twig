@@ -25,7 +25,11 @@
         <span style="font-size: 0.8rem; font-style: italic">
             {{- form_help(form) -}}
         </span>
-        {{- form_errors(form) -}}
+        {% for error in errors %}
+            <div class="ui red pointing label sylius-validation-error">
+                {{ error.message|raw }}
+            </div>
+        {% endfor %}
     </div>
     {% if isOney %}
         <div class="required field">
