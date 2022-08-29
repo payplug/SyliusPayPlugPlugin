@@ -35,6 +35,21 @@
             <tag name="form.type" />
         </service>
 
+        <!-- Gateway Bancontact by PayPlug -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.bancontact"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug_bancontact"/>
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type.bancontact_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\BancontactGatewayConfigurationType">
+            <tag name="sylius.gateway_configuration_type"
+                 type="payplug_bancontact"
+                 label="payplug_sylius_payplug_plugin.ui.bancontact_gateway_label" />
+            <tag name="form.type" />
+        </service>
+
         <service id="payplug_sylius_payplug_plugin.is_oney_enabled_validator"
                  class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabledValidator">
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
