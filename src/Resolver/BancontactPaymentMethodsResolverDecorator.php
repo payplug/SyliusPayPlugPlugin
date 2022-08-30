@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
-use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
 use Webmozart\Assert\Assert;
 
-final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
+final class BancontactPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
 {
     /** @var PaymentMethodsResolverInterface */
     private $decorated;
 
-    /** @var SupportedMethodsProvider  */
+    /** @var SupportedMethodsProvider */
     private $supportedMethodsProvider;
 
     public function __construct(
@@ -34,8 +34,8 @@ final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsReso
 
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
-            PayPlugGatewayFactory::FACTORY_NAME,
-            PayPlugGatewayFactory::AUTHORIZED_CURRENCIES,
+            BancontactGatewayFactory::FACTORY_NAME,
+            BancontactGatewayFactory::AUTHORIZED_CURRENCIES,
             $payment->getAmount() ?? 0);
     }
 
