@@ -13,11 +13,9 @@ use Webmozart\Assert\Assert;
 
 final class BancontactPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
 {
-    /** @var PaymentMethodsResolverInterface */
-    private $decorated;
+    private PaymentMethodsResolverInterface $decorated;
 
-    /** @var SupportedMethodsProvider */
-    private $supportedMethodsProvider;
+    private SupportedMethodsProvider $supportedMethodsProvider;
 
     public function __construct(
         PaymentMethodsResolverInterface $decorated,
