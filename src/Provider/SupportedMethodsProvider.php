@@ -11,15 +11,14 @@ use Webmozart\Assert\Assert;
 
 final class SupportedMethodsProvider
 {
-    /** @var CurrencyContextInterface */
-    private $currencyContext;
+    private CurrencyContextInterface $currencyContext;
 
     public function __construct(CurrencyContextInterface $currencyContext)
     {
         $this->currencyContext = $currencyContext;
     }
 
-    public function provide(array $supportedMethods, string $factoryName, array $authorizedCurrencies, int $paymentAmount)
+    public function provide(array $supportedMethods, string $factoryName, array $authorizedCurrencies, int $paymentAmount): array
     {
         $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
 
