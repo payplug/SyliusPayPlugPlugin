@@ -18,6 +18,8 @@ final class OneyGatewayFactory extends AbstractGatewayFactory
 
     public const REFUND_WAIT_TIME_IN_HOURS = 48;
 
+    public const FEES_FOR = 'fees_for';
+
     public const ONEY_WITH_FEES_CHOICES = [
         'x3_with_fees',
         'x4_with_fees',
