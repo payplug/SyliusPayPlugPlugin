@@ -197,6 +197,7 @@ class PaymentNotificationHandler
         // Oney is reviewing the payer’s file
         if ($paymentResource->__isset('payment_method') &&
             null !== $paymentResource->__get('payment_method') &&
+            \array_key_exists('is_pending', $paymentResource->__get('payment_method')) &&
             true === $paymentResource->__get('payment_method')['is_pending']) {
             return true;
         }
@@ -222,6 +223,7 @@ class PaymentNotificationHandler
         if (!$paymentResource->is_paid &&
             $paymentResource->__isset('payment_method') &&
             null !== $paymentResource->__get('payment_method') &&
+            \array_key_exists('is_pending', $paymentResource->__get('payment_method')) &&
             false === $paymentResource->__get('payment_method')['is_pending'] &&
             \in_array($paymentResource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true)
         ) {
