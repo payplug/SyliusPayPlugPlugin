@@ -12,6 +12,7 @@ use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
@@ -104,6 +105,10 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         if (OneyGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
             $details = $this->alterOneyDetails($details);
             $details->offsetSet('payment_context', $this->getCartContext($order));
+        }
+
+        if (BancontactGatewayFactory::FACTORY_NAME === $this->payPlugApiClient->getGatewayFactoryName()) {
+            $details['payment_method'] = BancontactGatewayFactory::PAYMENT_METHOD_BANCONTACT;
         }
 
         $request->setResult((array) $details);
