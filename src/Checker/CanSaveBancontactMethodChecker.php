@@ -9,8 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 
 final class CanSaveBancontactMethodChecker
 {
-    /** @var PayPlugApiClientInterface */
-    private $client;
+    private PayPlugApiClientInterface $client;
 
     public function __construct(PayPlugApiClientInterface $apiClient)
     {

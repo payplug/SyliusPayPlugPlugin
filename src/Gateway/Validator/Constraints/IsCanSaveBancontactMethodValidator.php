@@ -18,8 +18,7 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
  */
 final class IsCanSaveBancontactMethodValidator extends ConstraintValidator
 {
-    /** @var PayPlugApiClientFactory */
-    private $apiClientFactory;
+    private PayPlugApiClientFactory $apiClientFactory;
 
     public function __construct(PayPlugApiClientFactory $apiClientFactory)
     {
