@@ -73,8 +73,21 @@
                 decorates="sylius.payment_methods_resolver"
                 public="false"
         >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator"
+                decorates="sylius.payment_methods_resolver"
+                public="false"
+        >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider">
             <argument type="service" id="sylius.context.currency"/>
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
