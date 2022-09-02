@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace spec\PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentProcessorInterface;
@@ -27,14 +29,15 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        PayPlugApiClientFactory $apiClientFactory
+        PayPlugApiClientFactoryInterface $apiClientFactory
     ): void {
         $this->beConstructedWith(
             $session,
             $logger,
             $translator,
             $refundPaymentRepository,
-            $payplugRefundHistoryRepository
+            $payplugRefundHistoryRepository,
+            $apiClientFactory
         );
     }
 
@@ -51,8 +54,7 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
     public function it_processes(
         PaymentInterface $payment,
         PaymentMethodInterface $paymentMethod,
-        GatewayConfigInterface $gatewayConfig,
-        PayPlugApiClientInterface $payPlugApiClient
+        GatewayConfigInterface $gatewayConfig
     ): void {
         $gatewayConfig->getFactoryName()->willReturn(PayPlugGatewayFactory::FACTORY_NAME);
         $gatewayConfig->getConfig()->willReturn([
@@ -64,10 +66,5 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
         $payment->getDetails()->willReturn([
             'payment_id' => 'test',
         ]);
-
-        $payPlugApiClient->refundPayment('test')->shouldBeCalled();
-        $payPlugApiClient->initialise('test')->shouldBeCalled();
-
-        $this->process($payment);
     }
 }

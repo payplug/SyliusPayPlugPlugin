@@ -7,7 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 
-final class PayPlugApiClientFactory
+final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
 {
     /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
     private $gatewayConfigRepository;

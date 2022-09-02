@@ -33,7 +33,7 @@
             <argument type="service" id="translator" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
