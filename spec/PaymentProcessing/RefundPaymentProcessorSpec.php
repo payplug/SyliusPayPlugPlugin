@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace spec\PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentProcessorInterface;
@@ -22,15 +23,14 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
 {
     public function let(
         Session $session,
-        PayPlugApiClientInterface $payPlugApiClient,
         LoggerInterface $logger,
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository
+        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
+        PayPlugApiClientFactory $apiClientFactory
     ): void {
         $this->beConstructedWith(
             $session,
-            $payPlugApiClient,
             $logger,
             $translator,
             $refundPaymentRepository,

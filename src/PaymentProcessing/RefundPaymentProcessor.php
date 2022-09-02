@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Exception;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
@@ -22,38 +24,34 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
-    /** @var Session */
-    private $session;
+    private Session $session;
 
-    /** @var PayPlugApiClientInterface */
-    private $payPlugApiClient;
+    private PayPlugApiClientInterface $payPlugApiClient;
 
-    /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
-    /** @var TranslatorInterface */
-    private $translator;
+    private TranslatorInterface $translator;
 
-    /** @var RepositoryInterface */
-    private $refundPaymentRepository;
+    private RepositoryInterface $refundPaymentRepository;
 
-    /** @var RefundHistoryRepositoryInterface */
-    private $payplugRefundHistoryRepository;
+    private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository;
+
+    private PayPlugApiClientFactory $apiClientFactory;
 
     public function __construct(
         Session $session,
-        PayPlugApiClientInterface $payPlugApiClient,
         LoggerInterface $logger,
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository
+        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
+        PayPlugApiClientFactory $apiClientFactory
     ) {
         $this->session = $session;
-        $this->payPlugApiClient = $payPlugApiClient;
         $this->logger = $logger;
         $this->translator = $translator;
         $this->refundPaymentRepository = $refundPaymentRepository;
         $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
+        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function process(PaymentInterface $payment): void
@@ -113,14 +111,14 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     {
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $payment->getMethod();
-
         $details = $payment->getDetails();
 
         if (
             !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            !\in_array($paymentMethod->getGatewayConfig()->getFactoryName(), [
+            !\in_array($factoryName = $paymentMethod->getGatewayConfig()->getFactoryName(), [
                 PayPlugGatewayFactory::FACTORY_NAME,
                 OneyGatewayFactory::FACTORY_NAME,
+                BancontactGatewayFactory::FACTORY_NAME
             ], true)
         ) {
             return;
@@ -138,6 +136,8 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         $this->logger->info('[PayPlug] Start refund payment', ['payment_id' => $details['payment_id']]);
 
         $gatewayConfig = $paymentMethod->getGatewayConfig()->getConfig();
+
+        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName, $gatewayConfig['secretKey']);
 
         $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
     }
