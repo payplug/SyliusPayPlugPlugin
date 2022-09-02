@@ -7,6 +7,8 @@
         <defaults autoconfigure="true" autowire="true" public="false" />
 
         <service id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
+        <service id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface"
+                 class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
 
         <service id="payplug_sylius_payplug_plugin.api_client.payplug"
                  class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient"

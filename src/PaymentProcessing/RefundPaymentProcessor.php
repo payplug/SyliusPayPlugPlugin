@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Exception;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
@@ -36,7 +36,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
     private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository;
 
-    private PayPlugApiClientFactory $apiClientFactory;
+    private PayPlugApiClientFactoryInterface $apiClientFactory;
 
     public function __construct(
         Session $session,
@@ -44,7 +44,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        PayPlugApiClientFactory $apiClientFactory
+        PayPlugApiClientFactoryInterface $apiClientFactory
     ) {
         $this->session = $session;
         $this->logger = $logger;
