@@ -114,7 +114,7 @@ payplug_sylius_payplug_plugin:
             success_title: Informations enregistrées
             success_instruction: Cliquez à nouveau sur "Suivant" pour continuer
             email: |
-                Merci de saisir votre adresse email :
+                Veuillez saisir une adresse email valide :
             phone: |
                 Merci de saisir votre numéro de téléphone portable :
             submit: Valider et continuer
