@@ -29,11 +29,11 @@
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor" public="true">
             <argument type="service" id="session" />
-            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
             <argument type="service" id="monolog.logger.payum" />
             <argument type="service" id="translator" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">

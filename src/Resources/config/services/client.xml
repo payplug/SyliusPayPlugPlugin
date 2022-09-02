@@ -14,7 +14,7 @@
                  lazy="true">
             <factory service="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory"
                      method="create"/>
-            <argument type="string">payplug</argument><!-- Gateway factory name -->
+            <argument type="string" key="$factoryName">payplug</argument><!-- Gateway factory name -->
         </service>
 
         <service id="payplug_sylius_payplug_plugin.api_client.oney"
@@ -22,7 +22,7 @@
                  lazy="true">
             <factory service="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory"
                      method="create"/>
-            <argument type="string">payplug_oney</argument><!-- Gateway factory name -->
+            <argument type="string" key="$factoryName">payplug_oney</argument><!-- Gateway factory name -->
         </service>
 
         <service id="payplug_sylius_payplug_plugin.api_client.bancontact"
@@ -31,7 +31,7 @@
                  lazy="true">
             <factory service="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory"
                      method="create"/>
-            <argument type="string">payplug_bancontact</argument><!-- Gateway factory name -->
+            <argument type="string" key="$factoryName">payplug_bancontact</argument><!-- Gateway factory name -->
         </service>
     </services>
 </container>
