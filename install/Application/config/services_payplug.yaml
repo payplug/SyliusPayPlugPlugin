@@ -19,6 +19,13 @@ services:
             - "@service_container"
             - 'payplug_sylius_payplug_plugin.api_client.oney'
 
+    PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface:
+        class: Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiClientFactory
+        public: true
+        arguments:
+            - "@service_container"
+            - "payplug_sylius_payplug_plugin.api_client.payplug"
+
     Tests\Sylius\RefundPlugin\Behat\Services\Generator\FailedCreditMemoGenerator:
         decorates: 'Sylius\RefundPlugin\Generator\CreditMemoGeneratorInterface'
         arguments:
