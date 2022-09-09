@@ -1,11 +1,14 @@
 {% set oneyFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
 {% set payplugFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayplugGatewayFactory::FACTORY_NAME') %}
+{% set bancontactFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\BancontactGatewayFactory::FACTORY_NAME') %}
 
 {% set checkboxClass = '' %}
 {% if method.gatewayConfig.factoryName == oneyFactoryName %}
     {% set checkboxClass = 'checkbox-oney' %}
 {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
     {% set checkboxClass = 'checkbox-payplug' %}
+{% elseif method.gatewayConfig.factoryName == bancontactFactoryName %}
+    {% set checkboxClass = 'checkbox-bancontact' %}
 {% endif %}
 
 {% set showOney = false %}
@@ -14,10 +17,10 @@
 {% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
     {% set showOney = true %}
 {% elseif is_granted('ROLE_USER')
-      and method.gatewayConfig.factoryName == payplugFactoryName
-      and form.parent.parent.payplug_card_choice is defined
-      and is_save_card_enabled(method)
-      and sylius.customer.cards is not empty
+    and method.gatewayConfig.factoryName == payplugFactoryName
+    and form.parent.parent.payplug_card_choice is defined
+    and is_save_card_enabled(method)
+    and sylius.customer.cards is not empty
 %}
     {% set showPayplug = true %}
 {% endif %}
@@ -40,6 +43,11 @@
                 </label>
             {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
                 {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
+            {% elseif method.gatewayConfig.factoryName == bancontactFactoryName %}
+                <div class="bancontact-method" style="display: flex;">
+                    {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'bancontact'}}) }}
+                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/bancontact/logo.svg') }}" class="bancontact-logo" alt="Bancontact" height="30" style="margin-left: 0.5em;"/>
+                </div>
             {% else %}
                 {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
             {% endif %}
