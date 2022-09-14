@@ -41,22 +41,6 @@ final class BancontactGatewayConfigurationType extends AbstractGatewayConfigurat
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
             ])
-            ->add(PayPlugGatewayFactory::ONE_CLICK, CheckboxType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
-                'validation_groups' => $validationGroups,
-                'constraints' => [
-                    new IsCanSaveCards(),
-                ],
-                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.form.one_click_help'),
-                'help_html' => true,
-                'required' => false,
-            ])
-            ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
-                $data = $event->getData();
-                $data['payum.http_client'] = '@payplug_sylius_payplug_plugin.api_client.payplug';
-
-                $event->setData($data);
-            })
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
                 $this->checkCreationRequirements(
                     BancontactGatewayFactory::FACTORY_TITLE,
