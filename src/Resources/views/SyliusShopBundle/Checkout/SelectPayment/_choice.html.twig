@@ -44,9 +44,10 @@
             {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
                 {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
             {% elseif method.gatewayConfig.factoryName == bancontactFactoryName %}
-                <div class="bancontact-method" style="display: flex;">
-                    {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'bancontact'}}) }}
-                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/bancontact/logo.svg') }}" class="bancontact-logo" alt="Bancontact" height="30" style="margin-left: 0.5em;"/>
+                <div class="bancontact-method">
+                    <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="bancontact">{{ form.vars.label }}
+                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/bancontact/logo.svg') }}" class="bancontact-logo" alt="Bancontact" height="30" width="42" />
+                    </label>
                 </div>
             {% else %}
                 {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
