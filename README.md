@@ -57,9 +57,11 @@ In local environment, the plugin will not work properly because you will not be 
 
     ```yaml
     parameters:
+        locale: fr_FR
         sylius_refund.supported_gateways:
             - payplug
             - payplug_oney
+            - payplug_bancontact
     ```
 
 5. Add PayPlug routes in `config/routes.yaml`
