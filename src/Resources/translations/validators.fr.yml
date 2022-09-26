@@ -18,5 +18,5 @@ payplug_sylius_payplug_plugin:
         can_not_save_method_no_access: |
             Vous n'avez pas accès à cette fonctionnalité. 
             Pour activer Bancontact, rendez-vous sur 
-            <a href="https://support.payplug.com/hc/fr/requests/new?ticket_form_id=4583813991452" target="_blank" style="opacity: 1;">ce formulaire</a> 
+            <a href="https://support.payplug.com/hc/fr/requests/new?ticket_form_id=4583813991452" target="_blank" style="color:black;">ce formulaire</a> 
             et activez le mode LIVE.
