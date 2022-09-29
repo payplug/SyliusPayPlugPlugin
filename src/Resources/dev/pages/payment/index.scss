@@ -111,13 +111,15 @@
 
     .bancontact-method {
         label {
-
+            height: 22px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
         }
 
         .bancontact-logo {
             margin-left: 0.5em;
+            position: relative;
+            top: -12px;
         }
     }
 }
