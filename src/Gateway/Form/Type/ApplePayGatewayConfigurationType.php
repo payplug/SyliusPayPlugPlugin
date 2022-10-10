@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveApplePayMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -32,6 +33,7 @@ final class ApplePayGatewayConfigurationType extends AbstractGatewayConfiguratio
                         'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
                     ]),
                     new IsPayPlugSecretKeyValid(),
+                    new IsCanSaveApplePayMethod(),
                 ],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
