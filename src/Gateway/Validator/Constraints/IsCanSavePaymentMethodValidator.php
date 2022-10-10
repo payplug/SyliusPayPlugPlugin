@@ -6,17 +6,16 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
-use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveBancontactMethodChecker;
-use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Checker\CanSavePayplugPaymentMethodChecker;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
-use Symfony\Component\Validator\Exception\UnexpectedValueException;
+use Webmozart\Assert\Assert;
 
 /**
  * @Annotation
  */
-final class IsCanSaveBancontactMethodValidator extends ConstraintValidator
+final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 {
     private PayPlugApiClientFactory $apiClientFactory;
 
@@ -27,19 +26,20 @@ final class IsCanSaveBancontactMethodValidator extends ConstraintValidator
 
     public function validate($value, Constraint $constraint): void
     {
-        if (!$constraint instanceof IsCanSaveBancontactMethod) {
-            throw new UnexpectedTypeException($constraint, IsCanSaveBancontactMethod::class);
+        if (!$constraint instanceof IsCanSavePaymentMethod) {
+            throw new UnexpectedTypeException($constraint, IsCanSavePaymentMethod::class);
         }
         if (null === $value || '' === $value) {
             return;
         }
-        if (!is_string($value)) {
-            throw new UnexpectedValueException($value, 'string');
-        }
+        $factoryName = $this->context->getRoot()->getData()->getGatewayConfig()->getFactoryName();
+        $gatewayName = $this->context->getRoot()->getData()->getGatewayConfig()->getGatewayName();
 
-        $secretKey = $this->context->getRoot()->getData()->getGatewayConfig()->getConfig()['secretKey'];
+        Assert::string($value);
+        Assert::stringNotEmpty($gatewayName);
+        Assert::stringNotEmpty($factoryName);
 
-        $checker = new CanSaveBancontactMethodChecker($this->apiClientFactory->create(BancontactGatewayFactory::FACTORY_NAME, $secretKey));
+        $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->create($factoryName, $value));
 
         try {
             if (!$checker->isLive()) {
@@ -48,7 +48,7 @@ final class IsCanSaveBancontactMethodValidator extends ConstraintValidator
                 return;
             }
 
-            if (!$checker->isEnabled()) {
+            if (!$checker->isEnabled($gatewayName)) {
                 $this->context->buildViolation($constraint->noAccessMessage)->addViolation();
             }
 
