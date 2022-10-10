@@ -50,6 +50,21 @@
             <tag name="form.type" />
         </service>
 
+        <!-- Gateway Apple Pay by PayPlug -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.apple_pay"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug_apple_pay"/>
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type.apple_pay_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\ApplePayGatewayConfigurationType">
+            <tag name="sylius.gateway_configuration_type"
+                 type="payplug_apple_pay"
+                 label="payplug_sylius_payplug_plugin.ui.apple_pay_gateway_label" />
+            <tag name="form.type" />
+        </service>
+
         <service id="payplug_sylius_payplug_plugin.is_oney_enabled_validator"
                  class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabledValidator">
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
