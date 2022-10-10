@@ -29,11 +29,11 @@
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor" public="true">
             <argument type="service" id="session" />
-            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
             <argument type="service" id="monolog.logger.payum" />
             <argument type="service" id="translator" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
@@ -73,8 +73,21 @@
                 decorates="sylius.payment_methods_resolver"
                 public="false"
         >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator"
+                decorates="sylius.payment_methods_resolver"
+                public="false"
+        >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
+        </service>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider">
             <argument type="service" id="sylius.context.currency"/>
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">

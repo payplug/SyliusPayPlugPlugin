@@ -108,6 +108,20 @@
     .oney-logo[src*=without-fees] {
         max-width: 200px;
     }
+
+    .bancontact-method {
+        label {
+            height: 22px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .bancontact-logo {
+            margin-left: 0.5em;
+            position: relative;
+            top: -12px;
+        }
+    }
 }
 
 .payplug-payment-choice {

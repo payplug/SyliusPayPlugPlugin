@@ -23,6 +23,7 @@ payplug_sylius_payplug_plugin:
                 deleted_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
                 confirmation_modal:
                     confirm_card_deletion: Êtes-vous sûr(e) de vouloir supprimer cette carte ?
+        bancontact_gateway_label: Bancontact by PayPlug
         error:
             billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
             shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
@@ -114,7 +115,7 @@ payplug_sylius_payplug_plugin:
             success_title: Informations enregistrées
             success_instruction: Cliquez à nouveau sur "Suivant" pour continuer
             email: |
-                Merci de saisir votre adresse email :
+                Veuillez saisir une adresse email valide :
             phone: |
                 Merci de saisir votre numéro de téléphone portable :
             submit: Valider et continuer
