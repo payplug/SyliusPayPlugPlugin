@@ -32,6 +32,11 @@ jobs:
                   php-version: "${{ matrix.php }}"
                   tools: symfony
                   coverage: none
+            -
+                name: Install Symfony CLI
+                run: |
+                    wget https://github.com/symfony-cli/symfony-cli/releases/download/v5.4.14/symfony-cli_5.4.14_amd64.deb
+                    sudo dpkg -i symfony-cli_5.4.14_amd64.deb
 
             - name: Composer - Get Cache Directory
               id: composer-cache
@@ -117,6 +122,11 @@ jobs:
                   extensions: intl
                   tools: symfony
                   coverage: none
+            -
+                name: Install Symfony CLI
+                run: |
+                    wget https://github.com/symfony-cli/symfony-cli/releases/download/v5.4.14/symfony-cli_5.4.14_amd64.deb
+                    sudo dpkg -i symfony-cli_5.4.14_amd64.deb
 
             - name: Setup Node
               uses: actions/setup-node@v1
