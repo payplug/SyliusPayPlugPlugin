@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 
-final class CanSaveBancontactMethodChecker
+final class CanSavePayplugPaymentMethodChecker
 {
     private PayPlugApiClientInterface $client;
 
@@ -21,12 +20,12 @@ final class CanSaveBancontactMethodChecker
         return (bool) ($this->client->getAccount()['is_live']);
     }
 
-    public function isEnabled(): bool
+    public function isEnabled(string $gatewayName): bool
     {
         $paymentMethods = $this->client->getAccount()['payment_methods'];
 
         foreach ($paymentMethods as $key => $method) {
-            if ($key !== BancontactGatewayFactory::PAYMENT_METHOD_BANCONTACT) {
+            if ($key !== $gatewayName) {
                 continue;
             }
 
