@@ -34,6 +34,7 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
         }
         $factoryName = $this->context->getRoot()->getData()->getGatewayConfig()->getFactoryName();
         $gatewayName = $this->context->getRoot()->getData()->getGatewayConfig()->getGatewayName();
+        $channels = $this->context->getRoot()->getData()->getChannels();
 
         Assert::string($value);
         Assert::stringNotEmpty($gatewayName);
@@ -48,7 +49,7 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
                 return;
             }
 
-            if (!$checker->isEnabled($gatewayName)) {
+            if (!$checker->isEnabled($gatewayName, $channels)) {
                 $this->context->buildViolation($constraint->noAccessMessage)->addViolation();
             }
 
