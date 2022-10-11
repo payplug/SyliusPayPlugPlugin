@@ -30,7 +30,7 @@ final class CanSavePayplugPaymentMethodChecker
             if ($key !== $gatewayName) {
                 continue;
             }
-            if (ApplePayGatewayFactory::PAYMENT_METHOD_BANCONTACT !== $gatewayName) {
+            if (ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY !== $gatewayName) {
                 return $method['enabled'];
             }
 

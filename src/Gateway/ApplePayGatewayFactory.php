@@ -10,7 +10,7 @@ final class ApplePayGatewayFactory extends AbstractGatewayFactory
 
     public const FACTORY_TITLE = 'Apple Pay by PayPlug';
 
-    public const PAYMENT_METHOD_BANCONTACT = 'apple_pay';
+    public const PAYMENT_METHOD_APPLE_PAY = 'apple_pay';
 
     public const AUTHORIZED_CURRENCIES = [
         'EUR' => [
