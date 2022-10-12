@@ -33,11 +33,9 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
             return;
         }
         $factoryName = $this->context->getRoot()->getData()->getGatewayConfig()->getFactoryName();
-        $gatewayName = $this->context->getRoot()->getData()->getGatewayConfig()->getGatewayName();
         $channels = $this->context->getRoot()->getData()->getChannels();
 
         Assert::string($value);
-        Assert::stringNotEmpty($gatewayName);
         Assert::stringNotEmpty($factoryName);
 
         $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->create($factoryName, $value));
@@ -49,7 +47,7 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
                 return;
             }
 
-            if (!$checker->isEnabled($gatewayName, $channels)) {
+            if (!$checker->isEnabled($factoryName, $channels)) {
                 $this->context->buildViolation($constraint->noAccessMessage)->addViolation();
             }
 
