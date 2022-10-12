@@ -86,6 +86,15 @@
             <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
         </service>
 
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator"
+                decorates="sylius.payment_methods_resolver"
+                public="false"
+        >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
+        </service>
+
         <service id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider">
             <argument type="service" id="sylius.context.currency"/>
         </service>
