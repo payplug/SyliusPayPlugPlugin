@@ -64,7 +64,7 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                 /** @var ChannelInterface $dataFormChannel */
                 foreach ($dataFormChannels as $key => $dataFormChannel) {
                     $baseCurrency = $dataFormChannel->getBaseCurrency();
-                    if ($baseCurrency === null) {
+                    if (null === $baseCurrency) {
                         continue;
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();

@@ -11,6 +11,7 @@
     <services>
         <defaults autowire="true" autoconfigure="true">
             <bind key="$oneyClient" type="service" id="payplug_sylius_payplug_plugin.api_client.oney" />
+            <bind key="$applePayClient" type="service" id="payplug_sylius_payplug_plugin.api_client.apple_pay" />
             <bind key="$payplugLogger" type="service" id="monolog.logger.payum" />
         </defaults>
 
@@ -20,6 +21,22 @@
                    resource="../../../src/Controller" >
             <tag name="controller.service_arguments"/>
         </prototype>
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OrderController"
+                 class="PayPlug\SyliusPayPlugPlugin\Controller\OrderController"
+                 public="true"
+                 parent="sylius.controller.order"
+        >
+            <argument key="$applePayPaymentProvider" type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor"
+                decorates="sylius.order_processing.order_payment_processor.checkout"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor.inner" />
+            <argument type="service" id="sm.factory" />
+        </service>
 
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
             <argument type="service" id="sm.factory" />
@@ -203,5 +220,13 @@
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider" />
+        <service id="PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator" />
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\PaymentTokenProvider">
+            <argument type="service" id="payum" />
+            <argument type="string">sylius_shop_order_after_pay</argument>
+        </service>
+
     </services>
 </container>

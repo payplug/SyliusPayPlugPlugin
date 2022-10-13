@@ -6,26 +6,23 @@ namespace spec\PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
-use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
+use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Action\ActionInterface;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Request\Convert;
 use PhpSpec\ObjectBehavior;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
     public function let(
-        SessionInterface $session,
-        CanSaveCardCheckerInterface $canSaveCardChecker,
-        RepositoryInterface $payplugCardRepository
+        PayPlugPaymentDataCreator $paymentDataCreator
     ): void {
-        $this->beConstructedWith($session, $canSaveCardChecker, $payplugCardRepository);
+        $this->beConstructedWith($paymentDataCreator);
     }
 
     public function it_is_initializable(): void
@@ -43,7 +40,8 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         PaymentInterface $payment,
         OrderInterface $order,
         CustomerInterface $customer,
-        AddressInterface $address
+        AddressInterface $address,
+        PayPlugPaymentDataCreator $paymentDataCreator
     ): void {
         $this->setApi(new PayPlugApiClient('test', PayPlugGatewayFactory::FACTORY_NAME));
 
@@ -55,6 +53,11 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
 
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
+
+        $paymentDataCreator
+            ->create($payment, PayPlugGatewayFactory::FACTORY_NAME)
+            ->willReturn(new ArrayObject(["amount" => 100, "currency" => "EUR", "metadata" => ["customer_id" => 1, "order_number" => "000000001"], "billing" => ["title" => null, "first_name" => "John", "last_name" => "Doe", "company_name" => "Bob", "email" => "test@test.pl", "mobile_phone_number" => null, "landline_phone_number" => null, "address1" => "test", "address2" => null, "postcode" => "97980", "city" => "City", "state" => "State", "country" => "US", "language" => "en"], "shipping" => ["title" => null, "first_name" => "John", "last_name" => "Doe", "company_name" => "Bob", "email" => "test@test.pl", "mobile_phone_number" => null, "landline_phone_number" => null, "address1" => "test", "address2" => null, "postcode" => "97980", "city" => "City", "state" => "State", "country" => "US", "language" => "en", "delivery_type" => "BILLING"]]))
+        ;
 
         $request->setResult([
             'amount' => 100,
@@ -107,7 +110,8 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         OrderInterface $order,
         CustomerInterface $customer,
         AddressInterface $address,
-        AddressInterface $otherAddress
+        AddressInterface $otherAddress,
+        PayPlugPaymentDataCreator $paymentDataCreator
     ): void {
         $this->setApi(new PayPlugApiClient('test', PayPlugGatewayFactory::FACTORY_NAME));
 
@@ -120,6 +124,11 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
 
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
+
+        $paymentDataCreator
+            ->create($payment, PayPlugGatewayFactory::FACTORY_NAME)
+            ->willReturn(new ArrayObject(["amount" => 100, "currency" => "EUR", "metadata" => ["customer_id" => 1, "order_number" => "000000001"], "billing" => ["title" => null, "first_name" => "John", "last_name" => "Doe", "company_name" => "Bob", "email" => "test@test.pl", "mobile_phone_number" => null, "landline_phone_number" => null, "address1" => "test", "address2" => null, "postcode" => "97980", "city" => "City", "state" => "State", "country" => "US", "language" => "en"], "shipping" => ["title" => null, "first_name" => "Jean", "last_name" => "Bon", "company_name" => "Paris", "email" => "test@test.pl", "mobile_phone_number" => null, "landline_phone_number" => null, "address1" => "test", "address2" => null, "postcode" => "97980", "city" => "Paris", "state" => "Paris", "country" => "US", "language" => "en", "delivery_type" => "NEW"]]))
+        ;
 
         $request->setResult([
             'amount' => 100,

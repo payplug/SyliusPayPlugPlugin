@@ -47,7 +47,7 @@ final class OneyChecker implements OneyCheckerInterface
 
     public function isCountryEligible(?string $shippingCountry, ?string $billingCountry): bool
     {
-        if ($shippingCountry === null || $billingCountry === null) {
+        if (null === $shippingCountry || null === $billingCountry) {
             return false;
         }
 

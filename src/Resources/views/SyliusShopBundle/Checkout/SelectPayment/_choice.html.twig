@@ -1,6 +1,7 @@
 {% set oneyFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
 {% set payplugFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayplugGatewayFactory::FACTORY_NAME') %}
 {% set bancontactFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\BancontactGatewayFactory::FACTORY_NAME') %}
+{% set applePayFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') %}
 
 {% set checkboxClass = '' %}
 {% if method.gatewayConfig.factoryName == oneyFactoryName %}
@@ -9,6 +10,8 @@
     {% set checkboxClass = 'checkbox-payplug' %}
 {% elseif method.gatewayConfig.factoryName == bancontactFactoryName %}
     {% set checkboxClass = 'checkbox-bancontact' %}
+{% elseif method.gatewayConfig.factoryName == applePayFactoryName %}
+    {% set checkboxClass = 'checkbox-applepay' %}
 {% endif %}
 
 {% set showOney = false %}
@@ -62,16 +65,140 @@
             <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.oney_payment_choice) }}
             </div>
-            {% if app.session is not null and app.session.get('oney_has_error') == true %}
-                <script type="text/javascript">
-                    /* <![CDATA[ */
-                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
-                    /* ]] */
-                </script>
-            {% endif %}
-        {% elseif showPayplug %}
+        {% if app.session is not null and app.session.get('oney_has_error') == true %}
+            <script type="text/javascript">
+                /* <![CDATA[ */
+                var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                /* ]] */
+            </script>
+        {% endif %}
+            {% elseif showPayplug %}
             <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
                 {{ form_row(form.parent.parent.payplug_card_choice) }}
+            </div>
+        {% endif %}
+
+        {% if method.gatewayConfig.factoryName == applePayFactoryName %}
+            <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
+
+            <apple-pay-button id="payplug-applepay-btn" onclick="apple();" buttonstyle="black" type="plain" locale="en"></apple-pay-button>
+            <div>
+                <script>
+                    function apple() {
+                        const request = {
+                            "countryCode": "FR",
+                            "currencyCode": "EUR",
+                            "merchantCapabilities": [
+                                "supports3DS"
+                            ],
+                            "supportedNetworks": [
+                                "visa",
+                                "mastercard"
+                            ],
+                            "total": {
+                                "label": "Demo (Card is not charged)",
+                                "type": "final",
+                                "amount": "1.00"
+                            },
+                            'applicationData': btoa(JSON.stringify({
+                                'apple_pay_domain': 'ppsylappay.eu-1.sharedwithexpose.com'
+                            }))
+                        };
+
+                        // Create ApplePaySession
+                        const session = new ApplePaySession(3, request);
+
+                        session.onvalidatemerchant = async event => {
+                            jQuery.ajax({
+                                url: "{{ path('payplug_shop_checkout_apple_prepare') }}",
+                                method: 'POST',
+                                data: {
+                                },
+                                success: (authorization) => {
+                                    // console.log(authorization);
+                                    let result = authorization.merchant_session;
+                                    console.log(result);
+
+                                    if (authorization.success === true) {
+                                        // console.log(result['returnUrl']);
+                                        // redirectionUrl = result['returnUrl'];
+                                        // session.completePayment(result['responseToApple']);
+                                        // window.location.href = redirectionUrl;
+                                        // try {
+                                        console.log(authorization.merchant_session);
+                                        var test = session.completeMerchantValidation(result);
+                                        // } catch (err) {
+                                        //     console.error(err);
+                                        // }
+                                    } else {
+                                        session.abort();
+                                    }
+                                },
+                                error: (XHR, status, error) => {
+                                    console.log(XHR, status, error);
+
+                                    session.abort();
+                                },
+                            });
+                        };
+
+                        session.onpaymentauthorized = event => {
+                            jQuery.ajax({
+                                url: "{{ path('payplug_shop_checkout_apple_confirm') }}",
+                                method: 'POST',
+                                data: {
+                                    token: event.payment.token
+                                },
+                                success: (authorization) => {
+                                    var apple_pay_Session_status = ApplePaySession.STATUS_SUCCESS;
+
+                                    console.log(authorization);
+                                    console.log(authorization.data.responseToApple.status);
+                                    if (authorization.data.responseToApple.status != 1) {
+                                        apple_pay_Session_status = ApplePaySession.STATUS_FAILURE;
+                                    }
+                                    const result = {
+                                        "status": apple_pay_Session_status
+                                    };
+
+                                    console.log(apple_pay_Session_status);
+                                    console.log(result);
+
+                                    session.completePayment(result);
+                                },
+                                error: (XHR, status, error) => {
+                                    console.log(XHR, status, error);
+
+                                    session.abort();
+                                },
+                            });
+                        };
+
+                        session.oncancel = event => {
+                            console.log('Cancelling!');
+
+                            {#jQuery.ajax({#}
+                            {#    url: "{{ path('payplug_shop_checkout_apple_cancel') }}",#}
+                            {#    method: 'POST',#}
+                            {#    data: {#}
+                            {#    },#}
+                            {#    success: (authorization) => {#}
+                            {#        console.log('Cancelled!');#}
+
+                            {#        session.abort();#}
+                            {#    },#}
+                            {#    error: (XHR, status, error) => {#}
+                            {#        console.log(XHR, status, error);#}
+
+                            {#        session.abort();#}
+                            {#    },#}
+                            {#});#}
+                        };
+
+                        session.begin();
+                    }
+                </script>
+                {#                <button onclick="apple(); return false">Payer avec ApplePay</button>#}
             </div>
         {% endif %}
     </div>

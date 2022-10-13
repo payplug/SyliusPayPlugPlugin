@@ -57,7 +57,7 @@ class AbstractGatewayConfigurationType extends AbstractType
         }
 
         $message = $this->translator->trans('payplug_sylius_payplug_plugin.form.only_one_gateway_allowed', ['%gateway_title%' => $factoryTitle]);
-        /** @phpstan-ignore-next-line */
+        /* @phpstan-ignore-next-line */
         $form->getParent()->getParent()->get('enabled')->addError(new FormError($message));
     }
 }

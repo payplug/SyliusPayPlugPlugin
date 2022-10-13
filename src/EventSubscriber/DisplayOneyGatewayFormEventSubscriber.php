@@ -41,7 +41,7 @@ final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInte
 
     public function handle(KernelEvent $event): void
     {
-        if ($event->getRequest()->attributes->get('_route') !== 'sylius_admin_payment_method_update') {
+        if ('sylius_admin_payment_method_update' !== $event->getRequest()->attributes->get('_route')) {
             return;
         }
 

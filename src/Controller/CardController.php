@@ -57,7 +57,7 @@ final class CardController extends AbstractController
         }
 
         return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
-            /** @phpstan-ignore-next-line */
+            /* @phpstan-ignore-next-line */
             'savedCards' => $customer->getCards(),
         ]);
     }

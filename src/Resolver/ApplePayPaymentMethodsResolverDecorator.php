@@ -34,7 +34,8 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
             $supportedMethods,
             ApplePayGatewayFactory::FACTORY_NAME,
             ApplePayGatewayFactory::AUTHORIZED_CURRENCIES,
-            $payment->getAmount() ?? 0);
+            $payment->getAmount() ?? 0
+        );
     }
 
     public function supports(BasePaymentInterface $payment): bool

@@ -49,7 +49,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         HttpClient::addDefaultUserAgentProduct(
             'PayPlug-Sylius',
             PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/' . Kernel::VERSION
+            'Sylius/'.Kernel::VERSION
         );
     }
 
@@ -62,13 +62,13 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         HttpClient::addDefaultUserAgentProduct(
             'PayPlug-Sylius',
             PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/' . Kernel::VERSION
+            'Sylius/'.Kernel::VERSION
         );
     }
 
     public function getAccount(bool $refresh = false): array
     {
-        $cacheKey = 'payplug_account_' . substr($this->configuration->getToken(), 8);
+        $cacheKey = 'payplug_account_'.substr($this->configuration->getToken(), 8);
         if ($refresh) {
             $this->cache->delete($cacheKey);
         }

@@ -34,7 +34,8 @@ final class BancontactPaymentMethodsResolverDecorator implements PaymentMethodsR
             $supportedMethods,
             BancontactGatewayFactory::FACTORY_NAME,
             BancontactGatewayFactory::AUTHORIZED_CURRENCIES,
-            $payment->getAmount() ?? 0);
+            $payment->getAmount() ?? 0
+        );
     }
 
     public function supports(BasePaymentInterface $payment): bool

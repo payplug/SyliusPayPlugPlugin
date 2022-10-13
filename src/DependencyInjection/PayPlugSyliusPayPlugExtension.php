@@ -20,7 +20,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
      */
     public function load(array $config, ContainerBuilder $container): void
     {
-        $loader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__) . '/Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__).'/Resources/config'));
 
         $loader->load('services.xml');
     }
@@ -31,12 +31,12 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
             return;
         }
 
-        $viewsPath = dirname(__DIR__) . '/Resources/views/';
+        $viewsPath = dirname(__DIR__).'/Resources/views/';
         // This add our override in twig paths with correct namespace if there are not already overridden. No need for final user to copy it
         $paths = [
-            $viewsPath . 'SyliusShopBundle' => 'SyliusShop',
-            $viewsPath . 'SyliusAdminBundle' => 'SyliusAdmin',
-            $viewsPath . 'SyliusUiBundle' => 'SyliusUi',
+            $viewsPath.'SyliusShopBundle' => 'SyliusShop',
+            $viewsPath.'SyliusAdminBundle' => 'SyliusAdmin',
+            $viewsPath.'SyliusUiBundle' => 'SyliusUi',
         ];
 
         $twigConfig = $container->getExtensionConfig('twig');
@@ -59,12 +59,10 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
     }
 
     /**
-     * Verify if a given namespace is alreay extented
+     * Verify if a given namespace is alreay extented.
      *
-     * @param string $namespace The namespace to verify
+     * @param string $namespace      The namespace to verify
      * @param array  $configurations The given configurations
-     *
-     * @return bool
      */
     protected function isPathAlreadyInConfiguration(string $namespace, array $configurations): bool
     {

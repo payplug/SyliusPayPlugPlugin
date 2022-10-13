@@ -34,7 +34,8 @@ final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsReso
             $supportedMethods,
             PayPlugGatewayFactory::FACTORY_NAME,
             PayPlugGatewayFactory::AUTHORIZED_CURRENCIES,
-            $payment->getAmount() ?? 0);
+            $payment->getAmount() ?? 0
+        );
     }
 
     public function supports(BasePaymentInterface $payment): bool

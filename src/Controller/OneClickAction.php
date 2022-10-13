@@ -22,7 +22,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OneClickAction extends AbstractController implements GatewayAwareInterface, ApiAwareInterface
 {
-    use GatewayAwareTrait, ApiAwareTrait;
+    use GatewayAwareTrait;
+    use ApiAwareTrait;
 
     /** @var PaymentRepositoryInterface */
     private $paymentRepository;

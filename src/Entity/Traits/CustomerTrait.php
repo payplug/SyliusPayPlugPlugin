@@ -23,8 +23,8 @@ trait CustomerTrait
     {
         return $this->cards->filter(function (Card $card): bool {
             $secretKeyPrefix = \substr($card->getPaymentMethod()->getGatewayConfig()->getConfig()['secretKey'], 0, 7);
-            if (($card->isLive() && $secretKeyPrefix === PayPlugApiClientInterface::LIVE_KEY_PREFIX) ||
-                (!$card->isLive() && $secretKeyPrefix === PayPlugApiClientInterface::TEST_KEY_PREFIX)) {
+            if (($card->isLive() && PayPlugApiClientInterface::LIVE_KEY_PREFIX === $secretKeyPrefix) ||
+                (!$card->isLive() && PayPlugApiClientInterface::TEST_KEY_PREFIX === $secretKeyPrefix)) {
                 return true;
             }
 

@@ -79,7 +79,7 @@ final class SupportedRefundPaymentMethodsProviderDecorator implements RefundPaym
 
         if (null !== $order->getLastPayment() &&
             null !== $order->getLastPayment()->getMethod() &&
-            $order->getLastPayment()->getMethod()->getCode() === PayPlugGatewayFactory::FACTORY_NAME &&
+            PayPlugGatewayFactory::FACTORY_NAME === $order->getLastPayment()->getMethod()->getCode() &&
             !\in_array(PayPlugGatewayFactory::FACTORY_NAME, $this->supportedRefundGateways, true)) {
             $this->flashBag->add('info', 'payplug_sylius_payplug_plugin.ui.payplug_refund_gateway_is_not_activated');
         }

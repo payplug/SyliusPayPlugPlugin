@@ -52,8 +52,8 @@ final class OneyInvalidDataRetriever
 
     private function isCustomerEmailValid(CustomerInterface $customer): bool
     {
-        return $customer->getEmail() !== null &&
-            \mb_strpos($customer->getEmail(), '+') === false;
+        return null !== $customer->getEmail() &&
+            false === \mb_strpos($customer->getEmail(), '+');
     }
 
     private function isPhoneAddressValid(AddressInterface $address): bool
@@ -69,7 +69,7 @@ final class OneyInvalidDataRetriever
                 return false;
             }
 
-            return $this->phoneNumberUtil->getNumberType($parsedNumber) === PhoneNumberType::MOBILE;
+            return PhoneNumberType::MOBILE === $this->phoneNumberUtil->getNumberType($parsedNumber);
         } catch (\Throwable $throwable) {
             return false;
         }

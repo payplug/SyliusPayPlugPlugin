@@ -37,7 +37,7 @@ final class PaymentPage extends Page implements PaymentPageInterface
         $url = $captureToken->getTargetUrl();
 
         if (count($parameters) > 0) {
-            $url .= '?' . http_build_query($parameters);
+            $url .= '?'.http_build_query($parameters);
         }
 
         $this->getDriver()->visit($url);

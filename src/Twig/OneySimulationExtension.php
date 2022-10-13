@@ -88,7 +88,7 @@ final class OneySimulationExtension extends AbstractExtension
     {
         return \count(\array_filter(
             $this->getSupportedPaymentChoices(),
-            fn(string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true)
+            fn (string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true)
         )) > 0;
     }
 }
