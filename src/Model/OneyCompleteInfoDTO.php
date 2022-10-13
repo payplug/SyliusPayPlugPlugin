@@ -28,7 +28,7 @@ final class OneyCompleteInfoDTO
      */
     public function validatePhoneNumber(ExecutionContextInterface $context): void
     {
-        if ($this->phone === null) {
+        if (null === $this->phone) {
             return;
         }
 
@@ -36,7 +36,7 @@ final class OneyCompleteInfoDTO
             $phoneNumberUtil = PhoneNumberUtil::getInstance();
             $parsedNumber = $phoneNumberUtil->parse($this->phone, $this->countryCode);
             if (!$phoneNumberUtil->isValidNumber($parsedNumber) ||
-                $phoneNumberUtil->getNumberType($parsedNumber) !== PhoneNumberType::MOBILE) {
+                PhoneNumberType::MOBILE !== $phoneNumberUtil->getNumberType($parsedNumber)) {
                 throw new \InvalidArgumentException('Not a valid mobile phone number');
             }
         } catch (\Throwable $throwable) {

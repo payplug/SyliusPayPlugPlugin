@@ -85,7 +85,7 @@ final class CompleteRefundPaymentAction
                 $this->relatedPaymentIdProvider->getForRefundPayment($refundPayment)
             ));
 
-            if ($refundPayment->getState() !== self::COMPLETED_STATE) {
+            if (self::COMPLETED_STATE !== $refundPayment->getState()) {
                 $this->refundPaymentCompletedStateApplier->apply($refundPayment);
             }
             $this->session->getFlashBag()->add('success', 'sylius_refund.refund_payment_completed');

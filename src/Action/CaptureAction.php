@@ -31,7 +31,8 @@ use Webmozart\Assert\Assert;
 
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
 {
-    use GatewayAwareTrait, ApiAwareTrait;
+    use GatewayAwareTrait;
+    use ApiAwareTrait;
 
     /** @var GenericTokenFactoryInterface|null */
     private $tokenFactory;
@@ -105,10 +106,10 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         $details['hosted_payment'] = [
             'return_url' => $token->getAfterUrl(),
-            'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
+            'cancel_url' => $token->getTargetUrl().'?&'.http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
-        if (isset($details['status']) && $details['status'] === 'pending') {
+        if (isset($details['status']) && 'pending' === $details['status']) {
             // We previously made a payment but not yet "authorized",
             // Unset current status to allow to use payplug to change payment method
             unset($details['status']);
@@ -129,7 +130,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 $details['hosted_payment'] = [
                     'payment_url' => $payment->hosted_payment->payment_url,
                     'return_url' => $token->getAfterUrl(),
-                    'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
+                    'cancel_url' => $token->getTargetUrl().'?&'.http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
                 ];
 
                 $oneClickToken = $this->tokenFactory->createCaptureToken(
@@ -198,7 +199,6 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         }
 
         $notifyToken = $this->tokenFactory->createNotifyToken($token->getGatewayName(), $token->getDetails());
-
         $notificationUrl = $notifyToken->getTargetUrl();
 
         $details['notification_url'] = $notificationUrl;
@@ -225,11 +225,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         } catch (\Throwable $throwable) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
 
-            throw new UnknownApiErrorException(
-                'payplug_sylius_payplug_plugin.error.api_unknow_error',
-                $throwable->getCode(),
-                $throwable,
-            );
+            throw new UnknownApiErrorException('payplug_sylius_payplug_plugin.error.api_unknow_error', $throwable->getCode(), $throwable, );
         }
     }
 

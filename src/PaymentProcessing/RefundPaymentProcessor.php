@@ -118,7 +118,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
             !\in_array($factoryName = $paymentMethod->getGatewayConfig()->getFactoryName(), [
                 PayPlugGatewayFactory::FACTORY_NAME,
                 OneyGatewayFactory::FACTORY_NAME,
-                BancontactGatewayFactory::FACTORY_NAME
+                BancontactGatewayFactory::FACTORY_NAME,
             ], true)
         ) {
             return;

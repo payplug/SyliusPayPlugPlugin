@@ -18,10 +18,10 @@ final class OneyOrderChecker
     }
 
     /**
-     * Validate if phone number are setted and are mobile, and if address mail don't contains + characters
+     * Validate if phone number are setted and are mobile, and if address mail don't contains + characters.
      */
     public function isOrderInfoCorrect(OrderInterface $order): bool
     {
-        return \count($this->invalidDataRetriever->getForOrder($order)) === 0;
+        return 0 === \count($this->invalidDataRetriever->getForOrder($order));
     }
 }
