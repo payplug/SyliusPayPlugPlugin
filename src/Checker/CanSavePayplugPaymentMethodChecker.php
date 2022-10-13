@@ -25,7 +25,7 @@ final class CanSavePayplugPaymentMethodChecker
     public function isEnabled(string $factoryName, Collection $channels): bool
     {
         $paymentMethods = $this->client->getAccount()['payment_methods'];
-        $paymentMethodName = substr($factoryName, strpos($factoryName, '_', 0) +1);
+        $paymentMethodName = substr($factoryName, (int)(strpos($factoryName, '_', 0)) + 1);
 
         foreach ($paymentMethods as $key => $method) {
             if ($key !== $paymentMethodName) {
