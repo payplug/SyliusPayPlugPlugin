@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
-use Doctrine\ORM\PersistentCollection;
+use Doctrine\Common\Collections\Collection;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 
@@ -22,15 +22,17 @@ final class CanSavePayplugPaymentMethodChecker
         return (bool) ($this->client->getAccount()['is_live']);
     }
 
-    public function isEnabled(string $gatewayName, PersistentCollection $channels): bool
+    public function isEnabled(string $factoryName, Collection $channels): bool
     {
         $paymentMethods = $this->client->getAccount()['payment_methods'];
+        $paymentMethodName = substr($factoryName, (int)(strpos($factoryName, '_', 0)) + 1);
 
         foreach ($paymentMethods as $key => $method) {
-            if ($key !== $gatewayName) {
+            if ($key !== $paymentMethodName) {
                 continue;
             }
-            if (ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY !== $gatewayName) {
+
+            if (ApplePayGatewayFactory::FACTORY_NAME !== $factoryName) {
                 return $method['enabled'];
             }
 
@@ -40,7 +42,7 @@ final class CanSavePayplugPaymentMethodChecker
         return false;
     }
 
-    private function isAllowedDomainNames(array $method, PersistentCollection $channels): bool
+    private function isAllowedDomainNames(array $method, Collection $channels): bool
     {
         if (!$method['enabled'] || !array_key_exists('allowed_domain_names', $method) || $channels->isEmpty()) {
             return false;
