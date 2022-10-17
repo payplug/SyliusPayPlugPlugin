@@ -7,7 +7,6 @@ namespace PayPlug\SyliusPayPlugPlugin\Controller;
 use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider;
-use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
 use Sylius\Bundle\OrderBundle\Controller\OrderController as BaseOrderController;
 use Sylius\Bundle\ResourceBundle\Controller\AuthorizationCheckerInterface;
 use Sylius\Bundle\ResourceBundle\Controller\EventDispatcherInterface;
@@ -185,6 +184,7 @@ final class OrderController extends BaseOrderController
                 throw new PaymentNotCompletedException();
             }
         } catch (\Exception|PaymentNotCompletedException $exception) {
+            $this->addFlash('error', 'sylius.payment.cancelled');
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse = [];
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
@@ -279,6 +279,9 @@ final class OrderController extends BaseOrderController
             $currentCart = $this->getCurrentCart();
 
             $this->applePayPaymentProvider->cancel($request, $currentCart);
+
+            $this->addFlash('error', 'sylius.payment.cancelled');
+
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
@@ -293,7 +296,8 @@ final class OrderController extends BaseOrderController
         } catch (UpdateHandlingException $exception) {
             return new JsonResponse([], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $exception) {
-            $this->addFlash('error', 'This is a fake error!');
+            $this->addFlash('error', 'sylius.payment.cancelled');
+
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
