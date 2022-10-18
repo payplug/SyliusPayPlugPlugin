@@ -120,16 +120,8 @@
                                     console.log(result);
 
                                     if (authorization.success === true) {
-                                        // console.log(result['returnUrl']);
-                                        // redirectionUrl = result['returnUrl'];
-                                        // session.completePayment(result['responseToApple']);
-                                        // window.location.href = redirectionUrl;
-                                        // try {
                                         console.log(authorization.merchant_session);
-                                        var test = session.completeMerchantValidation(result);
-                                        // } catch (err) {
-                                        //     console.error(err);
-                                        // }
+                                        session.completeMerchantValidation(result);
                                     } else {
                                         session.abort();
                                     }
@@ -150,21 +142,29 @@
                                     token: event.payment.token
                                 },
                                 success: (authorization) => {
-                                    var apple_pay_Session_status = ApplePaySession.STATUS_SUCCESS;
+                                    try {
+                                        var apple_pay_Session_status = ApplePaySession.STATUS_SUCCESS;
 
-                                    console.log(authorization);
-                                    console.log(authorization.data.responseToApple.status);
-                                    if (authorization.data.responseToApple.status != 1) {
-                                        apple_pay_Session_status = ApplePaySession.STATUS_FAILURE;
+                                        console.log(authorization);
+                                        console.log(authorization.data.responseToApple.status);
+                                        if (authorization.data.responseToApple.status != 1) {
+                                            apple_pay_Session_status = ApplePaySession.STATUS_FAILURE;
+                                        }
+
+                                        const result = {
+                                            "status": apple_pay_Session_status
+                                        };
+
+                                        console.log(apple_pay_Session_status);
+                                        console.log(result);
+
+                                        session.completePayment(result);
+
+                                        console.log(authorization.data.returnUrl);
+                                        window.location.href = authorization.data.returnUrl;
+                                    } catch (err) {
+                                        console.error(err);
                                     }
-                                    const result = {
-                                        "status": apple_pay_Session_status
-                                    };
-
-                                    console.log(apple_pay_Session_status);
-                                    console.log(result);
-
-                                    session.completePayment(result);
                                 },
                                 error: (XHR, status, error) => {
                                     console.log(XHR, status, error);
@@ -177,28 +177,23 @@
                         session.oncancel = event => {
                             console.log('Cancelling!');
 
-                            {#jQuery.ajax({#}
-                            {#    url: "{{ path('payplug_shop_checkout_apple_cancel') }}",#}
-                            {#    method: 'POST',#}
-                            {#    data: {#}
-                            {#    },#}
-                            {#    success: (authorization) => {#}
-                            {#        console.log('Cancelled!');#}
-
-                            {#        session.abort();#}
-                            {#    },#}
-                            {#    error: (XHR, status, error) => {#}
-                            {#        console.log(XHR, status, error);#}
-
-                            {#        session.abort();#}
-                            {#    },#}
-                            {#});#}
+                            jQuery.ajax({
+                                url: "{{ path('payplug_shop_checkout_apple_cancel') }}",
+                                method: 'POST',
+                                data: {
+                                },
+                                success: (authorization) => {
+                                    console.log('Cancelled!');
+                                },
+                                error: (XHR, status, error) => {
+                                    console.log(XHR, status, error);
+                                },
+                            });
                         };
 
                         session.begin();
                     }
                 </script>
-                {#                <button onclick="apple(); return false">Payer avec ApplePay</button>#}
             </div>
         {% endif %}
     </div>
