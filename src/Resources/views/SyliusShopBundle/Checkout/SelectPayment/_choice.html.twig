@@ -98,7 +98,7 @@
                             "total": {
                                 "label": "Demo (Card is not charged)",
                                 "type": "final",
-                                "amount": "1.00"
+                                "amount": "{{ order.total/100 }}"
                             },
                             'applicationData': btoa(JSON.stringify({
                                 'apple_pay_domain': 'ppsylappay.eu-1.sharedwithexpose.com'
@@ -164,7 +164,7 @@
                                         window.location.href = authorization.data.returnUrl;
                                     } catch (err) {
                                         console.error(err);
-                                        window.location.reload;
+                                        window.location.reload();
                                     }
                                 },
                                 error: (XHR, status, error) => {
