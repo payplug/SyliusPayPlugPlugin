@@ -65,7 +65,7 @@ class PayPlugPaymentDataCreator
         $customer = $order->getCustomer();
 
         $details = ArrayObject::ensureArrayObject($payment->getDetails());
-        $details['amount'] = 100; //$payment->getAmount();
+        $details['amount'] = $payment->getAmount();
         $details['currency'] = $payment->getCurrencyCode();
 
         $details['metadata'] = [
