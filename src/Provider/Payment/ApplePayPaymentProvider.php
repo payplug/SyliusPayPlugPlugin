@@ -82,7 +82,7 @@ class ApplePayPaymentProvider
 
         Assert::isInstanceOf($order->getChannel(), ChannelInterface::class);
 
-        $paymentData = $this->paymentDataCreator->create(
+        $paymentDataObject = $this->paymentDataCreator->create(
             $payment,
             ApplePayGatewayFactory::FACTORY_NAME,
             [
@@ -99,13 +99,12 @@ class ApplePayPaymentProvider
         $token = $this->paymentTokenProvider->getPaymentToken($payment);
         $notificationUrl = $this->payum->getTokenFactory()->createNotifyToken($token->getGatewayName(), $token->getDetails());
 
-        $details = (array) $paymentData;
-        $details['hosted_payment'] = [
-            'notification_url' => $notificationUrl->getTargetUrl(),
-        ];
+        $paymentData = $paymentDataObject->getArrayCopy();
+        $paymentData['notification_url'] = $notificationUrl->getTargetUrl();
 
-        $paymentResource = $this->applePayClient->createPayment((array) $paymentData);
+        $paymentResource = $this->applePayClient->createPayment($paymentData);
 
+        $details = $paymentData;
         $details['merchant_session'] = $paymentResource->payment_method['merchant_session'];
         $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
         $details['payment_id'] = $paymentResource->id;

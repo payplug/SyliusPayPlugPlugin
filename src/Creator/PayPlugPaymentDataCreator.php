@@ -70,7 +70,7 @@ class PayPlugPaymentDataCreator
 
         $details['metadata'] = [
             'customer_id' => $customer->getId(),
-            'order_number' => $order->getNumber(),
+            'order_number' => $order->getNumber() ?? $order->getTokenValue() ?? $order->getId(),
         ];
 
         if ([] !== $context) {
