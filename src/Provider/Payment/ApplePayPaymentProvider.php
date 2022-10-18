@@ -96,17 +96,16 @@ class ApplePayPaymentProvider
             ],
         );
 
-        $paymentResource = $this->applePayClient->createPayment((array) $paymentData);
-
         $token = $this->paymentTokenProvider->getPaymentToken($payment);
         $notificationUrl = $this->payum->getTokenFactory()->createNotifyToken($token->getGatewayName(), $token->getDetails());
 
         $details = (array) $paymentData;
         $details['hosted_payment'] = [
-            'return_url' => $token->getAfterUrl(),
-            'cancel_url' => $token->getTargetUrl().'?&'.http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
             'notification_url' => $notificationUrl->getTargetUrl(),
         ];
+
+        $paymentResource = $this->applePayClient->createPayment((array) $paymentData);
+
         $details['merchant_session'] = $paymentResource->payment_method['merchant_session'];
         $details['status'] = PayPlugApiClientInterface::STATUS_CREATED;
         $details['payment_id'] = $paymentResource->id;
@@ -119,6 +118,9 @@ class ApplePayPaymentProvider
         return $payment;
     }
 
+    /**
+     * @throws NotProvidedOrderPaymentException
+     */
     private function initApplePaySyliusPaymentState(OrderInterface $order, string $targetState): PaymentInterface
     {
         $order->getPayments()->clear();
