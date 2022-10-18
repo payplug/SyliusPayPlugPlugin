@@ -14,7 +14,6 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Provider\PaymentTokenProvider;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
 use Payum\Core\Payum;
@@ -29,7 +28,6 @@ use Sylius\Component\Core\Payment\Exception\NotProvidedOrderPaymentException;
 use Sylius\Component\Core\TokenAssigner\OrderTokenAssignerInterface;
 use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Webmozart\Assert\Assert;
 
@@ -86,10 +84,11 @@ class ApplePayPaymentProvider
 
         $paymentData = $this->paymentDataCreator->create(
             $payment,
-            ApplePayGatewayFactory::FACTORY_NAME, [
+            ApplePayGatewayFactory::FACTORY_NAME,
+            [
                 'apple_pay' => [
                     'domain_name' => $order->getChannel()->getHostname(),
-                    /** @phpstan-ignore-next-line */
+                    /* @phpstan-ignore-next-line */
                     'application_data' => \base64_encode(\json_encode([
                         'apple_pay_domain' => $order->getChannel()->getHostname(),
                     ])),
@@ -198,7 +197,7 @@ class ApplePayPaymentProvider
             $applePay['payment_token'] = $request->get('token');
 
             $data = [
-                'apple_pay' => $applePay,
+                ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY => $applePay,
             ];
 
             /** @var Payment $response */
@@ -230,6 +229,7 @@ class ApplePayPaymentProvider
             $lastPayment->setDetails($details);
 
             $this->entityManager->flush();
+
             return $lastPayment;
         } catch (\Exception $exception) {
             $paymentResource->abort();
@@ -264,7 +264,7 @@ class ApplePayPaymentProvider
         return false;
     }
 
-    public function cancel(Request $request, OrderInterface $order): void
+    public function cancel(OrderInterface $order): void
     {
         $lastPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);
 

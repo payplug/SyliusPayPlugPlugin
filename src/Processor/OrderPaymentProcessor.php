@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Processor;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use SM\Factory\FactoryInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -35,16 +36,16 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
         $payment = $order->getLastPayment(PaymentInterface::STATE_NEW);
 
         if (
-            $payment !== null &&
-            $payment->getDetails()['status'] === PaymentInterface::STATE_COMPLETED &&
-            $this->getFactoryName($payment) === 'payplug_apple_pay'
+            null !== $payment &&
+            PaymentInterface::STATE_COMPLETED === $payment->getDetails()['status'] &&
+            ApplePayGatewayFactory::FACTORY_NAME === $this->getFactoryName($payment)
         ) {
             return;
         }
 
         if (
-            $payment !== null &&
-            $this->getFactoryName($payment) !== 'payplug_apple_pay'
+            null !== $payment &&
+            ApplePayGatewayFactory::FACTORY_NAME !== $this->getFactoryName($payment)
         ) {
             $stateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
             $stateMachine->apply(PaymentTransitions::TRANSITION_CANCEL);

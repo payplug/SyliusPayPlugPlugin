@@ -136,7 +136,7 @@ final class OrderController extends BaseOrderController
         } catch (UpdateHandlingException $exception) {
             return new JsonResponse([], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $exception) {
-            $this->addFlash('error', 'This is a fake error!');
+            $this->addFlash('error', 'sylius.payment.cancelled');
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
@@ -215,7 +215,7 @@ final class OrderController extends BaseOrderController
             return $initializeEventResponse;
         }
 
-        $order= $lastPayment->getOrder();
+        $order = $lastPayment->getOrder();
         Assert::isInstanceOf($order, OrderInterface::class);
 
         $request->getSession()->set('sylius_order_id', $order->getId());
@@ -231,7 +231,6 @@ final class OrderController extends BaseOrderController
 
         return new JsonResponse($response, Response::HTTP_OK);
     }
-
 
     public function cancelApplePaySessionAction(Request $request): Response
     {
@@ -278,7 +277,7 @@ final class OrderController extends BaseOrderController
             /** @var OrderInterface $currentCart */
             $currentCart = $this->getCurrentCart();
 
-            $this->applePayPaymentProvider->cancel($request, $currentCart);
+            $this->applePayPaymentProvider->cancel($currentCart);
 
             $this->addFlash('error', 'sylius.payment.cancelled');
 
@@ -311,5 +310,4 @@ final class OrderController extends BaseOrderController
             return new JsonResponse($response, Response::HTTP_OK);
         }
     }
-
 }
