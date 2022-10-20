@@ -37,6 +37,9 @@ use Webmozart\Assert\Assert;
 
 final class OrderController extends BaseOrderController
 {
+    private const APPLE_ERROR_RESPONSE_CODE = 1;
+    private const APPLE_SUCCESS_RESPONSE_CODE = 0;
+
     private ApplePayPaymentProvider $applePayPaymentProvider;
 
     public function __construct(
@@ -140,10 +143,10 @@ final class OrderController extends BaseOrderController
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
-            $dataResponse['responseToApple'] = ['status' => 1];
+            $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
 
             $response = [
-                'success' => true,
+                'success' => false,
                 'data' => $dataResponse,
             ];
 
@@ -188,7 +191,7 @@ final class OrderController extends BaseOrderController
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse = [];
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
-            $dataResponse['responseToApple'] = ['status' => 0];
+            $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
             $dataResponse['errors'] = 'Payment not created';
             $dataResponse['message'] = $exception->getMessage();
 
@@ -222,7 +225,7 @@ final class OrderController extends BaseOrderController
         $dataResponse = [];
         $redirect = $this->redirectToRoute('sylius_shop_order_thank_you');
         $dataResponse['returnUrl'] = $redirect->getTargetUrl();
-        $dataResponse['responseToApple'] = ['status' => 1];
+        $dataResponse['responseToApple'] = ['status' => self::APPLE_SUCCESS_RESPONSE_CODE];
 
         $response = [
             'success' => true,
@@ -284,7 +287,7 @@ final class OrderController extends BaseOrderController
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
-            $dataResponse['responseToApple'] = ['status' => 1];
+            $dataResponse['responseToApple'] = ['status' => self::APPLE_SUCCESS_RESPONSE_CODE];
 
             $response = [
                 'success' => true,
@@ -300,10 +303,10 @@ final class OrderController extends BaseOrderController
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
-            $dataResponse['responseToApple'] = ['status' => 1];
+            $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
 
             $response = [
-                'success' => true,
+                'success' => false,
                 'data' => $dataResponse,
             ];
 
