@@ -220,7 +220,7 @@ final class OrderController extends BaseOrderController
 
         $request->getSession()->set('sylius_order_id', $order->getId());
         $dataResponse = [];
-        $redirect = $this->redirectToRoute('sylius_shop_checkout_complete');
+        $redirect = $this->redirectToRoute('sylius_shop_order_thank_you');
         $dataResponse['returnUrl'] = $redirect->getTargetUrl();
         $dataResponse['responseToApple'] = ['status' => 1];
 
