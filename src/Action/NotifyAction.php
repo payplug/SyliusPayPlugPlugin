@@ -21,7 +21,8 @@ use Psr\Log\LoggerInterface;
 
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
 {
-    use GatewayAwareTrait, ApiAwareTrait;
+    use GatewayAwareTrait;
+    use ApiAwareTrait;
 
     /** @var LoggerInterface */
     private $logger;

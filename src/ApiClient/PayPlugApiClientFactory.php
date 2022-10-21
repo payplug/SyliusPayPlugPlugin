@@ -30,7 +30,7 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
             $gatewayConfig = $this->gatewayConfigRepository->findOneBy(['factoryName' => $factoryName]);
 
             if (null === $gatewayConfig) {
-                throw new \LogicException('Not yet gateway created for ' . $factoryName);
+                throw new \LogicException('Not yet gateway created for '.$factoryName);
             }
             $key = $gatewayConfig->getConfig()['secretKey'];
         }

@@ -19,7 +19,7 @@ final class phoneNumberFormatTest extends TestCase
         $phoneNumberUtil = PhoneNumberUtil::getInstance();
         $parsed = $phoneNumberUtil->parse($input, $isoCode);
 
-        self::assertEquals($expectedOutput['is_mobile'], $phoneNumberUtil->getNumberType($parsed) === PhoneNumberType::MOBILE);
+        self::assertEquals($expectedOutput['is_mobile'], PhoneNumberType::MOBILE === $phoneNumberUtil->getNumberType($parsed));
     }
 
     public function landlinePhoneNumbersDataProvider(): \Generator

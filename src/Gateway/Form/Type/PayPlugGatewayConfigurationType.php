@@ -67,11 +67,11 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
                 /** @var ChannelInterface $dataFormChannel */
                 foreach ($dataFormChannels as $key => $dataFormChannel) {
                     $baseCurrency = $dataFormChannel->getBaseCurrency();
-                    if ($baseCurrency === null) {
+                    if (null === $baseCurrency) {
                         continue;
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();
-                    if ($baseCurrencyCode !== PayPlugGatewayFactory::BASE_CURRENCY_CODE) {
+                    if (PayPlugGatewayFactory::BASE_CURRENCY_CODE !== $baseCurrencyCode) {
                         $message = $this->translator->trans(
                             'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
                             [
