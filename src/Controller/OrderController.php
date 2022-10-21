@@ -37,8 +37,8 @@ use Webmozart\Assert\Assert;
 
 final class OrderController extends BaseOrderController
 {
-    private const APPLE_ERROR_RESPONSE_CODE = 1;
-    private const APPLE_SUCCESS_RESPONSE_CODE = 0;
+    private const APPLE_ERROR_RESPONSE_CODE = 0;
+    private const APPLE_SUCCESS_RESPONSE_CODE = 1;
 
     private ApplePayPaymentProvider $applePayPaymentProvider;
 
