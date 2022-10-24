@@ -17,14 +17,11 @@ use Webmozart\Assert\Assert;
 
 final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
 {
-    /** @var CurrencyContextInterface */
-    private $currencyContext;
+    private CurrencyContextInterface $currencyContext;
 
-    /** @var PaymentMethodsResolverInterface */
-    private $decorated;
+    private PaymentMethodsResolverInterface $decorated;
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface */
-    private $oneyChecker;
+    private OneyCheckerInterface $oneyChecker;
 
     public function __construct(
         PaymentMethodsResolverInterface $decorated,
