@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace spec\PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentProcessorInterface;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;

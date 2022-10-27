@@ -64,7 +64,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
         $shippingRemainingPrice = $this->getShippingRemainingPrice($payment->getOrder());
         [$items, $shipments] = $this->dispatchRefundPrice($itemsRemainingPrice, $shippingRemainingPrice, $refund->amount);
 
-        if (count($items) === 0 && count($shipments) === 0) {
+        if (0 === count($items) && 0 === count($shipments)) {
             throw new InvalidRefundAmount();
         }
 
@@ -94,7 +94,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
     }
 
     /**
-     * Parse shipment id's to ShipmentRefund with id and remaining total or amount passed in request
+     * Parse shipment id's to ShipmentRefund with id and remaining total or amount passed in request.
      *
      * @return array|UnitRefundInterface[]
      */
@@ -186,12 +186,12 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
                 return [$this->addItem($items, $itemId, (int) $amount), $shipments];
             }
 
-            if ($price !== 0) {
+            if (0 !== $price) {
                 $items = $this->addItem($items, $itemId, $price);
                 $amount -= $price;
             }
 
-            if ($amount === 0) {
+            if (0 === $amount) {
                 return [$items, $shipments];
             }
         }
@@ -205,7 +205,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
             $shipments = $this->addItem($shipments, $itemId, $price);
             $amount -= $price;
 
-            if ($amount === 0) {
+            if (0 === $amount) {
                 return [$items, $shipments];
             }
         }

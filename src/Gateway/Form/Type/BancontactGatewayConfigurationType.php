@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveBancontactMethod;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCards;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -54,11 +51,11 @@ final class BancontactGatewayConfigurationType extends AbstractGatewayConfigurat
                 /** @var ChannelInterface $dataFormChannel */
                 foreach ($dataFormChannels as $key => $dataFormChannel) {
                     $baseCurrency = $dataFormChannel->getBaseCurrency();
-                    if ($baseCurrency === null) {
+                    if (null === $baseCurrency) {
                         continue;
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();
-                    if ($baseCurrencyCode !== BancontactGatewayFactory::BASE_CURRENCY_CODE) {
+                    if (BancontactGatewayFactory::BASE_CURRENCY_CODE !== $baseCurrencyCode) {
                         $message = $this->translator->trans(
                             'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
                             [

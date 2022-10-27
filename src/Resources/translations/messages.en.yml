@@ -24,6 +24,7 @@ payplug_sylius_payplug_plugin:
                 confirmation_modal:
                     confirm_card_deletion: Are you sure you want to delete this card?
         bancontact_gateway_label: Bancontact by PayPlug
+        apple_pay_gateway_label: Apple Pay by PayPlug
         error:
             billing.postcode: The postal code %postalCode% entered for the billing address is invalid
             shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
