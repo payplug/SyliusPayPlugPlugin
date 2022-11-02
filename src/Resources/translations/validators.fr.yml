@@ -26,5 +26,5 @@ payplug_sylius_payplug_plugin:
         can_not_save_method_no_access: |
             Vous n'avez pas accès à cette fonctionnalité. 
             Pour activer Apple Pay, rendez-vous sur 
-            <a href="https://support.payplug.com/hc/fr/requests/new" target="_blank" style="color:black;">ce formulaire</a> 
+            <a href="https://support.payplug.com/hc/fr/requests/new?ticket_form_id=5965121371548" target="_blank" style="color:black;">ce formulaire</a>
             et activez le mode LIVE.
