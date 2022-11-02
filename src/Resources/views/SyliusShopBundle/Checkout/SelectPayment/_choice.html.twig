@@ -88,7 +88,7 @@
             <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
             <script>
                 const applePaySessionRequestSettings = {
-                    "countryCode": "{{ sylius.channel.defaultLocale.code|slice(3, 2) }}",
+                    "countryCode": "{% if sylius.channel.defaultLocale.code|length == 2 %}{{ sylius.channel.defaultLocale.code }}{% else %}{{ sylius.channel.defaultLocale.code|slice(3, 2) }}{% endif %}",
                     "currencyCode": "{{ sylius.channel.baseCurrency.code }}",
                     "merchantCapabilities": [
                         "supports3DS"
