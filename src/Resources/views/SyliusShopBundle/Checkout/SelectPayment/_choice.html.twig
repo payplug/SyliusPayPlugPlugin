@@ -110,10 +110,10 @@
             <apple-pay-button id="payplug-applepay-btn"
                               buttonstyle="black"
                               type="pay"
-                              locale="{{ sylius.channel.defaultLocale.code }}"
-                              data-validate-merchant-route="{{ path('payplug_shop_checkout_apple_prepare') }}"
-                              data-payment-authorized-route="{{ path('payplug_shop_checkout_apple_confirm') }}"
-                              data-session-cancel-route="{{ path('payplug_shop_checkout_apple_cancel') }}"
+                              locale="{{ app.request.locale }}"
+                              data-validate-merchant-route="{{ path('payplug_shop_checkout_apple_prepare', {'orderId': order.id}) }}"
+                              data-payment-authorized-route="{{ path('payplug_shop_checkout_apple_confirm', {'orderId': order.id}) }}"
+                              data-session-cancel-route="{{ path('payplug_shop_checkout_apple_cancel', {'orderId': order.id}) }}"
             ></apple-pay-button>
         {% endif %}
     </div>
