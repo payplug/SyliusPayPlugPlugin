@@ -118,10 +118,15 @@
     }
 
     apple-pay-button {
-        --apple-pay-button-height: 45px;
-        max-width: 222px;
+        --apple-pay-button-width: 222px;
+        --apple-pay-button-height: 40px;
+        --apple-pay-button-border-radius: 4px;
+        --apple-pay-button-padding: 4px 4px;
+        --apple-pay-button-box-sizing: border-box;
         transition: background-color 0.3s ease-in-out;
         display: none;
+        min-width: 140px;
+        max-width: 100%;
 
         &.enabled {
             display: block;

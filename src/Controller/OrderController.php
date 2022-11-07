@@ -223,7 +223,7 @@ final class OrderController extends BaseOrderController
 
         $request->getSession()->set('sylius_order_id', $order->getId());
         $dataResponse = [];
-        $redirect = $this->redirectToRoute('sylius_shop_order_thank_you');
+        $redirect = $this->redirectToRoute('sylius_shop_order_thank_you', ['_locale' => $order->getLocaleCode()]);
         $dataResponse['returnUrl'] = $redirect->getTargetUrl();
         $dataResponse['responseToApple'] = ['status' => self::APPLE_SUCCESS_RESPONSE_CODE];
 
@@ -285,7 +285,7 @@ final class OrderController extends BaseOrderController
             $this->addFlash('error', 'sylius.payment.cancelled');
 
             $dataResponse = [];
-            $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
+            $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment', ['_locale' => $currentCart->getLocaleCode()]);
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
             $dataResponse['responseToApple'] = ['status' => self::APPLE_SUCCESS_RESPONSE_CODE];
 
