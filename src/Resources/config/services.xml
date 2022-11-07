@@ -28,6 +28,9 @@
                  parent="sylius.controller.order"
         >
             <argument key="$applePayPaymentProvider" type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />
+            <argument key="$stateMachineFactory" type="service" id="sm.factory" />
+            <argument key="$lockFactory" type="service" id="lock.default.factory" />
+            <argument key="$logger" type="service" id="logger" />
         </service>
 
         <service
@@ -114,6 +117,10 @@
 
         <service id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider">
             <argument type="service" id="sylius.context.currency"/>
+        </service>
+
+        <service id="payplug.apple_pay_order.provider" class="PayPlug\SyliusPayPlugPlugin\Provider\ApplePayOrderProvider" public="true">
+<!--            <argument type="service" id="sylius.context.cart"/>-->
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
