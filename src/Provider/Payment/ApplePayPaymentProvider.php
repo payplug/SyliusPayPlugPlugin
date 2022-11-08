@@ -75,8 +75,8 @@ class ApplePayPaymentProvider
 
         $payment = $this->initApplePaySyliusPaymentState($order, PaymentInterface::STATE_NEW);
 
-        Assert::notNull($order->getShippingAddress());
-        if (null !== $customer = $order->getShippingAddress()->getCustomer()) {
+        Assert::notNull($order->getBillingAddress());
+        if (null !== $customer = $order->getBillingAddress()->getCustomer()) {
             $order->setCustomer($customer);
         }
 
@@ -142,6 +142,7 @@ class ApplePayPaymentProvider
         $payment->setMethod($paymentMethod);
         $this->applyRequiredTransition($payment, $targetState);
         $order->addPayment($payment);
+        $this->entityManager->flush();
 
         return $payment;
     }
@@ -228,8 +229,6 @@ class ApplePayPaymentProvider
             }
 
             $lastPayment->setDetails($details);
-
-            $this->entityManager->flush();
 
             return $lastPayment;
         } catch (\Exception $exception) {
