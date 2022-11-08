@@ -335,6 +335,12 @@ final class OrderController extends BaseOrderController
             try {
                 $this->applePayPaymentProvider->cancel($resource);
             } catch (\Throwable $throwable) {
+                $this->logger->error('Could not cancel ApplePay payment', [
+                    'order_id' => $resource->getId(),
+                    'code' => $throwable->getCode(),
+                    'message' => $throwable->getMessage(),
+                    'trace' => $throwable->getTraceAsString(),
+                ]);
             }
 
             $orderCheckoutStateMachine = $this->stateMachineFactory->get($resource, OrderCheckoutTransitions::GRAPH);
