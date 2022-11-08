@@ -230,8 +230,6 @@ class ApplePayPaymentProvider
 
             $lastPayment->setDetails($details);
 
-//            $this->entityManager->flush();
-
             return $lastPayment;
         } catch (\Exception $exception) {
             $paymentResource->abort();
