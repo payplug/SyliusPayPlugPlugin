@@ -72,7 +72,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
             && isset($httpRequest->query['payum_token'])) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
-            $this->paymentNotificationHandler->treat($request, $resource, $details);
+            $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
         if (isset($httpRequest->query['status']) &&
@@ -87,7 +87,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
 
         if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
-            $this->paymentNotificationHandler->treat($request, $resource, $details);
+            $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
         $payment->setDetails($details->getArrayCopy());

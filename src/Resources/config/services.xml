@@ -33,6 +33,10 @@
             <argument key="$logger" type="service" id="logger" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\IpnAction" public="true">
+            <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" key="$paymentRepository" />
+        </service>
+
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor"
                 decorates="sylius.order_processing.order_payment_processor.checkout"
