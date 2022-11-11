@@ -57,8 +57,8 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
             }
             $resource = $this->payPlugApiClient->treat($input);
 
-            $this->paymentNotificationHandler->treat($request, $resource, $details);
-            $this->refundNotificationHandler->treat($request, $resource, $details);
+            $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
+            $this->refundNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         } catch (PayplugException $exception) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
             $this->logger->error('[PayPlug] Notify action', ['error' => $exception->getMessage()]);
