@@ -45,6 +45,12 @@ payplug_sylius_oneclick_verification:
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction'
 
+payplug_sylius_ipn:
+    path: /payplug/ipn
+    methods: ['GET', 'POST']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\IpnAction'
+
 payplug_shop_checkout_apple_prepare:
     path: /payplug/apple-pay/prepare/{orderId}
     methods: [POST, GET]

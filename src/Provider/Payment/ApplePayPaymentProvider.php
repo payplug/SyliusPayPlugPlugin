@@ -14,9 +14,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Provider\PaymentTokenProvider;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
-use Payum\Core\Payum;
 use SM\Factory\FactoryInterface as StateMachineFactoryInterface;
 use SM\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
@@ -29,6 +27,8 @@ use Sylius\Component\Core\TokenAssigner\OrderTokenAssignerInterface;
 use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Routing\RouterInterface;
 use Webmozart\Assert\Assert;
 
 class ApplePayPaymentProvider
@@ -36,33 +36,30 @@ class ApplePayPaymentProvider
     private PaymentFactoryInterface $paymentFactory;
     private StateMachineFactoryInterface $stateMachineFactory;
     private PaymentMethodRepositoryInterface $paymentMethodRepository;
-    private PaymentTokenProvider $paymentTokenProvider;
-    private Payum $payum;
     private PayPlugPaymentDataCreator $paymentDataCreator;
     private PayPlugApiClientInterface $applePayClient;
     private EntityManagerInterface $entityManager;
     private OrderTokenAssignerInterface $orderTokenAssigner;
+    private RouterInterface $router;
 
     public function __construct(
         PaymentFactoryInterface $paymentFactory,
         StateMachineFactoryInterface $stateMachineFactory,
         PaymentMethodRepositoryInterface $paymentMethodRepository,
-        PaymentTokenProvider $paymentTokenProvider,
-        Payum $payum,
         PayPlugPaymentDataCreator $paymentDataCreator,
         PayPlugApiClientInterface $applePayClient,
         EntityManagerInterface $entityManager,
-        OrderTokenAssignerInterface $orderTokenAssigner
+        OrderTokenAssignerInterface $orderTokenAssigner,
+        RouterInterface $router
     ) {
         $this->paymentFactory = $paymentFactory;
         $this->stateMachineFactory = $stateMachineFactory;
         $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->paymentTokenProvider = $paymentTokenProvider;
-        $this->payum = $payum;
         $this->paymentDataCreator = $paymentDataCreator;
         $this->applePayClient = $applePayClient;
         $this->entityManager = $entityManager;
         $this->orderTokenAssigner = $orderTokenAssigner;
+        $this->router = $router;
     }
 
     public function provide(Request $request, OrderInterface $order): PaymentInterface
@@ -96,11 +93,8 @@ class ApplePayPaymentProvider
             ],
         );
 
-        $token = $this->paymentTokenProvider->getPaymentToken($payment);
-        $notificationUrl = $this->payum->getTokenFactory()->createNotifyToken($token->getGatewayName(), $token->getDetails());
-
         $paymentData = $paymentDataObject->getArrayCopy();
-        $paymentData['notification_url'] = $notificationUrl->getTargetUrl();
+        $paymentData['notification_url'] = $this->router->generate('payplug_sylius_ipn', [], UrlGenerator::ABSOLUTE_URL);
 
         $paymentResource = $this->applePayClient->createPayment($paymentData);
 

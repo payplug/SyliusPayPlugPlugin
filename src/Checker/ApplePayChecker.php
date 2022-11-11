@@ -29,15 +29,15 @@ final class ApplePayChecker implements ApplePayCheckerInterface
             return false;
         }
 
-        $browsers = ["Opera", "Edg", "Chrome", "Firefox", "MSIE", "Trident"];
+        $browsers = ['Opera', 'Edg', 'Chrome', 'Firefox', 'MSIE', 'Trident'];
 
         foreach ($browsers as $browser) {
-            if (strpos($userAgent, $browser) !== false) {
+            if (false !== strpos($userAgent, $browser)) {
                 return false;
             }
         }
 
-        preg_match("/iPhone|Android|iPad|iPod|webOS|Mac/", $userAgent, $matches);
+        preg_match('/iPhone|Android|iPad|iPod|webOS|Mac/', $userAgent, $matches);
         $os = current($matches);
 
         return \is_string($os);

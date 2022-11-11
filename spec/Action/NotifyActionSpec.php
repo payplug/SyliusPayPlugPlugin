@@ -16,6 +16,7 @@ use Payum\Core\GatewayInterface;
 use Payum\Core\Request\Notify;
 use PhpSpec\ObjectBehavior;
 use Psr\Log\LoggerInterface;
+use Sylius\Component\Core\Model\Payment as SyliusPayment;
 
 final class NotifyActionSpec extends ObjectBehavior
 {
@@ -65,6 +66,7 @@ final class NotifyActionSpec extends ObjectBehavior
         $this->setApi($payPlugApiClient);
 
         $request->getModel()->willReturn($arrayObject);
+        $request->getFirstModel()->willReturn(new SyliusPayment());
         $payPlugApiClient->treat('')->willReturn($payment);
 
         $this->execute($request);
