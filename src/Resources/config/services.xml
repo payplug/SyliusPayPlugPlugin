@@ -33,6 +33,10 @@
             <argument key="$logger" type="service" id="logger" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\Controller\IpnAction" public="true">
+            <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" key="$paymentRepository" />
+        </service>
+
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor"
                 decorates="sylius.order_processing.order_payment_processor.checkout"
@@ -157,6 +161,28 @@
                 public="false"
         >
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
         </service>

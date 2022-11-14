@@ -12,7 +12,6 @@ use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
-use Payum\Core\Request\Generic;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -61,7 +60,7 @@ class PaymentNotificationHandler
         $this->lockFactory = $lockFactory;
     }
 
-    public function treat(Generic $request, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
+    public function treat(PaymentInterface $payment, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
     {
         if (!$paymentResource instanceof Payment) {
             return;
@@ -70,19 +69,13 @@ class PaymentNotificationHandler
         $lock = $this->lockFactory->createLock('payment_'.$paymentResource->id);
         $lock->acquire(true);
 
-        $this->entityManager->refresh($request->getFirstModel());
-
-        if (PayPlugApiClientInterface::STATUS_CREATED === $request->getFirstModel()->getDetails()) {
-            $lock->release();
-
-            return;
-        }
+        $this->entityManager->refresh($payment);
 
         if ($paymentResource->is_paid) {
             $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
             $details['created_at'] = $paymentResource->created_at;
 
-            $this->saveCard($request->getFirstModel(), $paymentResource);
+            $this->saveCard($payment, $paymentResource);
 
             $lock->release();
 

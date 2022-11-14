@@ -34,5 +34,6 @@
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.notify" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.notify" />
         </service>
+
     </services>
 </container>
