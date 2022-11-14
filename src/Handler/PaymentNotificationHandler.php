@@ -71,12 +71,6 @@ class PaymentNotificationHandler
 
         $this->entityManager->refresh($payment);
 
-        if (PayPlugApiClientInterface::STATUS_CREATED === $payment->getDetails()['status']) {
-            $lock->release();
-
-            return;
-        }
-
         if ($paymentResource->is_paid) {
             $details['status'] = PayPlugApiClientInterface::STATUS_CAPTURED;
             $details['created_at'] = $paymentResource->created_at;
