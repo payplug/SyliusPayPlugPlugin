@@ -18,14 +18,11 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PaymentTypeExtension extends AbstractTypeExtension
 {
-    /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface */
-    private $session;
-
     /** @var \Symfony\Contracts\Translation\TranslatorInterface */
     private $translator;
 
@@ -34,13 +31,15 @@ final class PaymentTypeExtension extends AbstractTypeExtension
 
     private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
 
+    private RequestStack $requestStack;
+
     public function __construct(
-        SessionInterface $session,
+        RequestStack $requestStack,
         TranslatorInterface $translator,
         OneyOrderChecker $orderChecker,
         OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
     ) {
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->translator = $translator;
         $this->orderChecker = $orderChecker;
         $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
@@ -64,12 +63,12 @@ final class PaymentTypeExtension extends AbstractTypeExtension
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (): void {
                 // Remove on preset data, it'll be readded if needed in post_submit
-                $this->session->remove('oney_has_error');
-                $this->session->remove('payplug_payment_method');
+                $this->requestStack->getSession()->remove('oney_has_error');
+                $this->requestStack->getSession()->remove('payplug_payment_method');
             })
             ->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event): void {
-                if ($this->session->has('oney_payment_method')) {
-                    $event->getForm()->get('oney_payment_choice')->setData($this->session->get('oney_payment_method'));
+                if ($this->requestStack->getSession()->has('oney_payment_method')) {
+                    $event->getForm()->get('oney_payment_choice')->setData($this->requestStack->getSession()->get('oney_payment_method'));
                 }
             })
             ->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
@@ -87,7 +86,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
 
                 if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() && null !== $event->getForm()->get('payplug_card_choice')->getData()) {
                     $payplugCardId = $event->getForm()->get('payplug_card_choice')->getData();
-                    $this->session->set('payplug_payment_method', $payplugCardId);
+                    $this->requestStack->getSession()->set('payplug_payment_method', $payplugCardId);
 
                     return;
                 }
@@ -116,13 +115,13 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->addError($error);
                     });
-                    $this->session->set('oney_has_error', true);
+                    $this->requestStack->getSession()->set('oney_has_error', true);
 
                     return;
                 }
 
                 $data = $event->getForm()->get('oney_payment_choice')->getData();
-                $this->session->set('oney_payment_method', $data);
+                $this->requestStack->getSession()->set('oney_payment_method', $data);
             })
         ;
     }

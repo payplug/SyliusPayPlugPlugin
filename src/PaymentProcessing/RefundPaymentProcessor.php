@@ -20,12 +20,13 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
-    private Session $session;
+    private RequestStack $requestStack;
 
     private PayPlugApiClientInterface $payPlugApiClient;
 
@@ -40,14 +41,14 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     private PayPlugApiClientFactoryInterface $apiClientFactory;
 
     public function __construct(
-        Session $session,
+        RequestStack $requestStack,
         LoggerInterface $logger,
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
         PayPlugApiClientFactoryInterface $apiClientFactory
     ) {
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->logger = $logger;
         $this->translator = $translator;
         $this->refundPaymentRepository = $refundPaymentRepository;
@@ -127,7 +128,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         }
 
         if (!isset($details['payment_id'])) {
-            $this->session->getFlashBag()->add(
+            $this->requestStack->getSession()->getFlashBag()->add(
                 'info',
                 $this->translator->trans('payplug_sylius_payplug_plugin.ui.payment_refund_locally')
             );

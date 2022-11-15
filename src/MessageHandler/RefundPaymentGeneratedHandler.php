@@ -28,7 +28,7 @@ use Sylius\RefundPlugin\Entity\RefundPayment;
 use Sylius\RefundPlugin\Event\RefundPaymentGenerated;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentTransitions;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 use Webmozart\Assert\Assert;
@@ -53,9 +53,6 @@ final class RefundPaymentGeneratedHandler
     /** @var RefundHistoryRepositoryInterface */
     private $payplugRefundHistoryRepository;
 
-    /** @var Session */
-    private $session;
-
     /** @var OrderRepositoryInterface */
     private $orderRepository;
 
@@ -64,6 +61,7 @@ final class RefundPaymentGeneratedHandler
 
     /** @var RepositoryInterface */
     private $refundPaymentRepository;
+    private RequestStack $requestStack;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -73,7 +71,7 @@ final class RefundPaymentGeneratedHandler
         FactoryInterface $stateMachineFactory,
         RefundPaymentProcessor $refundPaymentProcessor,
         LoggerInterface $logger,
-        Session $session,
+        RequestStack $requestStack,
         OrderRepositoryInterface $orderRepository,
         TranslatorInterface $translator
     ) {
@@ -84,7 +82,7 @@ final class RefundPaymentGeneratedHandler
         $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentProcessor = $refundPaymentProcessor;
         $this->logger = $logger;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->orderRepository = $orderRepository;
         $this->translator = $translator;
     }
@@ -134,7 +132,7 @@ final class RefundPaymentGeneratedHandler
 
             $this->processRefund($payment, $message);
         } catch (InvalidRefundAmount $exception) {
-            $this->session->getFlashBag()->add('error', $exception->getMessage());
+            $this->requestStack->getSession()->getFlashBag()->add('error', $exception->getMessage());
             $this->logger->error($exception->getMessage());
 
             throw new ApiRefundException($exception->getMessage(), $exception->getCode(), $exception);

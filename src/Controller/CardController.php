@@ -11,8 +11,8 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CardController extends AbstractController
@@ -23,27 +23,26 @@ final class CardController extends AbstractController
     /** @var EntityRepository */
     private $payplugCardRepository;
 
-    /** @var FlashBagInterface */
-    private $flashBag;
-
     /** @var TranslatorInterface */
     private $translator;
 
     /** @var PayPlugApiClientInterface */
     private $payPlugApiClient;
 
+    private RequestStack $requestStack;
+
     public function __construct(
         CustomerContextInterface $customerContext,
         EntityRepository $payplugCardRepository,
-        FlashBagInterface $flashBag,
         TranslatorInterface $translator,
-        PayPlugApiClientInterface $payPlugApiClient
+        PayPlugApiClientInterface $payPlugApiClient,
+        RequestStack $requestStack
     ) {
         $this->customerContext = $customerContext;
         $this->payplugCardRepository = $payplugCardRepository;
-        $this->flashBag = $flashBag;
         $this->translator = $translator;
         $this->payPlugApiClient = $payPlugApiClient;
+        $this->requestStack = $requestStack;
     }
 
     public function indexAction(): Response
@@ -87,7 +86,7 @@ final class CardController extends AbstractController
         try {
             $this->payPlugApiClient->deleteCard($cardToken);
         } catch (NotFoundException $e) {
-            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_error'));
+            $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_error'));
 
             return $this->redirectToRoute('payplug_sylius_card_account_index');
         }
@@ -103,7 +102,7 @@ final class CardController extends AbstractController
         $entityManager->remove($card);
         $entityManager->flush();
 
-        $this->flashBag->add('success', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_successfully'));
+        $this->requestStack->getSession()->getFlashBag()->add('success', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_successfully'));
     }
 
     private function isCardExpired(Card $card): bool

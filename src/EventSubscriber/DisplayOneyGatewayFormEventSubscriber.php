@@ -8,28 +8,27 @@ use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
 
 final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInterface
 {
-    /** @var \Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface */
-    private $flashBag;
-
     /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
     private $paymentMethodRepository;
 
     /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface */
     private $oneyChecker;
 
+    private RequestStack $requestStack;
+
     public function __construct(
-        FlashBagInterface $flashBag,
         RepositoryInterface $paymentMethodRepository,
-        OneyCheckerInterface $oneyChecker
+        OneyCheckerInterface $oneyChecker,
+        RequestStack $requestStack
     ) {
-        $this->flashBag = $flashBag;
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->oneyChecker = $oneyChecker;
+        $this->requestStack = $requestStack;
     }
 
     public static function getSubscribedEvents(): array
@@ -62,7 +61,7 @@ final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInte
             return;
         }
 
-        $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.oney_not_enabled');
+        $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.oney_not_enabled');
         $subject->disable();
         $this->paymentMethodRepository->add($subject);
     }

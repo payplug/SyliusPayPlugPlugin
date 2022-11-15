@@ -12,8 +12,8 @@ use Sylius\RefundPlugin\Event\RefundPaymentGenerated;
 use Sylius\RefundPlugin\Provider\RelatedPaymentIdProviderInterface;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplierInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -22,9 +22,6 @@ use Throwable;
 final class CompleteRefundPaymentAction
 {
     private const COMPLETED_STATE = 'completed';
-
-    /** @var Session */
-    private $session;
 
     /** @var ObjectRepository */
     private $refundPaymentRepository;
@@ -47,8 +44,10 @@ final class CompleteRefundPaymentAction
     /** @var \Symfony\Contracts\Translation\TranslatorInterface */
     private $translator;
 
+    private RequestStack $requestStack;
+
     public function __construct(
-        Session $session,
+        RequestStack $requestStack,
         ObjectRepository $refundPaymentInterface,
         OrderRepositoryInterface $orderRepository,
         RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier,
@@ -57,7 +56,7 @@ final class CompleteRefundPaymentAction
         RelatedPaymentIdProviderInterface $relatedPaymentIdProvider,
         TranslatorInterface $translator
     ) {
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->refundPaymentRepository = $refundPaymentInterface;
         $this->refundPaymentCompletedStateApplier = $refundPaymentCompletedStateApplier;
         $this->router = $router;
@@ -88,9 +87,9 @@ final class CompleteRefundPaymentAction
             if (self::COMPLETED_STATE !== $refundPayment->getState()) {
                 $this->refundPaymentCompletedStateApplier->apply($refundPayment);
             }
-            $this->session->getFlashBag()->add('success', 'sylius_refund.refund_payment_completed');
+            $this->requestStack->getSession()->getFlashBag()->add('success', 'sylius_refund.refund_payment_completed');
         } catch (Throwable $throwable) {
-            $this->session->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.impossible_to_refund_this_payment'));
+            $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.impossible_to_refund_this_payment'));
         }
 
         return new RedirectResponse($this->router->generate(
