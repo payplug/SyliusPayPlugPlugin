@@ -74,7 +74,7 @@
         {% if app.session is not null and app.session.get('oney_has_error') == true %}
             <script type="text/javascript">
                 /* <![CDATA[ */
-                var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}';
+                var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}?tokenValue={{ order.tokenValue }}';
                 /* ]] */
             </script>
         {% endif %}
