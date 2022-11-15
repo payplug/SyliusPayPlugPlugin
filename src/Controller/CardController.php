@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
-use Doctrine\Persistence\ManagerRegistry;
 use Payplug\Exception\NotFoundException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
@@ -31,22 +30,19 @@ final class CardController extends AbstractController
     private $payPlugApiClient;
 
     private RequestStack $requestStack;
-    private ManagerRegistry $managerRegistry;
 
     public function __construct(
         CustomerContextInterface $customerContext,
         EntityRepository $payplugCardRepository,
         TranslatorInterface $translator,
         PayPlugApiClientInterface $payPlugApiClient,
-        RequestStack $requestStack,
-        ManagerRegistry $managerRegistry
+        RequestStack $requestStack
     ) {
         $this->customerContext = $customerContext;
         $this->payplugCardRepository = $payplugCardRepository;
         $this->translator = $translator;
         $this->payPlugApiClient = $payPlugApiClient;
         $this->requestStack = $requestStack;
-        $this->managerRegistry = $managerRegistry;
     }
 
     public function indexAction(): Response
@@ -102,7 +98,7 @@ final class CardController extends AbstractController
 
     private function removeCard(Card $card): void
     {
-        $entityManager = $this->managerRegistry->getManager();
+        $entityManager = $this->getDoctrine()->getManager();
         $entityManager->remove($card);
         $entityManager->flush();
 
