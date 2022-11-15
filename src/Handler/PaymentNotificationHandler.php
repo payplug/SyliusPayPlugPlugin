@@ -18,7 +18,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Repository\CustomerRepositoryInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Lock\LockFactory;
 
 class PaymentNotificationHandler
@@ -32,9 +32,6 @@ class PaymentNotificationHandler
     /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
     private $payplugCardFactory;
 
-    /** @var \Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface */
-    private $flashBag;
-
     /** @var \Sylius\Component\Core\Repository\CustomerRepositoryInterface */
     private $customerRepository;
 
@@ -42,22 +39,24 @@ class PaymentNotificationHandler
 
     private LockFactory $lockFactory;
 
+    private RequestStack $requestStack;
+
     public function __construct(
         LoggerInterface $logger,
         RepositoryInterface $payplugCardRepository,
         FactoryInterface $payplugCardFactory,
         CustomerRepositoryInterface $customerRepository,
-        FlashBagInterface $flashBag,
         EntityManagerInterface $entityManager,
-        LockFactory $lockFactory
+        LockFactory $lockFactory,
+        RequestStack $requestStack
     ) {
         $this->logger = $logger;
         $this->payplugCardRepository = $payplugCardRepository;
         $this->payplugCardFactory = $payplugCardFactory;
-        $this->flashBag = $flashBag;
         $this->customerRepository = $customerRepository;
         $this->entityManager = $entityManager;
         $this->lockFactory = $lockFactory;
+        $this->requestStack = $requestStack;
     }
 
     public function treat(PaymentInterface $payment, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
@@ -110,7 +109,7 @@ class PaymentNotificationHandler
         ];
 
         if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
-            $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
+            $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
         }
 
         $details['status'] = PayPlugApiClientInterface::FAILED;
@@ -147,7 +146,7 @@ class PaymentNotificationHandler
 
         // Payment has been successfully made, but card was not saved
         if (null === $paymentResource->__get('card')->id) {
-            $this->flashBag->add('info', 'payplug_sylius_payplug_plugin.warning.payment_success_no_card_saved');
+            $this->requestStack->getSession()->getFlashBag()->add('info', 'payplug_sylius_payplug_plugin.warning.payment_success_no_card_saved');
 
             return;
         }

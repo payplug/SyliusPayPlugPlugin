@@ -20,7 +20,7 @@ use Payum\Core\Request\GetStatusInterface;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
@@ -35,20 +35,18 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
 
     /** @var \PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler */
     private $paymentNotificationHandler;
-
-    /** @var FlashBagInterface */
-    private $flashBag;
+    private RequestStack $requestStack;
 
     public function __construct(
         FactoryInterface $stateMachineFactory,
         RefundPaymentHandlerInterface $refundPaymentHandler,
         PaymentNotificationHandler $paymentNotificationHandler,
-        FlashBagInterface $flashBag
+        RequestStack $requestStack
     ) {
         $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentHandler = $refundPaymentHandler;
         $this->paymentNotificationHandler = $paymentNotificationHandler;
-        $this->flashBag = $flashBag;
+        $this->requestStack = $requestStack;
     }
 
     public function execute($request): void
@@ -79,7 +77,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
             PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
             // we need to show a specific error message when the payment is cancelled using the 1click feature
             if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
-                $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
+                $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
             }
 
             $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;

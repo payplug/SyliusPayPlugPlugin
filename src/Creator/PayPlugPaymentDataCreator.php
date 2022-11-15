@@ -24,7 +24,7 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class PayPlugPaymentDataCreator
 {
@@ -34,23 +34,21 @@ class PayPlugPaymentDataCreator
 
     private const PAYPLUG_CARD_ID_OTHER = 'other';
 
-    /** @var SessionInterface */
-    private $session;
-
     /** @var CanSaveCardCheckerInterface */
     private $canSaveCardChecker;
 
     /** @var RepositoryInterface */
     private $payplugCardRepository;
+    private RequestStack $requestStack;
 
     public function __construct(
-        SessionInterface $session,
         CanSaveCardCheckerInterface $canSaveCard,
-        RepositoryInterface $payplugCardRepository
+        RepositoryInterface $payplugCardRepository,
+        RequestStack $requestStack
     ) {
-        $this->session = $session;
         $this->canSaveCardChecker = $canSaveCard;
         $this->payplugCardRepository = $payplugCardRepository;
+        $this->requestStack = $requestStack;
     }
 
     public function create(
@@ -240,7 +238,7 @@ class PayPlugPaymentDataCreator
         }
 
         /** @var string|null $cardId */
-        $cardId = $this->session->get('payplug_payment_method');
+        $cardId = $this->requestStack->getSession()->get('payplug_payment_method');
 
         if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
             $paymentMethod
@@ -268,7 +266,7 @@ class PayPlugPaymentDataCreator
 
     private function alterOneyDetails(ArrayObject $details): ArrayObject
     {
-        $details['payment_method'] = $this->session->get('oney_payment_method', 'oney_x3_with_fees');
+        $details['payment_method'] = $this->requestStack->getSession()->get('oney_payment_method', 'oney_x3_with_fees');
         $details['auto_capture'] = true;
         $details['authorized_amount'] = $details['amount'];
         unset($details['amount']);

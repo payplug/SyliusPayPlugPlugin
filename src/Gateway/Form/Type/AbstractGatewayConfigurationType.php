@@ -9,7 +9,7 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class AbstractGatewayConfigurationType extends AbstractType
@@ -17,20 +17,19 @@ class AbstractGatewayConfigurationType extends AbstractType
     /** @var TranslatorInterface */
     protected $translator;
 
-    /** @var FlashBagInterface */
-    protected $flashBag;
+    protected RequestStack $requestStack;
 
     /** @var RepositoryInterface */
     private $gatewayConfigRepository;
 
     public function __construct(
         TranslatorInterface $translator,
-        FlashBagInterface $flashBag,
-        RepositoryInterface $gatewayConfigRepository
+        RepositoryInterface $gatewayConfigRepository,
+        RequestStack $requestStack
     ) {
         $this->translator = $translator;
-        $this->flashBag = $flashBag;
         $this->gatewayConfigRepository = $gatewayConfigRepository;
+        $this->requestStack = $requestStack;
     }
 
     protected function canBeCreated(string $factoryName): bool

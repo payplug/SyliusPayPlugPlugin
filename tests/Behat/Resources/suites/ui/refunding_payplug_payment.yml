@@ -3,7 +3,6 @@ default:
         ui_refunding_payplug_payment:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
-                - sylius.behat.context.hook.email_spool
 
                 - sylius.behat.context.setup.channel
                 - sylius.behat.context.setup.currency

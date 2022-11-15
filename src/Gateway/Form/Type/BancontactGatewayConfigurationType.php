@@ -64,7 +64,7 @@ final class BancontactGatewayConfigurationType extends AbstractGatewayConfigurat
                             ]
                         );
                         $formChannels->get($key)->addError(new FormError($message));
-                        $this->flashBag->add('error', $message);
+                        $this->requestStack->getSession()->getFlashBag()->add('error', $message);
                     }
                 }
             })

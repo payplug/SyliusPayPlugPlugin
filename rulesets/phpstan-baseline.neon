@@ -1,0 +1,21 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method PayPlug\\\\SyliusPayPlugPlugin\\\\Gateway\\\\Validator\\\\Constraints\\\\IsCanSaveCardsValidator\\:\\:validate\\(\\) has parameter \\$value with no typehint specified\\.$#"
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: "#^Method PayPlug\\\\SyliusPayPlugPlugin\\\\Gateway\\\\Validator\\\\Constraints\\\\IsCanSavePaymentMethodValidator\\:\\:validate\\(\\) has parameter \\$value with no typehint specified\\.$#"
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: "#^Method PayPlug\\\\SyliusPayPlugPlugin\\\\Gateway\\\\Validator\\\\Constraints\\\\IsOneyEnabledValidator\\:\\:validate\\(\\) has parameter \\$value with no typehint specified\\.$#"
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsOneyEnabledValidator.php
+
+		-
+			message: "#^Method PayPlug\\\\SyliusPayPlugPlugin\\\\Gateway\\\\Validator\\\\Constraints\\\\IsPayPlugSecretKeyValidator\\:\\:validate\\(\\) has parameter \\$value with no typehint specified\\.$#"
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsPayPlugSecretKeyValidator.php
