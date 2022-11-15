@@ -77,7 +77,7 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
                             ]
                         );
                         $formChannels->get($key)->addError(new FormError($message));
-                        $this->flashBag->add('error', $message);
+                        $this->requestStack->getSession()->getFlashBag()->add('error', $message);
                     }
                 }
             })

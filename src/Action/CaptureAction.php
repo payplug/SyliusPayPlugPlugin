@@ -25,7 +25,7 @@ use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
@@ -40,20 +40,19 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var FlashBagInterface */
-    private $flashBag;
-
     /** @var TranslatorInterface */
     private $translator;
 
+    private RequestStack $requestStack;
+
     public function __construct(
         LoggerInterface $logger,
-        FlashBagInterface $flashBag,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        RequestStack $requestStack
     ) {
         $this->logger = $logger;
-        $this->flashBag = $flashBag;
         $this->translator = $translator;
+        $this->requestStack = $requestStack;
     }
 
     public function setGenericTokenFactory(GenericTokenFactoryInterface $genericTokenFactory = null): void
@@ -157,7 +156,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         } catch (BadRequestException $badRequestException) {
             $errorObject = $badRequestException->getErrorObject();
             if (null === $errorObject || [] === $errorObject) {
-                $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
+                $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
 
                 return;
             }
@@ -176,12 +175,12 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     private function displayGenericError(ArrayObject $details): void
     {
         if ('PAYER' === $details['initiator']) {
-            $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.transaction_failed_1click'));
+            $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.transaction_failed_1click'));
 
             return;
         }
 
-        $this->flashBag->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.api_unknow_error'));
+        $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.error.api_unknow_error'));
     }
 
     public function supports($request): bool
@@ -236,7 +235,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         }
 
         if (isset($errorDetails['details']['billing']['postcode'])) {
-            $this->flashBag->add(
+            $this->requestStack->getSession()->getFlashBag()->add(
                 'error',
                 $this->translator->trans('payplug_sylius_payplug_plugin.ui.error.billing.postcode', [
                     '%postalCode%' => $details['billing']['postcode'],
@@ -245,7 +244,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         }
 
         if (isset($errorDetails['details']['shipping']['postcode'])) {
-            $this->flashBag->add(
+            $this->requestStack->getSession()->getFlashBag()->add(
                 'error',
                 $this->translator->trans('payplug_sylius_payplug_plugin.ui.error.shipping.postcode', [
                     '%postalCode%' => $details['shipping']['postcode'],
@@ -255,7 +254,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         if (!isset($errorDetails['details']['billing']['postcode']) &&
             !isset($errorDetails['details']['shipping']['postcode'])) {
-            $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
+            $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
         }
     }
 }

@@ -10,20 +10,16 @@ use Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundUnitsAction
 {
     /** @var MessageBusInterface */
     private $commandBus;
-
-    /** @var Session */
-    private $session;
 
     /** @var UrlGeneratorInterface */
     private $router;
@@ -34,23 +30,20 @@ final class RefundUnitsAction
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
-    private $translator;
+    private RequestStack $requestStack;
 
     public function __construct(
         MessageBusInterface $commandBus,
-        Session $session,
+        RequestStack $requestStack,
         UrlGeneratorInterface $router,
         RefundUnitsCommandCreatorInterface $commandCreator,
-        LoggerInterface $logger,
-        TranslatorInterface $translator
+        LoggerInterface $logger
     ) {
         $this->commandBus = $commandBus;
-        $this->session = $session;
+        $this->requestStack = $requestStack;
         $this->router = $router;
         $this->commandCreator = $commandCreator;
         $this->logger = $logger;
-        $this->translator = $translator;
     }
 
     public function __invoke(Request $request): Response
@@ -58,16 +51,16 @@ final class RefundUnitsAction
         try {
             $this->commandBus->dispatch($this->commandCreator->fromRequest($request));
 
-            $this->session->getFlashBag()->add('success', 'sylius_refund.units_successfully_refunded');
+            $this->requestStack->getSession()->getFlashBag()->add('success', 'sylius_refund.units_successfully_refunded');
         } catch (InvalidRefundAmount $exception) {
-            $this->session->getFlashBag()->add('error', $exception->getMessage());
+            $this->requestStack->getSession()->getFlashBag()->add('error', $exception->getMessage());
 
             $this->logger->error($exception->getMessage());
         } catch (HandlerFailedException $exception) {
             /** @var Exception $previousException */
             $previousException = $exception->getPrevious();
 
-            $this->session->getFlashBag()->add('error', $previousException->getMessage());
+            $this->requestStack->getSession()->getFlashBag()->add('error', $previousException->getMessage());
 
             $this->logger->error($previousException->getMessage());
         }
