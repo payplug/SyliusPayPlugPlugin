@@ -27,8 +27,7 @@ final class CompleteInfoController extends AbstractController
     /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
     private $customerRepository;
 
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $orderRepository;
+    private RepositoryInterface $orderRepository;
 
     public function __construct(
         OneyInvalidDataRetriever $invalidDataRetriever,
@@ -45,10 +44,6 @@ final class CompleteInfoController extends AbstractController
         CartContextInterface $cartContext,
         EntityManagerInterface $entityManager
     ): Response {
-        if (!$request->isXmlHttpRequest()) {
-            throw $this->createNotFoundException();
-        }
-
         $order = $cartContext->getCart();
         $tokenValue = $request->get('tokenValue');
         if ('' !== $tokenValue) {

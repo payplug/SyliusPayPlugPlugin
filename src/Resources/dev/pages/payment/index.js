@@ -3,7 +3,7 @@ const Payment = {
     trigger: ".payment-method-choice",
     completeInfo: {
       modal: ".oney-complete-info-popin",
-      area: ".ui.steps + .ui.grid",
+      area: ".ui.grid",
     },
   },
   init(options) {
