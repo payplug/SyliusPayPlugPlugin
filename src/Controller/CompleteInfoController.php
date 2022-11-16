@@ -27,12 +27,16 @@ final class CompleteInfoController extends AbstractController
     /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
     private $customerRepository;
 
+    private RepositoryInterface $orderRepository;
+
     public function __construct(
         OneyInvalidDataRetriever $invalidDataRetriever,
-        RepositoryInterface $customerRepository
+        RepositoryInterface $customerRepository,
+        RepositoryInterface $orderRepository
     ) {
         $this->invalidDataRetriever = $invalidDataRetriever;
         $this->customerRepository = $customerRepository;
+        $this->orderRepository = $orderRepository;
     }
 
     public function __invoke(
@@ -40,11 +44,15 @@ final class CompleteInfoController extends AbstractController
         CartContextInterface $cartContext,
         EntityManagerInterface $entityManager
     ): Response {
-        if (!$request->isXmlHttpRequest()) {
-            throw $this->createNotFoundException();
+        $order = $cartContext->getCart();
+        $tokenValue = $request->get('tokenValue');
+        if ('' !== $tokenValue) {
+            $orderFromToken = $this->orderRepository->findOneBy(['tokenValue' => $request->get('tokenValue')]);
+            if ($orderFromToken instanceof OrderInterface) {
+                $order = $orderFromToken;
+            }
         }
 
-        $order = $cartContext->getCart();
         Assert::isInstanceOf($order, OrderInterface::class);
         $data = $this->invalidDataRetriever->getForOrder($order);
         $form = $this->createFormForOrder($order, $data);

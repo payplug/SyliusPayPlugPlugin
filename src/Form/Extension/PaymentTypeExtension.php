@@ -114,7 +114,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
 
                 if (\count($errors) > 0) {
                     \array_walk($errors, static function (FormError $error) use ($event): void {
-                        $event->getForm()->addError($error);
+                        $event->getForm()->get('method')->addError($error);
                     });
                     $this->session->set('oney_has_error', true);
 
