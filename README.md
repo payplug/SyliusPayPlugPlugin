@@ -62,6 +62,7 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug
             - payplug_oney
             - payplug_bancontact
+            - payplug_apple_pay
     ```
 
 5. Add PayPlug routes in `config/routes.yaml`

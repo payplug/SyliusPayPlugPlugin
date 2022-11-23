@@ -44,3 +44,45 @@ payplug_sylius_oneclick_verification:
     methods: ['GET']
     defaults:
         _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction'
+
+payplug_sylius_ipn:
+    path: /payplug/ipn
+    methods: ['GET', 'POST']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\IpnAction'
+
+payplug_shop_checkout_apple_prepare:
+    path: /payplug/apple-pay/prepare/{orderId}
+    methods: [POST, GET]
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OrderController::initiateApplePaySessionAction'
+        _sylius:
+            flash: false
+            repository:
+                method: find
+                arguments:
+                    - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"
+
+payplug_shop_checkout_apple_confirm:
+    path: /payplug/apple-pay/complete/{orderId}
+    methods: [POST, GET]
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OrderController::confirmApplePayPaymentAction'
+        _sylius:
+            flash: false
+            repository:
+                method: find
+                arguments:
+                    - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"
+
+payplug_shop_checkout_apple_cancel:
+    path: /payplug/apple-pay/cancel/{orderId}
+    methods: [POST, GET]
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\OrderController::cancelApplePaySessionAction'
+        _sylius:
+            flash: false
+            repository:
+                method: find
+                arguments:
+                    - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"

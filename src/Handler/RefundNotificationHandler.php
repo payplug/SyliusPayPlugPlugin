@@ -10,7 +10,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
-use Payum\Core\Request\Generic;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class RefundNotificationHandler
@@ -34,7 +34,7 @@ class RefundNotificationHandler
         $this->commandBus = $commandBus;
     }
 
-    public function treat(Generic $request, IVerifiableAPIResource $refundResource, \ArrayObject $details): void
+    public function treat(PaymentInterface $payment, IVerifiableAPIResource $refundResource, \ArrayObject $details): void
     {
         if (!$refundResource instanceof Refund) {
             return;
@@ -46,7 +46,7 @@ class RefundNotificationHandler
         }
 
         $details['status'] = PayPlugApiClientInterface::REFUNDED;
-        $refundUnits = $this->refundPaymentHandler->handle($refundResource, $request->getFirstModel());
+        $refundUnits = $this->refundPaymentHandler->handle($refundResource, $payment);
 
         /** @var RefundHistory|null $refundHistory */
         $refundHistory = $this->payplugRefundHistoryRepository->findOneBy(['externalId' => $refundResource->id]);
@@ -58,7 +58,7 @@ class RefundNotificationHandler
         $refundHistory
             ->setExternalId($refundResource->id)
             ->setValue($refundResource->amount)
-            ->setPayment($request->getFirstModel())
+            ->setPayment($payment)
         ;
 
         $this->payplugRefundHistoryRepository->add($refundHistory);

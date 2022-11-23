@@ -104,22 +104,67 @@
     }
 }
 
+.ui {
+    &.items {
+        > .payment-item {
+            margin: 1.5em 0;
+        }
+    }
+}
+
 .payment-item {
     .oney-logo[src*=without-fees] {
         max-width: 200px;
     }
 
+    apple-pay-button {
+        --apple-pay-button-width: 222px;
+        --apple-pay-button-height: 40px;
+        --apple-pay-button-border-radius: 4px;
+        --apple-pay-button-padding: 4px 4px;
+        --apple-pay-button-box-sizing: border-box;
+        transition: background-color 0.3s ease-in-out;
+        display: none;
+        min-width: 140px;
+        max-width: 100%;
+
+        &.enabled {
+            display: block;
+        }
+    }
+
+    label {
+        cursor: pointer;
+    }
+
+    .bancontact-method,
+    .apple-pay-method {
+        label {
+            display: flex;
+            align-items: flex-start;
+        }
+    }
+
     .bancontact-method {
         label {
             height: 22px;
-            display: flex;
-            align-items: flex-start;
         }
 
         .bancontact-logo {
             margin-left: 0.5em;
             position: relative;
             top: -12px;
+        }
+    }
+
+    .apple-pay-method {
+        label {
+            height: 45px;
+        }
+
+        .apple-pay-logo {
+            margin-left: 0.5em;
+            transform: translateY(-12px);
         }
     }
 }

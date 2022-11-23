@@ -24,7 +24,8 @@ use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 
 final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
-    use GatewayAwareTrait, ApiAwareTrait;
+    use GatewayAwareTrait;
+    use ApiAwareTrait;
 
     /** @var FactoryInterface */
     private $stateMachineFactory;
@@ -71,22 +72,22 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
             && isset($httpRequest->query['payum_token'])) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
-            $this->paymentNotificationHandler->treat($request, $resource, $details);
+            $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
         if (isset($httpRequest->query['status']) &&
             PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
             // we need to show a specific error message when the payment is cancelled using the 1click feature
-            if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
+            if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
                 $this->flashBag->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
             }
 
             $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
         }
 
-        if ($details['status'] === PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK) {
+        if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
-            $this->paymentNotificationHandler->treat($request, $resource, $details);
+            $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
         $payment->setDetails($details->getArrayCopy());

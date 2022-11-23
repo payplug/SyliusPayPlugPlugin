@@ -8,6 +8,7 @@ use Exception;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
@@ -118,7 +119,8 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
             !\in_array($factoryName = $paymentMethod->getGatewayConfig()->getFactoryName(), [
                 PayPlugGatewayFactory::FACTORY_NAME,
                 OneyGatewayFactory::FACTORY_NAME,
-                BancontactGatewayFactory::FACTORY_NAME
+                BancontactGatewayFactory::FACTORY_NAME,
+                ApplePayGatewayFactory::FACTORY_NAME,
             ], true)
         ) {
             return;
