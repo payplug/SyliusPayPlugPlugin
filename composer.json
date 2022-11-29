@@ -5,15 +5,15 @@
     "description": "PayPlug payment plugin for Sylius applications.",
     "license": "MIT",
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": "^7.4 || ^8.0 || 8.1",
         "ext-json": "*",
         "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^3.1",
         "sylius/refund-plugin": "^1.0.0",
         "sylius/sylius": "^1.9.0 || ^1.10.0 || ^1.11.0",
-        "symfony/asset": "^4.4|^5.0",
-        "symfony/lock": "^4.4|^5.0",
-        "symfony/validator": "^4.4|^5.0"
+        "symfony/asset": "^4.4|^5.0|^6.0",
+        "symfony/lock": "^4.4|^5.0|^6.0",
+        "symfony/validator": "^4.4|^5.0|^6.0"
     },
     "require-dev": {
         "behat/behat": "^3.7",
@@ -43,11 +43,11 @@
         "phpunit/phpunit": "^9.0",
         "slevomat/coding-standard": "^6.3.2",
         "sylius-labs/coding-standard": "^4.0",
-        "symfony/browser-kit": "^5.1",
-        "symfony/debug-bundle": "^5.1",
-        "symfony/dotenv": "^5.1",
-        "symfony/intl": "^5.1",
-        "symfony/web-profiler-bundle": "^5.1",
+        "symfony/browser-kit": "^5.1||^6.1",
+        "symfony/debug-bundle": "^5.1||^6.1",
+        "symfony/dotenv": "^5.1||^6.1",
+        "symfony/intl": "^5.1||^6.1",
+        "symfony/web-profiler-bundle": "^5.1||^6.1",
         "webmozart/assert": "^1.8"
     },
     "prefer-stable": true,
