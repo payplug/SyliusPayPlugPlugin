@@ -63,6 +63,8 @@ install-plugin:
 	mkdir -p ${TEST_DIRECTORY}/templates/form/
 	cp -R src/Resources/views/form/* ${TEST_DIRECTORY}/templates/form/
 
+	sed -i 's/api.payplug.com/api-qa.payplug.com/g' ${TEST_DIRECTORY}/vendor/payplug/payplug-php/lib/Payplug/Core/APIRoutes.php
+
 # As of sylius/refund-plugin 1.2 the folder does not exist anymore
 ifneq ($(PHP_VERSION), 8)
 	mkdir -p ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
@@ -73,13 +75,9 @@ install-sylius:
 	${CONSOLE} sylius:install -n -s default
 	${YARN} install
 	${YARN} build
-ifeq ($(shell expr $(value) \<= 5.3), 1)
-	${CONSOLE} translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
-	${CONSOLE} translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
-else ifeq ($(shell expr $(value) \>= 5.4), 1)
+	${YARN} gulp
 	${CONSOLE} translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
 	${CONSOLE} translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
-endif
 
 	${CONSOLE} cache:clear
 
