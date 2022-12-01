@@ -1,0 +1,14 @@
+sylius_fixtures:
+    suites:
+        default:
+            listeners:
+                orm_purger: ~
+                logger: ~
+            fixtures:
+                locale:
+                    options:
+                        locales:
+                            - 'en_US'
+                            - 'en_GB'
+                            - 'fr_FR'
+                            - 'it_IT'
