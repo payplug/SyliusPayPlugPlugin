@@ -63,8 +63,6 @@ install-plugin:
 	mkdir -p ${TEST_DIRECTORY}/templates/form/
 	cp -R src/Resources/views/form/* ${TEST_DIRECTORY}/templates/form/
 
-	sed -i 's/api.payplug.com/api-qa.payplug.com/g' ${TEST_DIRECTORY}/vendor/payplug/payplug-php/lib/Payplug/Core/APIRoutes.php
-
 # As of sylius/refund-plugin 1.2 the folder does not exist anymore
 ifneq ($(PHP_VERSION), 8)
 	mkdir -p ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
