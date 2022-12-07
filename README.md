@@ -26,10 +26,10 @@ In local environment, the plugin will not work properly because you will not be 
 
 ## Compatibility
 
-| | Version |
-| :--- | :--- |
-| PHP  | 7.4, 8.0 |
-| Sylius | 1.9, 1.10 |
+| | Version               |
+| :--- |:----------------------|
+| PHP  | 7.4, 8.0, 8.1         |
+| Sylius | 1.9, 1.10, 1.11, 1.12 |
 
 ## Installation
 
