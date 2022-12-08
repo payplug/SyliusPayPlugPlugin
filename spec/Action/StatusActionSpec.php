@@ -14,7 +14,7 @@ use Payum\Core\Request\GetStatusInterface;
 use PhpSpec\ObjectBehavior;
 use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 final class StatusActionSpec extends ObjectBehavior
 {
@@ -22,9 +22,9 @@ final class StatusActionSpec extends ObjectBehavior
         FactoryInterface $stateMachineFactory,
         RefundPaymentHandlerInterface $refundPaymentHandler,
         PaymentNotificationHandler $paymentNotificationHandler,
-        FlashBagInterface $flashBag
+        RequestStack $requestStack
     ): void {
-        $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler, $paymentNotificationHandler, $flashBag);
+        $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler, $paymentNotificationHandler, $requestStack);
     }
 
     public function it_is_initializable(): void
