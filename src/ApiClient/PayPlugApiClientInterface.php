@@ -21,6 +21,8 @@ interface PayPlugApiClientInterface
 
     public const STATUS_CANCELED = 'canceled';
 
+    public const STATUS_ABORTED = 'aborted';
+
     public const STATUS_CANCELED_BY_ONEY = 'canceled_by_oney';
 
     public const STATUS_CAPTURED = 'captured';
@@ -45,6 +47,8 @@ interface PayPlugApiClientInterface
     public function getPermissions(): array;
 
     public function createPayment(array $data): Payment;
+
+    public function abortPayment(string $paymentId): Payment;
 
     public function refundPayment(string $paymentId): Refund;
 
