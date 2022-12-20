@@ -27,6 +27,7 @@ use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
 use Psr\Log\LoggerInterface;
+use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
@@ -92,8 +93,8 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             return;
         }
 
-        /** @var PaymentInterface $paymentModel */
         $paymentModel = $request->getFirstModel();
+        Assert::isInstanceOf($paymentModel, PaymentInterface::class);
 
         /** @var Capture $request */
         if (array_key_exists('status', $paymentModel->getDetails())
@@ -164,13 +165,15 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $accountData = $this->payPlugApiClient->getAccount(true);
             $canSaveCard = (bool) $accountData['permissions']['can_save_cards'];
 
-            /** @var \Sylius\Component\Core\Model\PaymentMethod $paymentMethod */
-            $paymentMethod = $request->getFirstModel()->getMethod();
-            /** @var \Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface $gatewayConfig */
-            $gatewayConfig = $paymentMethod->getGatewayConfig();
-            $config = $gatewayConfig->getConfig();
-            $config[PayPlugGatewayFactory::ONE_CLICK] = $canSaveCard;
-            $gatewayConfig->setConfig($config);
+            $paymentMethod = $paymentModel->getMethod();
+            if (
+                $paymentMethod instanceof PaymentMethodInterface &&
+                ($gatewayConfig = $paymentMethod->getGatewayConfig()) instanceof GatewayConfigInterface
+            ) {
+                $config = $gatewayConfig->getConfig();
+                $config[PayPlugGatewayFactory::ONE_CLICK] = $canSaveCard;
+                $gatewayConfig->setConfig($config);
+            }
         } catch (BadRequestException $badRequestException) {
             $errorObject = $badRequestException->getErrorObject();
             if (null === $errorObject || [] === $errorObject) {
