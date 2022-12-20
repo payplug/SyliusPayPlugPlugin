@@ -20,14 +20,22 @@ use Payum\Core\Security\TokenInterface;
 use PhpSpec\ObjectBehavior;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CaptureActionSpec extends ObjectBehavior
 {
-    public function let(LoggerInterface $logger, TranslatorInterface $translator, RequestStack $requestStack): void
+    public function let(
+        LoggerInterface $logger,
+        TranslatorInterface $translator,
+        AbortPaymentProcessor $abortPaymentProcessor,
+        RequestStack $requestStack,
+        RepositoryInterface $payplugCardRepository
+    ): void
     {
-        $this->beConstructedWith($logger, $translator, $requestStack);
+        $this->beConstructedWith($logger, $translator, $abortPaymentProcessor, $requestStack, $payplugCardRepository);
     }
 
     public function it_is_initializable(): void
@@ -58,8 +66,10 @@ final class CaptureActionSpec extends ObjectBehavior
         PayPlugApiClientInterface $payPlugApiClient,
         GenericTokenFactory $genericTokenFactory,
         TokenInterface $notifyToken,
-        PaymentInterface $payment
+        PaymentInterface $payment,
+        RequestStack $requestStack
     ): void {
+        $requestStack->getSession()->willReturn(new Session());
         $payplugPayment = \Mockery::mock('payment', Payment::class);
 
         $payplugPayment->id = 1;
