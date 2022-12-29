@@ -15,13 +15,13 @@ use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessorSpec extends ObjectBehavior
 {
     public function let(
-        Session $session,
+        RequestStack $requestStack,
         LoggerInterface $logger,
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
@@ -29,7 +29,7 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
         PayPlugApiClientFactoryInterface $apiClientFactory
     ): void {
         $this->beConstructedWith(
-            $session,
+            $requestStack,
             $logger,
             $translator,
             $refundPaymentRepository,

@@ -2,9 +2,9 @@
 SHELL=/bin/bash
 COMPOSER_ROOT=composer
 PLUGIN_NAME=payplug/sylius-payplug-plugin
-SYLIUS_VERSION=1.11.0
-SYMFONY_VERSION=5.4
-PHP_VERSION=8.0
+SYLIUS_VERSION=1.12.0
+SYMFONY_VERSION=6.1
+PHP_VERSION=8.1
 TEST_DIRECTORY=tests/Application
 YARN=cd tests/Application && yarn
 CONSOLE=cd tests/Application && php bin/console -e test
@@ -14,7 +14,7 @@ COMPOSER=cd tests/Application && composer
 ### DEVELOPMENT
 ### ¯¯¯¯¯¯¯¯¯¯¯
 
-install: sylius ## Install Plugin on Sylius [SyliusVersion=1.11] [SymfonyVersion=5.4] [PHP_VERSION=8.0]
+install: sylius ## Install Plugin on Sylius [SYLIUS_VERSION=1.12.0] [SYMFONY_VERSION=6.1] [PHP_VERSION=8.1]
 .PHONY: install
 
 reset: ## Remove dependencies
@@ -67,21 +67,15 @@ install-plugin:
 ifneq ($(PHP_VERSION), 8)
 	mkdir -p ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
 	cp -R src/Resources/views/SyliusAdminBundle/* ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
-	# For Refund Plugin
-	cp -R ${TEST_DIRECTORY}/vendor/sylius/refund-plugin/src/Resources/views/SyliusAdminBundle/* ${TEST_DIRECTORY}/templates/bundles/SyliusAdminBundle/
 endif
 
 install-sylius:
 	${CONSOLE} sylius:install -n -s default
 	${YARN} install
 	${YARN} build
-ifeq ($(shell expr $(value) \<= 5.3), 1)
-	${CONSOLE} translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
-	${CONSOLE} translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
-else ifeq ($(shell expr $(value) \>= 5.4), 1)
+	${YARN} gulp
 	${CONSOLE} translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
 	${CONSOLE} translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
-endif
 
 	${CONSOLE} cache:clear
 

@@ -1,5 +1,12 @@
 @import "../../settings/constants.scss";
 
+// @see https://github.com/Sylius/Sylius/blob/1d6650f2da82ccd8970898be29649016ab18b0d0/src/Sylius/Bundle/ShopBundle/Resources/private/scss/theme.scss#L1067
+%label {
+    display: flex !important;
+    margin-top: 0 !important;
+    padding: 1em !important;
+}
+
 .oney-payment-choice,
 .payplug-payment-choice {
     display: none;
@@ -39,15 +46,14 @@
         }
 
         label {
+            @extend %label;
             width: 100%;
             height: 100%;
             cursor: pointer;
             position: relative;
-            display: flex;
             flex-direction: column;
             border: 1px solid $lightgrey;
             box-shadow: 0 1px 2px 0 transparentize($darkgrey, .85);
-            padding: 1em 1em;
             border-radius: .28571429rem;
             transition: border-color, background-color 300ms ease-in-out;
 
@@ -104,12 +110,9 @@
     }
 }
 
-.ui {
-    &.items {
-        > .payment-item {
-            margin: 1.5em 0;
-        }
-    }
+[data-gateway="oney"] {
+    padding: 0 !important;
+    margin-top: 10px !important;
 }
 
 .payment-item {
@@ -140,16 +143,12 @@
     .bancontact-method,
     .apple-pay-method {
         label {
-            display: flex;
+            display: flex !important;
             align-items: flex-start;
         }
     }
 
     .bancontact-method {
-        label {
-            height: 22px;
-        }
-
         .bancontact-logo {
             margin-left: 0.5em;
             position: relative;
@@ -331,6 +330,7 @@
             }
 
             label {
+                @extend %label;
                 border-top-right-radius: 0;
                 border-top-left-radius: 0;
             }
