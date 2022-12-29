@@ -12,6 +12,7 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
+use Webmozart\Assert\Assert;
 
 final class IsOneyEnabledValidator extends ConstraintValidator
 {
@@ -35,8 +36,15 @@ final class IsOneyEnabledValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, 'string');
         }
 
+        $factoryName = $this->context->getRoot()->getData()->getGatewayConfig()->getFactoryName();
+        Assert::stringNotEmpty($factoryName);
+
+        if ($factoryName !== OneyGatewayFactory::FACTORY_NAME) {
+            return;
+        }
+
         try {
-            $checker = new OneyChecker($this->apiClientFactory->create(OneyGatewayFactory::FACTORY_NAME, $value));
+            $checker = new OneyChecker($this->apiClientFactory->create($factoryName, $value));
 
             if (false === $checker->isEnabled()) {
                 $this->context->buildViolation($constraint->message)
