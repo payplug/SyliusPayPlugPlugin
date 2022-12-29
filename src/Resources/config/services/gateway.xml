@@ -19,6 +19,10 @@
                  label="payplug_sylius_payplug_plugin.ui.payplug_gateway_label" />
             <tag name="form.type" />
         </service>
+        <service id="payplug_sylius_payplug_plugin.form.type_extension.payplug_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\PayPlugGatewayConfigurationTypeExtension">
+            <tag name="form.type_extension" />
+        </service>
 
         <!-- Gateway Oney By PayPlug -->
         <service id="payplug_sylius_payplug_plugin.gateway_factory.oney"
@@ -33,6 +37,10 @@
                  type="payplug_oney"
                  label="payplug_sylius_payplug_plugin.ui.oney_gateway_label" />
             <tag name="form.type" />
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type_extension.oney_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\OneyGatewayConfigurationTypeExtension">
+            <tag name="form.type_extension" />
         </service>
 
         <!-- Gateway Bancontact by PayPlug -->

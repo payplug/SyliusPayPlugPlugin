@@ -4,23 +4,42 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class AbstractGatewayConfigurationType extends AbstractType
 {
-    /** @var TranslatorInterface */
-    protected $translator;
+    public const VALIDATION_GROUPS = ['Default', 'sylius'];
+
+    protected TranslatorInterface $translator;
 
     protected RequestStack $requestStack;
 
-    /** @var RepositoryInterface */
-    private $gatewayConfigRepository;
+    protected string $noTestKeyMessage = '';
+
+    protected string $noAccessMessage = '';
+
+    protected string $gatewayFactoryTitle = '';
+
+    protected string $gatewayFactoryName = '';
+
+    protected string $gatewayBaseCurrencyCode = 'EUR';
+
+    private RepositoryInterface $gatewayConfigRepository;
 
     public function __construct(
         TranslatorInterface $translator,
@@ -32,14 +51,70 @@ class AbstractGatewayConfigurationType extends AbstractType
         $this->requestStack = $requestStack;
     }
 
-    protected function canBeCreated(string $factoryName): bool
+    /**
+     * @inheritdoc
+     */
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder
+            ->add('secretKey', TextType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.ui.secret_key',
+                'validation_groups' => self::VALIDATION_GROUPS,
+                'constraints' => [
+                    new NotBlank([
+                        'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
+                    ]),
+                    new IsPayPlugSecretKeyValid(),
+                    new IsCanSavePaymentMethod([
+                        'noTestKeyMessage' => $this->noTestKeyMessage,
+                        'noAccessMessage' => $this->noAccessMessage,
+                    ]),
+                    new IsOneyEnabled(),
+                ],
+                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
+                'help_html' => true,
+            ])
+            ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
+                $this->checkCreationRequirements(
+                    $this->gatewayFactoryTitle,
+                    $this->gatewayFactoryName,
+                    $event->getForm()
+                );
+
+                /** @phpstan-ignore-next-line */
+                $formChannels = $event->getForm()->getParent()->getParent()->get('channels');
+                $dataFormChannels = $formChannels->getData();
+                /** @var ChannelInterface $dataFormChannel */
+                foreach ($dataFormChannels as $key => $dataFormChannel) {
+                    $baseCurrency = $dataFormChannel->getBaseCurrency();
+                    if (null === $baseCurrency) {
+                        continue;
+                    }
+                    $baseCurrencyCode = $baseCurrency->getCode();
+                    if ($this->gatewayBaseCurrencyCode !== $baseCurrencyCode) {
+                        $message = $this->translator->trans(
+                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
+                            [
+                                '#channel_code#' => $dataFormChannel->getCode(),
+                                '#payment_method#' => $this->gatewayFactoryTitle,
+                            ]
+                        );
+                        $formChannels->get($key)->addError(new FormError($message));
+                        $this->requestStack->getSession()->getFlashBag()->add('error', $message);
+                    }
+                }
+            })
+        ;
+    }
+
+    private function canBeCreated(string $factoryName): bool
     {
         $alreadyExists = $this->gatewayConfigRepository->findOneBy(['factoryName' => $factoryName]);
 
         return !$alreadyExists instanceof GatewayConfigInterface;
     }
 
-    protected function checkCreationRequirements(
+    private function checkCreationRequirements(
         string $factoryTitle,
         string $factoryName,
         FormInterface $form
