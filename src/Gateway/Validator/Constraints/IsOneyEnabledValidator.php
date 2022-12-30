@@ -8,6 +8,9 @@ use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Symfony\Component\Form\Form;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -35,8 +38,21 @@ final class IsOneyEnabledValidator extends ConstraintValidator
         if (!is_string($value)) {
             throw new UnexpectedValueException($value, 'string');
         }
+        // phpstan checks
+        $form = $this->context->getRoot();
+        Assert::isInstanceOf($form, Form::class);
 
-        $factoryName = $this->context->getRoot()->getData()->getGatewayConfig()->getFactoryName();
+        $paymentMethod = $form->getData();
+        if (!$paymentMethod instanceof PaymentMethodInterface) {
+            return;
+        }
+
+        $gatewayConfig = $paymentMethod->getGatewayConfig();
+        if (!$gatewayConfig instanceof GatewayConfigInterface) {
+            return;
+        }
+
+        $factoryName = $gatewayConfig->getFactoryName();
         Assert::stringNotEmpty($factoryName);
 
         if ($factoryName !== OneyGatewayFactory::FACTORY_NAME) {
