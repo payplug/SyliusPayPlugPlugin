@@ -8,6 +8,7 @@ use Exception;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -21,7 +22,6 @@ use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessor implements PaymentProcessorInterface
@@ -122,6 +122,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
                 OneyGatewayFactory::FACTORY_NAME,
                 BancontactGatewayFactory::FACTORY_NAME,
                 ApplePayGatewayFactory::FACTORY_NAME,
+                AmericanExpressGatewayFactory::FACTORY_NAME,
             ], true)
         ) {
             return;

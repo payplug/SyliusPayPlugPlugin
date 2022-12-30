@@ -199,6 +199,17 @@
             <argument type="service" id="sylius.repository.order"/>
         </service>
 
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\AmexSupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+
         <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction">
             <argument type="service" id="request_stack" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />

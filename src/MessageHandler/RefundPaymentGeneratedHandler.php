@@ -9,6 +9,7 @@ use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Exception\ApiRefundException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -106,6 +107,7 @@ final class RefundPaymentGeneratedHandler
                     OneyGatewayFactory::FACTORY_NAME,
                     BancontactGatewayFactory::FACTORY_NAME,
                     ApplePayGatewayFactory::FACTORY_NAME,
+                    AmericanExpressGatewayFactory::FACTORY_NAME,
                 ], true)
             ) {
                 return;
