@@ -10,6 +10,7 @@
             <tag name="payum.action" factory="payplug" alias="payum.action.capture" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.capture" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.capture" />
+            <tag name="payum.action" factory="payplug_american_express" alias="payum.action.capture" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.status" class="PayPlug\SyliusPayPlugPlugin\Action\StatusAction">
@@ -19,12 +20,14 @@
             <tag name="payum.action" factory="payplug" alias="payum.action.status" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.status" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.status" />
+            <tag name="payum.action" factory="payplug_american_express" alias="payum.action.status" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.convert_payment" class="PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction">
             <tag name="payum.action" factory="payplug" alias="payum.action.convert_payment" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.convert_payment" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.convert_payment" />
+            <tag name="payum.action" factory="payplug_american_express" alias="payum.action.convert_payment" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.notify" class="PayPlug\SyliusPayPlugPlugin\Action\NotifyAction">
@@ -34,6 +37,7 @@
             <tag name="payum.action" factory="payplug" alias="payum.action.notify" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.notify" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.notify" />
+            <tag name="payum.action" factory="payplug_american_express" alias="payum.action.notify" />
         </service>
 
     </services>

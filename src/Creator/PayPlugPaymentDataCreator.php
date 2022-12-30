@@ -11,6 +11,7 @@ use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -34,11 +35,10 @@ class PayPlugPaymentDataCreator
 
     private const PAYPLUG_CARD_ID_OTHER = 'other';
 
-    /** @var CanSaveCardCheckerInterface */
-    private $canSaveCardChecker;
+    private CanSaveCardCheckerInterface $canSaveCardChecker;
 
-    /** @var RepositoryInterface */
-    private $payplugCardRepository;
+    private RepositoryInterface $payplugCardRepository;
+
     private RequestStack $requestStack;
 
     public function __construct(
@@ -100,13 +100,7 @@ class PayPlugPaymentDataCreator
             $details->offsetSet('payment_context', $this->getCartContext($order));
         }
 
-        if (BancontactGatewayFactory::FACTORY_NAME === $gatewayFactoryName) {
-            $details['payment_method'] = BancontactGatewayFactory::PAYMENT_METHOD_BANCONTACT;
-        }
-
-        if (ApplePayGatewayFactory::FACTORY_NAME === $gatewayFactoryName) {
-            $details['payment_method'] = ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY;
-        }
+        $this->addPaymentMethodFieldToDetails($details, $gatewayFactoryName);
 
         return $details;
     }
@@ -320,5 +314,23 @@ class PayPlugPaymentDataCreator
     {
         // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
         return 'storepickup';
+    }
+
+    private function addPaymentMethodFieldToDetails(ArrayObject $details, string $gatewayFactoryName): ArrayObject
+    {
+        $paymentMethods = [
+            BancontactGatewayFactory::FACTORY_NAME => BancontactGatewayFactory::PAYMENT_METHOD_BANCONTACT,
+            ApplePayGatewayFactory::FACTORY_NAME => ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY,
+            AmericanExpressGatewayFactory::FACTORY_NAME => AmericanExpressGatewayFactory::PAYMENT_METHOD_AMERICAN_EXPRESS,
+        ];
+        // match function is only supported by php 8. so can not use it here.
+        foreach ($paymentMethods as $name => $method) {
+            if ($gatewayFactoryName !== $name) {
+                continue;
+            }
+            $details['payment_method'] = $method;
+        }
+
+        return $details;
     }
 }
