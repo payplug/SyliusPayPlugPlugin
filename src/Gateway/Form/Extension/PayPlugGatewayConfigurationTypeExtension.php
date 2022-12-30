@@ -40,8 +40,11 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
                 $data = $event->getData();
+                // phpstan check
+                if (!is_array($data)) {
+                    return;
+                }
                 $data['payum.http_client'] = '@payplug_sylius_payplug_plugin.api_client.payplug';
-
                 $event->setData($data);
             })
         ;

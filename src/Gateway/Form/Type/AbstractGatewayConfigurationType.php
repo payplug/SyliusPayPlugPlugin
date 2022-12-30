@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
+use Doctrine\Common\Collections\Collection;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
@@ -84,6 +85,9 @@ class AbstractGatewayConfigurationType extends AbstractType
                 /** @phpstan-ignore-next-line */
                 $formChannels = $event->getForm()->getParent()->getParent()->get('channels');
                 $dataFormChannels = $formChannels->getData();
+                if (!$dataFormChannels instanceof Collection) {
+                    return;
+                }
                 /** @var ChannelInterface $dataFormChannel */
                 foreach ($dataFormChannels as $key => $dataFormChannel) {
                     $baseCurrency = $dataFormChannel->getBaseCurrency();
@@ -99,7 +103,7 @@ class AbstractGatewayConfigurationType extends AbstractType
                                 '#payment_method#' => $this->gatewayFactoryTitle,
                             ]
                         );
-                        $formChannels->get($key)->addError(new FormError($message));
+                        $formChannels->get((string) $key)->addError(new FormError($message));
                         $this->requestStack->getSession()->getFlashBag()->add('error', $message);
                     }
                 }
