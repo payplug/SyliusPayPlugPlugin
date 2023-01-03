@@ -10,6 +10,8 @@ final class AmericanExpressGatewayFactory extends AbstractGatewayFactory
 
     public const FACTORY_TITLE = 'American Express by PayPlug';
 
+    public const PAYMENT_METHOD_AMERICAN_EXPRESS = 'american_express';
+
     public const AUTHORIZED_CURRENCIES = [
         'EUR' => [
             'min_amount' => 100,
