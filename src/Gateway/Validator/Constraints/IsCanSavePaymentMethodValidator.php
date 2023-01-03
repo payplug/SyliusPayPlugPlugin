@@ -7,6 +7,8 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSavePayplugPaymentMethodChecker;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -18,6 +20,8 @@ use Webmozart\Assert\Assert;
 final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 {
     private PayPlugApiClientFactory $apiClientFactory;
+
+    private const GATEWAYS_SKIP = [PayPlugGatewayFactory::FACTORY_NAME, OneyGatewayFactory::FACTORY_NAME];
 
     public function __construct(PayPlugApiClientFactory $apiClientFactory)
     {
@@ -37,6 +41,10 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 
         Assert::string($value);
         Assert::stringNotEmpty($factoryName);
+
+        if (in_array($factoryName, self::GATEWAYS_SKIP, true)) {
+            return;
+        }
 
         $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->create($factoryName, $value));
 

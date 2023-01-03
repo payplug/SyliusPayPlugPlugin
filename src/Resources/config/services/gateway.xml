@@ -19,6 +19,10 @@
                  label="payplug_sylius_payplug_plugin.ui.payplug_gateway_label" />
             <tag name="form.type" />
         </service>
+        <service id="payplug_sylius_payplug_plugin.form.type_extension.payplug_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\PayPlugGatewayConfigurationTypeExtension">
+            <tag name="form.type_extension" />
+        </service>
 
         <!-- Gateway Oney By PayPlug -->
         <service id="payplug_sylius_payplug_plugin.gateway_factory.oney"
@@ -33,6 +37,10 @@
                  type="payplug_oney"
                  label="payplug_sylius_payplug_plugin.ui.oney_gateway_label" />
             <tag name="form.type" />
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type_extension.oney_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\OneyGatewayConfigurationTypeExtension">
+            <tag name="form.type_extension" />
         </service>
 
         <!-- Gateway Bancontact by PayPlug -->
@@ -62,6 +70,21 @@
             <tag name="sylius.gateway_configuration_type"
                  type="payplug_apple_pay"
                  label="payplug_sylius_payplug_plugin.ui.apple_pay_gateway_label" />
+            <tag name="form.type" />
+        </service>
+
+        <!-- Gateway American Express by PayPlug -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.american_express"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug_american_express"/>
+        </service>
+        <service id="payplug_sylius_payplug_plugin.form.type.american_express_gateway_configuration"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AmericanExpressGatewayConfigurationType">
+            <tag name="sylius.gateway_configuration_type"
+                 type="payplug_american_express"
+                 label="payplug_sylius_payplug_plugin.ui.american_express_gateway_label" />
             <tag name="form.type" />
         </service>
 
