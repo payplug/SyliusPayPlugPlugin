@@ -37,7 +37,7 @@ sylius-standard:
 	${COMPOSER} require sylius/sylius:"~${SYLIUS_VERSION}"
 
 update-dependencies:
-	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
+	${COMPOSER} config extra.symfony.require "~${SYMFONY_VERSION}"
 	${COMPOSER} require --dev donatj/mock-webserver:^2.1 --no-scripts --no-update
 # FIX since https://github.com/Sylius/Sylius/pull/13215 is not merged
 	${COMPOSER} require doctrine/dbal:"^2.6" doctrine/orm:"^2.9" --no-scripts --no-update
