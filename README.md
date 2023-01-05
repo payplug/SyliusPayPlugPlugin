@@ -130,8 +130,8 @@ In local environment, the plugin will not work properly because you will not be 
 9. Process translations
 
     ```bash
-    php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
-    php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
+    php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+    php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
 10. Clear cache:
