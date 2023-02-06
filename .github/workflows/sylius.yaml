@@ -90,9 +90,6 @@ jobs:
                 with:
                     node-version: '${{ matrix.node }}'
             -
-                name: 'Wkhtmltopdf - Install'
-                run: "sudo apt-get update\nsudo apt-get install xvfb libfontconfig wkhtmltopdf\nprintf '#!/bin/bash\\nxvfb-run -a --server-args=\"-screen 0, 1024x768x24\" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh\nsudo chmod a+x /usr/bin/wkhtmltopdf.sh\nsudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf\n"
-            -
                 uses: actions/checkout@v2
             -
                 name: 'Composer - Get Cache Directory'
