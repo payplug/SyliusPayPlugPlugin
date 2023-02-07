@@ -44,5 +44,14 @@
                      method="create"/>
             <argument type="string" key="$factoryName">payplug_apple_pay</argument><!-- Gateway factory name -->
         </service>
+
+        <service id="payplug_sylius_payplug_plugin.api_client.american_express"
+                 class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient"
+                 public="true"
+                 lazy="true">
+            <factory service="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory"
+                     method="create"/>
+            <argument type="string" key="$factoryName">american_express</argument><!-- Gateway factory name -->
+        </service>
     </services>
 </container>

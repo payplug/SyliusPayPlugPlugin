@@ -60,6 +60,10 @@
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface" />
         </service>
 
+        <service id="payplug_sylius_payplug_plugin.payment_processing.abort" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor" public="true">
+            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
+        </service>
+
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
             <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator" />
             <argument type="service" id="Sylius\RefundPlugin\Provider\RemainingTotalProvider" />
@@ -116,6 +120,15 @@
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator.inner"/>
+            <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Resolver\AmericanExpressPaymentMethodsResolverDecorator"
+                decorates="sylius.payment_methods_resolver"
+                public="false"
+        >
+            <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\AmericanExpressPaymentMethodsResolverDecorator.inner"/>
             <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
         </service>
 
@@ -182,6 +195,17 @@
                 public="false"
         >
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator.inner"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="sylius.repository.order"/>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Provider\AmexSupportedRefundPaymentMethodsProviderDecorator"
+                decorates="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator"
+                decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator.inner"
+                public="false"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
         </service>

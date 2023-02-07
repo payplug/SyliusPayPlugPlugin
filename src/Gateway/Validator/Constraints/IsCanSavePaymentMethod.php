@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraint;
 /**
  * @Annotation
  */
-abstract class IsCanSavePaymentMethod extends Constraint
+final class IsCanSavePaymentMethod extends Constraint
 {
     public string $noTestKeyMessage = '';
 
