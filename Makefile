@@ -70,7 +70,11 @@ ifneq ($(PHP_VERSION), 8)
 endif
 
 install-sylius:
-	${CONSOLE} sylius:install -n -s default
+	#${CONSOLE} sylius:install -n -s default
+	${CONSOLE} doctrine:database:create -n
+	${CONSOLE} messenger:setup-transports -n
+	${CONSOLE} doctrine:migration:migrate -n
+	${CONSOLE} sylius:fixture:load -n
 	${YARN} install
 	${YARN} build
 	${YARN} gulp
