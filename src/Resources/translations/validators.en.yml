@@ -1,10 +1,10 @@
 payplug_sylius_payplug_plugin:
     secret_key:
         not_blank: The secret key cannot be empty.
-        not_valid: This is not a valid PayPlug secret key.
+        not_valid: This is not a valid Payplug secret key.
     oney:
         not_enabled: |
-            Attention. To use the payment method “Oney by PayPlug“ in LIVE mode,
+            Attention. To use the payment method “Oney by Payplug“ in LIVE mode,
             please contact us at support@payplug.com
         not_valid_phone_number: This is not a valid cell phone number.
     one_click:
