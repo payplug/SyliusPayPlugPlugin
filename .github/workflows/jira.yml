@@ -29,7 +29,7 @@ jobs:
           # Valeur par default "from github" en MVP
           fields: >
             {
-              "customfield_10150": "${{ env.BODY_ISSUE | replace('\n', '\r') | replace('\r\r', '\r') | replace('\"', '\\\"') }}",
+              "customfield_10150": "${{ env.BODY_ISSUE \\| replace('\\n', '\\r') \\| replace('\\r\\r', '\\r') \\| replace('\"', '\\\"') }}",
               "customfield_10106": "from github",
               "customfield_10105": "https://www.from-github.fr",
               "customfield_10108": "from github",
