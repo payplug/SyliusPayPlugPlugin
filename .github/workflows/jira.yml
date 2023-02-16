@@ -21,7 +21,7 @@ jobs:
         uses: atlassian/gajira-create@master
         env:
           TITLE_ISSUE: ${{ github.event.issue.title }}
-          BODY_ISSUE: ${{ toJson(github.event.issue.body) }}
+          BODY_ISSUE: ${{ github.event.issue.body }}
         with:
           project: SMP
           issuetype: Sylius Technical Support
@@ -29,7 +29,7 @@ jobs:
           # Valeur par default "from github" en MVP
           fields: >
             {
-              "customfield_10150": "${{ env.BODY_ISSUE \\| replace('\\n', '\\r') \\| replace('\\r\\r', '\\r') \\| replace('\"', '\\\"') }}",
+              "customfield_10150": "${{ env.BODY_ISSUE | replace('\"', '\\\"') | replace('\n', '\\r') | replace('\r\r', '\\r') }}",
               "customfield_10106": "from github",
               "customfield_10105": "https://www.from-github.fr",
               "customfield_10108": "from github",
