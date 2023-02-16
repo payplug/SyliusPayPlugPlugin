@@ -21,7 +21,9 @@ jobs:
         uses: atlassian/gajira-create@master
         env:
           TITLE_ISSUE: ${{ github.event.issue.title }}
-          BODY_ISSUE: |
+          BODY_ISSUE: | 
+            ${{ github.event.issue.body }}
+          BODY_ISSUE2: |
             Ho
 
             Hello
