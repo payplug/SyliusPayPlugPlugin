@@ -22,10 +22,15 @@ jobs:
         env:
           TITLE_ISSUE: ${{ github.event.issue.title }}
           BODY_ISSUE: |
-            new
-            long
-            
-            string
+            Ho
+
+            Hello
+
+            Hi
+
+            Hi
+
+            https://github.com/payplug/SyliusPayPlugPlugin/issues/new
         with:
           project: SMP
           issuetype: Sylius Technical Support
