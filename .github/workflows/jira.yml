@@ -36,9 +36,9 @@ jobs:
         with:
           project: SMP
           issuetype: Sylius Technical Support
-          summary: "$TITLE_ISSUE #${{ github.event.issue.number }}"
+          summary: "${{ TITLE_ISSUE }}  #${{ github.event.issue.number }}"
           # Valeur par default "from github" en MVP
-          fields: '{"customfield_10150": "$BODY_ISSUE \n\n Created from GitHub Action", "customfield_10106": "from github","customfield_10105": "https://www.from-github.fr","customfield_10108": "from github", "customfield_10145": "from github"}'
+          fields: '{"customfield_10150": "${{ BODY_ISSUE }} \n\n Created from GitHub Action", "customfield_10106": "from github","customfield_10105": "https://www.from-github.fr","customfield_10108": "from github", "customfield_10145": "from github"}'
 
       - name: Log
         run: echo "Created issue ${{ steps.create.outputs.issue }}"
