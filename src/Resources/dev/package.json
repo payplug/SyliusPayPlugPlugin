@@ -5,7 +5,9 @@
   "source": "src/index.js",
   "scripts": {
     "build": "parcel build pages/**/* --dist-dir ../public/assets/oney --no-source-maps",
+    "build:admin": "parcel build admin/**/* --dist-dir ../public/assets/admin --no-source-maps",
     "dev": "parcel watch pages/**/* --dist-dir ../public/assets/oney --no-hmr",
+    "dev:admin": "parcel watch admin/**/* --dist-dir ../public/assets/admin --no-hmr",
     "eslint": "eslint -c .eslintrc ./",
     "fix-eslint": "eslint -c .eslintrc ./ --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
