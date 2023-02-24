@@ -23,21 +23,22 @@ payplug_sylius_payplug_plugin:
                 deleted_error: An error occurred. Please retry in few seconds.
                 confirmation_modal:
                     confirm_card_deletion: Are you sure you want to delete this card?
-        bancontact_gateway_label: Bancontact by PayPlug
-        apple_pay_gateway_label: Apple Pay by PayPlug
+        bancontact_gateway_label: Bancontact by Payplug
+        apple_pay_gateway_label: Apple Pay by Payplug
+        american_express_gateway_label: American Express by Payplug
         error:
             billing.postcode: The postal code %postalCode% entered for the billing address is invalid
             shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
         secret_key: Secret key
-        payplug_gateway_label: PayPlug
+        payplug_gateway_label: Payplug
         payment_refund_locally: The payment refund was made locally only.
-        retrieve_secret_key_in_api_configuration_portal: Find your LIVE and TEST Secret Keys in your <a href="https://portal.payplug.com/#/configuration/api" target="_blank">PayPlug portal</a>
+        retrieve_secret_key_in_api_configuration_portal: Find your LIVE and TEST Secret Keys in your <a href="https://portal.payplug.com/#/configuration/api" target="_blank">Payplug portal</a>
         test_mode: TEST Mode
         payplug_id: |
-            PayPlug ID: %paymentId%
-        payplug_refund_gateway_is_not_activated: PayPlug has not been activated as a refund method
+            Payplug ID: %paymentId%
+        payplug_refund_gateway_is_not_activated: Payplug has not been activated as a refund method
         impossible_to_refund_this_payment: This payment cannot be refunded
-        oney_gateway_label: Oney by PayPlug
+        oney_gateway_label: Oney by Payplug
         oney: Oney
         oney_transaction_less_than_forty_eight_hours: The refund will be possible 48 hours after the last payment or refund transaction.
         or_pay_with_oney: Or pay in

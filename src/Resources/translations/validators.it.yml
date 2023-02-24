@@ -1,10 +1,10 @@
 payplug_sylius_payplug_plugin:
     secret_key:
         not_blank: Il campo dell’ID segreto non può essere vuoto.
-        not_valid: ID segreto PayPlug non valido.
+        not_valid: ID segreto Payplug non valido.
     oney:
         not_enabled: |
-            Attenzione! Per utilizzare il metodo di pagamento “Oney by PayPlug” in modalità LIVE,
+            Attenzione! Per utilizzare il metodo di pagamento “Oney by Payplug” in modalità LIVE,
             contattaci al seguente indirizzo: support@payplug.com
         not_valid_phone_number: Numero di cellulare non valido.
     one_click:
@@ -27,4 +27,12 @@ payplug_sylius_payplug_plugin:
             Non puoi ancora accedere a questa funzionalità. 
             Per attivare Apple Pay, compila  
             <a href="https://support.payplug.com/hc/it/requests/new?ticket_form_id=5965121371548" target="_blank" style="color:black;">questo modulo</a>
+            e attiva la modalità LIVE.
+    american_express:
+        can_not_save_method_with_test_key: |
+            Il pagamento American Express non è disponibile in modalità TEST.
+        can_not_save_method_no_access: |
+            Non puoi ancora accedere a questa funzionalità. 
+            Per attivare American Express, compila  
+            <a href="https://support.payplug.com/hc/it/requests/new?ticket_form_id=6331992459420" target="_blank" style="color:black;">questo modulo</a>
             e attiva la modalità LIVE.

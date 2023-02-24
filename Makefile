@@ -37,7 +37,7 @@ sylius-standard:
 	${COMPOSER} require sylius/sylius:"~${SYLIUS_VERSION}"
 
 update-dependencies:
-	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
+	${COMPOSER} config extra.symfony.require "~${SYMFONY_VERSION}"
 	${COMPOSER} require --dev donatj/mock-webserver:^2.1 --no-scripts --no-update
 # FIX since https://github.com/Sylius/Sylius/pull/13215 is not merged
 	${COMPOSER} require doctrine/dbal:"^2.6" doctrine/orm:"^2.9" --no-scripts --no-update
@@ -70,7 +70,11 @@ ifneq ($(PHP_VERSION), 8)
 endif
 
 install-sylius:
-	${CONSOLE} sylius:install -n -s default
+	#${CONSOLE} sylius:install -n -s default
+	${CONSOLE} doctrine:database:create -n
+	${CONSOLE} messenger:setup-transports -n
+	${CONSOLE} doctrine:migration:migrate -n
+	${CONSOLE} sylius:fixture:load -n
 	${YARN} install
 	${YARN} build
 	${YARN} gulp

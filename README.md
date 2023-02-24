@@ -9,9 +9,9 @@
     </a>
 </p>
 
-<h1 align="center">PayPlug payment plugin for Sylius</h1>
+<h1 align="center">Payplug payment plugin for Sylius</h1>
 
-<p align="center">This plugin allows you to integrate PayPlug payment with Sylius platform app including payment features and refunding orders.</p>
+<p align="center">This plugin allows you to integrate Payplug payment with Sylius platform app including payment features and refunding orders.</p>
 
 ## Requirements
 
@@ -53,7 +53,7 @@ In local environment, the plugin will not work properly because you will not be 
     cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
-4. Add PayPlug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+4. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
     ```yaml
     parameters:
@@ -63,9 +63,10 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug_oney
             - payplug_bancontact
             - payplug_apple_pay
+            - payplug_american_express
     ```
 
-5. Add PayPlug routes in `config/routes.yaml`
+5. Add Payplug routes in `config/routes.yaml`
 
    ```yaml
    sylius_payplug:
@@ -129,8 +130,8 @@ In local environment, the plugin will not work properly because you will not be 
 9. Process translations
 
     ```bash
-    php bin/console translation:update en PayPlugSyliusPayPlugPlugin --dump-messages
-    php bin/console translation:update fr PayPlugSyliusPayPlugPlugin --dump-messages
+    php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+    php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
 10. Clear cache:
@@ -140,11 +141,11 @@ In local environment, the plugin will not work properly because you will not be 
      ```
 
 🎉 You are now ready to add Payplug Payment method.
-In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**PayPlug**".
+In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
 
 ## Logs
 
-If you want to follow the logs in the production environment, you need to add the configuration in `config/packages/prod/monolog.yaml`, logs should be in `var/log/prod.log` which can be searched after the phrase `[Payum]` or `[PayPlug]`:
+If you want to follow the logs in the production environment, you need to add the configuration in `config/packages/prod/monolog.yaml`, logs should be in `var/log/prod.log` which can be searched after the phrase `[Payum]` or `[Payplug]`:
 
  ```yaml
    monolog:

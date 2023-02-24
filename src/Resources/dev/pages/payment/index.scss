@@ -141,7 +141,8 @@
     }
 
     .bancontact-method,
-    .apple-pay-method {
+    .apple-pay-method,
+    .american-express-method {
         label {
             display: flex !important;
             align-items: flex-start;
@@ -150,6 +151,14 @@
 
     .bancontact-method {
         .bancontact-logo {
+            margin-left: 0.5em;
+            position: relative;
+            top: -12px;
+        }
+    }
+
+    .american-express-method {
+        .american-express-logo {
             margin-left: 0.5em;
             position: relative;
             top: -12px;
