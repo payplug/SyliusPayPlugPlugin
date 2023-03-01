@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
+use _PHPStan_9a6ded56a\Symfony\Component\Finder\Exception\AccessDeniedException;
 use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider;
@@ -26,6 +27,7 @@ use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Core\OrderCheckoutTransitions;
+use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Factory\FactoryInterface;
@@ -105,6 +107,10 @@ final class OrderController extends BaseOrderController
 
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
+
+        if ($resource->getPaymentState() === OrderPaymentStates::STATE_PAID) {
+            throw new AccessDeniedException();
+        }
 
         /** @var ResourceControllerEvent $event */
         $event = $this->eventDispatcher->dispatchPreEvent(ResourceActions::UPDATE, $configuration, $resource);
