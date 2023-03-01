@@ -76,8 +76,8 @@ class ApplePayPaymentProvider
 
         $state = PaymentInterface::STATE_CART;
 
-        if ($order->getPayments()->filter(function(PaymentInterface $payment) {
-            return $payment->getState() === PaymentInterface::STATE_FAILED || $payment->getState() === PaymentInterface::STATE_CANCELLED;
+        if ($order->getPayments()->filter(function (PaymentInterface $payment) {
+            return PaymentInterface::STATE_FAILED === $payment->getState() || PaymentInterface::STATE_CANCELLED === $payment->getState();
         })->count() > 0) {
             $state = PaymentInterface::STATE_NEW;
         }
@@ -147,11 +147,11 @@ class ApplePayPaymentProvider
     {
         $lastPayment = $order->getLastPayment();
 
-        if ($lastPayment instanceof PaymentInterface && $lastPayment->getState() === PaymentInterface::STATE_CART) {
+        if ($lastPayment instanceof PaymentInterface && PaymentInterface::STATE_CART === $lastPayment->getState()) {
             return $lastPayment;
         }
 
-        if ($lastPayment instanceof PaymentInterface && $order->getState() === OrderInterface::STATE_NEW && $lastPayment->getState() === PaymentInterface::STATE_NEW) {
+        if ($lastPayment instanceof PaymentInterface && OrderInterface::STATE_NEW === $order->getState() && PaymentInterface::STATE_NEW === $lastPayment->getState()) {
             return $lastPayment;
         }
 
@@ -191,7 +191,6 @@ class ApplePayPaymentProvider
             $stateMachine->apply($targetTransition);
         }
     }
-
 
     public function applyRequiredOrderCheckoutTransition(OrderInterface $order, string $targetState): void
     {

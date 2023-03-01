@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
-use _PHPStan_9a6ded56a\Symfony\Component\Finder\Exception\AccessDeniedException;
 use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider;
@@ -108,8 +107,22 @@ final class OrderController extends BaseOrderController
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
 
-        if ($resource->getPaymentState() === OrderPaymentStates::STATE_PAID) {
-            throw new AccessDeniedException();
+        if (OrderPaymentStates::STATE_PAID === $resource->getPaymentState()) {
+            $redirect = $this->redirectToRoute('sylius_shop_order_show', [
+                'tokenValue' => $resource->getTokenValue(),
+                '_locale' => $resource->getLocaleCode(),
+            ]);
+
+            $dataResponse = [];
+            $dataResponse['returnUrl'] = $redirect->getTargetUrl();
+            $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
+
+            $response = [
+                'success' => false,
+                'data' => $dataResponse,
+            ];
+
+            return new JsonResponse($response, Response::HTTP_OK);
         }
 
         /** @var ResourceControllerEvent $event */
