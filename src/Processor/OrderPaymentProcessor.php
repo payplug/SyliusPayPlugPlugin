@@ -19,37 +19,61 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
     private OrderProcessorInterface $baseOrderPaymentProcessor;
 
     private FactoryInterface $stateMachineFactory;
+    private string $targetState = PaymentInterface::STATE_CART;
 
     public function __construct(
         OrderProcessorInterface $baseOrderPaymentProcessor,
-        FactoryInterface $stateMachineFactory
+        FactoryInterface $stateMachineFactory,
+        string $targetState = PaymentInterface::STATE_CART
     ) {
         $this->baseOrderPaymentProcessor = $baseOrderPaymentProcessor;
         $this->stateMachineFactory = $stateMachineFactory;
+        $this->targetState = $targetState;
     }
 
     public function process(OrderInterface $order): void
     {
+        $this->baseOrderPaymentProcessor->process($order);
+
+        return;
         Assert::isInstanceOf($order, \Sylius\Component\Core\Model\OrderInterface::class);
 
-        /** @var PaymentInterface|null $payment */
-        $payment = $order->getLastPayment(PaymentInterface::STATE_NEW);
+        /** @var PaymentInterface|null $lastPayment */
+        $lastPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);
 
+        if (!$lastPayment instanceof PaymentInterface) {
+            $this->baseOrderPaymentProcessor->process($order);
+
+            return;
+        }
+
+        $lastPaymentFactoryName = $this->getFactoryName($lastPayment);
+
+        // If Apple Pay payment and is already processed by the gateway
         if (
-            null !== $payment &&
-            PaymentInterface::STATE_COMPLETED === $payment->getDetails()['status'] &&
-            ApplePayGatewayFactory::FACTORY_NAME === $this->getFactoryName($payment)
+            ApplePayGatewayFactory::FACTORY_NAME === $lastPaymentFactoryName &&
+            !in_array($lastPayment->getDetails()['status'], [
+                PaymentInterface::STATE_NEW,
+            ], true)
         ) {
             return;
         }
 
+        // If Apple Pay payment and is just instanced to the gateway
         if (
-            null !== $payment &&
-            ApplePayGatewayFactory::FACTORY_NAME !== $this->getFactoryName($payment)
+            ApplePayGatewayFactory::FACTORY_NAME === $lastPaymentFactoryName &&
+            PaymentInterface::STATE_NEW === $lastPayment->getDetails()['status']
         ) {
-            $stateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
+            $lastPayment->setAmount(-8800);
+            $stateMachine = $this->stateMachineFactory->get($lastPayment, PaymentTransitions::GRAPH);
             $stateMachine->apply(PaymentTransitions::TRANSITION_CANCEL);
         }
+
+//        if (ApplePayGatewayFactory::FACTORY_NAME !== $lastPaymentFactoryName) {
+//            $stateMachine = $this->stateMachineFactory->get($lastPayment, PaymentTransitions::GRAPH);
+//            $stateMachine->apply(PaymentTransitions::TRANSITION_CANCEL);
+//            $lastPayment->setAmount(-9000);
+//        }
 
         $this->baseOrderPaymentProcessor->process($order);
     }

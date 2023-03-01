@@ -43,6 +43,16 @@
         >
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor.inner" />
             <argument type="service" id="sm.factory" />
+            <argument>cart</argument>
+        </service>
+
+        <service
+                id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor"
+                decorates="sylius.order_processing.order_payment_processor.after_checkout"
+        >
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor.inner" />
+            <argument type="service" id="sm.factory" />
+            <argument>new</argument>
         </service>
 
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
