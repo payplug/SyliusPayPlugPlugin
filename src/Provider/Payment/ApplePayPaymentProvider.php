@@ -22,6 +22,10 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Core\OrderCheckoutStates;
+use Sylius\Component\Core\OrderCheckoutTransitions;
+use Sylius\Component\Core\OrderPaymentStates;
+use Sylius\Component\Core\OrderPaymentTransitions;
 use Sylius\Component\Core\Payment\Exception\NotProvidedOrderPaymentException;
 use Sylius\Component\Core\TokenAssigner\OrderTokenAssignerInterface;
 use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
@@ -70,7 +74,15 @@ class ApplePayPaymentProvider
             throw new LogicException('Apple Pay is not enabled');
         }
 
-        $payment = $this->initApplePaySyliusPaymentState($order, PaymentInterface::STATE_NEW);
+        $state = PaymentInterface::STATE_CART;
+
+        if ($order->getPayments()->filter(function (PaymentInterface $payment): bool {
+            return PaymentInterface::STATE_FAILED === $payment->getState() || PaymentInterface::STATE_CANCELLED === $payment->getState();
+        })->count() > 0) {
+            $state = PaymentInterface::STATE_NEW;
+        }
+
+        $payment = $this->initApplePaySyliusPaymentState($order, $state);
 
         Assert::notNull($order->getBillingAddress());
         if (null !== $customer = $order->getBillingAddress()->getCustomer()) {
@@ -105,7 +117,10 @@ class ApplePayPaymentProvider
         $details['is_live'] = $paymentResource->is_live;
 
         $payment->setDetails($details);
-        $this->applyRequiredTransition($payment, PaymentInterface::STATE_NEW);
+        $this->applyRequiredPaymentTransition($payment, PaymentInterface::STATE_NEW);
+        $this->applyRequiredOrderPaymentTransition($order, OrderPaymentStates::STATE_AWAITING_PAYMENT);
+        $this->applyRequiredOrderCheckoutTransition($order, OrderCheckoutStates::STATE_COMPLETED);
+
         $this->entityManager->flush();
 
         return $payment;
@@ -116,32 +131,34 @@ class ApplePayPaymentProvider
      */
     private function initApplePaySyliusPaymentState(OrderInterface $order, string $targetState): PaymentInterface
     {
-        $order->getPayments()->clear();
-
         Assert::notNull($order->getCurrencyCode());
-        /** @var PaymentInterface $payment */
-        $payment = $this->paymentFactory->createWithAmountAndCurrencyCode($order->getTotal(), $order->getCurrencyCode());
+
+        $payment = $this->getPayment($order);
+
         $paymentMethod = $this->paymentMethodRepository->findOneByGatewayName(ApplePayGatewayFactory::FACTORY_NAME);
-
-        $lastPayment = $this->getLastPayment($order);
-
-        if (null !== $lastPayment) {
-            $paymentMethod = $lastPayment->getMethod();
-        }
-
-        if (null === $paymentMethod) {
-            throw new NotProvidedOrderPaymentException();
-        }
-
         $payment->setMethod($paymentMethod);
-        $this->applyRequiredTransition($payment, $targetState);
         $order->addPayment($payment);
         $this->entityManager->flush();
 
         return $payment;
     }
 
-    public function applyRequiredTransition(PaymentInterface $payment, string $targetState): void
+    private function getPayment(OrderInterface $order): PaymentInterface
+    {
+        $lastPayment = $order->getLastPayment();
+
+        if ($lastPayment instanceof PaymentInterface && PaymentInterface::STATE_CART === $lastPayment->getState()) {
+            return $lastPayment;
+        }
+
+        if ($lastPayment instanceof PaymentInterface && OrderInterface::STATE_NEW === $order->getState() && PaymentInterface::STATE_NEW === $lastPayment->getState()) {
+            return $lastPayment;
+        }
+
+        return $this->paymentFactory->createWithAmountAndCurrencyCode($order->getTotal(), $order->getCurrencyCode());
+    }
+
+    public function applyRequiredPaymentTransition(PaymentInterface $payment, string $targetState): void
     {
         if ($targetState === $payment->getState()) {
             return;
@@ -149,6 +166,40 @@ class ApplePayPaymentProvider
 
         /** @var StateMachineInterface $stateMachine */
         $stateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
+
+        /** @phpstan-ignore-next-line */
+        $targetTransition = $stateMachine->getTransitionToState($targetState);
+
+        if (null !== $targetTransition) {
+            $stateMachine->apply($targetTransition);
+        }
+    }
+
+    public function applyRequiredOrderPaymentTransition(OrderInterface $order, string $targetState): void
+    {
+        if ($targetState === $order->getPaymentState()) {
+            return;
+        }
+
+        /** @var StateMachineInterface $stateMachine */
+        $stateMachine = $this->stateMachineFactory->get($order, OrderPaymentTransitions::GRAPH);
+
+        /** @phpstan-ignore-next-line */
+        $targetTransition = $stateMachine->getTransitionToState($targetState);
+
+        if (null !== $targetTransition) {
+            $stateMachine->apply($targetTransition);
+        }
+    }
+
+    public function applyRequiredOrderCheckoutTransition(OrderInterface $order, string $targetState): void
+    {
+        if ($targetState === $order->getPaymentState()) {
+            return;
+        }
+
+        /** @var StateMachineInterface $stateMachine */
+        $stateMachine = $this->stateMachineFactory->get($order, OrderCheckoutTransitions::GRAPH);
 
         /** @phpstan-ignore-next-line */
         $targetTransition = $stateMachine->getTransitionToState($targetState);
@@ -201,7 +252,7 @@ class ApplePayPaymentProvider
             $details = $lastPayment->getDetails();
 
             if (!$response->is_paid) {
-                $this->applyRequiredTransition($lastPayment, PaymentInterface::STATE_FAILED);
+                $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_FAILED);
 
                 throw new PaymentNotCompletedException();
             }
@@ -216,7 +267,7 @@ class ApplePayPaymentProvider
 
             $this->entityManager->flush();
 
-            $this->applyRequiredTransition($lastPayment, PaymentInterface::STATE_COMPLETED);
+            $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_COMPLETED);
 
             if ($this->isResourceIsAuthorized($response)) {
                 $details['status'] = PayPlugApiClientInterface::STATUS_AUTHORIZED;
@@ -227,7 +278,7 @@ class ApplePayPaymentProvider
             return $lastPayment;
         } catch (\Exception $exception) {
             $paymentResource->abort();
-            $this->applyRequiredTransition($lastPayment, PaymentInterface::STATE_FAILED);
+            $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_FAILED);
 
             throw new PaymentNotCompletedException();
         }
@@ -275,7 +326,7 @@ class ApplePayPaymentProvider
             throw new LogicException();
         }
 
-        $this->applyRequiredTransition($lastPayment, PaymentInterface::STATE_CANCELLED);
+        $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_CANCELLED);
         $this->entityManager->flush();
     }
 }

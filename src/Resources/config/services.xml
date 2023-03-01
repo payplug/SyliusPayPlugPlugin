@@ -37,14 +37,6 @@
             <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" key="$paymentRepository" />
         </service>
 
-        <service
-                id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor"
-                decorates="sylius.order_processing.order_payment_processor.checkout"
-        >
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor.inner" />
-            <argument type="service" id="sm.factory" />
-        </service>
-
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
             <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
