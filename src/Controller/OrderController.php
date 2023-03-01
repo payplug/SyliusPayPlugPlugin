@@ -24,7 +24,9 @@ use Sylius\Bundle\ResourceBundle\Controller\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Controller\ViewHandlerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Core\OrderCheckoutTransitions;
+use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Factory\FactoryInterface;
@@ -36,6 +38,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Webmozart\Assert\Assert;
 
 final class OrderController extends BaseOrderController
@@ -105,6 +108,10 @@ final class OrderController extends BaseOrderController
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
 
+        if (OrderPaymentStates::STATE_PAID === $resource->getPaymentState()) {
+            throw new AccessDeniedException();
+        }
+
         /** @var ResourceControllerEvent $event */
         $event = $this->eventDispatcher->dispatchPreEvent(ResourceActions::UPDATE, $configuration, $resource);
 
@@ -173,7 +180,7 @@ final class OrderController extends BaseOrderController
                 ]);
             }
 
-            $this->addFlash('error', 'sylius.payment.cancelled');
+            $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
@@ -231,7 +238,7 @@ final class OrderController extends BaseOrderController
                 ]);
             }
 
-            $this->addFlash('error', 'sylius.payment.cancelled');
+            $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
             $dataResponse = [];
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
@@ -351,12 +358,12 @@ final class OrderController extends BaseOrderController
 
             $this->manager->flush();
 
-            $this->addFlash('error', 'sylius.payment.cancelled');
+            $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
 
             $dataResponse = [];
             $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment', ['_locale' => $resource->getLocaleCode()]);
 
-            if (OrderInterface::STATE_NEW === $resource->getState()) {
+            if (OrderCheckoutStates::STATE_COMPLETED === $resource->getCheckoutState()) {
                 $redirect = $this->redirectToRoute('sylius_shop_order_show', [
                     'tokenValue' => $resource->getTokenValue(),
                     '_locale' => $resource->getLocaleCode(),
@@ -391,7 +398,7 @@ final class OrderController extends BaseOrderController
                 'trace' => $exception->getTraceAsString(),
             ]);
 
-            $this->addFlash('error', 'sylius.payment.cancelled');
+            $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
 
             $dataResponse = [];
 

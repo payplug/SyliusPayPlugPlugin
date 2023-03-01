@@ -67,6 +67,11 @@ class IpnAction
         $content = json_decode($input, true);
         $details = ArrayObject::ensureArrayObject($content);
 
+        // if we are too fast canceling a payment before we got an answer from PayPlug gateway
+        if (null === $details['payment_id']) {
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+        }
+
         $payment = $this->paymentRepository->findOneByPayPlugPaymentId($details['payment_id']);
         $paymentMethod = $payment->getMethod();
 
