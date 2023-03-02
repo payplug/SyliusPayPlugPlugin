@@ -33,8 +33,7 @@ final class CaptureActionSpec extends ObjectBehavior
         AbortPaymentProcessor $abortPaymentProcessor,
         RequestStack $requestStack,
         RepositoryInterface $payplugCardRepository
-    ): void
-    {
+    ): void {
         $this->beConstructedWith($logger, $translator, $abortPaymentProcessor, $requestStack, $payplugCardRepository);
     }
 
@@ -107,6 +106,11 @@ final class CaptureActionSpec extends ObjectBehavior
         $arrayObject->offsetSet('payment_id', 1)->shouldBeCalled();
         $arrayObject->offsetSet('is_live', true)->shouldBeCalled();
         $arrayObject->offsetSet('status', PayPlugApiClientInterface::STATUS_CREATED)->shouldBeCalled();
+
+        // Apple Pay cleanup
+        $arrayObject->offsetGet('payment_method')->shouldBeCalled();
+        $arrayObject->offsetUnset('payment_context')->shouldBeCalled();
+        $arrayObject->offsetUnset('merchant_session')->shouldBeCalled();
 
         $this
             ->shouldThrow(HttpRedirect::class)
