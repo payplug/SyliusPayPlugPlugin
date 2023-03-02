@@ -76,6 +76,7 @@ class ApplePayPaymentProvider
 
         $state = PaymentInterface::STATE_CART;
 
+        /** @phpstan-ignore-next-line */
         if ($order->getPayments()->filter(function (PaymentInterface $payment): bool {
             return PaymentInterface::STATE_FAILED === $payment->getState() || PaymentInterface::STATE_CANCELLED === $payment->getState();
         })->count() > 0) {
@@ -147,14 +148,19 @@ class ApplePayPaymentProvider
     {
         $lastPayment = $order->getLastPayment();
 
-        if ($lastPayment instanceof PaymentInterface && PaymentInterface::STATE_CART === $lastPayment->getState()) {
+        if ($lastPayment instanceof PaymentInterface &&
+            PaymentInterface::STATE_CART === $lastPayment->getState()) {
             return $lastPayment;
         }
 
-        if ($lastPayment instanceof PaymentInterface && OrderInterface::STATE_NEW === $order->getState() && PaymentInterface::STATE_NEW === $lastPayment->getState()) {
+        if ($lastPayment instanceof PaymentInterface && OrderInterface::STATE_NEW === $order->getState() &&
+            PaymentInterface::STATE_NEW === $lastPayment->getState()) {
             return $lastPayment;
         }
 
+        Assert::string($order->getCurrencyCode());
+
+        /** @phpstan-ignore-next-line */
         return $this->paymentFactory->createWithAmountAndCurrencyCode($order->getTotal(), $order->getCurrencyCode());
     }
 
