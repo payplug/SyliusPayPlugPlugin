@@ -23,8 +23,8 @@
              data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}">
         </div>
     </div>
-    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/popin/index.css') }}">
+    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_popin/index.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_popin/index.css') }}">
     <div id="payplug-product-variant-codes">
         {% for variantCodes in sylius_product_variant_codes(product, sylius.channel) %}
             <div {% for key, option in variantCodes %}data-{{ key }}="{{ option }}"{% endfor %}></div>
