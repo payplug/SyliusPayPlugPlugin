@@ -57,10 +57,12 @@ final class CheckoutContext implements Context
      */
     public function iSignInToPayPlugAndPaySuccessfully(): void
     {
-        $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
-            $this->payPlugApiMocker->mockApiSuccessfulPayment(function () {
-                $this->paymentPage->notify(['id' => 1]);
-                $this->paymentPage->capture();
+        $this->payPlugApiMocker->mockMultipleApiCancelledPayment(function () {
+            $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
+                $this->payPlugApiMocker->mockApiSuccessfulPayment(function () {
+                    $this->paymentPage->notify(['id' => 1]);
+                    $this->paymentPage->capture();
+                });
             });
         });
     }
@@ -70,7 +72,7 @@ final class CheckoutContext implements Context
      */
     public function iHaveFailedPayPlugPayment()
     {
-        $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+        $this->payPlugApiMocker->mockMultipleApiCancelledPayment(function () {
             $this->payPlugApiMocker->mockApiFailedPayment(function () {
                 $this->paymentPage->notify(['id' => 1]);
                 $this->paymentPage->capture();
@@ -84,7 +86,7 @@ final class CheckoutContext implements Context
      */
     public function iCancelMyPayPlugPayment(): void
     {
-        $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+        $this->payPlugApiMocker->mockMultipleApiCancelledPayment(function () {
             $this->paymentPage->capture(['status' => PayPlugApiClientInterface::STATUS_CANCELED]);
         });
     }
@@ -115,7 +117,7 @@ final class CheckoutContext implements Context
      */
     public function iTryToPayAgainPayPlugPayment(): void
     {
-        $this->payPlugApiMocker->mockApiCancelledPayment(function () {
+        $this->payPlugApiMocker->mockMultipleApiCancelledPayment(function () {
             $this->payPlugApiMocker->mockPayPlugApiGetGatewayFactoryName(function () {
                 $this->payPlugApiMocker->mockApiCreatePayment(function () {
                     $this->orderDetails->pay();

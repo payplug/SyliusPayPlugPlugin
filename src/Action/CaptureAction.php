@@ -129,7 +129,13 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         if (ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY !== $details['payment_method']) {
             // clean other detail values
-            unset($details['payment_context'], $details['merchant_session']);
+            if ($details->offsetExists('payment_context')) {
+                unset($details['payment_context']);
+            }
+
+            if ($details->offsetExists('merchant_session')) {
+                unset($details['merchant_session']);
+            }
         }
 
         try {
@@ -247,7 +253,9 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     {
         try {
             if ($details->offsetExists('payment_id')
-                && $details->offsetExists('status')) {
+                && $details->offsetExists('status')
+                && $details->offsetExists('is_live')
+            ) {
                 $this->abortPaymentProcessor->process($paymentModel);
                 unset($details['status'], $details['payment_id'], $details['is_live']);
                 // the parameter allow_save_card must be false when payment_method parameter is provided

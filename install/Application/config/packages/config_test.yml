@@ -1,4 +1,0 @@
-doctrine:
-    dbal:
-        options:
-            1002: 'SET SESSION wait_timeout=300'
