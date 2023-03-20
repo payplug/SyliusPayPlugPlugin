@@ -157,6 +157,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 'pay_1';
         $payment->is_paid = false;
         $mock
             ->shouldReceive('treat')
@@ -173,6 +174,7 @@ final class PayPlugApiMocker
             ->shouldReceive('initialise')
         ;
         $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 'pay_1';
         $payment->status = 'failure';
         $payment->is_paid = false;
         $failure = new \stdClass();
@@ -213,12 +215,35 @@ final class PayPlugApiMocker
         ;
 
         $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 'pay_1';
         $payment->state = 'abort';
         $payment->is_paid = false;
 
         $mock
             ->shouldReceive('abortPayment')->once()
-            ->withArgs(['123456'])
+            ->withArgs(['pay_1'])
+            ->andReturn($payment)
+        ;
+
+        $action();
+        $this->mocker->unmockAll();
+    }
+
+    public function mockMultipleApiCancelledPayment(callable $action): void
+    {
+        $mock = $this->mocker->mockService('payplug_sylius_payplug_plugin.api_client.payplug', PayPlugApiClientInterface::class);
+        $mock
+            ->shouldReceive('initialise')
+        ;
+
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->id = 'pay_1';
+        $payment->state = 'abort';
+        $payment->is_paid = false;
+
+        $mock
+            ->shouldReceive('abortPayment')
+            ->withArgs(['pay_1'])
             ->andReturn($payment)
         ;
 
