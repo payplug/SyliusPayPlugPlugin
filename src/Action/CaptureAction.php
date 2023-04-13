@@ -13,6 +13,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor;
 use Payum\Core\Action\ActionInterface;
@@ -127,7 +128,14 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             unset($details['status']);
         }
 
-        if (ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY !== $details['payment_method']) {
+        if (!in_array(
+            $details['payment_method'],
+            array_merge(
+                [ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY],
+                OneyGatewayFactory::PAYMENT_CHOICES
+            ),
+            true
+        )) {
             // clean other detail values
             if ($details->offsetExists('payment_context')) {
                 unset($details['payment_context']);
