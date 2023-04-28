@@ -144,35 +144,14 @@
     .apple-pay-method,
     .american-express-method {
         label {
-            display: flex !important;
-            align-items: flex-start;
-        }
-    }
-
-    .bancontact-method {
-        .bancontact-logo {
-            margin-left: 0.5em;
             position: relative;
-            top: -12px;
-        }
-    }
 
-    .american-express-method {
-        .american-express-logo {
-            margin-left: 0.5em;
-            position: relative;
-            top: -12px;
-        }
-    }
-
-    .apple-pay-method {
-        label {
-            height: 45px;
-        }
-
-        .apple-pay-logo {
-            margin-left: 0.5em;
-            transform: translateY(-12px);
+            img {
+                position: absolute;
+                left: 100%;
+                margin-left: 0.5em;
+                top: -12px;
+            }
         }
     }
 }

@@ -17,10 +17,14 @@ sylius_ui:
                     template: '@PayPlugSyliusPayPlugPlugin/javascripts/webfont_loader.html.twig'
                 oney_common:
                     template: '@PayPlugSyliusPayPlugPlugin/javascripts/oney_common.html.twig'
+                select_payment_js:
+                    template: '@PayPlugSyliusPayPlugPlugin/javascripts/select_payment_js.html.twig'
         sylius.shop.layout.stylesheets:
             blocks:
                 oney_common:
                     template: '@PayPlugSyliusPayPlugPlugin/stylesheets/oney_common.html.twig'
+                select_payment_css:
+                    template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
         sylius.shop.account.saved_cards.index.header.content:
             blocks:
                 legacy:
@@ -49,3 +53,8 @@ sylius_ui:
                     priority: 5
                     context:
                         event: sylius.shop.account.order.index.after_grid
+        sylius.admin.payment_method.create.stylesheets: &cssEvt
+            blocks:
+                payment_methods_css:
+                    template: '@PayPlugSyliusPayPlugPlugin/stylesheets/payment_method_css.html.twig'
+        sylius.admin.payment_method.update.stylesheets: *cssEvt

@@ -12,6 +12,8 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor;
 use Payum\Core\Action\ActionInterface;
@@ -79,7 +81,18 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
         Assert::isInstanceOf($this->tokenFactory, GenericTokenFactoryInterface::class);
         RequestNotSupportedException::assertSupports($this, $request);
 
+        $paymentModel = $request->getFirstModel();
+        Assert::isInstanceOf($paymentModel, PaymentInterface::class);
+
         $details = ArrayObject::ensureArrayObject($request->getModel());
+
+        if (isset($details['payment_method']) &&
+            ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY === $details['payment_method']) {
+            $this->abortPaymentProcessor->process($paymentModel);
+            $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
+
+            return;
+        }
 
         if (isset($details['status']) && PayPlugApiClientInterface::FAILED === $details['status']) {
             // Unset current status to allow to use payplug to change payment method
@@ -93,12 +106,9 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             return;
         }
 
-        $paymentModel = $request->getFirstModel();
-        Assert::isInstanceOf($paymentModel, PaymentInterface::class);
-
-        /** @var Capture $request */
+        /* @var Capture $request */
         if (array_key_exists('status', $paymentModel->getDetails())
-            && $paymentModel->getDetails()['status'] === PayPlugApiClientInterface::STATUS_CAPTURED) {
+            && PayPlugApiClientInterface::STATUS_CAPTURED === $paymentModel->getDetails()['status']) {
             return;
         }
 
@@ -116,6 +126,24 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             // We previously made a payment but not yet "authorized",
             // Unset current status to allow to use payplug to change payment method
             unset($details['status']);
+        }
+
+        if (!in_array(
+            $details['payment_method'],
+            array_merge(
+                [ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY],
+                OneyGatewayFactory::PAYMENT_CHOICES
+            ),
+            true
+        )) {
+            // clean other detail values
+            if ($details->offsetExists('payment_context')) {
+                unset($details['payment_context']);
+            }
+
+            if ($details->offsetExists('merchant_session')) {
+                unset($details['merchant_session']);
+            }
         }
 
         try {
@@ -233,7 +261,9 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     {
         try {
             if ($details->offsetExists('payment_id')
-                && $details->offsetExists('status')) {
+                && $details->offsetExists('status')
+                && $details->offsetExists('is_live')
+            ) {
                 $this->abortPaymentProcessor->process($paymentModel);
                 unset($details['status'], $details['payment_id'], $details['is_live']);
                 // the parameter allow_save_card must be false when payment_method parameter is provided
