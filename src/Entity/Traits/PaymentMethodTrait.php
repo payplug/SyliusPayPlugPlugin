@@ -11,6 +11,7 @@ use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 trait PaymentMethodTrait
 {
     /** @ORM\OneToMany(targetEntity=Card::class, mappedBy="paymentMethod", orphanRemoval=true) */
+    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'paymentMethod', orphanRemoval: true)]
     protected $cards;
 
     /**

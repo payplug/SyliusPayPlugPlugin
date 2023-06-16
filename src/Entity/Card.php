@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Customer\Model\CustomerInterface;
 use Sylius\Component\Resource\Model\ResourceInterface;
 
 /**
  * @ORM\Entity()
  * @ORM\Table("payplug_cards")
  */
+#[ORM\Entity]
+#[ORM\Table(name: 'payplug_cards')]
 class Card implements ResourceInterface
 {
     /**
@@ -21,48 +24,58 @@ class Card implements ResourceInterface
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
     private $id;
 
     /**
      * @var string
      * @ORM\Column(name="external_id", type="string", nullable=false)
      */
+    #[ORM\Column(name: 'external_id', type: Types::STRING, nullable: false)]
     private $externalId;
 
     /**
      * @var string
      * @ORM\Column(name="last4", type="string")
      */
+    #[ORM\Column(name: 'last4', type: Types::STRING)]
     private $last4;
 
     /**
      * @var string
      * @ORM\Column(name="country", type="string")
      */
+    #[ORM\Column(name: 'country', type: Types::STRING)]
     private $countryCode;
 
     /**
      * @var int
      * @ORM\Column(name="exp_month", type="integer")
      */
+    #[ORM\Column(name: 'exp_month', type: Types::INTEGER)]
     private $expirationMonth;
 
     /**
      * @var int
      * @ORM\Column(name="exp_year", type="integer")
      */
+    #[ORM\Column(name: 'exp_year', type: Types::INTEGER)]
     private $expirationYear;
 
     /**
      * @var string
      * @ORM\Column(name="brand", type="string")
      */
+    #[ORM\Column(name: 'brand', type: Types::STRING)]
     private $brand;
 
     /**
      * @var bool
      * @ORM\Column(name="is_live", type="boolean")
      */
+    #[ORM\Column(name: 'is_live', type: Types::BOOLEAN)]
     private $isLive;
 
     /**
@@ -70,6 +83,8 @@ class Card implements ResourceInterface
      * @ORM\ManyToOne(targetEntity=\Sylius\Component\Customer\Model\CustomerInterface::class, inversedBy="cards")
      * @ORM\JoinColumn(nullable=false)
      */
+    #[ORM\ManyToOne(targetEntity: CustomerInterface::class, inversedBy: 'cards')]
+    #[ORM\JoinColumn(nullable: false)]
     private $customer;
 
     /**
@@ -77,6 +92,8 @@ class Card implements ResourceInterface
      * @ORM\ManyToOne(targetEntity=\Sylius\Component\Core\Model\PaymentMethodInterface::class, inversedBy="cards")
      * @ORM\JoinColumn(nullable=false)
      */
+    #[ORM\ManyToOne(targetEntity: PaymentMethodInterface::class, inversedBy: 'cards')]
+    #[ORM\JoinColumn(nullable: false)]
     private $paymentMethod;
 
     public function getId(): int
