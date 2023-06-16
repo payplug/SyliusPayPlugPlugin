@@ -14,6 +14,8 @@ trait CustomerTrait
      * @ORM\OneToMany(targetEntity=Card::class, mappedBy="customer", orphanRemoval=true)
      * @ORM\OrderBy({"id" = "DESC"})
      */
+    #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'customer', orphanRemoval: true)]
+    #[ORM\OrderBy(['id' => 'DESC'])]
     protected $cards;
 
     /**

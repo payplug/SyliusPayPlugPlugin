@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Entity;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Resource\Model\ResourceInterface;
@@ -17,6 +18,8 @@ use Webmozart\Assert\Assert;
  * @ORM\Entity()
  * @ORM\Table("payplug_refund_history")
  */
+#[ORM\Entity]
+#[ORM\Table(name: 'payplug_refund_history')]
 class RefundHistory implements ResourceInterface
 {
     /**
@@ -25,6 +28,9 @@ class RefundHistory implements ResourceInterface
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
     private $id;
 
     /**
@@ -32,12 +38,15 @@ class RefundHistory implements ResourceInterface
      * @ORM\OneToOne(targetEntity="Sylius\RefundPlugin\Entity\RefundPayment")
      * @ORM\JoinColumn(name="refund_payment_id", nullable=true)
      */
+    #[ORM\OneToOne(targetEntity: RefundPayment::class)]
+    #[ORM\JoinColumn(name: 'refund_payment_id', nullable: true)]
     private $refundPayment;
 
     /**
      * @var string|null
      * @ORM\Column(type="string", nullable=true)
      */
+    #[ORM\Column(type: Types::STRING, nullable: true)]
     private $externalId;
 
     /**
@@ -45,24 +54,29 @@ class RefundHistory implements ResourceInterface
      * @ORM\ManyToOne(targetEntity="\Sylius\Component\Core\Model\Payment")
      * @ORM\JoinColumn(name="payment_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      */
+    #[ORM\ManyToOne(targetEntity: PaymentInterface::class)]
+    #[ORM\JoinColumn(name: 'payment_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private $payment;
 
     /**
      * @var int
      * @ORM\Column(type="integer", nullable=true)
      */
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private $value;
 
     /**
      * @var bool
      * @ORM\Column(type="boolean")
      */
+    #[ORM\Column(type: Types::BOOLEAN)]
     private $processed = false;
 
     /**
      * @var DateTimeInterface
      * @ORM\Column(type="datetime")
      */
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private $createdAt;
 
     public function __construct()
