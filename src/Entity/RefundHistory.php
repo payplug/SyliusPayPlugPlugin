@@ -51,10 +51,10 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var PaymentInterface|null
-     * @ORM\ManyToOne(targetEntity="\Sylius\Component\Core\Model\Payment")
+     * @ORM\ManyToOne(targetEntity="\Sylius\Component\Core\Model\PaymentInterface", inversedBy="refundHistories")
      * @ORM\JoinColumn(name="payment_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      */
-    #[ORM\ManyToOne(targetEntity: PaymentInterface::class)]
+    #[ORM\ManyToOne(targetEntity: PaymentInterface::class, inversedBy: 'refundHistories')]
     #[ORM\JoinColumn(name: 'payment_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private $payment;
 

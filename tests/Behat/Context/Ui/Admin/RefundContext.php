@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Admin;
 
+use App\Entity\Payment\Payment;
 use Behat\Behat\Context\Context;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,7 +16,6 @@ use Sylius\Behat\Context\Ui\Admin\ManagingOrdersContext;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
-use Sylius\Component\Core\Model\Payment;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker;
 use Tests\Sylius\RefundPlugin\Behat\Context\Ui\RefundingContext;
 
