@@ -19,9 +19,11 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
 {
     private TranslatorInterface $translator;
 
-    public function __construct(TranslatorInterface $translator) {
+    public function __construct(TranslatorInterface $translator)
+    {
         $this->translator = $translator;
     }
+
     /**
      * @inheritdoc
      */
