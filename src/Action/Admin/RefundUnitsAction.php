@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Action\Admin;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface;
+use Sylius\RefundPlugin\Creator\RequestCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,26 +25,23 @@ final class RefundUnitsAction
     /** @var UrlGeneratorInterface */
     private $router;
 
-    /** @var RefundUnitsCommandCreatorInterface */
-    private $commandCreator;
-
     /** @var LoggerInterface */
     private $logger;
 
-    private RequestStack $requestStack;
-
     public function __construct(
         MessageBusInterface $commandBus,
-        RequestStack $requestStack,
+        private RequestStack $requestStack,
         UrlGeneratorInterface $router,
-        RefundUnitsCommandCreatorInterface $commandCreator,
+        private RequestCommandCreatorInterface | RefundUnitsCommandCreatorInterface $commandCreator,
         LoggerInterface $logger
     ) {
         $this->commandBus = $commandBus;
-        $this->requestStack = $requestStack;
         $this->router = $router;
-        $this->commandCreator = $commandCreator;
         $this->logger = $logger;
+
+        if ($this->commandCreator instanceof RefundUnitsCommandCreatorInterface) {
+            trigger_deprecation('sylius/refund-plugin', '1.4', sprintf('Passing an instance of %s as constructor argument for %s is deprecated as of Sylius Refund Plugin 1.4 and will be removed in 2.0. Pass an instance of %s instead.', RefundUnitsCommandCreatorInterface::class, self::class, RequestCommandCreatorInterface::class));
+        }
     }
 
     public function __invoke(Request $request): Response
