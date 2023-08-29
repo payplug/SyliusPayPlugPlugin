@@ -246,6 +246,7 @@
                 public="false"
         >
             <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator.inner"/>
+            <argument type="service" id="Sylius\RefundPlugin\Converter\Request\RequestToRefundUnitsConverterInterface"/>
         </service>
 
         <service
