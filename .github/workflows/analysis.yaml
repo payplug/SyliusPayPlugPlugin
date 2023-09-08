@@ -72,3 +72,24 @@ jobs:
                 name: 'Checks security issues - Run'
                 run: 'symfony security:check'
                 if: 'always() && steps.end-of-setup.outcome == ''success'''
+    sonarcloud:
+      runs-on: ubuntu-latest
+      continue-on-error: true
+      steps:
+      - uses: actions/checkout@v3
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGA }}
+            -Dsonar.projectKey=github-payplug-payplug-syliuspayplugplugin
+            -Dsonar.sources=lib/
+            -Dsonar.test.exclusions=tests/**
+            -Dsonar.tests=tests/
+            -Dsonar.verbose=true
