@@ -89,7 +89,7 @@ jobs:
           args: >
             -Dsonar.organization=${{ secrets.SONAR_ORGA }}
             -Dsonar.projectKey=github-payplug-payplug-syliuspayplugplugin
-            -Dsonar.sources=lib/
+            -Dsonar.sources=src/
             -Dsonar.test.exclusions=tests/**
             -Dsonar.tests=tests/
             -Dsonar.verbose=true
