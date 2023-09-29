@@ -21,6 +21,7 @@ use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Sylius\RefundPlugin\Model\OrderItemUnitRefund;
 use Sylius\RefundPlugin\Model\RefundType;
 use Sylius\RefundPlugin\Model\ShipmentRefund;
+use Sylius\RefundPlugin\Model\UnitRefundInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
@@ -131,7 +132,7 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         return $total;
     }
 
-    private function getAmount(OrderItemUnitRefund $unit): int
+    private function getAmount(UnitRefundInterface $unit): int
     {
         return $unit->total();
     }
