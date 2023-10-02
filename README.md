@@ -92,6 +92,8 @@ In local environment, the plugin will not work properly because you will not be 
    * @ORM\Entity
    * @ORM\Table(name="sylius_customer")
    */
+   #[ORM\Entity]
+   #[ORM\Table(name: 'sylius_customer')]
    class Customer extends BaseCustomer
    {
       use CustomerTrait;
@@ -116,6 +118,8 @@ In local environment, the plugin will not work properly because you will not be 
     * @ORM\Entity
     * @ORM\Table(name="sylius_payment_method")
     */
+   #[ORM\Entity]
+   #[ORM\Table(name: 'sylius_payment_method')]
    class PaymentMethod extends BasePaymentMethod
    {
        use PaymentMethodTrait;
@@ -125,6 +129,32 @@ In local environment, the plugin will not work properly because you will not be 
            return new PaymentMethodTranslation();
        }
    }
+   ``` 
+
+* App\Entity\Payment\Payment
+
+   ```php
+   <?php
+
+   declare(strict_types=1);
+
+   namespace App\Entity\Payment;
+
+   use Doctrine\Common\Collections\ArrayCollection;
+   use Doctrine\ORM\Mapping as ORM;
+   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentTrait;
+   use Sylius\Component\Core\Model\Payment as BasePayment;
+
+   /**
+   * @ORM\Entity
+   * @ORM\Table(name="sylius_payment")
+  */
+  #[ORM\Entity]
+  #[ORM\Table(name: 'sylius_payment')]
+  class Payment extends BasePayment
+  {
+      use PaymentTrait;
+  }
    ``` 
 
 9. Process translations

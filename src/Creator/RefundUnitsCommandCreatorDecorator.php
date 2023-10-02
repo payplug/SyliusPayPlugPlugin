@@ -14,17 +14,23 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Payment\Repository\PaymentMethodRepositoryInterface;
 use Sylius\RefundPlugin\Command\RefundUnits;
-use Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface;
+use Sylius\RefundPlugin\Converter\RefundUnitsConverterInterface;
+use Sylius\RefundPlugin\Converter\Request\RequestToRefundUnitsConverterInterface;
+use Sylius\RefundPlugin\Creator\RequestCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
+use Sylius\RefundPlugin\Model\OrderItemUnitRefund;
+use Sylius\RefundPlugin\Model\RefundType;
+use Sylius\RefundPlugin\Model\ShipmentRefund;
+use Sylius\RefundPlugin\Model\UnitRefundInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
-class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInterface
+class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterface
 {
-    private const MINIMUM_REFUND_AMOUNT = 0.10;
+    private const MINIMUM_REFUND_AMOUNT = 10;
 
-    /** @var RefundUnitsCommandCreatorInterface */
+    /** @var RequestCommandCreatorInterface */
     private $decorated;
 
     /** @var PaymentMethodRepositoryInterface */
@@ -40,7 +46,8 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
     private $oneyClient;
 
     public function __construct(
-        RefundUnitsCommandCreatorInterface $decorated,
+        RequestCommandCreatorInterface $decorated,
+        private RequestToRefundUnitsConverterInterface | RefundUnitsConverterInterface $requestToRefundUnitsConverter,
         PaymentMethodRepositoryInterface $paymentMethodRepository,
         OrderRepositoryInterface $orderRepository,
         TranslatorInterface $translator,
@@ -57,15 +64,30 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
     {
         Assert::true($request->attributes->has('orderNumber'), 'Refunded order number not provided');
 
-        $units = $this->filterEmptyRefundUnits(
-            $request->request->has('sylius_refund_units') ? $request->request->all()['sylius_refund_units'] : []
-        );
-        $shipments = $this->filterEmptyRefundUnits(
-            $request->request->has('sylius_refund_shipments') ? $request->request->all()['sylius_refund_shipments'] : []
-        );
+        if ($this->requestToRefundUnitsConverter instanceof RefundUnitsConverterInterface) {
+            /** @phpstan-ignore-next-line */
+            $units = $this->requestToRefundUnitsConverter->convert(
+                $request->request->has('sylius_refund_units') ? $request->request->all()['sylius_refund_units'] : [],
+                /* @phpstan-ignore-next-line */
+                RefundType::orderItemUnit(),
+                OrderItemUnitRefund::class,
+            );
 
-        if (0 === count($units) && 0 === count($shipments)) {
-            throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('sylius_refund.at_least_one_unit_should_be_selected_to_refund'));
+            /** @phpstan-ignore-next-line */
+            $shipments = $this->requestToRefundUnitsConverter->convert(
+                $request->request->has('sylius_refund_shipments') ? $request->request->all()['sylius_refund_shipments'] : [],
+                /* @phpstan-ignore-next-line */
+                RefundType::shipment(),
+                ShipmentRefund::class,
+            );
+
+            $units = array_merge($units, $shipments);
+        } else {
+            $units = $this->requestToRefundUnitsConverter->convert($request);
+        }
+
+        if (0 === count($units)) {
+            throw InvalidRefundAmount::withValidationConstraint('sylius_refund.at_least_one_unit_should_be_selected_to_refund');
         }
 
         /** @var int $paymentMethodId */
@@ -79,7 +101,7 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
 
         if (PayPlugGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName() &&
             OneyGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName()) {
-            return $this->decorated->fromRequest($request);
+            return $this->decorated->fromRequest($request); /** @phpstan-ignore-line */
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $gateway->getFactoryName()) {
@@ -90,49 +112,29 @@ class RefundUnitsCommandCreatorDecorator implements RefundUnitsCommandCreatorInt
             $this->canOneyRefundBeMade($order);
         }
 
-        $totalRefundRequest = $this->getTotalRefundAmount($units, $shipments);
+        $totalRefundRequest = $this->getTotalRefundAmount($units);
 
         if ($totalRefundRequest < self::MINIMUM_REFUND_AMOUNT) {
             throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met'));
         }
 
-        return $this->decorated->fromRequest($request);
+        return $this->decorated->fromRequest($request); /** @phpstan-ignore-line */
     }
 
-    private function getTotalRefundAmount(array $units, array $shipments): float
+    private function getTotalRefundAmount(array $units): int
     {
         $total = 0;
 
         foreach ($units as $unit) {
-            $total += $this->getAmount($unit) ?? 0;
-        }
-
-        foreach ($shipments as $unit) {
-            $total += $this->getAmount($unit) ?? 0;
+            $total += $this->getAmount($unit);
         }
 
         return $total;
     }
 
-    private function filterEmptyRefundUnits(array $units): array
+    private function getAmount(UnitRefundInterface $unit): int
     {
-        return array_filter($units, function (array $refundUnit): bool {
-            return
-                (isset($refundUnit['amount']) && '' !== $refundUnit['amount'])
-                || isset($refundUnit['full'])
-                ;
-        });
-    }
-
-    private function getAmount(array $unit): ?float
-    {
-        if (isset($unit['full'])) {
-            return null;
-        }
-
-        Assert::keyExists($unit, 'amount');
-
-        return (float) $unit['amount'];
+        return $unit->total();
     }
 
     private function canOneyRefundBeMade(OrderInterface $order): void
