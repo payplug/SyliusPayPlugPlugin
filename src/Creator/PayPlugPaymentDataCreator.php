@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Creator;
 
 use DateInterval;
 use DateTime;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
@@ -107,22 +108,29 @@ class PayPlugPaymentDataCreator
 
     public function formatNumber(string $phoneNumber, ?string $isoCode): array
     {
-        $phoneNumberUtil = PhoneNumberUtil::getInstance();
-        $parsed = $phoneNumberUtil->parse($phoneNumber, $isoCode);
+        try {
+            $phoneNumberUtil = PhoneNumberUtil::getInstance();
+            $parsed = $phoneNumberUtil->parse($phoneNumber, $isoCode);
 
-        if (!$phoneNumberUtil->isValidNumber($parsed)) {
+            if (!$phoneNumberUtil->isValidNumber($parsed)) {
+                return [
+                    'phone' => null,
+                    'is_mobile' => null,
+                ];
+            }
+
+            $formatted = $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164);
+
+            return [
+                'phone' => $formatted,
+                'is_mobile' => PhoneNumberType::MOBILE === $phoneNumberUtil->getNumberType($parsed),
+            ];
+        } catch (NumberParseException) {
             return [
                 'phone' => null,
                 'is_mobile' => null,
             ];
         }
-
-        $formatted = $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164);
-
-        return [
-            'phone' => $formatted,
-            'is_mobile' => PhoneNumberType::MOBILE === $phoneNumberUtil->getNumberType($parsed),
-        ];
     }
 
     private function formatTitle(CustomerInterface $customer): ?string
