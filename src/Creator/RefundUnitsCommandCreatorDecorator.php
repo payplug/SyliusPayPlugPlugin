@@ -105,8 +105,11 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $gateway->getFactoryName()) {
+            $orderNumber = $request->get('orderNumber');
+            Assert::string($orderNumber);
+
             /** @var OrderInterface|null $order */
-            $order = $this->orderRepository->findOneByNumber($request->get('orderNumber'));
+            $order = $this->orderRepository->findOneByNumber($orderNumber);
             Assert::isInstanceOf($order, OrderInterface::class);
 
             $this->canOneyRefundBeMade($order);
