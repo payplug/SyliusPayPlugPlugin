@@ -6,18 +6,22 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false
+    bootstrapFiles:
+        - ../vendor/autoload.php
     excludePaths:
         # Makes PHPStan crash
         - ../src/DependencyInjection/Configuration.php
         - ../src/Repository/PaymentMethodRepository.php
         - ../src/Migrations/
+        - ../src/Entity/
+        - ../tests/PHPUnit
+        - ../src/Manager/SettingsManager.php
+        - ../src/Form/Type/SettingsType.php
 
         # Test dependencies
-        - ../tests
-
-        # PHPSpec
-        - ../spec
-
+        - ../tests/Application
+        - ../tests/PHPUnit
+        - ../install
     ignoreErrors:
         # ignore false positive
         - '#Access to an undefined property Payplug\\Resource\\[a-zA-Z0-9]+::\$#'
