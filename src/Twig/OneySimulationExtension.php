@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
+use Webmozart\Assert\Assert;
 
 final class OneySimulationExtension extends AbstractExtension
 {
@@ -70,7 +71,10 @@ final class OneySimulationExtension extends AbstractExtension
             return $cart;
         }
 
-        $order = $this->orderRepository->findOneByTokenValue($currentRequest->get('tokenValue'));
+        $tokenValue = $currentRequest->get('tokenValue');
+        Assert::string($tokenValue);
+
+        $order = $this->orderRepository->findOneByTokenValue($tokenValue);
 
         if (!$order instanceof OrderInterface) {
             throw new \Exception('No order found.');
