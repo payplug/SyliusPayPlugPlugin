@@ -189,11 +189,16 @@ final class OneyRulesExtension extends AbstractExtension
         }
 
         Assert::notNull($currentCart->getLocaleCode());
+        Assert::isArray($request->get('_route_params'));
+        Assert::keyExists($request->get('_route_params'), 'slug');
+        Assert::string($request->get('_route_params')['slug']);
+
         $product = $this->productRepository->findOneByChannelAndSlug(
             $channel,
             $currentCart->getLocaleCode(),
             $request->get('_route_params')['slug']
         );
+
         Assert::isInstanceOf($product, ProductInterface::class);
 
         /** @var ProductVariantInterface|null $firstVariant */
