@@ -110,3 +110,5 @@ payplug_sylius_payplug_plugin:
         one_click_enable: Enable One click
         one_click_help: |
             Allow your customers to save their credit card details for later
+
+        integrated_payment_enable: Enable payment integrated

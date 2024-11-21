@@ -40,6 +40,11 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'help_html' => true,
                 'required' => false,
             ])
+            ->add(PayPlugGatewayFactory::INTEGRATED_PAYMENT, CheckboxType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.form.integrated_payment_enable',
+                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
+                'required' => false,
+            ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
                 $data = $event->getData();
                 // phpstan check
