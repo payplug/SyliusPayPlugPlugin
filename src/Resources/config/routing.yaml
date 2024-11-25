@@ -86,3 +86,9 @@ payplug_shop_checkout_apple_cancel:
                 method: find
                 arguments:
                     - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"
+
+payplug_sylius_integrated_payment_init:
+    path: /{_locale}/payplug/integrated_payment/init/{paymentMethodId}
+    methods: ['GET', 'POST']
+    defaults:
+        _controller: 'PayPlug\SyliusPayPlugPlugin\Controller\IntegratedPaymentController::initPaymentAction'
