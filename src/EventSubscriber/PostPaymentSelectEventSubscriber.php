@@ -7,7 +7,6 @@ namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use SM\Factory\FactoryInterface;
-use Sylius\Bundle\ResourceBundle\Controller\RedirectHandlerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -26,7 +25,6 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
-        private RedirectHandlerInterface $redirectHandler,
         private FactoryInterface $stateMachineFactory,
     ) {
     }
@@ -50,6 +48,10 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         $syliusRequestConfig = $request->attributes->get('_sylius');
+        if (!\is_array($syliusRequestConfig)) {
+            return;
+        }
+
         $syliusRequestConfig['redirect'] = [
             'route' => 'sylius_shop_order_pay',
             'parameters' => ['tokenValue' => 'resource.tokenValue'],
