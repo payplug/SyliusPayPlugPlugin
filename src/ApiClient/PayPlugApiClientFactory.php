@@ -41,7 +41,8 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
 
     public function createForPaymentMethod(PaymentMethodInterface $paymentMethod): PayPlugApiClientInterface
     {
-        $gatewayConfig = $paymentMethod->getGatewayConfig();
+        $gatewayConfig = $paymentMethod->getGatewayConfig() ?? throw new \LogicException('Gateway config not found');
+
         $key = $gatewayConfig->getConfig()['secretKey'];
         $factoryName = $gatewayConfig->getFactoryName();
 
