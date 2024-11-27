@@ -129,3 +129,5 @@ payplug_sylius_payplug_plugin:
         one_click_help: |
             Permettez à vos clients d'enregistrer leurs coordonnées de carte de paiement pour effectuer ultérieurement
             d'autres transactions
+
+        integrated_payment_enable: Activer le Paiement Integré
