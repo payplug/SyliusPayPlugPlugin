@@ -21,6 +21,9 @@ const Payment = {
     });
     Payment.tabsHandler();
     Payment.applePayHandler();
+    $('form[name="sylius_checkout_select_payment"]').on("submit", () => {
+      Payment.handleForm();
+    });
   },
   toggleGateway() {
     const paymentMethodInputId = $(this.options.trigger).data("payment-input-id");
@@ -118,8 +121,7 @@ const Payment = {
       Payment.enableNextStepButton();
     }
   },
-  onApplePayButtonClick(event)
-  {
+  onApplePayButtonClick(event) {
     const applePayButton = $(event.currentTarget);
 
     if (applePaySessionRequestSettings === undefined) {
@@ -270,12 +272,7 @@ const Payment = {
       this.modalSubmit(e);
     });
   },
-};
-
-const onDocumentLoad = function (event) {
-  Payment.init();
-
-  $('form[name="sylius_checkout_select_payment"] button[type="submit"]').on("click", (event) => {
+  handleForm() {
     if ($(".checkbox-oney :radio:checked").length) {
       $(".checkbox-payplug").closest(".payment-item").find(".payment-choice__input:checked").prop("checked", false);
     } else if ($(".checkbox-payplug :radio:checked").length) {
@@ -284,7 +281,7 @@ const onDocumentLoad = function (event) {
 
     $("input#payplug_choice_card_other").attr("disabled", true);
     $('form[name="sylius_checkout_select_payment"]').submit();
-  });
+  }
 };
 
-document.addEventListener("DOMContentLoaded", onDocumentLoad, false);
+document.addEventListener("DOMContentLoaded", Payment.init, false);
