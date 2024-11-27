@@ -92,7 +92,13 @@
                 {{ form_row(form.parent.parent.payplug_card_choice) }}
             </div>
         {% endif %}
-
+        {% if method.gatewayConfig.factoryName is same as payplugFactoryName and method.gatewayConfig.config.integratedPayment is defined and method.gatewayConfig.config.integratedPayment is same as true %}
+            {% include '@PayPlugSyliusPayPlugPlugin/form/integrated.html.twig' with {
+                'paymentMethod': method,
+                'payment': order.getLastPayment('cart'),
+                'hasSavedCards': hasSavedCards
+            } %}
+        {% endif %}
         {% if method.gatewayConfig.factoryName == applePayFactoryName %}
             <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
             <script>

@@ -110,6 +110,21 @@ payplug_sylius_payplug_plugin:
                 title: 'Les frais sont :'
                 client: Répartis entre vous et vos clients
                 merchant: À votre charge
+        integrated_payment:
+            card_holder.title: 'Nom du titulaire de la carte'
+            card_holder.error: 'Nom et/ou prénom invalide(s).'
+            pan.title: 'Numero de carte'
+            pan.error: 'Numéro de carte invalide.'
+            cvv.title: '123'
+            cvv.error: 'CVV invalide.'
+            exp.title: "MM/AA"
+            exp.error: "Date d'expiration invalide."
+            empty: 'Champ obligatoire.'
+            scheme.label: 'Votre carte'
+            save_card.label: 'Enregistrer ma carte bancaire'
+            place_order.label: 'Confirmer le paiement'
+            transaction_secure.label: 'Transaction sécurisée par'
+            privacy_policy.label: 'Politique de confidentialité'
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
