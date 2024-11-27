@@ -28,7 +28,7 @@ final class PayPlugExtension extends AbstractExtension
     {
         return [
             new TwigFunction('is_save_card_enabled', [$this, 'isSaveCardAllowed']),
-            new TwigFunction('is_payplug_live', [$this, 'isLive']),
+            new TwigFunction('is_payplug_test_mode_enabled', [$this, 'isTest']),
         ];
     }
 
@@ -37,10 +37,10 @@ final class PayPlugExtension extends AbstractExtension
         return $this->canSaveCardChecker->isAllowed($paymentMethod);
     }
 
-    public function isLive(PaymentMethodInterface $paymentMethod): bool
+    public function isTest(PaymentMethodInterface $paymentMethod): bool
     {
         $client = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
 
-        return (bool) ($client->getAccount()['is_live']);
+        return ((bool) $client->getAccount()['is_live']) !== true;
     }
 }
