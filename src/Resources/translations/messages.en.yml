@@ -92,6 +92,18 @@ payplug_sylius_payplug_plugin:
                 title: 'The fees are:'
                 client: Split between you and your customers
                 merchant: For you
+        integrated_payment:
+            card_holder.title: 'Cardholder name'
+            card_holder.error: 'Invalid Name and/or Last Name.'
+            pan.title: 'Card number'
+            pan.error: 'Invalid card number.'
+            cvv.title: '123'
+            cvv.error: 'Invalid CVV.'
+            exp.title: 'MM/YY'
+            exp.error: 'Invalid expiration date.'
+            empty: 'Mandatory field.'
+            scheme.label: 'Your card'
+            place_order.label: 'Place order'
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
@@ -110,3 +122,5 @@ payplug_sylius_payplug_plugin:
         one_click_enable: Enable One click
         one_click_help: |
             Allow your customers to save their credit card details for later
+
+        integrated_payment_enable: Enable payment integrated
