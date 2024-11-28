@@ -7,7 +7,9 @@ namespace PayPlug\SyliusPayPlugPlugin\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Psr\Log\LoggerInterface;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
@@ -16,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class IntegratedPaymentController extends AbstractController
 {
@@ -55,8 +58,6 @@ final class IntegratedPaymentController extends AbstractController
      * specifying the IntegratedPayment integration.
      *
      * @see https://docs.payplug.com/api/integratedref.html#trigger-a-payment
-     *
-     * @TODO: handle save card checkbox
      */
     public function initPaymentAction(Request $request, int $paymentMethodId): Response
     {
@@ -66,20 +67,29 @@ final class IntegratedPaymentController extends AbstractController
         }
 
         $cart = $this->cartContext->getCart();
+        if (!$cart instanceof OrderInterface) {
+            throw $this->createNotFoundException('No cart found');
+        }
+
         $payment = $cart->getLastPayment(PaymentInterface::STATE_CART);
         if (!$payment instanceof PaymentInterface) {
             throw $this->createNotFoundException('No payment available on cart');
         }
 
         $payment->setMethod($paymentMethod);
-        $paymentData = $this->paymentDataCreator->create($payment, $paymentMethod->getGatewayConfig()?->getFactoryName());
+        $factoryName = $paymentMethod->getGatewayConfig()?->getFactoryName();
+        if (PayPlugGatewayFactory::FACTORY_NAME !== $factoryName) {
+            throw new BadRequestHttpException('Unsupported payment method of Integrated Payment');
+        }
+
+        $paymentData = $this->paymentDataCreator->create($payment, $factoryName);
         // Mandatory
         $paymentData['integration'] = 'INTEGRATED_PAYMENT';
-        $this->logger->debug('Payment data', $paymentData->getArrayCopy());
+        $this->logger->debug('Payplug Payment data for creation', $paymentData->getArrayCopy());
 
-        $apiClient = $this->apiClientFactory->create($paymentMethod->getGatewayConfig()?->getFactoryName());
+        $apiClient = $this->apiClientFactory->create($factoryName);
         $payplugPayment = $apiClient->createPayment($paymentData->getArrayCopy());
-        $this->logger->debug('PayPlug payment', (array) $payplugPayment);
+        $this->logger->debug('PayPlug payment created', (array) $payplugPayment);
 
         $paymentData['payment_id'] = $payplugPayment->id;
         $paymentData['is_live'] = $payplugPayment->is_live;
