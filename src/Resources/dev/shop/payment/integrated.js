@@ -118,13 +118,20 @@ const IntegratedPayment = {
     });
     integratedPaymentApi.onValidateForm(async ({isFormValid}) => {
       if (isFormValid) {
-        IntegratedPayment.options.scheme = document.querySelector('#savecard').checked;
+        const saveCardElement = document.querySelector('#savecard');
+        if (null !== saveCardElement) {
+          IntegratedPayment.options.save_card = saveCardElement.checked;
+        }
+        const chosenScheme = document.querySelector('[name=schemeOptions]:checked');
+        IntegratedPayment.options.scheme = Payplug.Scheme.AUTO;
+        if (null !== chosenScheme) {
+          IntegratedPayment.options.scheme = chosenScheme.value;
+        }
 
         if (payplug_integrated_payment_params.payment_id !== undefined) {
           integratedPaymentApi.pay(payplug_integrated_payment_params.payment_id, IntegratedPayment.options.scheme, {save_card: IntegratedPayment.options.save_card});
           return;
         }
-        IntegratedPayment.options.save_card = document.querySelector('[name=schemeOptions]:checked').value;
 
         const response = await fetch(payplug_integrated_payment_params.routes.init_payment, {method: 'POST'});
         const data = await response.json();
