@@ -88,6 +88,11 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
             $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
+        if (PaymentInterface::STATE_PROCESSING === $details['status']) {
+            $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
+            $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
+        }
+
         $payment->setDetails($details->getArrayCopy());
         $this->markRequestAs($details['status'], $request);
     }
