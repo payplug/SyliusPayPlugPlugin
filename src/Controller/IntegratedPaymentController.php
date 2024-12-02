@@ -6,12 +6,14 @@ namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +29,7 @@ final class IntegratedPaymentController extends AbstractController
      * @var RepositoryInterface<\Sylius\Component\Core\Model\PaymentMethodInterface>
      */
     private RepositoryInterface $paymentMethodRepository;
+    private OrderRepositoryInterface $orderRepository;
     private PayPlugPaymentDataCreator $paymentDataCreator;
     private PayPlugApiClientFactory $apiClientFactory;
     private EntityManagerInterface $entityManager;
@@ -38,6 +41,7 @@ final class IntegratedPaymentController extends AbstractController
     public function __construct(
         CartContextInterface $cartContext,
         RepositoryInterface $paymentMethodRepository,
+        OrderRepositoryInterface $orderRepository,
         PayPlugPaymentDataCreator $paymentDataCreator,
         PayPlugApiClientFactory $apiClientFactory,
         EntityManagerInterface $entityManager,
@@ -45,6 +49,7 @@ final class IntegratedPaymentController extends AbstractController
     ) {
         $this->cartContext = $cartContext;
         $this->paymentMethodRepository = $paymentMethodRepository;
+        $this->orderRepository = $orderRepository;
         $this->paymentDataCreator = $paymentDataCreator;
         $this->apiClientFactory = $apiClientFactory;
         $this->entityManager = $entityManager;
@@ -66,14 +71,20 @@ final class IntegratedPaymentController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $cart = $this->cartContext->getCart();
-        if (!$cart instanceof OrderInterface) {
-            throw $this->createNotFoundException('No cart found');
+        $order = null;
+        if (\is_string($orderToken = $request->query->get('orderToken'))) {
+            $order = $this->orderRepository->findOneByTokenValue($orderToken);
+        }
+        if (null === $order) {
+            $order = $this->cartContext->getCart();
+        }
+        if (!$order instanceof OrderInterface) {
+            throw $this->createNotFoundException('No order found');
         }
 
-        $payment = $cart->getLastPayment(PaymentInterface::STATE_CART);
+        $payment = $order->getLastPayment();
         if (!$payment instanceof PaymentInterface) {
-            throw $this->createNotFoundException('No payment available on cart');
+            throw $this->createNotFoundException('No payment available');
         }
 
         $payment->setMethod($paymentMethod);
@@ -84,7 +95,7 @@ final class IntegratedPaymentController extends AbstractController
 
         $paymentData = $this->paymentDataCreator->create($payment, $factoryName);
         // Mandatory
-        $paymentData['integration'] = 'INTEGRATED_PAYMENT';
+        $paymentData['integration'] = PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION;
         $this->logger->debug('Payplug Payment data for creation', $paymentData->getArrayCopy());
 
         $apiClient = $this->apiClientFactory->create($factoryName);

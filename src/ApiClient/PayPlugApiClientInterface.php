@@ -13,6 +13,8 @@ interface PayPlugApiClientInterface
 {
     public const INTERNAL_STATUS_ONE_CLICK = 'one_click';
 
+    public const INTEGRATED_PAYMENT_INTEGRATION = 'INTEGRATED_PAYMENT';
+
     public const LIVE_KEY_PREFIX = 'sk_live';
 
     public const TEST_KEY_PREFIX = 'sk_test';
