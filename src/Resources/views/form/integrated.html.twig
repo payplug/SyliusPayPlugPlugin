@@ -1,3 +1,8 @@
+{% set initRouteParam = {'paymentMethodId': paymentMethod.id} %}
+{% if order is defined and order.getCheckoutCompletedAt is not null and order.tokenValue is not null %}
+  {% set initRouteParam = initRouteParam|merge({'orderToken': order.tokenValue}) %}
+{% endif %}
+
 <script type="text/javascript" src="https://cdn.payplug.com/js/integrated-payment/v1/index.js"></script>
 <script type="text/javascript">
   /* <![CDATA[ */
@@ -9,7 +14,7 @@
     payment_id: '{{ payment.details.payment_id }}',
     {% endif %}
     routes: {
-      init_payment: '{{ path('payplug_sylius_integrated_payment_init', {'paymentMethodId': paymentMethod.id}) }}',
+      init_payment: '{{ path('payplug_sylius_integrated_payment_init', initRouteParam) }}',
     },
     cardholder: '{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.card_holder.title'|trans }}',
     pan: '{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.pan.title'|trans }}',

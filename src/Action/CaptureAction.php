@@ -94,6 +94,12 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             return;
         }
 
+        if (PayPlugApiClientInterface::FAILED === ($details['status'] ?? null) &&
+            PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION === ($details['integration'] ?? null)) {
+            // Do not try to capture a failed integrated payment and do not remove status
+            return;
+        }
+
         if (isset($details['status']) && PayPlugApiClientInterface::FAILED === $details['status']) {
             // Unset current status to allow to use payplug to change payment method
             unset($details['status']);
