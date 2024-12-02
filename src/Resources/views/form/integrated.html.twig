@@ -4,6 +4,7 @@
   var payplug_integrated_payment_params = {
     is_test_mode: '{{ is_payplug_test_mode_enabled(paymentMethod) }}',
     has_saved_cards: '{{ hasSavedCards }}',
+    payment_method_code: '{{ paymentMethod.code }}',
     {% if payment.details.payment_id is defined %}
     payment_id: '{{ payment.details.payment_id }}',
     {% endif %}

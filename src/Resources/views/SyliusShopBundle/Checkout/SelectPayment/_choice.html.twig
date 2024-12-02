@@ -96,7 +96,7 @@
             {% include '@PayPlugSyliusPayPlugPlugin/form/integrated.html.twig' with {
                 'paymentMethod': method,
                 'payment': order.getLastPayment('cart'),
-                'hasSavedCards': hasSavedCards
+                'hasSavedCards': hasSavedCards,
             } %}
         {% endif %}
         {% if method.gatewayConfig.factoryName == applePayFactoryName %}
