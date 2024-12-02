@@ -52,12 +52,12 @@ const IntegratedPayment = {
       })
       return;
     }
-    if (document.querySelector('[id*=sylius_checkout_select_payment_payments][value=payplug]:checked')) {
+    if (document.querySelector(`[id*=sylius_checkout_select_payment_payments][value=${payplug_integrated_payment_params.payment_method_code}]:checked`)) {
       IntegratedPayment.openFields();
     }
     document.querySelectorAll('[id*=sylius_checkout_select_payment_payments]').forEach((element) => {
       element.addEventListener('change', (e) => {
-        if ('payplug' === e.currentTarget.value && e.currentTarget.checked) {
+        if (payplug_integrated_payment_params.payment_method_code === e.currentTarget.value && e.currentTarget.checked) {
           IntegratedPayment.openFields();
           return;
         }
@@ -67,14 +67,14 @@ const IntegratedPayment = {
   },
   openFields() {
     document.querySelector('.payplugIntegratedPayment').classList.add('payplugIntegratedPayment--loaded');
-    document.querySelector('#next-step').classList.add('disabled');
+    document.querySelector('button[type=submit]').classList.add('disabled');
     if (null === IntegratedPayment.options.api) {
       IntegratedPayment.load();
     }
   },
   closeFields() {
     document.querySelector('.payplugIntegratedPayment').classList.remove('payplugIntegratedPayment--loaded');
-    document.querySelector('#next-step').classList.remove('disabled');
+    document.querySelector('button[type=submit]').classList.remove('disabled');
   },
   load() {
     IntegratedPayment.options.api = integratedPaymentApi = new Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
@@ -127,12 +127,10 @@ const IntegratedPayment = {
         if (null !== chosenScheme) {
           IntegratedPayment.options.scheme = chosenScheme.value;
         }
-
         if (payplug_integrated_payment_params.payment_id !== undefined) {
           integratedPaymentApi.pay(payplug_integrated_payment_params.payment_id, IntegratedPayment.options.scheme, {save_card: IntegratedPayment.options.save_card});
           return;
         }
-
         const response = await fetch(payplug_integrated_payment_params.routes.init_payment, {method: 'POST'});
         const data = await response.json();
         integratedPaymentApi.pay(data.payment_id, IntegratedPayment.options.scheme, {save_card: IntegratedPayment.options.save_card});
@@ -153,7 +151,6 @@ const IntegratedPayment = {
         if (err.error) {
           document.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.remove('payplugIntegratedPayment__error--hide');
           document.querySelector(`.${key}-input-container`).classList.add('payplugIntegratedPayment__container--invalid');
-
           if (err.error.name === "FIELD_EMPTY") {
             document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.remove('payplugIntegratedPayment__error--hide');
             document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
