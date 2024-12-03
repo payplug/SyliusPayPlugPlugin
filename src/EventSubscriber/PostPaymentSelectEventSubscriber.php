@@ -20,6 +20,9 @@ use Webmozart\Assert\Assert;
 
 final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 {
+    private const CHECKOUT_ROUTE = 'sylius_shop_checkout_select_payment';
+    private const UPDATE_ORDER_PAYMENT_ROUTE = 'sylius_shop_order_show';
+
     private const TOKEN_FIELD = 'payplug_integrated_payment_token';
 
     public function __construct(
@@ -34,13 +37,14 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         return [
             RequestEvent::class => 'alterRequestConfigurationForIntegratedPayment',
             'sylius.order.post_payment' => 'handle',
+            'sylius.order.post_update' => 'handle',
         ];
     }
 
     public function alterRequestConfigurationForIntegratedPayment(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if (!$this->hasToken($request) || 'sylius_shop_checkout_select_payment' !== $request->attributes->get('_route')) {
+        if (!$this->hasToken($request) || self::CHECKOUT_ROUTE !== $request->attributes->get('_route')) {
             return;
         }
         if (!$request->attributes->has('_sylius')) {
@@ -66,9 +70,12 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
             return;
         }
 
+        if (!\in_array($request->attributes->get('_route'), [self::CHECKOUT_ROUTE, self::UPDATE_ORDER_PAYMENT_ROUTE], true)) {
+            return;
+        }
+
         /** @var \Sylius\Component\Core\Model\OrderInterface $order */
         $order = $resourceControllerEvent->getSubject();
-        $token = $request->request->get(self::TOKEN_FIELD);
         $lastPayment = $order->getLastPayment();
         if (null === $lastPayment) {
             return;
