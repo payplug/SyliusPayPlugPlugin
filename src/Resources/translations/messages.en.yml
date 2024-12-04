@@ -126,3 +126,7 @@ payplug_sylius_payplug_plugin:
             Allow your customers to save their credit card details for later
 
         integrated_payment_enable: Enable payment integrated
+
+        deferred_capture_enable: Enable deferred capture
+        deferred_capture_help: |
+            Please ensure that a delayed capture trigger has been added to the project source code.

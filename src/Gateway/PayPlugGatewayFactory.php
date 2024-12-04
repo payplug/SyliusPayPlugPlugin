@@ -12,6 +12,7 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
     // Custom gateway configuration keys
     public const ONE_CLICK = 'oneClick';
     public const INTEGRATED_PAYMENT = 'integratedPayment';
+    public const DEFERRED_CAPTURE = 'deferredCapture';
 
     public const AUTHORIZED_CURRENCIES = [
         'EUR' => [

@@ -60,8 +60,8 @@
     </style>
 {% endblock %}
 
-{% block _sylius_payment_method_gatewayConfig_config_oneClick_row %}
-    <div style="margin-left: 2rem;" class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %} ui toggle checkbox">
+{% block _sylius_payment_method_gatewayConfig_config_payplug_checkbox_row %}
+    <div class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %} ui toggle checkbox">
         <div class="ui toggle checkbox" style="margin-top: 2rem; margin-bottom: 0.8rem;">
             {{- form_label(form) -}}
             {{- form_widget(form) -}}

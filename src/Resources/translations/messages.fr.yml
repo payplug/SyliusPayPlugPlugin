@@ -146,3 +146,6 @@ payplug_sylius_payplug_plugin:
             d'autres transactions
 
         integrated_payment_enable: Activer le Paiement Integré
+        deferred_capture_enable: Activer la capture différée
+        deferred_capture_help: |
+            Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet
