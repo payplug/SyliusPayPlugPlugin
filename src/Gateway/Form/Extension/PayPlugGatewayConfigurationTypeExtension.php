@@ -31,6 +31,7 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
     {
         $builder
             ->add(PayPlugGatewayFactory::ONE_CLICK, CheckboxType::class, [
+                'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
                 'constraints' => [
@@ -41,8 +42,17 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'required' => false,
             ])
             ->add(PayPlugGatewayFactory::INTEGRATED_PAYMENT, CheckboxType::class, [
+                'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.form.integrated_payment_enable',
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
+                'required' => false,
+            ])
+            ->add(PayPlugGatewayFactory::DEFERRED_CAPTURE, CheckboxType::class, [
+                'block_name' => 'payplug_checkbox',
+                'label' => 'payplug_sylius_payplug_plugin.form.deferred_capture_enable',
+                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
+                'help' => 'payplug_sylius_payplug_plugin.form.deferred_capture_help',
+                'help_html' => true,
                 'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
