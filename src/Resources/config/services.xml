@@ -71,6 +71,9 @@
             <argument type="service" id="Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplier" />
         </service>
 
+        <service id="payplug_sylius_payplug_plugin.payment_processing.capture" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\CaptureAuthorizedPaymentProcessor" public="true">
+        </service>
+
         <service id="payplug_sylius_payplug_plugin.command.payment_state" class="PayPlug\SyliusPayPlugPlugin\Cli\UpdatePaymentStateCommand">
             <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" />
             <argument type="service" id="payplug_sylius_payplug_plugin.resolver.payment_state" />
