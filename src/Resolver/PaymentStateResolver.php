@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Payplug\Resource\Payment;
+use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
@@ -68,6 +70,10 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
                 $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_FAIL);
 
                 break;
+            case $this->isAuthorized($payment):
+                $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_AUTHORIZE);
+
+                break;
             default:
                 $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_PROCESS);
         }
@@ -80,5 +86,18 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
         if ($paymentStateMachine->can($transition)) {
             $paymentStateMachine->apply($transition);
         }
+    }
+
+    private function isAuthorized(Payment $payment): bool
+    {
+        $now = new \DateTimeImmutable();
+        if ($payment->__isset('authorization') &&
+            $payment->__get('authorization') instanceof PaymentAuthorization &&
+            null !== $payment->__get('authorization')->__get('expires_at') &&
+            $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'))) {
+            return true;
+        }
+
+        return false;
     }
 }
