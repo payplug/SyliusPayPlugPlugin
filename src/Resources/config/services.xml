@@ -81,6 +81,11 @@
             <tag name="console.command" />
         </service>
 
+        <service id="PayPlug\SyliusPayPlugPlugin\Command\CaptureAuthorizedPaymentCommand" class="PayPlug\SyliusPayPlugPlugin\Command\CaptureAuthorizedPaymentCommand">
+            <argument key="$paymentRepository" type="service" id="payplug_sylius_payplug_plugin.repository.payment" />
+            <tag name="console.command" />
+        </service>
+
         <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin" class="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin">
             <argument type="service" id="sylius.repository.product_variant" key="$productVariantRepository" />
         </service>
