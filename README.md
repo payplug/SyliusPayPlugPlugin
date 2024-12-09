@@ -234,6 +234,10 @@ This library is under the MIT license.
 
 For better Oney integration, you can check the [Oney enhancement documentation](doc/oney_enhancement.md).
 
+## Authorized Payment
+
+Since 1.10.0, the plugin supports the authorized payment feature. You can check the [Authorized Payment documentation](doc/authorized_payment.md).
+
 ## Doc
 - [Development](doc/development.md)
 - [Release Process](RELEASE.md)
