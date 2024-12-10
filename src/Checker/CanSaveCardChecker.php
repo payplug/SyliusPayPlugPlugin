@@ -29,6 +29,6 @@ class CanSaveCardChecker implements CanSaveCardCheckerInterface
             return false;
         }
 
-        $this->payplugFeatureChecker->isOneClickEnabled($paymentMethod);
+        return $this->payplugFeatureChecker->isOneClickEnabled($paymentMethod);
     }
 }
