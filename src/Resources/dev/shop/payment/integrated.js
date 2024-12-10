@@ -41,9 +41,12 @@ const IntegratedPayment = {
       return;
     }
     if (payplug_integrated_payment_params.has_saved_cards) {
-      document.querySelectorAll('.payment-choice__input').forEach((element) => {
+      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]').forEach((element) => {
         element.addEventListener('change', (e) => {
-          if ('payplug_choice_card_other' === e.currentTarget.id && e.currentTarget.checked) {
+          if (
+            'payplug_choice_card_other' === e.currentTarget.id && e.currentTarget.checked ||
+            e.target.value === payplug_integrated_payment_params.payment_method_code && document.querySelector('#payplug_choice_card_other').checked
+          ) {
             IntegratedPayment.openFields();
             return;
           }
