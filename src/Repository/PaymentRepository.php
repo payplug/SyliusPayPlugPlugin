@@ -45,6 +45,7 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
 
         $date = (new \DateTime())->modify(sprintf('-%d days', $days));
 
+        /** @var array<PaymentInterface>  */
         return $this->createQueryBuilder('o')
             ->innerJoin('o.method', 'method')
             ->innerJoin('method.gatewayConfig', 'gatewayConfig')
@@ -52,7 +53,7 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
             ->andWhere('o.updatedAt < :date')
             ->andWhere('gatewayConfig.factoryName = :factoryName')
             ->setParameter('state', PaymentInterface::STATE_AUTHORIZED)
-            ->setParameter('factoryName', PayPlugGatewayFactory::FACTORY_NAME)
+            ->setParameter('factoryName', $gatewayFactoryName)
             ->setParameter('date', $date)
             ->getQuery()
             ->getResult()

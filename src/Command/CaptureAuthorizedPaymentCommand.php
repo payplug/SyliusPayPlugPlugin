@@ -45,7 +45,13 @@ class CaptureAuthorizedPaymentCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $payments = $this->paymentRepository->findAllAuthorizedOlderThanDays($input->getOption('days'));
+        $days = \filter_var($input->getOption('days'), FILTER_VALIDATE_INT);
+        if (false === $days) {
+            throw new \InvalidArgumentException('Invalid number of days provided.');
+        }
+
+        $payments = $this->paymentRepository->findAllAuthorizedOlderThanDays($days);
+
         if (\count($payments) === 0) {
             $this->logger->debug('[Payplug] No authorized payments found.');
         }
