@@ -10,6 +10,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 
 final class CaptureAuthorizedPaymentProcessor
 {
@@ -28,7 +29,7 @@ final class CaptureAuthorizedPaymentProcessor
     {
         $details = new ArrayObject($payment->getDetails());
         $method = $payment->getMethod();
-        if (null === $method) {
+        if (!$method instanceof PaymentMethodInterface) {
             return;
         }
         if (PayPlugGatewayFactory::FACTORY_NAME !== $method->getGatewayConfig()?->getFactoryName()) {
@@ -44,9 +45,13 @@ final class CaptureAuthorizedPaymentProcessor
             // not a payplug payment id ? do nothing
             return;
         }
+        $paymentId = $details['payment_id'];
+        if (!is_string($paymentId)) {
+            throw new \LogicException('Payment id is not a string');
+        }
 
         $client = $this->apiClientFactory->createForPaymentMethod($method);
-        $payplugPayment = $client->retrieve($details['payment_id']);
+        $payplugPayment = $client->retrieve($paymentId);
 
         $updatedPayment = $payplugPayment->capture($client->getConfiguration());
         if (null === $updatedPayment) {
