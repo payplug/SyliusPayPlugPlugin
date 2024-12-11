@@ -55,7 +55,7 @@ winzou_state_machine:
             before:
                 app_ensure_capture_payment:
                     on: ["ship"]
-                    do: ["@App\StateMachine\CaptureOrderProcessor", "process"]
+                    do: ['@App\StateMachine\CaptureOrderProcessor', "process"]
                     args: ["object"]
 ```
 
@@ -88,7 +88,7 @@ class CaptureOrderProcessor
         $this->stateMachineFactory
             ->get($payment, PaymentTransitions::GRAPH)
             ->apply(PaymentTransitions::TRANSITION_COMPLETE);
-            
+
         if (PaymentInterface::STATE_COMPLETED !== $payment->getState()) {
             throw new \LogicException('Oh no! Payment capture failed 💸');
         }
