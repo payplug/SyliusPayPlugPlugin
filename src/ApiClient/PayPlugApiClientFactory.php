@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 
@@ -34,6 +35,16 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
             }
             $key = $gatewayConfig->getConfig()['secretKey'];
         }
+
+        return new PayPlugApiClient($key, $factoryName, $this->cache);
+    }
+
+    public function createForPaymentMethod(PaymentMethodInterface $paymentMethod): PayPlugApiClientInterface
+    {
+        $gatewayConfig = $paymentMethod->getGatewayConfig() ?? throw new \LogicException('Gateway config not found');
+
+        $key = $gatewayConfig->getConfig()['secretKey'];
+        $factoryName = $gatewayConfig->getFactoryName();
 
         return new PayPlugApiClient($key, $factoryName, $this->cache);
     }

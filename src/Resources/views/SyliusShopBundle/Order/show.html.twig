@@ -1,0 +1,6 @@
+{% extends '@!SyliusShop/Order/show.html.twig' %}
+
+{% block content %}
+    {{ sylius_template_event('sylius.shop.order.select_payment.before_form') }}
+    {{ parent() }}
+{% endblock %}
