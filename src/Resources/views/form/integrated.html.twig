@@ -90,9 +90,18 @@
             </label>
         </div>
     {% endif %}
-    <button id="paid" class="ui large primary button" type="button">
-        {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.place_order.label'|trans }}
-    </button>
+
+    <div class="payplugIntegratedPayment__container">
+        <button id="paid" class="ui large primary button" type="button">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.place_order.label'|trans }}
+        </button>
+    </div>
+    {% set config = paymentMethod.gatewayConfig.config %}
+    {% if config.deferredCapture is defined and config.deferredCapture is same as true %}
+    <div>
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.deferred_capture.process_order_info'|trans }}</span>
+    </div>
+    {% endif %}
     <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--transaction">
         <img class="lock-icon" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/images/integrated/lock.svg') }}" />
         <div class="transaction-label">

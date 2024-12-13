@@ -125,6 +125,10 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Confirmer le paiement'
             transaction_secure.label: 'Transaction sécurisée par'
             privacy_policy.label: 'Politique de confidentialité'
+        deferred_capture:
+            process_order_info: |
+                Vous serez prélevé(é) lors du traitement de votre commande.
+
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
