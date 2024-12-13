@@ -106,6 +106,9 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Ordine'
             transaction_secure.label: 'Transazione protetta da'
             privacy_policy.label: 'Politica di confidenzialità'
+        deferred_capture:
+            process_order_info: |
+                L'addebito avverrà al momento dell'elaborazione dell'ordine.
     form:
         oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
         complete_info:

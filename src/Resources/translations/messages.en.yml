@@ -106,6 +106,9 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Place order'
             transaction_secure.label: 'Transaction secured by'
             privacy_policy.label: 'Privacy Policy'
+        deferred_capture:
+            process_order_info: |
+                You will be charged when your order is processed.
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
