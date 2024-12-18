@@ -7,10 +7,14 @@ payplug_sylius_payplug_plugin:
             Attenzione! Per utilizzare il metodo di pagamento “Oney by Payplug” in modalità LIVE,
             contattaci al seguente indirizzo: support@payplug.com
         not_valid_phone_number: Numero di cellulare non valido.
+    permission:
+        error: |
+            Non hai accesso a questa funzionalità. Per ulteriori informazioni,
+            contattaci al seguente indirizzo e-mail: <a href="mailto:support@payplug.com" target="_blank">support@payplug.com</a>
     one_click:
         can_not_save_cards: |
             Non hai accesso a questa funzionalità. Per ulteriori informazioni,
-            contattaci al seguente indirizzo e-mail: <a href="mailto:support@payplug.com" target="_blank" style="color:black;">support@payplug.com</a>
+            contattaci al seguente indirizzo e-mail: <a href="mailto:support@payplug.com" target="_blank">support@payplug.com</a>
     bancontact:
         can_not_save_method_with_test_key: |
             Il metodo di pagamento Bancontact non è disponibile in modalità TEST. 

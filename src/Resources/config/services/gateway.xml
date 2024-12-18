@@ -112,5 +112,10 @@
             <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethodValidator" />
         </service>
 
+        <service id="payplug_sylius_payplug_plugin.permission_validator"
+                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermissionValidator">
+            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
+            <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermissionValidator" />
+        </service>
     </services>
 </container>

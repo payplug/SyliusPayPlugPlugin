@@ -13,40 +13,43 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
-/**
- * @Annotation
- * @deprecated Use PayplugPermission constraint instead
- */
-final class IsCanSaveCardsValidator extends ConstraintValidator
+final class PayplugPermissionValidator extends ConstraintValidator
 {
-    /** @var PayPlugApiClientFactory */
-    private $apiClientFactory;
+    private PayPlugApiClientFactory $apiClientFactory;
 
     public function __construct(PayPlugApiClientFactory $apiClientFactory)
     {
         $this->apiClientFactory = $apiClientFactory;
     }
 
-    public function validate($value, Constraint $constraint): void
+    public function validate(mixed $value, Constraint $constraint): void
     {
-        if (!$constraint instanceof IsCanSaveCards) {
-            throw new UnexpectedTypeException($constraint, IsCanSaveCards::class);
+        if (!$constraint instanceof PayplugPermission) {
+            throw new UnexpectedTypeException($constraint, PayplugPermission::class);
         }
+
         if (null === $value || '' === $value) {
             return;
         }
+
         if (!is_bool($value)) {
             throw new UnexpectedValueException($value, 'boolean');
+        }
+
+        if (false === $value) {
+            return;
         }
 
         $secretKey = $this->context->getRoot()->getData()->getGatewayConfig()->getConfig()['secretKey'];
 
         try {
-            if (true === $value) {
-                $checker = new PermissionCanSaveCardsChecker($this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey));
-                if (false === $checker->isEnabled()) {
-                    $this->context->buildViolation($constraint->message)->addViolation();
-                }
+            $client = $this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey);
+            $accountPermissions = $client->getPermissions();
+
+            if (false === $accountPermissions[$constraint->permission]) {
+                $this->context
+                    ->buildViolation($constraint->message)
+                    ->addViolation();
             }
 
             return;

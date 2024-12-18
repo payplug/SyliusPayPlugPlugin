@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension;
 
+use PayPlug\SyliusPayPlugPlugin\Const\Permission;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AbstractGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PayPlugGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCards;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -34,9 +35,7 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
-                'constraints' => [
-                    new IsCanSaveCards(),
-                ],
+                'constraints' => [new PayplugPermission(Permission::CAN_SAVE_CARD)],
                 'help' => $this->translator->trans('payplug_sylius_payplug_plugin.form.one_click_help'),
                 'help_html' => true,
                 'required' => false,
@@ -45,12 +44,14 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.form.integrated_payment_enable',
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
+                'constraints' => [new PayplugPermission(Permission::CAN_USE_INTEGRATED_PAYMENTS)],
                 'required' => false,
             ])
             ->add(PayPlugGatewayFactory::DEFERRED_CAPTURE, CheckboxType::class, [
                 'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.form.deferred_capture_enable',
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
+                'constraints' => [new PayplugPermission(Permission::CAN_CREATE_DEFERRED_PAYMENT)],
                 'help' => 'payplug_sylius_payplug_plugin.form.deferred_capture_help',
                 'help_html' => true,
                 'required' => false,
