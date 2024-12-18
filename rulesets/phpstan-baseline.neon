@@ -266,6 +266,11 @@ parameters:
 			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
 
 		-
+			message: "#^Cannot call method getData\\(\\) on mixed\\.$#"
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
 			message: "#^Method PayPlug\\\\SyliusPayPlugPlugin\\\\Gateway\\\\Validator\\\\Constraints\\\\IsCanSaveCardsValidator\\:\\:validate\\(\\) has parameter \\$value with no type specified\\.$#"
 			count: 1
 			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php

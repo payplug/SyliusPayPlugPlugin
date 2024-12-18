@@ -8,6 +8,8 @@ use Symfony\Component\Validator\Constraint;
 
 /**
  * @Annotation
+ *
+ * @deprecated Use PayplugPermission constraint instead
  */
 final class IsCanSaveCards extends Constraint
 {

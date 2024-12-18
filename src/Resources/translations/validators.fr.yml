@@ -7,10 +7,14 @@ payplug_sylius_payplug_plugin:
             Vous n'avez pas encore accès à la fonctionnalité du PayLater.
             Pour utiliser la méthode de paiement 3x 4x Oney par Payplug en mode LIVE, merci de nous contacter à support@payplug.com
         not_valid_phone_number: Cette valeur n'est pas un numéro de téléphone portable valide.
+    permission:
+        error: |
+            Vous n'avez pas accès à cette fonctionnalité. Pour plus d'informations,
+            veuillez nous contacter à : <a href="mailto:support@payplug.com" target="_blank">support@payplug.com</a>
     one_click:
         can_not_save_cards: |
             Vous n'avez pas accès à cette fonctionnalité. Pour plus d'informations,
-            veuillez nous contacter à : <a href="mailto:support@payplug.com" target="_blank" style="color:black;">support@payplug.com</a>
+            veuillez nous contacter à : <a href="mailto:support@payplug.com" target="_blank">support@payplug.com</a>
     bancontact:
         can_not_save_method_with_test_key: | 
             Le paiement par Bancontact n’est pas disponible en mode TEST. 
