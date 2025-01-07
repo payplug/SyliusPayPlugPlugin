@@ -121,6 +121,7 @@ const IntegratedPayment = {
     });
     integratedPaymentApi.onValidateForm(async ({isFormValid}) => {
       if (isFormValid) {
+        this.toggleLoader();
         const saveCardElement = document.querySelector('#savecard');
         if (null !== saveCardElement) {
           IntegratedPayment.options.save_card = saveCardElement.checked;
@@ -171,6 +172,9 @@ const IntegratedPayment = {
         }
       });
     });
+  },
+  toggleLoader() {
+    document.querySelector('.payplugIntegratedPayment').querySelector('.dimmer').classList.toggle('active');
   }
 };
 
