@@ -41,7 +41,7 @@ const IntegratedPayment = {
       return;
     }
     if (payplug_integrated_payment_params.has_saved_cards) {
-      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]').forEach((element) => {
+      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]:not([name=schemeOptions])').forEach((element) => {
         element.addEventListener('change', (e) => {
           if (
             'payplug_choice_card_other' === e.currentTarget.id && e.currentTarget.checked ||
