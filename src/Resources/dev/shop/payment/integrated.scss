@@ -14,6 +14,7 @@
     flex-wrap: wrap;
     justify-content: space-between;
     margin-bottom: 0;
+    position: relative;
   }
 
   &__select {
@@ -118,9 +119,9 @@
       }
 
       label {
-        margin: 0;
+        margin: 0 !important;
         cursor: pointer;
-        font-size: 12px;
+        font-size: 12px !important;
         color: #918f8f;
 
         span {
