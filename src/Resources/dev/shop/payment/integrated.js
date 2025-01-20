@@ -41,7 +41,7 @@ const IntegratedPayment = {
       return;
     }
     if (payplug_integrated_payment_params.has_saved_cards) {
-      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]').forEach((element) => {
+      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]:not([name=schemeOptions])').forEach((element) => {
         element.addEventListener('change', (e) => {
           if (
             'payplug_choice_card_other' === e.currentTarget.id && e.currentTarget.checked ||
@@ -121,6 +121,7 @@ const IntegratedPayment = {
     });
     integratedPaymentApi.onValidateForm(async ({isFormValid}) => {
       if (isFormValid) {
+        this.toggleLoader();
         const saveCardElement = document.querySelector('#savecard');
         if (null !== saveCardElement) {
           IntegratedPayment.options.save_card = saveCardElement.checked;
@@ -171,6 +172,9 @@ const IntegratedPayment = {
         }
       });
     });
+  },
+  toggleLoader() {
+    document.querySelector('.payplugIntegratedPayment').querySelector('.dimmer').classList.toggle('active');
   }
 };
 
