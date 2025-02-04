@@ -10,3 +10,7 @@ winzou_state_machine:
                     on: ["fail"]
                     do: ["@payplug_sylius_payplug_plugin.payment_processing.abort", "process"]
                     args: ["object"]
+                payplug_sylius_payplug_plugin_complete:
+                    on: ["complete"]
+                    do: ["@payplug_sylius_payplug_plugin.payment_processing.capture", "process"]
+                    args: ["object"]

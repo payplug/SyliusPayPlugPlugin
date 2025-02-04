@@ -12,12 +12,15 @@ use Sylius\Component\Customer\Context\CustomerContextInterface;
 
 class CanSaveCardChecker implements CanSaveCardCheckerInterface
 {
-    /** @var CustomerContextInterface */
-    private $customerContext;
+    private CustomerContextInterface $customerContext;
+    private PayplugFeatureChecker $payplugFeatureChecker;
 
-    public function __construct(CustomerContextInterface $customerContext)
-    {
+    public function __construct(
+        CustomerContextInterface $customerContext,
+        PayplugFeatureChecker $payplugFeatureChecker,
+    ) {
         $this->customerContext = $customerContext;
+        $this->payplugFeatureChecker = $payplugFeatureChecker;
     }
 
     public function isAllowed(PaymentMethodInterface $paymentMethod): bool
@@ -26,16 +29,6 @@ class CanSaveCardChecker implements CanSaveCardCheckerInterface
             return false;
         }
 
-        $gatewayConfiguration = $paymentMethod->getGatewayConfig();
-
-        if (!$gatewayConfiguration instanceof GatewayConfigInterface) {
-            return false;
-        }
-
-        if (!\array_key_exists(PayPlugGatewayFactory::ONE_CLICK, $gatewayConfiguration->getConfig())) {
-            return false;
-        }
-
-        return (bool) $gatewayConfiguration->getConfig()[PayPlugGatewayFactory::ONE_CLICK] ?? false;
+        return $this->payplugFeatureChecker->isOneClickEnabled($paymentMethod);
     }
 }

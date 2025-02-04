@@ -106,6 +106,9 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Place order'
             transaction_secure.label: 'Transaction secured by'
             privacy_policy.label: 'Privacy Policy'
+        deferred_capture:
+            process_order_info: |
+                You will be charged when your order is processed.
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
@@ -126,3 +129,7 @@ payplug_sylius_payplug_plugin:
             Allow your customers to save their credit card details for later
 
         integrated_payment_enable: Enable payment integrated
+
+        deferred_capture_enable: Enable deferred capture
+        deferred_capture_help: |
+            Please ensure that a delayed capture trigger has been added to the project source code.

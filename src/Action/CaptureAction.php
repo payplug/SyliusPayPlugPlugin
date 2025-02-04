@@ -8,6 +8,7 @@ use ArrayAccess;
 use Payplug\Exception\BadRequestException;
 use Payplug\Exception\ForbiddenException;
 use Payplug\Resource\Payment;
+use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
@@ -178,6 +179,14 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                     return;
                 }
 
+                $now = new \DateTimeImmutable();
+                if ($payment->__isset('authorization') &&
+                    $payment->__get('authorization') instanceof PaymentAuthorization &&
+                    null !== $payment->__get('authorization')->__get('expires_at') &&
+                    $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'))) {
+                    return;
+                }
+
                 $details['status'] = PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK;
                 $details['hosted_payment'] = [
                     'payment_url' => $payment->hosted_payment->payment_url,
@@ -278,12 +287,16 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 }
             }
 
+            $this->logger->debug('[PayPlug] Create payment', [
+                'detail' => $details->getArrayCopy(),
+            ]);
             $payment = $this->payPlugApiClient->createPayment($details->getArrayCopy());
             $details['payment_id'] = $payment->id;
             $details['is_live'] = $payment->is_live;
 
             $this->logger->debug('[PayPlug] Create payment', [
                 'payment_id' => $payment->id,
+                'payment' => (array) $payment,
             ]);
 
             return $payment;

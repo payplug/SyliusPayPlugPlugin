@@ -266,6 +266,11 @@ parameters:
 			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
 
 		-
+			message: "#^Cannot call method getData\\(\\) on mixed\\.$#"
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
 			message: "#^Method PayPlug\\\\SyliusPayPlugPlugin\\\\Gateway\\\\Validator\\\\Constraints\\\\IsCanSaveCardsValidator\\:\\:validate\\(\\) has parameter \\$value with no type specified\\.$#"
 			count: 1
 			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
@@ -329,6 +334,15 @@ parameters:
 			message: "#^Parameter \\#1 \\$timestamp of method DateTimeImmutable\\:\\:setTimestamp\\(\\) expects int, mixed given\\.$#"
 			count: 1
 			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: "#^Parameter \\#1 \\$timestamp of method DateTimeImmutable\\:\\:setTimestamp\\(\\) expects int, mixed given\\.$#"
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+		-
+			message: "#^Parameter \\#1 \\$timestamp of method DateTimeImmutable\\:\\:setTimestamp\\(\\) expects int, mixed given\\.$#"
+			count: 1
+			path: ../src/Action/CaptureAction.php
 
 		-
 			message: "#^Parameter \\#2 \\$array of function array_key_exists expects array, mixed given\\.$#"
