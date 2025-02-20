@@ -29,7 +29,7 @@ final class CachedSimulationDataProvider implements OneySimulationDataProviderIn
 
     public function getForCart(OrderInterface $cart): array
     {
-        $country = \explode('_', $cart->getLocaleCode() ?? 'fr_FR')[1];
+        $country = strtoupper(substr($cart->getLocaleCode() ?? 'fr_FR', -2));
         $cacheKey = \sprintf(
             'oney_simulation_%s_%s_%s',
             $country,
