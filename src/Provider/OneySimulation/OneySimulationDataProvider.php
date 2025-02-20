@@ -29,7 +29,7 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
 
     public function getForCart(OrderInterface $cart): array
     {
-        $country = \explode('_', $cart->getLocaleCode() ?? 'fr_FR')[1];
+        $country = strtoupper(substr($cart->getLocaleCode() ?? 'fr_FR', -2));
 
         $data = [
             'amount' => $cart->getTotal(),
