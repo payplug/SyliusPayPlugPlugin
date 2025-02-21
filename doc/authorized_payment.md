@@ -8,7 +8,7 @@ The payment is authorized and the capture can be done later.
 
 ## Activation
 
-On the payment method configuration, you can enable the deferred catpure feature.
+On the payment method configuration, you can enable the deferred capture feature.
 
 ![admin_deferred_capture_feature.png](images/admin_deferred_capture_feature.png)
 
@@ -48,6 +48,8 @@ winzou_state_machine:
 
 For example, if you want to trigger the capture when an order is shipped, you can create a callback on the `sylius_order_shipping` state machine.
 
+File: `config/packages/winzou_state_machine.yaml`
+
 ```yaml 
 winzou_state_machine:
     sylius_order_shipping:
@@ -58,6 +60,8 @@ winzou_state_machine:
                     do: ['@App\StateMachine\CaptureOrderProcessor', "process"]
                     args: ["object"]
 ```
+
+File : `src/StateMachine/CaptureOrderProcessor.php`
 
 ```php
 <?php
