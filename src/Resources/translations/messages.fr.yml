@@ -125,6 +125,10 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Confirmer le paiement'
             transaction_secure.label: 'Transaction sécurisée par'
             privacy_policy.label: 'Politique de confidentialité'
+        deferred_capture:
+            process_order_info: |
+                Vous serez prélevé(é) lors du traitement de votre commande.
+
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
@@ -146,3 +150,6 @@ payplug_sylius_payplug_plugin:
             d'autres transactions
 
         integrated_payment_enable: Activer le Paiement Integré
+        deferred_capture_enable: Activer la capture différée
+        deferred_capture_help: |
+            Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet

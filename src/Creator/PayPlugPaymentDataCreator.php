@@ -11,6 +11,7 @@ use libphonenumber\PhoneNumberFormat as PhoneNumberFormat;
 use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil as PhoneNumberUtil;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSaveCardCheckerInterface;
+use PayPlug\SyliusPayPlugPlugin\Checker\PayplugFeatureChecker;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
@@ -31,25 +32,24 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class PayPlugPaymentDataCreator
 {
     private const DELIVERY_TYPE_BILLING = 'BILLING';
-
     private const DELIVERY_TYPE_NEW = 'NEW';
-
     private const PAYPLUG_CARD_ID_OTHER = 'other';
 
     private CanSaveCardCheckerInterface $canSaveCardChecker;
-
     private RepositoryInterface $payplugCardRepository;
-
     private RequestStack $requestStack;
+    private PayplugFeatureChecker $payplugFeatureChecker;
 
     public function __construct(
         CanSaveCardCheckerInterface $canSaveCard,
         RepositoryInterface $payplugCardRepository,
-        RequestStack $requestStack
+        RequestStack $requestStack,
+        PayplugFeatureChecker $payplugFeatureChecker,
     ) {
         $this->canSaveCardChecker = $canSaveCard;
         $this->payplugCardRepository = $payplugCardRepository;
         $this->requestStack = $requestStack;
+        $this->payplugFeatureChecker = $payplugFeatureChecker;
     }
 
     public function create(
@@ -93,7 +93,8 @@ class PayPlugPaymentDataCreator
         if (PayPlugGatewayFactory::FACTORY_NAME === $gatewayFactoryName &&
             $paymentMethod instanceof PaymentMethodInterface) {
             $details['allow_save_card'] = false;
-            $details = $this->alterPayPlugDetails($paymentMethod, $details);
+            $details = $this->alterPayPlugDetailsForOneClick($paymentMethod, $details);
+            $details = $this->alterPayPlugDetailsForDeferredCapture($paymentMethod, $details);
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $gatewayFactoryName) {
@@ -233,7 +234,7 @@ class PayPlugPaymentDataCreator
         ];
     }
 
-    private function alterPayPlugDetails(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
+    private function alterPayPlugDetailsForOneClick(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
     {
         if (!$this->canSaveCardChecker->isAllowed($paymentMethod)) {
             return $details;
@@ -262,6 +263,18 @@ class PayPlugPaymentDataCreator
 
         $details['payment_method'] = $card->getExternalId();
         $details['initiator'] = 'PAYER';
+
+        return $details;
+    }
+
+    private function alterPayPlugDetailsForDeferredCapture(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
+    {
+        if (!$this->payplugFeatureChecker->isDeferredCaptureEnabled($paymentMethod)) {
+            return $details;
+        }
+
+        $details['authorized_amount'] = $details['amount'];
+        unset($details['amount']);
 
         return $details;
     }
