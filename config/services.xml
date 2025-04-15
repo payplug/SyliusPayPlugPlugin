@@ -16,9 +16,9 @@
         </defaults>
 
         <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
-                   resource="../../../src/{Checker,EventSubscriber,Form,Twig,Validator,Provider/OneySimulation}/*" />
+                   resource="../src/{Checker,EventSubscriber,Form,Twig,Validator,Provider/OneySimulation}/*" />
         <prototype namespace="PayPlug\SyliusPayPlugPlugin\Controller\"
-                   resource="../../../src/Controller" >
+                   resource="../src/Controller" >
             <tag name="controller.service_arguments"/>
         </prototype>
 

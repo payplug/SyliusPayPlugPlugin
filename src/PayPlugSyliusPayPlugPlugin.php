@@ -12,4 +12,9 @@ final class PayPlugSyliusPayPlugPlugin extends Bundle
     public const VERSION = '1.11.0';
 
     use SyliusPluginTrait;
+
+    public function getPath(): string
+    {
+        return \dirname(__DIR__);
+    }
 }

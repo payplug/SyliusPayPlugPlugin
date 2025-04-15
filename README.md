@@ -50,7 +50,7 @@ In local environment, the plugin will not work properly because you will not be 
     
     ```shell
     mkdir -p templates/bundles/SyliusAdminBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+    cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
     ```
 
 4. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
@@ -70,7 +70,7 @@ In local environment, the plugin will not work properly because you will not be 
 
    ```yaml
    sylius_payplug:
-      resource: "@PayPlugSyliusPayPlugPlugin/Resources/config/routing.yaml"
+      resource: "@PayPlugSyliusPayPlugPlugin/config/routing.yaml"
    ```
 
 8. Add Traits for Customer and PaymentMethod entities
@@ -209,9 +209,9 @@ Copy Sylius templates overridden in plugin to your templates directory (e.g temp
 mkdir -p templates/bundles/SyliusAdminBundle/
 mkdir -p templates/bundles/SyliusShopBundle/
 mkdir -p templates/bundles/SyliusUiBundle/
-cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
-cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
-cp -R vendor/payplug/sylius-payplug-plugin/src/Resources/views/SyliusUiBundle/* templates/bundles/SyliusUiBundle/
+cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
+cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
+cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusUiBundle/* templates/bundles/SyliusUiBundle/
 ```
 
 You also need to edit your twig config to add your path to avoid our configuration to be prepended :

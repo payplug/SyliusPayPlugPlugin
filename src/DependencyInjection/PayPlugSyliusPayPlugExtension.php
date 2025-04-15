@@ -18,9 +18,9 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
     /**
      * @inheritdoc
      */
-    public function load(array $config, ContainerBuilder $container): void
+    public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__).'/Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__, 2) . '/config'));
 
         $loader->load('services.xml');
     }
@@ -31,12 +31,13 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
             return;
         }
 
-        $viewsPath = dirname(__DIR__).'/Resources/views/';
-        // This add our override in twig paths with correct namespace if there are not already overridden. No need for final user to copy it
+        $viewsPath = dirname(__DIR__, 2) . '/templates/';
+        // This adds our override in twig paths with correct namespace if there are not already overridden
+        // No need for the final user to copy it
         $paths = [
-            $viewsPath.'SyliusShopBundle' => 'SyliusShop',
-            $viewsPath.'SyliusAdminBundle' => 'SyliusAdmin',
-            $viewsPath.'SyliusUiBundle' => 'SyliusUi',
+            $viewsPath . 'SyliusShopBundle' => 'SyliusShop',
+            $viewsPath . 'SyliusAdminBundle' => 'SyliusAdmin',
+            $viewsPath . 'SyliusUiBundle' => 'SyliusUi',
         ];
 
         $twigConfig = $container->getExtensionConfig('twig');
@@ -59,10 +60,10 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
     }
 
     /**
-     * Verify if a given namespace is alreay extented.
+     * Verify if a given namespace is already extended
      *
-     * @param string $namespace      The namespace to verify
-     * @param array  $configurations The given configurations
+     * @param string $namespace The namespace to verify
+     * @param array $configurations The given configurations
      */
     protected function isPathAlreadyInConfiguration(string $namespace, array $configurations): bool
     {
@@ -84,7 +85,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
 
     protected function getMigrationsDirectory(): string
     {
-        return '@PayPlugSyliusPayPlugPlugin/Migrations';
+        return '@PayPlugSyliusPayPlugPlugin/migrations';
     }
 
     protected function getNamespacesOfMigrationsExecutedBefore(): array
