@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Component\Locale\Context\LocaleContextInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -16,6 +17,7 @@ final class ShowMeaExtension extends AbstractExtension
 
     public function __construct(
         private LocaleContextInterface $localeContext,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
         private PayPlugApiClientInterface $oneyClient,
     ) {
     }

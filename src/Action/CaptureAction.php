@@ -13,7 +13,9 @@ use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Exception\UnknownApiErrorException;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor;
@@ -34,10 +36,41 @@ use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
+#[AsAlias(id: 'payplug_sylius_payplug_plugin.action.capture', public: true)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => PayPlugGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => OneyGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => BancontactGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
 {
     use GatewayAwareTrait;

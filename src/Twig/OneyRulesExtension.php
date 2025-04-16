@@ -15,6 +15,7 @@ use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -25,6 +26,7 @@ final class OneyRulesExtension extends AbstractExtension
     public function __construct(
         private OneyCheckerInterface $oneyChecker,
         private CartContextInterface $cartContext,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
         private PayPlugApiClientInterface $oneyClient,
         private MoneyFormatterInterface $moneyFormatter,
         private ProductRepositoryInterface $productRepository,

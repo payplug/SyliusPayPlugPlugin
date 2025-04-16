@@ -1,0 +1,23 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    PayPlug\SyliusPayPlugPlugin\:
+        resource: '../src/*'
+        exclude: '../src/{ApiClient,DependencyInjection,Entity,Exception,Gateway,Model,Repository,PayPlugSyliusPayPlugPlugin.php}'
+
+    PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
+        class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
+        parent: sylius.repository.payment
+
+    PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface:
+        class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepository
+        parent: sylius.repository.payment_method
+
+    PayPlug\SyliusPayPlugPlugin\Controller\OrderController:
+        parent: sylius.controller.order
+
+    PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface:
+        class: PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider

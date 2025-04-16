@@ -9,6 +9,10 @@ use LogicException;
 use Payplug\Exception\PayplugException;
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use Payum\Core\Action\ActionInterface;
@@ -18,8 +22,39 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Notify;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
+#[AsAlias(id: 'payplug_sylius_payplug_plugin.action.notify', public: true)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => PayPlugGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => OneyGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => BancontactGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;

@@ -29,6 +29,7 @@ use Sylius\Component\Core\Payment\Exception\NotProvidedOrderPaymentException;
 use Sylius\Component\Core\TokenAssigner\OrderTokenAssignerInterface;
 use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\RouterInterface;
@@ -43,6 +44,7 @@ class ApplePayPaymentProvider
         // private StateMachineFactoryInterface $stateMachineFactory;
         private PaymentMethodRepositoryInterface $paymentMethodRepository,
         private PayPlugPaymentDataCreator $paymentDataCreator,
+        #[Autowire('@sylius_payplug_plugin.api_client.apple_pay')]
         private PayPlugApiClientInterface $applePayClient,
         private EntityManagerInterface $entityManager,
         private OrderTokenAssignerInterface $orderTokenAssigner,

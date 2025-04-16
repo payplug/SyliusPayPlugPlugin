@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 final class PayPlugSyliusPayPlugExtension extends Extension implements PrependExtensionInterface
 {
@@ -20,9 +21,13 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__, 2) . '/config'));
+        $ymlloader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 2) . '/config'));
+        $xmlloader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__, 2) . '/config/services'));
 
-        $loader->load('services.xml');
+        $ymlloader->load('services.yaml');
+
+        $xmlloader->load('client.xml');
+        $xmlloader->load('gateway.xml');
     }
 
     public function prepend(ContainerBuilder $container): void

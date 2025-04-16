@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
-use PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider;
+use PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface;
 use PayPlug\SyliusPayPlugPlugin\Twig\OneyRulesExtension;
 use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductRepository;
 use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductVariantRepository;
@@ -25,7 +25,7 @@ use Webmozart\Assert\Assert;
 abstract class AbstractOneyController extends AbstractController
 {
     public function __construct(
-        protected OneySimulationDataProvider $oneySimulationDataProvider,
+        protected OneySimulationDataProviderInterface $oneySimulationDataProvider,
         protected CartContextInterface $cartContext,
         protected ProductRepository $productRepository,
         protected ProductVariantRepository $productVariantRepository,

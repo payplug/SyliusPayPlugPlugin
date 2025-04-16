@@ -6,6 +6,10 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use PayPlug\SyliusPayPlugPlugin\StateMachine\Transition\OrderPaymentTransitions;
@@ -19,8 +23,39 @@ use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+#[AsAlias(id: 'payplug_sylius_payplug_plugin.action.status', public: true)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => PayPlugGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => OneyGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => BancontactGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.capture',
+    ],
+)]
 final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
     use GatewayAwareTrait;

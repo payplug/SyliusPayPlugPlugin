@@ -11,13 +11,9 @@ use Twig\TwigFunction;
 
 final class GetCurrentRouteExtension extends AbstractExtension
 {
-    /** @var Request|null */
-    private $request;
-
     public function __construct(
-        RequestStack $requestStack,
+        private RequestStack $requestStack,
     ) {
-        $this->request = $requestStack->getCurrentRequest();
     }
 
     public function getFunctions(): array
@@ -29,10 +25,11 @@ final class GetCurrentRouteExtension extends AbstractExtension
 
     public function payplugGetCurrentRoute(): string
     {
-        if (!$this->request instanceof Request) {
+        $currentRequest = $this->requestStack->getCurrentRequest();
+        if (!$currentRequest instanceof Request) {
             return '';
         }
 
-        return $this->request->get('_route', '');
+        return $currentRequest->get('_route', '');
     }
 }

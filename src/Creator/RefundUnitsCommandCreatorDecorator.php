@@ -40,6 +40,7 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         private PaymentMethodRepositoryInterface $paymentMethodRepository,
         private OrderRepositoryInterface $orderRepository,
         private TranslatorInterface $translator,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
         private PayPlugApiClientInterface $oneyClient,
     ) {
     }
