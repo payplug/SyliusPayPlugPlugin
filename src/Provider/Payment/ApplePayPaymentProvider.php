@@ -15,7 +15,6 @@ use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
-use SM\Factory\FactoryInterface as StateMachineFactoryInterface;
 use SM\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -37,6 +36,8 @@ use Webmozart\Assert\Assert;
 
 class ApplePayPaymentProvider
 {
+    public $stateMachineFactory;
+
     public function __construct(
         private PaymentFactoryInterface $paymentFactory,
         // private StateMachineFactoryInterface $stateMachineFactory;
@@ -45,7 +46,7 @@ class ApplePayPaymentProvider
         private PayPlugApiClientInterface $applePayClient,
         private EntityManagerInterface $entityManager,
         private OrderTokenAssignerInterface $orderTokenAssigner,
-        private RouterInterface $router
+        private RouterInterface $router,
     ) {
     }
 
@@ -60,16 +61,14 @@ class ApplePayPaymentProvider
         $state = PaymentInterface::STATE_CART;
 
         /** @phpstan-ignore-next-line */
-        if ($order->getPayments()->filter(function (PaymentInterface $payment): bool {
-            return PaymentInterface::STATE_FAILED === $payment->getState() || PaymentInterface::STATE_CANCELLED === $payment->getState();
-        })->count() > 0) {
+        if ($order->getPayments()->filter(fn (PaymentInterface $payment): bool => PaymentInterface::STATE_FAILED === $payment->getState() || PaymentInterface::STATE_CANCELLED === $payment->getState())->count() > 0) {
             $state = PaymentInterface::STATE_NEW;
         }
 
-        $payment = $this->initApplePaySyliusPaymentState($order, $state);
+        $payment = $this->initApplePaySyliusPaymentState($order);
 
         Assert::notNull($order->getBillingAddress());
-        if (null !== $customer = $order->getBillingAddress()->getCustomer()) {
+        if ($customer = $order->getBillingAddress()->getCustomer() instanceof \Sylius\Component\Customer\Model\CustomerInterface) {
             $order->setCustomer($customer);
         }
 
@@ -113,7 +112,7 @@ class ApplePayPaymentProvider
     /**
      * @throws NotProvidedOrderPaymentException
      */
-    private function initApplePaySyliusPaymentState(OrderInterface $order, string $targetState): PaymentInterface
+    private function initApplePaySyliusPaymentState(OrderInterface $order): PaymentInterface
     {
         Assert::notNull($order->getCurrencyCode());
 
@@ -131,13 +130,17 @@ class ApplePayPaymentProvider
     {
         $lastPayment = $order->getLastPayment();
 
-        if ($lastPayment instanceof PaymentInterface &&
-            PaymentInterface::STATE_CART === $lastPayment->getState()) {
+        if (
+            $lastPayment instanceof PaymentInterface &&
+            PaymentInterface::STATE_CART === $lastPayment->getState()
+        ) {
             return $lastPayment;
         }
 
-        if ($lastPayment instanceof PaymentInterface && OrderInterface::STATE_NEW === $order->getState() &&
-            PaymentInterface::STATE_NEW === $lastPayment->getState()) {
+        if (
+            $lastPayment instanceof PaymentInterface && OrderInterface::STATE_NEW === $order->getState() &&
+            PaymentInterface::STATE_NEW === $lastPayment->getState()
+        ) {
             return $lastPayment;
         }
 
@@ -198,17 +201,6 @@ class ApplePayPaymentProvider
         }
     }
 
-    private function getLastPayment(OrderInterface $order): ?PaymentInterface
-    {
-        $lastCancelledPayment = $order->getLastPayment(PaymentInterface::STATE_CANCELLED);
-
-        if (null !== $lastCancelledPayment) {
-            return $lastCancelledPayment;
-        }
-
-        return $order->getLastPayment(PaymentInterface::STATE_FAILED);
-    }
-
     public function patch(Request $request, OrderInterface $order): PaymentInterface
     {
         $lastPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);
@@ -265,7 +257,7 @@ class ApplePayPaymentProvider
             $lastPayment->setDetails($details);
 
             return $lastPayment;
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             $paymentResource->abort();
             $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_FAILED);
 
@@ -280,22 +272,18 @@ class ApplePayPaymentProvider
         }
 
         // Oney is reviewing the payer’s file
-        if ($paymentResource->__isset('payment_method') &&
+        if (
+            $paymentResource->__isset('payment_method') &&
             null !== $paymentResource->__get('payment_method') &&
             \array_key_exists('is_pending', $paymentResource->__get('payment_method')) &&
-            true === $paymentResource->__get('payment_method')['is_pending']) {
+            true === $paymentResource->__get('payment_method')['is_pending']
+        ) {
             return true;
         }
 
         $now = new DateTimeImmutable();
-        if ($paymentResource->__isset('authorization') &&
-            $paymentResource->__get('authorization') instanceof PaymentAuthorization &&
-            null !== $paymentResource->__get('authorization')->__get('expires_at') &&
-            $now < $now->setTimestamp($paymentResource->__get('authorization')->__get('expires_at'))) {
-            return true;
-        }
 
-        return false;
+        return $paymentResource->__isset('authorization') && $paymentResource->__get('authorization') instanceof PaymentAuthorization && null !== $paymentResource->__get('authorization')->__get('expires_at') && $now < $now->setTimestamp($paymentResource->__get('authorization')->__get('expires_at'));
     }
 
     public function cancel(OrderInterface $order): void

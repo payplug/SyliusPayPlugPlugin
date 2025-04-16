@@ -17,7 +17,7 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
         private PayPlugApiClientInterface $oneyClient,
         #[Autowire('@monolog.logger.payum')]
         private LoggerInterface $logger,
-        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider,
     ) {
     }
 
@@ -45,9 +45,9 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
                     'min_amount' => $accountData['configuration']['oney']['min_amounts'][$currency],
                     'max_amount' => $accountData['configuration']['oney']['max_amounts'][$currency],
                 ],
-                $simulationData
+                $simulationData,
             );
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             return [];
         }
     }

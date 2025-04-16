@@ -35,7 +35,7 @@ final class OneyIsProductEligible extends AbstractOneyController
     private function isProductEligible(
         OrderInterface $cart,
         string $productVariantCode,
-        int $quantity
+        int $quantity,
     ): bool {
         $productVariant = $this->productVariantRepository->findOneBy(['code' => $productVariantCode]);
         Assert::isInstanceOf($productVariant, ProductVariantInterface::class);
@@ -51,7 +51,7 @@ final class OneyIsProductEligible extends AbstractOneyController
             $quantity,
             $channel,
             $cart->getLocaleCode(),
-            $cart->getCurrencyCode()
+            $cart->getCurrencyCode(),
         );
 
         return $this->oneyRulesExtension->isCartEligible($tempCart);

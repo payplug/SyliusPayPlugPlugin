@@ -27,7 +27,7 @@ final class RefundUnitsAction
         private UrlGeneratorInterface $router,
         #[Autowire('@sylius_refund.creator.request_command')]
         private RequestCommandCreatorInterface $commandCreator,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -52,7 +52,7 @@ final class RefundUnitsAction
 
         return new RedirectResponse($this->router->generate(
             'sylius_refund_order_refunds_list',
-            ['orderNumber' => $request->attributes->get('orderNumber')]
+            ['orderNumber' => $request->attributes->get('orderNumber')],
         ));
     }
 }

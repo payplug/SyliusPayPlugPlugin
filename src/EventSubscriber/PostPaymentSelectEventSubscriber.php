@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use SM\Factory\FactoryInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -20,7 +18,10 @@ use Webmozart\Assert\Assert;
 
 final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 {
+    public $stateMachineFactory;
+
     private const CHECKOUT_ROUTE = 'sylius_shop_checkout_select_payment';
+
     private const UPDATE_ORDER_PAYMENT_ROUTE = 'sylius_shop_order_show';
 
     private const TOKEN_FIELD = 'payplug_integrated_payment_token';
@@ -63,10 +64,11 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
         $request->attributes->set('_sylius', $syliusRequestConfig);
     }
+
     public function handle(ResourceControllerEvent $resourceControllerEvent): void
     {
         $request = $this->requestStack->getCurrentRequest();
-        if (null === $request) {
+        if (!$request instanceof \Symfony\Component\HttpFoundation\Request) {
             return;
         }
 
@@ -83,7 +85,6 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
         if (!$this->hasToken($request)) {
             return;
-
         }
         $this->handleToken($resourceControllerEvent, $request, $lastPayment);
     }
@@ -100,7 +101,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
             [
                 'payment_id' => $token,
                 'status' => PaymentInterface::STATE_PROCESSING,
-            ]
+            ],
         ));
 
         $resource = $resourceControllerEvent->getSubject();

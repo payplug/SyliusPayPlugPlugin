@@ -18,12 +18,15 @@ class RefundNotificationHandler
     public function __construct(
         private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
         private RefundPaymentHandlerInterface $refundPaymentHandler,
-        private MessageBusInterface $commandBus
+        private MessageBusInterface $commandBus,
     ) {
     }
 
-    public function treat(PaymentInterface $payment, IVerifiableAPIResource $refundResource, \ArrayObject $details): void
-    {
+    public function treat(
+        PaymentInterface $payment,
+        IVerifiableAPIResource $refundResource,
+        \ArrayObject $details,
+    ): void {
         if (!$refundResource instanceof Refund) {
             return;
         }

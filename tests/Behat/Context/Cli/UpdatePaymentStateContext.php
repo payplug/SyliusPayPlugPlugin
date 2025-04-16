@@ -48,7 +48,7 @@ final class UpdatePaymentStateContext implements Context
         PayPlugApiMocker $payPlugApiMocker,
         PaymentFactoryInterface $paymentFactory,
         PaymentRepositoryInterface $paymentRepository,
-        SharedStorageInterface $sharedStorage
+        SharedStorageInterface $sharedStorage,
     ) {
         $this->kernel = $kernel;
         $this->payPlugApiMocker = $payPlugApiMocker;

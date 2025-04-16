@@ -19,13 +19,10 @@ use Webmozart\Assert\Assert;
  */
 final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 {
-    private PayPlugApiClientFactory $apiClientFactory;
-
     private const GATEWAYS_SKIP = [PayPlugGatewayFactory::FACTORY_NAME, OneyGatewayFactory::FACTORY_NAME];
 
-    public function __construct(PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
     {
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function validate($value, Constraint $constraint): void
@@ -60,7 +57,7 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
             }
 
             return;
-        } catch (UnauthorizedException|\LogicException $exception) {
+        } catch (UnauthorizedException | \LogicException) {
             return;
         }
     }

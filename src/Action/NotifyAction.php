@@ -29,7 +29,7 @@ final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayA
         #[Autowire('@monolog.logger.payum')]
         private LoggerInterface $logger,
         private PaymentNotificationHandler $paymentNotificationHandler,
-        private RefundNotificationHandler $refundNotificationHandler
+        private RefundNotificationHandler $refundNotificationHandler,
     ) {
     }
 

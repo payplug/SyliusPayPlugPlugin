@@ -15,12 +15,7 @@
         </div>
     </div>
     <br/>
-    {% if (payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayPlugGatewayFactory::FACTORY_NAME')
-        or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME'))
-        or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\BancontactGatewayFactory::FACTORY_NAME')
-        or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME')
-        or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\AmericanExpressGatewayFactory::FACTORY_NAME')
-        and payment.details.payment_id is defined %}
+    {% if payment.method.gatewayConfig.factoryName in [constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayPlugGatewayFactory::FACTORY_NAME'), constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME')] or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\BancontactGatewayFactory::FACTORY_NAME') or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') or payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\AmericanExpressGatewayFactory::FACTORY_NAME') and payment.details.payment_id is defined %}
         <div class="ui" style="word-break: break-word">
             {{ 'payplug_sylius_payplug_plugin.ui.payplug_id'|trans({'%paymentId%': payment.details.payment_id|default('')}) }}
             {% if payment.method.gatewayConfig.factoryName == constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}

@@ -18,9 +18,7 @@ use Sylius\RefundPlugin\Converter\RefundUnitsConverterInterface;
 use Sylius\RefundPlugin\Converter\Request\RequestToRefundUnitsConverterInterface;
 use Sylius\RefundPlugin\Creator\RequestCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
-use Sylius\RefundPlugin\Model\OrderItemUnitRefund;
 use Sylius\RefundPlugin\Model\RefundType;
-use Sylius\RefundPlugin\Model\ShipmentRefund;
 use Sylius\RefundPlugin\Model\UnitRefundInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -42,7 +40,7 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         private PaymentMethodRepositoryInterface $paymentMethodRepository,
         private OrderRepositoryInterface $orderRepository,
         private TranslatorInterface $translator,
-        private PayPlugApiClientInterface $oneyClient
+        private PayPlugApiClientInterface $oneyClient,
     ) {
     }
 
@@ -56,7 +54,6 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
                 $request->request->has('sylius_refund_units') ? $request->request->all()['sylius_refund_units'] : [],
                 /* @phpstan-ignore-next-line */
                 RefundType::orderItemUnit(),
-                OrderItemUnitRefund::class,
             );
 
             /** @phpstan-ignore-next-line */
@@ -64,7 +61,6 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
                 $request->request->has('sylius_refund_shipments') ? $request->request->all()['sylius_refund_shipments'] : [],
                 /* @phpstan-ignore-next-line */
                 RefundType::shipment(),
-                ShipmentRefund::class,
             );
 
             $units = array_merge($units, $shipments);
@@ -72,7 +68,7 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
             $units = $this->requestToRefundUnitsConverter->convert($request);
         }
 
-        if (0 === count($units)) {
+        if ([] === $units) {
             throw InvalidRefundAmount::withValidationConstraint('sylius_refund.at_least_one_unit_should_be_selected_to_refund');
         }
 
@@ -85,8 +81,10 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         /** @var GatewayConfigInterface $gateway */
         $gateway = $paymentMethod->getGatewayConfig();
 
-        if (PayPlugGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName() &&
-            OneyGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName()) {
+        if (
+            PayPlugGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName() &&
+            OneyGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName()
+        ) {
             return $this->decorated->fromRequest($request); /** @phpstan-ignore-line */
         }
 
@@ -135,8 +133,10 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
 
         $now = new \DateTime();
 
-        if ($now->getTimestamp() < $data->refundable_until &&
-            $now->getTimestamp() > $data->refundable_after) {
+        if (
+            $now->getTimestamp() < $data->refundable_until &&
+            $now->getTimestamp() > $data->refundable_after
+        ) {
             return;
         }
 

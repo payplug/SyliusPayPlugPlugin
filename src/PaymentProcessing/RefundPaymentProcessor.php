@@ -28,6 +28,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Autoconfigure(public: true)]
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
+    public $payPlugApiClient;
+
     public function __construct(
         private RequestStack $requestStack,
         #[Autowire('@monolog.logger.payum')]
@@ -35,7 +37,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         private TranslatorInterface $translator,
         private RepositoryInterface $refundPaymentRepository,
         private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        private PayPlugApiClientFactoryInterface $apiClientFactory
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
     ) {
     }
 
@@ -114,7 +116,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         if (!isset($details['payment_id'])) {
             $this->requestStack->getSession()->getFlashBag()->add(
                 'info',
-                $this->translator->trans('payplug_sylius_payplug_plugin.ui.payment_refund_locally')
+                $this->translator->trans('payplug_sylius_payplug_plugin.ui.payment_refund_locally'),
             );
 
             return;

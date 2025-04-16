@@ -26,36 +26,18 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 #[AsController]
 final class IntegratedPaymentController extends AbstractController
 {
-    private CartContextInterface $cartContext;
-    /**
-     * @var RepositoryInterface<\Sylius\Component\Core\Model\PaymentMethodInterface>
-     */
-    private RepositoryInterface $paymentMethodRepository;
-    private OrderRepositoryInterface $orderRepository;
-    private PayPlugPaymentDataCreator $paymentDataCreator;
-    private PayPlugApiClientFactory $apiClientFactory;
-    private EntityManagerInterface $entityManager;
-    private LoggerInterface $logger;
-
     /**
      * @param RepositoryInterface<\Sylius\Component\Core\Model\PaymentMethodInterface> $paymentMethodRepository
      */
     public function __construct(
-        CartContextInterface $cartContext,
-        RepositoryInterface $paymentMethodRepository,
-        OrderRepositoryInterface $orderRepository,
-        PayPlugPaymentDataCreator $paymentDataCreator,
-        PayPlugApiClientFactory $apiClientFactory,
-        EntityManagerInterface $entityManager,
-        LoggerInterface $logger
+        private CartContextInterface $cartContext,
+        private RepositoryInterface $paymentMethodRepository,
+        private OrderRepositoryInterface $orderRepository,
+        private PayPlugPaymentDataCreator $paymentDataCreator,
+        private PayPlugApiClientFactory $apiClientFactory,
+        private EntityManagerInterface $entityManager,
+        private LoggerInterface $logger,
     ) {
-        $this->cartContext = $cartContext;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->orderRepository = $orderRepository;
-        $this->paymentDataCreator = $paymentDataCreator;
-        $this->apiClientFactory = $apiClientFactory;
-        $this->entityManager = $entityManager;
-        $this->logger = $logger;
     }
 
     /**
@@ -77,7 +59,7 @@ final class IntegratedPaymentController extends AbstractController
         if (\is_string($orderToken = $request->query->get('orderToken'))) {
             $order = $this->orderRepository->findOneByTokenValue($orderToken);
         }
-        if (null === $order) {
+        if (!$order instanceof \Sylius\Component\Order\Model\OrderInterface) {
             $order = $this->cartContext->getCart();
         }
         if (!$order instanceof OrderInterface) {

@@ -15,7 +15,7 @@ final class GetCurrentRouteExtension extends AbstractExtension
     private $request;
 
     public function __construct(
-        RequestStack $requestStack
+        RequestStack $requestStack,
     ) {
         $this->request = $requestStack->getCurrentRequest();
     }
@@ -23,7 +23,7 @@ final class GetCurrentRouteExtension extends AbstractExtension
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('payplug_get_current_route', [$this, 'payplugGetCurrentRoute']),
+            new TwigFunction('payplug_get_current_route', $this->payplugGetCurrentRoute(...)),
         ];
     }
 

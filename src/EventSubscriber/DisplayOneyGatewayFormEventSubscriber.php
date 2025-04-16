@@ -13,22 +13,11 @@ use Symfony\Component\HttpKernel\Event\KernelEvent;
 
 final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInterface
 {
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $paymentMethodRepository;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface */
-    private $oneyChecker;
-
-    private RequestStack $requestStack;
-
     public function __construct(
-        RepositoryInterface $paymentMethodRepository,
-        OneyCheckerInterface $oneyChecker,
-        RequestStack $requestStack
+        private RepositoryInterface $paymentMethodRepository,
+        private OneyCheckerInterface $oneyChecker,
+        private RequestStack $requestStack,
     ) {
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->oneyChecker = $oneyChecker;
-        $this->requestStack = $requestStack;
     }
 
     public static function getSubscribedEvents(): array
@@ -50,13 +39,15 @@ final class DisplayOneyGatewayFormEventSubscriber implements EventSubscriberInte
             return;
         }
 
-        if (false === $subject->isEnabled() ||
+        if (
+            false === $subject->isEnabled() ||
             null === $subject->getGatewayConfig() ||
-            OneyGatewayFactory::FACTORY_NAME !== $subject->getGatewayConfig()->getFactoryName()) {
+            OneyGatewayFactory::FACTORY_NAME !== $subject->getGatewayConfig()->getFactoryName()
+        ) {
             return;
         }
 
-        if (true === $this->oneyChecker->isEnabled()) {
+        if ($this->oneyChecker->isEnabled()) {
             // Oney still enabled, do nothing
             return;
         }

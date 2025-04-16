@@ -6,7 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
-use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -27,8 +26,8 @@ final class SupportedRefundPaymentMethodsProviderDecorator extends AbstractSuppo
         RefundPaymentMethodsProviderInterface $decorated,
         RequestStack $requestStack,
         OrderRepositoryInterface $orderRepository,
-        #[Autowire('%sylius_refund.supported_gateways%')]
-        protected array $supportedRefundGateways
+        #[Autowire(param: 'sylius_refund.supported_gateways')]
+        protected array $supportedRefundGateways,
     ) {
         parent::__construct($decorated, $requestStack, $orderRepository);
     }
@@ -50,10 +49,12 @@ final class SupportedRefundPaymentMethodsProviderDecorator extends AbstractSuppo
             });
         }
 
-        if (null !== $order->getLastPayment() &&
-            null !== $order->getLastPayment()->getMethod() &&
+        if (
+            $order->getLastPayment() instanceof \Sylius\Component\Core\Model\PaymentInterface &&
+            $order->getLastPayment()->getMethod() instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface &&
             $this->gatewayFactoryName === $order->getLastPayment()->getMethod()->getCode() &&
-            !\in_array($this->gatewayFactoryName, $this->supportedRefundGateways, true)) {
+            !\in_array($this->gatewayFactoryName, $this->supportedRefundGateways, true)
+        ) {
             $this->requestStack->getSession()->getFlashBag()->add('info', 'payplug_sylius_payplug_plugin.ui.payplug_refund_gateway_is_not_activated');
         }
 

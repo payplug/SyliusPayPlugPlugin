@@ -23,12 +23,12 @@ final class NotifyActionSpec extends ObjectBehavior
     public function let(
         LoggerInterface $logger,
         PaymentNotificationHandler $paymentNotificationHandler,
-        RefundNotificationHandler $refundNotificationHandler
+        RefundNotificationHandler $refundNotificationHandler,
     ): void {
         $this->beConstructedWith(
             $logger,
             $paymentNotificationHandler,
-            $refundNotificationHandler
+            $refundNotificationHandler,
         );
     }
 
@@ -56,7 +56,7 @@ final class NotifyActionSpec extends ObjectBehavior
         Notify $request,
         \ArrayObject $arrayObject,
         GatewayInterface $gateway,
-        PayPlugApiClient $payPlugApiClient
+        PayPlugApiClient $payPlugApiClient,
     ): void {
         $payment = \Mockery::mock('payment', Payment::class);
 
@@ -74,7 +74,7 @@ final class NotifyActionSpec extends ObjectBehavior
 
     public function it_supports_only_notify_request_and_array_access(
         Notify $request,
-        \ArrayAccess $arrayAccess
+        \ArrayAccess $arrayAccess,
     ): void {
         $request->getModel()->willReturn($arrayAccess);
         $this->supports($request)->shouldReturn(true);

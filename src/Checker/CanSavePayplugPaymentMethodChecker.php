@@ -10,11 +10,8 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 
 final class CanSavePayplugPaymentMethodChecker
 {
-    private PayPlugApiClientInterface $client;
-
-    public function __construct(PayPlugApiClientInterface $apiClient)
+    public function __construct(private PayPlugApiClientInterface $client)
     {
-        $this->client = $apiClient;
     }
 
     public function isLive(): bool

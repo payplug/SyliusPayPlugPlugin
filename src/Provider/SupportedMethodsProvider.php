@@ -15,8 +15,12 @@ final class SupportedMethodsProvider
     {
     }
 
-    public function provide(array $supportedMethods, string $factoryName, array $authorizedCurrencies, int $paymentAmount): array
-    {
+    public function provide(
+        array $supportedMethods,
+        string $factoryName,
+        array $authorizedCurrencies,
+        int $paymentAmount,
+    ): array {
         $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
 
         foreach ($supportedMethods as $key => $paymentMethod) {
@@ -35,8 +39,9 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            if ($paymentAmount < $authorizedCurrencies[$activeCurrencyCode]['min_amount']
-                || $paymentAmount > $authorizedCurrencies[$activeCurrencyCode]['max_amount']
+            if (
+                $paymentAmount < $authorizedCurrencies[$activeCurrencyCode]['min_amount'] ||
+                $paymentAmount > $authorizedCurrencies[$activeCurrencyCode]['max_amount']
             ) {
                 unset($supportedMethods[$key]);
 

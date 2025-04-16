@@ -16,6 +16,7 @@ use Webmozart\Assert\Assert;
 
 /**
  * @ORM\Entity()
+ *
  * @ORM\Table("payplug_refund_history")
  */
 #[ORM\Entity]
@@ -24,8 +25,11 @@ class RefundHistory implements ResourceInterface
 {
     /**
      * @var int
+     *
      * @ORM\Id()
+     *
      * @ORM\GeneratedValue()
+     *
      * @ORM\Column(type="integer")
      */
     #[ORM\Id]
@@ -35,7 +39,9 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var RefundPayment|null
+     *
      * @ORM\OneToOne(targetEntity="Sylius\RefundPlugin\Entity\RefundPayment")
+     *
      * @ORM\JoinColumn(name="refund_payment_id", nullable=true)
      */
     #[ORM\OneToOne(targetEntity: RefundPayment::class)]
@@ -44,6 +50,7 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var string|null
+     *
      * @ORM\Column(type="string", nullable=true)
      */
     #[ORM\Column(type: Types::STRING, nullable: true)]
@@ -51,7 +58,9 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var PaymentInterface|null
+     *
      * @ORM\ManyToOne(targetEntity="\Sylius\Component\Core\Model\PaymentInterface", inversedBy="refundHistories")
+     *
      * @ORM\JoinColumn(name="payment_id", referencedColumnName="id", nullable=true, onDelete="SET NULL")
      */
     #[ORM\ManyToOne(targetEntity: PaymentInterface::class, inversedBy: 'refundHistories')]
@@ -60,6 +69,7 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var int
+     *
      * @ORM\Column(type="integer", nullable=true)
      */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
@@ -67,6 +77,7 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var bool
+     *
      * @ORM\Column(type="boolean")
      */
     #[ORM\Column(type: Types::BOOLEAN)]
@@ -74,6 +85,7 @@ class RefundHistory implements ResourceInterface
 
     /**
      * @var DateTimeInterface
+     *
      * @ORM\Column(type="datetime")
      */
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

@@ -14,15 +14,10 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 
 final class CaptureAuthorizedPaymentProcessor
 {
-    private PayPlugApiClientFactory $apiClientFactory;
-    private PaymentNotificationHandler $paymentNotificationHandler;
-
     public function __construct(
-        PayPlugApiClientFactory $apiClientFactory,
-        PaymentNotificationHandler $paymentNotificationHandler
+        private PayPlugApiClientFactory $apiClientFactory,
+        private PaymentNotificationHandler $paymentNotificationHandler,
     ) {
-        $this->apiClientFactory = $apiClientFactory;
-        $this->paymentNotificationHandler = $paymentNotificationHandler;
     }
 
     public function process(PaymentInterface $payment): void

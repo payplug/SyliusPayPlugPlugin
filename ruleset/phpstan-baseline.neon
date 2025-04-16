@@ -1,0 +1,1453 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Action/Admin/CompleteRefundPaymentAction.php
+
+		-
+			message: '#^Parameter \#1 \$id of class Sylius\\RefundPlugin\\Event\\RefundPaymentGenerated constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/Admin/CompleteRefundPaymentAction.php
+
+		-
+			message: '#^Parameter \#5 \$paymentMethodId of class Sylius\\RefundPlugin\\Event\\RefundPaymentGenerated constructor expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/Admin/CompleteRefundPaymentAction.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: ../src/Action/Admin/RefundUnitsAction.php
+
+		-
+			message: '#^Cannot access offset ''billing'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot access offset ''can_save_cards'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot access offset ''cancel_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot access offset ''postcode'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot access offset ''shipping'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot access property \$payment_url on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 6
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot call method getFirstModel\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot call method getModel\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot call method getToken\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Parameter \#1 \$timestamp of method DateTimeImmutable\:\:setTimestamp\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Parameter \#1 \$url of class Payum\\Core\\Reply\\HttpRedirect constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: ../src/Action/CaptureAction.php
+
+		-
+			message: '#^Cannot call method getSource\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/ConvertPaymentAction.php
+
+		-
+			message: '#^Cannot call method setResult\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/ConvertPaymentAction.php
+
+		-
+			message: '#^Cannot call method getFirstModel\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Action/NotifyAction.php
+
+		-
+			message: '#^Cannot call method getModel\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/NotifyAction.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method PayPlug\\SyliusPayPlugPlugin\\Handler\\PaymentNotificationHandler\:\:treat\(\) expects Sylius\\Component\\Core\\Model\\PaymentInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/NotifyAction.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method PayPlug\\SyliusPayPlugPlugin\\Handler\\RefundNotificationHandler\:\:treat\(\) expects Sylius\\Component\\Core\\Model\\PaymentInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/NotifyAction.php
+
+		-
+			message: '#^Access to an undefined property PayPlug\\SyliusPayPlugPlugin\\Action\\StatusAction\:\:\$stateMachineFactory\.$#'
+			identifier: property.notFound
+			count: 2
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method apply\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method can\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method getFirstModel\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method getModel\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Cannot call method markNew\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method PayPlug\\SyliusPayPlugPlugin\\Handler\\PaymentNotificationHandler\:\:treat\(\) expects Sylius\\Component\\Core\\Model\\PaymentInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandlerInterface\:\:updatePaymentStatus\(\) expects Sylius\\Component\\Core\\Model\\PaymentInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Parameter \#1 \$paymentId of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:retrieve\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Parameter \#1 \$status of method PayPlug\\SyliusPayPlugPlugin\\Action\\StatusAction\:\:markRequestAs\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Parameter \#2 \$request of method PayPlug\\SyliusPayPlugPlugin\\Action\\StatusAction\:\:markRequestAs\(\) expects Payum\\Core\\Request\\GetStatusInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Action/StatusAction.php
+
+		-
+			message: '#^Access to constant VERSION on an unknown class Sylius\\Bundle\\CoreBundle\\Application\\Kernel\.$#'
+			identifier: class.notFound
+			count: 2
+			path: ../src/ApiClient/PayPlugApiClient.php
+
+		-
+			message: '#^Anonymous function should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/ApiClient/PayPlugApiClient.php
+
+		-
+			message: '#^Binary operation "\." between ''Sylius/'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: ../src/ApiClient/PayPlugApiClient.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payplug\\Resource\\Refund\|null is not subtype of type Payplug\\Refund\|null\.$#'
+			identifier: varTag.type
+			count: 2
+			path: ../src/ApiClient/PayPlugApiClient.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfig\|null is not subtype of type Sylius\\Resource\\Model\\ResourceInterface\|null\.$#'
+			identifier: varTag.type
+			count: 1
+			path: ../src/ApiClient/PayPlugApiClientFactory.php
+
+		-
+			message: '#^Parameter \#1 \$secretKey of class PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClient constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/ApiClient/PayPlugApiClientFactory.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: ../src/Checker/CanSavePayplugPaymentMethodChecker.php
+
+		-
+			message: '#^Cannot access offset ''enabled'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Checker/CanSavePayplugPaymentMethodChecker.php
+
+		-
+			message: '#^Cannot call method getHostname\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Checker/CanSavePayplugPaymentMethodChecker.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Checker\\CanSavePayplugPaymentMethodChecker\:\:isEnabled\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Checker/CanSavePayplugPaymentMethodChecker.php
+
+		-
+			message: '#^Parameter \#1 \$method of method PayPlug\\SyliusPayPlugPlugin\\Checker\\CanSavePayplugPaymentMethodChecker\:\:isAllowedDomainNames\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Checker/CanSavePayplugPaymentMethodChecker.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Checker/CanSavePayplugPaymentMethodChecker.php
+
+		-
+			message: '#^Cannot access offset ''allowed_countries'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Checker/OneyChecker.php
+
+		-
+			message: '#^Cannot access offset ''max_amounts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Checker/OneyChecker.php
+
+		-
+			message: '#^Cannot access offset ''min_amounts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Checker/OneyChecker.php
+
+		-
+			message: '#^Cannot access offset ''oney'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../src/Checker/OneyChecker.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Checker/OneyChecker.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Checker/OneyChecker.php
+
+		-
+			message: '#^Cannot call method apply\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Command/CaptureAuthorizedPaymentCommand.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Command/CaptureAuthorizedPaymentCommand.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Command/CaptureAuthorizedPaymentCommand.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\Command\\CaptureAuthorizedPaymentCommand\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/Command/CaptureAuthorizedPaymentCommand.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Controller/CardController.php
+
+		-
+			message: '#^Parameter \#2 \$type of method Symfony\\Component\\Form\\FormBuilderInterface\:\:add\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/CompleteInfoController.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$paymentMethodRepository contains generic type Sylius\\Component\\Resource\\Repository\\RepositoryInterface\<Sylius\\Component\\Core\\Model\\PaymentMethodInterface\> but interface Sylius\\Component\\Resource\\Repository\\RepositoryInterface is not generic\.$#'
+			identifier: generics.notGeneric
+			count: 1
+			path: ../src/Controller/IntegratedPaymentController.php
+
+		-
+			message: '#^PHPDoc type for property PayPlug\\SyliusPayPlugPlugin\\Controller\\IntegratedPaymentController\:\:\$paymentMethodRepository contains generic type Sylius\\Component\\Resource\\Repository\\RepositoryInterface\<Sylius\\Component\\Core\\Model\\PaymentMethodInterface\> but interface Sylius\\Component\\Resource\\Repository\\RepositoryInterface is not generic\.$#'
+			identifier: generics.notGeneric
+			count: 1
+			path: ../src/Controller/IntegratedPaymentController.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../src/Controller/IpnAction.php
+
+		-
+			message: '#^Parameter \#1 \$payplugPaymentId of method PayPlug\\SyliusPayPlugPlugin\\Repository\\PaymentRepositoryInterface\:\:findOneByPayPlugPaymentId\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/IpnAction.php
+
+		-
+			message: '#^Parameter \#1 \$secretKey of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:initialise\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/IpnAction.php
+
+		-
+			message: '#^Parameter \#2 \$key of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientFactoryInterface\:\:create\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/IpnAction.php
+
+		-
+			message: '#^Cannot access offset ''payment_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Controller/OneClickAction.php
+
+		-
+			message: '#^Cannot access offset ''return_url'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Controller/OneClickAction.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: ../src/Controller/OneClickAction.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.type
+			count: 1
+			path: ../src/Controller/OneClickAction.php
+
+		-
+			message: '#^Parameter \#1 \$url of class Symfony\\Component\\HttpFoundation\\RedirectResponse constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/OneClickAction.php
+
+		-
+			message: '#^Parameter \#2 \$key of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientFactory\:\:create\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/OneClickAction.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: ../src/Controller/OneyIsProductEligible.php
+
+		-
+			message: '#^PHPDoc tag @var with type int\|null is not subtype of native type int\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: ../src/Controller/OneyIsProductEligible.php
+
+		-
+			message: '#^Parameter \#2 \$productVariantCode of method PayPlug\\SyliusPayPlugPlugin\\Controller\\OneyIsProductEligible\:\:isProductEligible\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Controller/OneyIsProductEligible.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: ../src/Controller/OneySimulationPopin.php
+
+		-
+			message: '#^PHPDoc tag @var with type int\|null is not subtype of native type int\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: ../src/Controller/OneySimulationPopin.php
+
+		-
+			message: '#^Binary operation "\." between ''apple_pay_cancel'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../src/Controller/OrderController.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: ../src/Controller/OrderController.php
+
+		-
+			message: '#^Cannot call method apply\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: ../src/Controller/OrderController.php
+
+		-
+			message: '#^Cannot call method can\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: ../src/Controller/OrderController.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: ../src/Controller/OrderController.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\Controller\\OrderController\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/Controller/OrderController.php
+
+		-
+			message: '#^Cannot access offset ''company_name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Cannot access offset ''first_name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Cannot access offset ''last_name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^PHPDoc tag @SuppressWarnings has invalid value \(\(PHPMD\.UnusedFormalParameter\)\)\: Unexpected token "\.UnusedFormalParameter\)", expected ''\)'' at offset 34 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Parameter &\$landingPhone by\-ref type of method PayPlug\\SyliusPayPlugPlugin\\Creator\\PayPlugPaymentDataCreator\:\:loadPhoneNumbers\(\) expects string\|null, mixed given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Parameter &\$mobilePhone by\-ref type of method PayPlug\\SyliusPayPlugPlugin\\Creator\\PayPlugPaymentDataCreator\:\:loadPhoneNumbers\(\) expects string\|null, mixed given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: ../src/Creator/PayPlugPaymentDataCreator.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.type
+			count: 1
+			path: ../src/Creator/RefundUnitsCommandCreatorDecorator.php
+
+		-
+			message: '#^Parameter \#1 \$paymentId of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:retrieve\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Creator/RefundUnitsCommandCreatorDecorator.php
+
+		-
+			message: '#^Parameter \#1 \$unit of method PayPlug\\SyliusPayPlugPlugin\\Creator\\RefundUnitsCommandCreatorDecorator\:\:getAmount\(\) expects Sylius\\RefundPlugin\\Model\\UnitRefundInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Creator/RefundUnitsCommandCreatorDecorator.php
+
+		-
+			message: '#^Parameter \#1 \$units of method Sylius\\RefundPlugin\\Converter\\RefundUnitsConverterInterface\:\:convert\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/Creator/RefundUnitsCommandCreatorDecorator.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\Entity\\RefundHistory\:\:\$value type mapping mismatch\: database can contain int\|null but property expects int\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: ../src/Entity/RefundHistory.php
+
+		-
+			message: '#^Trait PayPlug\\SyliusPayPlugPlugin\\Entity\\Traits\\CustomerTrait is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: ../src/Entity/Traits/CustomerTrait.php
+
+		-
+			message: '#^Trait PayPlug\\SyliusPayPlugPlugin\\Entity\\Traits\\PaymentMethodTrait is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: ../src/Entity/Traits/PaymentMethodTrait.php
+
+		-
+			message: '#^Trait PayPlug\\SyliusPayPlugPlugin\\Entity\\Traits\\PaymentTrait is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: ../src/Entity/Traits/PaymentTrait.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/EventSubscriber/DisplayOneyGatewayFormEventSubscriber.php
+
+		-
+			message: '#^Cannot call method apply\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/EventSubscriber/PostPaymentSelectEventSubscriber.php
+
+		-
+			message: '#^Cannot call method can\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/EventSubscriber/PostPaymentSelectEventSubscriber.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/EventSubscriber/PostPaymentSelectEventSubscriber.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\EventSubscriber\\PostPaymentSelectEventSubscriber\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/EventSubscriber/PostPaymentSelectEventSubscriber.php
+
+		-
+			message: '#^Parameter \#1 \$input of method Payum\\Core\\Bridge\\Spl\\ArrayObject\:\:defaults\(\) expects array\|Traversable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/AbstractGatewayFactory.php
+
+		-
+			message: '#^Parameter \#1 \$required of method Payum\\Core\\Bridge\\Spl\\ArrayObject\:\:validateNotEmpty\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/AbstractGatewayFactory.php
+
+		-
+			message: '#^Parameter \#1 \$secretKey of class PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClient constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/AbstractGatewayFactory.php
+
+		-
+			message: '#^Parameter \#2 \$factoryName of class PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClient constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/AbstractGatewayFactory.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Form/Type/AbstractGatewayConfigurationType.php
+
+		-
+			message: '#^Cannot call method getId\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Form/Type/AbstractGatewayConfigurationType.php
+
+		-
+			message: '#^Cannot access offset ''secretKey'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: '#^Cannot call method getConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: '#^Cannot call method getGatewayConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Gateway\\Validator\\Constraints\\IsCanSaveCardsValidator\:\:validate\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: '#^Parameter \#2 \$key of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientFactory\:\:create\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSaveCardsValidator.php
+
+		-
+			message: '#^Cannot call method getChannels\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: '#^Cannot call method getFactoryName\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: '#^Cannot call method getGatewayConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Gateway\\Validator\\Constraints\\IsCanSavePaymentMethodValidator\:\:validate\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: '#^Parameter \#2 \$channels of method PayPlug\\SyliusPayPlugPlugin\\Checker\\CanSavePayplugPaymentMethodChecker\:\:isEnabled\(\) expects Doctrine\\Common\\Collections\\Collection, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsCanSavePaymentMethodValidator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Gateway\\Validator\\Constraints\\IsOneyEnabledValidator\:\:validate\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsOneyEnabledValidator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Gateway\\Validator\\Constraints\\IsPayPlugSecretKeyValidator\:\:validate\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/IsPayPlugSecretKeyValidator.php
+
+		-
+			message: '#^Cannot access offset ''secretKey'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
+			message: '#^Cannot call method getConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
+			message: '#^Cannot call method getData\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
+			message: '#^Cannot call method getGatewayConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
+			message: '#^Parameter \#2 \$key of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientFactory\:\:create\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Gateway/Validator/Constraints/PayplugPermissionValidator.php
+
+		-
+			message: '#^Binary operation "\." between ''payment_'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access offset ''customer_id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$brand on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$code on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$country on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$exp_month on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$exp_year on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$id on mixed\.$#'
+			identifier: property.nonObject
+			count: 4
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$last4 on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access property \$message on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$brand of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setBrand\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$countryCode of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setCountryCode\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$expirationMonth of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setExpirationMonth\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$expirationYear of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setExpirationYear\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$externalId of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setExternalId\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$isLive of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setIsLive\(\) expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$last4 of method PayPlug\\SyliusPayPlugPlugin\\Entity\\Card\:\:setLast4\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$timestamp of method DateTimeImmutable\:\:setTimestamp\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/Handler/PaymentNotificationHandler.php
+
+		-
+			message: '#^Cannot access offset ''refund_from_sylius'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Handler/RefundNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$externalId of method PayPlug\\SyliusPayPlugPlugin\\Entity\\RefundHistory\:\:setExternalId\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/RefundNotificationHandler.php
+
+		-
+			message: '#^Parameter \#1 \$value of method PayPlug\\SyliusPayPlugPlugin\\Entity\\RefundHistory\:\:setValue\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Handler/RefundNotificationHandler.php
+
+		-
+			message: '#^Call to static method Webmozart\\Assert\\Assert\:\:isInstanceOf\(\) with DateTimeInterface and ''DateTimeInterface'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: ../src/MessageHandler/RefundPaymentGeneratedHandler.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/MessageHandler/RefundPaymentGeneratedHandler.php
+
+		-
+			message: '#^Cannot call method apply\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/MessageHandler/RefundPaymentGeneratedHandler.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/MessageHandler/RefundPaymentGeneratedHandler.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\MessageHandler\\RefundPaymentGeneratedHandler\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/MessageHandler/RefundPaymentGeneratedHandler.php
+
+		-
+			message: '#^Parameter \#1 \$paymentId of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:abortPayment\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/AbortPaymentProcessor.php
+
+		-
+			message: '#^Binary operation "\-\=" between float\|int and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 2
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Cannot cast mixed to float\.$#'
+			identifier: cast.double
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Class Sylius\\RefundPlugin\\Command\\RefundUnits constructor invoked with 5 parameters, 4 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandler\:\:parseIdsToUnitRefunds\(\) should return array\<Sylius\\RefundPlugin\\Model\\UnitRefundInterface\> but returns list\<object\>\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^PHPDoc tag @var with type Sylius\\Component\\Core\\Model\\ShipmentInterface is not subtype of type Sylius\\Component\\Order\\Model\\AdjustmentInterface\.$#'
+			identifier: varTag.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#1 \$id of method Sylius\\RefundPlugin\\Provider\\RemainingTotalProviderInterface\:\:getTotalLeftToRefund\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#1 \$unit of method PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandler\:\:getAmount\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#1 \$units of method PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandler\:\:parseIdsToUnitRefunds\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#3 \$amount of method PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandler\:\:addItem\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#3 \$amount of method PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandler\:\:dispatchRefundPrice\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#3 \$paymentMethodId of class Sylius\\RefundPlugin\\Command\\RefundUnits constructor expects int, array\<Sylius\\RefundPlugin\\Model\\UnitRefundInterface\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Parameter \#4 \$comment of class Sylius\\RefundPlugin\\Command\\RefundUnits constructor expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentHandler.php
+
+		-
+			message: '#^Cannot access an offset on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot access property \$amount on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot access property \$id on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot access property \$metadata on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot call method refundPayment\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot call method refundPaymentWithAmount\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Parameter \#1 \$secretKey of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:initialise\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Parameter \#2 \$key of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientFactoryInterface\:\:create\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentProcessor\:\:\$payPlugApiClient has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/PaymentProcessing/RefundPaymentProcessor.php
+
+		-
+			message: '#^Cannot call method apply\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Processor/OrderPaymentProcessor.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Processor/OrderPaymentProcessor.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Processor\\OrderPaymentProcessor\:\:getFactoryName\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Processor/OrderPaymentProcessor.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\Processor\\OrderPaymentProcessor\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/Processor/OrderPaymentProcessor.php
+
+		-
+			message: '#^Call to an undefined method Sylius\\RefundPlugin\\Provider\\RefundPaymentMethodsProviderInterface\:\:findForChannel\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: ../src/Provider/AbstractSupportedRefundPaymentMethodsProvider.php
+
+		-
+			message: '#^Cannot call method getGatewayConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Provider/AbstractSupportedRefundPaymentMethodsProvider.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Provider\\AbstractSupportedRefundPaymentMethodsProvider\:\:findForChannel\(\) should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 3
+			path: ../src/Provider/AbstractSupportedRefundPaymentMethodsProvider.php
+
+		-
+			message: '#^Parameter \#1 \$paymentMethods of method PayPlug\\SyliusPayPlugPlugin\\Provider\\AbstractSupportedRefundPaymentMethodsProvider\:\:find\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/Provider/AbstractSupportedRefundPaymentMethodsProvider.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(Sylius\\Component\\Core\\Model\\PaymentMethodInterface\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Provider/AbstractSupportedRefundPaymentMethodsProvider.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: ../src/Provider/ApplePayOrderProvider.php
+
+		-
+			message: '#^Cannot access offset ''max_amounts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Provider/OneySimulation/OneySimulationDataProvider.php
+
+		-
+			message: '#^Cannot access offset ''min_amounts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Provider/OneySimulation/OneySimulationDataProvider.php
+
+		-
+			message: '#^Cannot access offset ''oney'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Provider/OneySimulation/OneySimulationDataProvider.php
+
+		-
+			message: '#^Cannot access offset string\|null on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Provider/OneySimulation/OneySimulationDataProvider.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Provider\\OneySupportedPaymentChoiceProvider\:\:getFeesFor\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Provider/OneySupportedPaymentChoiceProvider.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of native type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: ../src/Provider/OneySupportedPaymentChoiceProvider.php
+
+		-
+			message: '#^Call to method apply\(\) on an unknown class SM\\StateMachine\\StateMachineInterface\.$#'
+			identifier: class.notFound
+			count: 3
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Cannot access offset ''merchant_session'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$stateMachine contains unknown class SM\\StateMachine\\StateMachineInterface\.$#'
+			identifier: class.notFound
+			count: 3
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Parameter \#1 \$customer of method Sylius\\Component\\Customer\\Model\\CustomerAwareInterface\:\:setCustomer\(\) expects Sylius\\Component\\Customer\\Model\\CustomerInterface\|null, true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Parameter \#1 \$paymentId of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:retrieve\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Parameter \#1 \$timestamp of method DateTimeImmutable\:\:setTimestamp\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\Provider\\Payment\\ApplePayPaymentProvider\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/Provider/Payment/ApplePayPaymentProvider.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.type
+			count: 1
+			path: ../src/Provider/PaymentTokenProvider.php
+
+		-
+			message: '#^Cannot access offset ''max_amount'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Provider/SupportedMethodsProvider.php
+
+		-
+			message: '#^Cannot access offset ''min_amount'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Provider/SupportedMethodsProvider.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of native type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: ../src/Provider/SupportedMethodsProvider.php
+
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Provider/SupportedRefundPaymentMethodsProviderDecorator.php
+
+		-
+			message: '#^Cannot call method getGatewayConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Provider/SupportedRefundPaymentMethodsProviderDecorator.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(Sylius\\Component\\Core\\Model\\PaymentMethodInterface\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Provider/SupportedRefundPaymentMethodsProviderDecorator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\PaymentMethodRepository\:\:findOneByGatewayName\(\) should return Sylius\\Component\\Core\\Model\\PaymentMethodInterface\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/PaymentMethodRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\PaymentRepository\:\:findAllActiveByGatewayFactoryName\(\) should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/PaymentRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\PaymentRepository\:\:findAllAuthorizedOlderThanDays\(\) should return array\<Sylius\\Component\\Core\\Model\\PaymentInterface\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/PaymentRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\PaymentRepository\:\:findOneByPayPlugPaymentId\(\) should return Sylius\\Component\\Core\\Model\\PaymentInterface but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/PaymentRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\RefundHistoryRepository\:\:findLastProcessedRefundForPayment\(\) should return PayPlug\\SyliusPayPlugPlugin\\Entity\\RefundHistory\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/RefundHistoryRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\RefundHistoryRepository\:\:findLastRefundForPayment\(\) should return PayPlug\\SyliusPayPlugPlugin\\Entity\\RefundHistory\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/RefundHistoryRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Resolver\\AmericanExpressPaymentMethodsResolverDecorator\:\:getSupportedMethods\(\) should return array\<Sylius\\Component\\Payment\\Model\\PaymentMethodInterface\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Resolver/AmericanExpressPaymentMethodsResolverDecorator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Resolver\\ApplePayPaymentMethodsResolverDecorator\:\:getSupportedMethods\(\) should return array\<Sylius\\Component\\Payment\\Model\\PaymentMethodInterface\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Resolver/ApplePayPaymentMethodsResolverDecorator.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of native type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: ../src/Resolver/ApplePayPaymentMethodsResolverDecorator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Resolver\\BancontactPaymentMethodsResolverDecorator\:\:getSupportedMethods\(\) should return array\<Sylius\\Component\\Payment\\Model\\PaymentMethodInterface\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Resolver/BancontactPaymentMethodsResolverDecorator.php
+
+		-
+			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of native type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: ../src/Resolver/OneyPaymentMethodsResolverDecorator.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Resolver\\PayPlugPaymentMethodsResolverDecorator\:\:getSupportedMethods\(\) should return array\<Sylius\\Component\\Payment\\Model\\PaymentMethodInterface\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Resolver/PayPlugPaymentMethodsResolverDecorator.php
+
+		-
+			message: '#^Call to method apply\(\) on an unknown class SM\\StateMachine\\StateMachineInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Call to method can\(\) on an unknown class SM\\StateMachine\\StateMachineInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Parameter \#1 \$paymentStateMachine of method PayPlug\\SyliusPayPlugPlugin\\Resolver\\PaymentStateResolver\:\:applyTransition\(\) expects SM\\StateMachine\\StateMachineInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Parameter \#1 \$secretKey of method PayPlug\\SyliusPayPlugPlugin\\ApiClient\\PayPlugApiClientInterface\:\:initialise\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Parameter \#1 \$timestamp of method DateTimeImmutable\:\:setTimestamp\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Parameter \$paymentStateMachine of method PayPlug\\SyliusPayPlugPlugin\\Resolver\\PaymentStateResolver\:\:applyTransition\(\) has invalid type SM\\StateMachine\\StateMachineInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Property PayPlug\\SyliusPayPlugPlugin\\Resolver\\PaymentStateResolver\:\:\$stateMachineFactory has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: ../src/Resolver/PaymentStateResolver.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Twig\\GetCurrentRouteExtension\:\:payplugGetCurrentRoute\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Twig/GetCurrentRouteExtension.php
+
+		-
+			message: '#^Cannot access offset ''max_amounts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Twig/OneyRulesExtension.php
+
+		-
+			message: '#^Cannot access offset ''min_amounts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../src/Twig/OneyRulesExtension.php
+
+		-
+			message: '#^Cannot access offset ''oney'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Twig/OneyRulesExtension.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../src/Twig/OneyRulesExtension.php
+
+		-
+			message: '#^PHPDoc tag @var with type Sylius\\Component\\Core\\Model\\ProductVariantInterface\|null is not subtype of type Sylius\\Component\\Product\\Model\\ProductVariantInterface\|false\.$#'
+			identifier: varTag.type
+			count: 1
+			path: ../src/Twig/OneyRulesExtension.php
+
+		-
+			message: '#^Parameter \#1 \$amount of method Sylius\\Bundle\\MoneyBundle\\Formatter\\MoneyFormatterInterface\:\:format\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../src/Twig/OneyRulesExtension.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(string\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../src/Twig/OneySimulationExtension.php

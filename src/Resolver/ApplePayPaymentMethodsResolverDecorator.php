@@ -23,7 +23,7 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
         #[AutowireDecorated]
         private PaymentMethodsResolverInterface $decorated,
         private SupportedMethodsProvider $supportedMethodsProvider,
-        private ApplePayCheckerInterface $applePayChecker
+        private ApplePayCheckerInterface $applePayChecker,
     ) {
     }
 
@@ -51,7 +51,7 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
             $supportedMethods,
             ApplePayGatewayFactory::FACTORY_NAME,
             ApplePayGatewayFactory::AUTHORIZED_CURRENCIES,
-            $subject->getAmount() ?? 0
+            $subject->getAmount() ?? 0,
         );
     }
 

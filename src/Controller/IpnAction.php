@@ -29,13 +29,15 @@ use Webmozart\Assert\Assert;
 #[AsController]
 class IpnAction
 {
+    private PayPlugApiClientInterface $payPlugApiClient;
+
     public function __construct(
         private LoggerInterface $logger,
         private PaymentNotificationHandler $paymentNotificationHandler,
         private RefundNotificationHandler $refundNotificationHandler,
         private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentRepositoryInterface $paymentRepository,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
     ) {
     }
 

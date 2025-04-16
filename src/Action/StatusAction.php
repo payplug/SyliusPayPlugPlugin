@@ -17,7 +17,6 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
-use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -27,21 +26,11 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
     use GatewayAwareTrait;
     use ApiAwareTrait;
 
-    /** @var RefundPaymentHandlerInterface */
-    private $refundPaymentHandler;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler */
-    private $paymentNotificationHandler;
-    private RequestStack $requestStack;
-
     public function __construct(
-        RefundPaymentHandlerInterface $refundPaymentHandler,
-        PaymentNotificationHandler $paymentNotificationHandler,
-        RequestStack $requestStack
+        private RefundPaymentHandlerInterface $refundPaymentHandler,
+        private PaymentNotificationHandler $paymentNotificationHandler,
+        private RequestStack $requestStack,
     ) {
-        $this->refundPaymentHandler = $refundPaymentHandler;
-        $this->paymentNotificationHandler = $paymentNotificationHandler;
-        $this->requestStack = $requestStack;
     }
 
     public function execute($request): void
@@ -62,14 +51,18 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         $this->gateway->execute($httpRequest = new GetHttpRequest());
 
         //If we don't have received the notification when we reach this page, call the API manually to update the status
-        if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
-            && isset($httpRequest->query['payum_token'])) {
+        if (
+            PayPlugApiClientInterface::STATUS_CREATED === $details['status'] &&
+            isset($httpRequest->query['payum_token'])
+        ) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
             $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
-        if (isset($httpRequest->query['status']) &&
-            PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
+        if (
+            isset($httpRequest->query['status']) &&
+            PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']
+        ) {
             // we need to show a specific error message when the payment is cancelled using the 1click feature
             if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
                 $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');

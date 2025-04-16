@@ -120,7 +120,7 @@ final class PayPlugApiMocker
     {
         $mock = $this->mocker->mockService(
             'payplug_sylius_payplug_plugin.api_client.oney',
-            PayPlugApiClientInterface::class
+            PayPlugApiClientInterface::class,
         );
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
@@ -137,7 +137,7 @@ final class PayPlugApiMocker
     {
         $mock = $this->mocker->mockService(
             'payplug_sylius_payplug_plugin.api_client.oney',
-            PayPlugApiClientInterface::class
+            PayPlugApiClientInterface::class,
         );
         $payment = \Mockery::mock('payment', Payment::class);
         $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
@@ -331,7 +331,7 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
         $mock = $this->mocker->mockService(
             'payplug_sylius_payplug_plugin.api_client.oney',
-            PayPlugApiClientInterface::class
+            PayPlugApiClientInterface::class,
         );
         $mock->shouldReceive([
             'getPermissions' => ['can_use_oney' => true],
@@ -360,7 +360,7 @@ final class PayPlugApiMocker
         $this->mocker->unmockAll();
         $mock = $this->mocker->mockService(
             'payplug_sylius_payplug_plugin.api_client.oney',
-            PayPlugApiClientInterface::class
+            PayPlugApiClientInterface::class,
         );
         $mock->shouldReceive([
             'getPermissions' => ['can_use_oney' => false],

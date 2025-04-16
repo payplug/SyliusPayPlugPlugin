@@ -45,7 +45,10 @@ use Webmozart\Assert\Assert;
 #[AsController]
 final class OrderController extends BaseOrderController
 {
+    public $stateMachineFactory;
+
     private const APPLE_ERROR_RESPONSE_CODE = 0;
+
     private const APPLE_SUCCESS_RESPONSE_CODE = 1;
 
     public function __construct(
@@ -68,7 +71,7 @@ final class OrderController extends BaseOrderController
         ResourceDeleteHandlerInterface $resourceDeleteHandler,
         private ApplePayPaymentProvider $applePayPaymentProvider,
         private LockFactory $lockFactory,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
     ) {
         parent::__construct(
             $metadata,
@@ -87,7 +90,7 @@ final class OrderController extends BaseOrderController
             $eventDispatcher,
             $stateMachine,
             $resourceUpdateHandler,
-            $resourceDeleteHandler
+            $resourceDeleteHandler,
         );
     }
 
@@ -124,7 +127,7 @@ final class OrderController extends BaseOrderController
 
             $postEventResponse = $postEvent->getResponse();
 
-            if (null !== $postEventResponse) {
+            if ($postEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
                 return $postEventResponse;
             }
 
@@ -132,7 +135,7 @@ final class OrderController extends BaseOrderController
 
             $initializeEventResponse = $initializeEvent->getResponse();
 
-            if (null !== $initializeEventResponse) {
+            if ($initializeEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
                 return $initializeEventResponse;
             }
 
@@ -159,7 +162,7 @@ final class OrderController extends BaseOrderController
             ]);
 
             return new JsonResponse([], Response::HTTP_BAD_REQUEST);
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             try {
                 $this->applePayPaymentProvider->cancel($resource);
             } catch (\Throwable $throwable) {
@@ -217,7 +220,7 @@ final class OrderController extends BaseOrderController
             if (PaymentInterface::STATE_COMPLETED !== $lastPayment->getState()) {
                 throw new PaymentNotCompletedException();
             }
-        } catch (\Exception|PaymentNotCompletedException $exception) {
+        } catch (\Exception | PaymentNotCompletedException $exception) {
             try {
                 $this->applePayPaymentProvider->cancel($resource);
             } catch (\Throwable $throwable) {
@@ -246,7 +249,7 @@ final class OrderController extends BaseOrderController
 
         $postEventResponse = $postEvent->getResponse();
 
-        if (null !== $postEventResponse) {
+        if ($postEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
             return $postEventResponse;
         }
 
@@ -254,7 +257,7 @@ final class OrderController extends BaseOrderController
 
         $initializeEventResponse = $initializeEvent->getResponse();
 
-        if (null !== $initializeEventResponse) {
+        if ($initializeEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
             return $initializeEventResponse;
         }
 
@@ -292,7 +295,7 @@ final class OrderController extends BaseOrderController
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
 
-        $lock = $this->lockFactory->createLock('apple_pay_cancel'.$resource->getId());
+        $lock = $this->lockFactory->createLock('apple_pay_cancel' . $resource->getId());
         $lock->acquire(true);
 
         /** @var ResourceControllerEvent $event */
@@ -318,7 +321,7 @@ final class OrderController extends BaseOrderController
 
             $postEventResponse = $postEvent->getResponse();
 
-            if (null !== $postEventResponse) {
+            if ($postEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
                 return $postEventResponse;
             }
 
@@ -326,7 +329,7 @@ final class OrderController extends BaseOrderController
 
             $initializeEventResponse = $initializeEvent->getResponse();
 
-            if (null !== $initializeEventResponse) {
+            if ($initializeEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
                 return $initializeEventResponse;
             }
 

@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class IsOneyEnabledValidator extends ConstraintValidator
 {
-    /** @var PayPlugApiClientFactory */
-    private $apiClientFactory;
-
-    public function __construct(PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
     {
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function validate($value, Constraint $constraint): void
@@ -66,7 +62,7 @@ final class IsOneyEnabledValidator extends ConstraintValidator
                 $this->context->buildViolation($constraint->message)
                     ->addViolation();
             }
-        } catch (UnauthorizedException $exception) {
+        } catch (UnauthorizedException) {
             // do nothing, this should be handle by IsPayPlugSecretKeyValid Constraint
             return;
         }

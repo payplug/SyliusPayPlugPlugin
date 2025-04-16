@@ -19,7 +19,7 @@ final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsReso
     public function __construct(
         #[AutowireDecorated]
         private PaymentMethodsResolverInterface $decorated,
-        private SupportedMethodsProvider $supportedMethodsProvider
+        private SupportedMethodsProvider $supportedMethodsProvider,
     ) {
     }
 
@@ -32,7 +32,7 @@ final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsReso
             $supportedMethods,
             PayPlugGatewayFactory::FACTORY_NAME,
             PayPlugGatewayFactory::AUTHORIZED_CURRENCIES,
-            $subject->getAmount() ?? 0
+            $subject->getAmount() ?? 0,
         );
     }
 

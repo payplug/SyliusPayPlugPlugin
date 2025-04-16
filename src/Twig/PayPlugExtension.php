@@ -12,23 +12,17 @@ use Twig\TwigFunction;
 
 final class PayPlugExtension extends AbstractExtension
 {
-    /** @var CanSaveCardCheckerInterface */
-    private $canSaveCardChecker;
-    private PayPlugApiClientFactory $apiClientFactory;
-
     public function __construct(
-        CanSaveCardCheckerInterface $canSaveCardChecker,
-        PayPlugApiClientFactory $apiClientFactory,
+        private CanSaveCardCheckerInterface $canSaveCardChecker,
+        private PayPlugApiClientFactory $apiClientFactory,
     ) {
-        $this->canSaveCardChecker = $canSaveCardChecker;
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('is_save_card_enabled', [$this, 'isSaveCardAllowed']),
-            new TwigFunction('is_payplug_test_mode_enabled', [$this, 'isTest']),
+            new TwigFunction('is_save_card_enabled', $this->isSaveCardAllowed(...)),
+            new TwigFunction('is_payplug_test_mode_enabled', $this->isTest(...)),
         ];
     }
 
@@ -41,6 +35,6 @@ final class PayPlugExtension extends AbstractExtension
     {
         $client = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
 
-        return ((bool) $client->getAccount()['is_live']) !== true;
+        return !(bool) $client->getAccount()['is_live'];
     }
 }

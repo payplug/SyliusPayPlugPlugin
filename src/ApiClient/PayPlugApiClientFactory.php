@@ -10,18 +10,10 @@ use Symfony\Contracts\Cache\CacheInterface;
 
 final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
 {
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $gatewayConfigRepository;
-
-    /** @var CacheInterface */
-    private $cache;
-
     public function __construct(
-        RepositoryInterface $gatewayConfigRepository,
-        CacheInterface $cache
+        private RepositoryInterface $gatewayConfigRepository,
+        private CacheInterface $cache,
     ) {
-        $this->gatewayConfigRepository = $gatewayConfigRepository;
-        $this->cache = $cache;
     }
 
     public function create(string $factoryName, ?string $key = null): PayPlugApiClientInterface
@@ -31,7 +23,7 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
             $gatewayConfig = $this->gatewayConfigRepository->findOneBy(['factoryName' => $factoryName]);
 
             if (null === $gatewayConfig) {
-                throw new \LogicException('Not yet gateway created for '.$factoryName);
+                throw new \LogicException('Not yet gateway created for ' . $factoryName);
             }
             $key = $gatewayConfig->getConfig()['secretKey'];
         }

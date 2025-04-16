@@ -26,7 +26,7 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
         TranslatorInterface $translator,
         RepositoryInterface $refundPaymentRepository,
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        PayPlugApiClientFactoryInterface $apiClientFactory
+        PayPlugApiClientFactoryInterface $apiClientFactory,
     ): void {
         $this->beConstructedWith(
             $requestStack,
@@ -34,7 +34,7 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
             $translator,
             $refundPaymentRepository,
             $payplugRefundHistoryRepository,
-            $apiClientFactory
+            $apiClientFactory,
         );
     }
 
@@ -51,7 +51,7 @@ final class RefundPaymentProcessorSpec extends ObjectBehavior
     public function it_processes(
         PaymentInterface $payment,
         PaymentMethodInterface $paymentMethod,
-        GatewayConfigInterface $gatewayConfig
+        GatewayConfigInterface $gatewayConfig,
     ): void {
         $gatewayConfig->getFactoryName()->willReturn(PayPlugGatewayFactory::FACTORY_NAME);
         $gatewayConfig->getConfig()->willReturn([

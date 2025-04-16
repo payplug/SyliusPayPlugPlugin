@@ -11,11 +11,8 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 
 class OneySupportedPaymentChoiceProvider
 {
-    private PaymentMethodRepositoryInterface $paymentMethodRepository;
-
-    public function __construct(PaymentMethodRepositoryInterface $paymentMethodRepository)
+    public function __construct(private PaymentMethodRepositoryInterface $paymentMethodRepository)
     {
-        $this->paymentMethodRepository = $paymentMethodRepository;
     }
 
     public function getSupportedPaymentChoices(bool $useOneyPrefix = false): array
@@ -29,12 +26,8 @@ class OneySupportedPaymentChoiceProvider
                 return $values;
             }
 
-            $values = array_map(function ($data): string {
-                return 'oney_'.$data;
-            }, $values);
-
-            return $values;
-        } catch (\Exception $exception) {
+            return array_map(fn ($data): string => 'oney_' . $data, $values);
+        } catch (\Exception) {
             return [];
         }
     }

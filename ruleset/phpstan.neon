@@ -4,25 +4,22 @@ includes:
 parameters:
     level: max
     reportUnmatchedIgnoredErrors: false
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
+    paths:
+        - ../src
     bootstrapFiles:
         - ../vendor/autoload.php
     excludePaths:
         # Makes PHPStan crash
-        - ../src/DependencyInjection/Configuration.php
-        - ../src/Repository/PaymentMethodRepository.php
-        - ../src/Migrations/
-        - ../src/Entity/
-        - ../tests/PHPUnit
-        - ../src/Manager/SettingsManager.php
-        - ../src/Form/Type/SettingsType.php
+        - ../src/DependencyInjection/
+        - ../migrations
 
         # Test dependencies
-        - ../tests/Application
+        - ../tests/Application?
         - ../tests/PHPUnit
         - ../install
     ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
         # ignore false positive
         - '#Access to an undefined property Payplug\\Resource\\[a-zA-Z0-9]+::\$#'
         - '#Call to static method getSimulations\(\) on an unknown class Payplug\\OneySimulation.#'

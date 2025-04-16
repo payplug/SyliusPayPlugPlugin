@@ -37,7 +37,7 @@ final class ManagingPaymentMethodContext implements Context
         foreach ($fields as $field) {
             Assert::true($this->createPage->containsErrorWithMessage(sprintf(
                 'The %s cannot be empty.',
-                strtolower(trim($field))
+                strtolower(trim($field)),
             )));
         }
     }

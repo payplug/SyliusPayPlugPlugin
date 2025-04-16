@@ -26,10 +26,6 @@ class AbstractGatewayConfigurationType extends AbstractType
 {
     public const VALIDATION_GROUPS = ['Default', 'sylius'];
 
-    protected TranslatorInterface $translator;
-
-    protected RequestStack $requestStack;
-
     protected string $noTestKeyMessage = '';
 
     protected string $noAccessMessage = '';
@@ -40,16 +36,11 @@ class AbstractGatewayConfigurationType extends AbstractType
 
     protected string $gatewayBaseCurrencyCode = 'EUR';
 
-    private RepositoryInterface $gatewayConfigRepository;
-
     public function __construct(
-        TranslatorInterface $translator,
-        RepositoryInterface $gatewayConfigRepository,
-        RequestStack $requestStack
+        protected TranslatorInterface $translator,
+        private RepositoryInterface $gatewayConfigRepository,
+        protected RequestStack $requestStack,
     ) {
-        $this->translator = $translator;
-        $this->gatewayConfigRepository = $gatewayConfigRepository;
-        $this->requestStack = $requestStack;
     }
 
     /**
@@ -79,7 +70,7 @@ class AbstractGatewayConfigurationType extends AbstractType
                 $this->checkCreationRequirements(
                     $this->gatewayFactoryTitle,
                     $this->gatewayFactoryName,
-                    $event->getForm()
+                    $event->getForm(),
                 );
 
                 /** @phpstan-ignore-next-line */
@@ -101,7 +92,7 @@ class AbstractGatewayConfigurationType extends AbstractType
                             [
                                 '#channel_code#' => $dataFormChannel->getCode(),
                                 '#payment_method#' => $this->gatewayFactoryTitle,
-                            ]
+                            ],
                         );
                         $formChannels->get((string) $key)->addError(new FormError($message));
                         $this->requestStack->getSession()->getFlashBag()->add('error', $message);
@@ -121,7 +112,7 @@ class AbstractGatewayConfigurationType extends AbstractType
     private function checkCreationRequirements(
         string $factoryTitle,
         string $factoryName,
-        FormInterface $form
+        FormInterface $form,
     ): void {
         /** @phpstan-ignore-next-line */
         $paymentMethod = $form->getParent()->getParent()->getData();

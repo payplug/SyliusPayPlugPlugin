@@ -28,7 +28,7 @@ final class CardController extends AbstractController
         #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
         private PayPlugApiClientInterface $payPlugApiClient,
         private RequestStack $requestStack,
-        private ManagerRegistry $managerRegistry
+        private ManagerRegistry $managerRegistry,
     ) {
     }
 
@@ -62,7 +62,7 @@ final class CardController extends AbstractController
             return $this->redirectToRoute('payplug_sylius_card_account_index');
         }
 
-        if (true === $this->isCardExpired($card)) {
+        if ($this->isCardExpired($card)) {
             $this->removeCard($card);
 
             return $this->redirectToRoute('payplug_sylius_card_account_index');
@@ -72,7 +72,7 @@ final class CardController extends AbstractController
 
         try {
             $this->payPlugApiClient->deleteCard($cardToken);
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_error'));
 
             return $this->redirectToRoute('payplug_sylius_card_account_index');
@@ -98,13 +98,6 @@ final class CardController extends AbstractController
         $currentYear = $now->format('Y');
         $expirationYear = (string) $card->getExpirationYear();
 
-        if (
-            ($currentYear < $expirationYear) ||
-            ($currentYear === $expirationYear && $now->format('n') <= (string) $card->getExpirationMonth())
-        ) {
-            return false;
-        }
-
-        return true;
+        return $currentYear >= $expirationYear && !($currentYear === $expirationYear && $now->format('n') <= (string) $card->getExpirationMonth());
     }
 }

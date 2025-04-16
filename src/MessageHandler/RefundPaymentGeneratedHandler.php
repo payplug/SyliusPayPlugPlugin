@@ -18,7 +18,6 @@ use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
-use SM\Factory\FactoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -36,6 +35,8 @@ use Webmozart\Assert\Assert;
 
 final class RefundPaymentGeneratedHandler
 {
+    public $stateMachineFactory;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private PaymentRepositoryInterface $paymentRepository,
@@ -46,7 +47,7 @@ final class RefundPaymentGeneratedHandler
         private LoggerInterface $logger,
         private RequestStack $requestStack,
         private OrderRepositoryInterface $orderRepository,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
     ) {
     }
 
@@ -76,9 +77,10 @@ final class RefundPaymentGeneratedHandler
             }
 
             $refundHistory = $this->payplugRefundHistoryRepository->findLastRefundForPayment($payment);
-            if ($refundHistory instanceof RefundHistory &&
+            if (
+                $refundHistory instanceof RefundHistory &&
                 null !== $refundHistory->getExternalId() &&
-                null === $refundHistory->getRefundPayment()
+                !$refundHistory->getRefundPayment() instanceof \Sylius\RefundPlugin\Entity\RefundPayment
             ) {
                 /** @var RefundPayment $refundPayment */
                 $refundPayment = $this->refundPaymentRepository->find($message->id());
@@ -136,7 +138,7 @@ final class RefundPaymentGeneratedHandler
 
             return $this->isLessThanFortyEightHours(
                 $order->getLastPayment()->getCreatedAt(),
-                $now
+                $now,
             );
         }
 
@@ -146,7 +148,7 @@ final class RefundPaymentGeneratedHandler
 
         return $this->isLessThanFortyEightHours(
             $refundHistory->getCreatedAt(),
-            $now
+            $now,
         );
     }
 
@@ -161,13 +163,15 @@ final class RefundPaymentGeneratedHandler
 
     private function checkOneyRequirements(
         PaymentInterface $payment,
-        RefundPaymentGenerated $message
+        RefundPaymentGenerated $message,
     ): void {
         Assert::isInstanceOf($payment->getMethod(), PaymentMethodInterface::class);
         Assert::isInstanceOf($payment->getMethod()->getGatewayConfig(), GatewayConfigInterface::class);
 
-        if (OneyGatewayFactory::FACTORY_NAME === $payment->getMethod()->getGatewayConfig()->getFactoryName() &&
-            $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())) {
+        if (
+            OneyGatewayFactory::FACTORY_NAME === $payment->getMethod()->getGatewayConfig()->getFactoryName() &&
+            $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())
+        ) {
             throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours'));
         }
     }

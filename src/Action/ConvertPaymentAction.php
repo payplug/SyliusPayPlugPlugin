@@ -16,12 +16,8 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
 {
     use ApiAwareTrait;
 
-    private PayPlugPaymentDataCreator $paymentDataCreator;
-
-    public function __construct(
-        PayPlugPaymentDataCreator $paymentDataCreator
-    ) {
-        $this->paymentDataCreator = $paymentDataCreator;
+    public function __construct(private PayPlugPaymentDataCreator $paymentDataCreator)
+    {
     }
 
     public function execute($request): void

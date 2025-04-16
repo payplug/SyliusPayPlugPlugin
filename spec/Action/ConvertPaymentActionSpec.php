@@ -20,7 +20,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 final class ConvertPaymentActionSpec extends ObjectBehavior
 {
     public function let(
-        PayPlugPaymentDataCreator $paymentDataCreator
+        PayPlugPaymentDataCreator $paymentDataCreator,
     ): void {
         $this->beConstructedWith($paymentDataCreator);
     }
@@ -41,7 +41,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         OrderInterface $order,
         CustomerInterface $customer,
         AddressInterface $address,
-        PayPlugPaymentDataCreator $paymentDataCreator
+        PayPlugPaymentDataCreator $paymentDataCreator,
     ): void {
         $this->setApi(new PayPlugApiClient('test', PayPlugGatewayFactory::FACTORY_NAME));
 
@@ -111,7 +111,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         CustomerInterface $customer,
         AddressInterface $address,
         AddressInterface $otherAddress,
-        PayPlugPaymentDataCreator $paymentDataCreator
+        PayPlugPaymentDataCreator $paymentDataCreator,
     ): void {
         $this->setApi(new PayPlugApiClient('test', PayPlugGatewayFactory::FACTORY_NAME));
 
@@ -177,7 +177,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
 
     public function it_supports_only_convert_request_payment_source_and_array_to(
         Convert $request,
-        PaymentInterface $payment
+        PaymentInterface $payment,
     ): void {
         $request->getSource()->willReturn($payment);
         $request->getTo()->willReturn('array');
@@ -229,7 +229,7 @@ final class ConvertPaymentActionSpec extends ObjectBehavior
         OrderInterface $order,
         CustomerInterface $customer,
         AddressInterface $billingAddress,
-        AddressInterface $shippingAddress
+        AddressInterface $shippingAddress,
     ) {
         $order->getCustomer()->willReturn($customer);
         $order->getBillingAddress()->willReturn($billingAddress);

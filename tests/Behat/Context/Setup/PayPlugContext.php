@@ -36,7 +36,7 @@ final class PayPlugContext implements Context
         PaymentMethodRepositoryInterface $paymentMethodRepository,
         ExampleFactoryInterface $paymentMethodExampleFactory,
         FactoryInterface $paymentMethodTranslationFactory,
-        ObjectManager $paymentMethodManager
+        ObjectManager $paymentMethodManager,
     ) {
         $this->sharedStorage = $sharedStorage;
         $this->paymentMethodRepository = $paymentMethodRepository;
@@ -48,13 +48,15 @@ final class PayPlugContext implements Context
     /**
      * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode and PayPlug payment gateway
      */
-    public function theStoreHasAPaymentMethodWithACodeAndPayPlugPaymentGateway(string $paymentMethodName, string $paymentMethodCode): void
-    {
+    public function theStoreHasAPaymentMethodWithACodeAndPayPlugPaymentGateway(
+        string $paymentMethodName,
+        string $paymentMethodCode,
+    ): void {
         $paymentMethod = $this->createPaymentMethodPayPlug(
             $paymentMethodName,
             $paymentMethodCode,
             PayPlugGatewayFactory::FACTORY_NAME,
-            'PayPlug'
+            'PayPlug',
         );
 
         $paymentMethod->getGatewayConfig()->setConfig([
@@ -68,13 +70,15 @@ final class PayPlugContext implements Context
     /**
      * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode and Oney payment gateway
      */
-    public function theStoreHasAPaymentMethodWithACodeAndOneyPaymentGateway(string $paymentMethodName, string $paymentMethodCode): void
-    {
+    public function theStoreHasAPaymentMethodWithACodeAndOneyPaymentGateway(
+        string $paymentMethodName,
+        string $paymentMethodCode,
+    ): void {
         $paymentMethod = $this->createPaymentMethodPayPlug(
             $paymentMethodName,
             $paymentMethodCode,
             OneyGatewayFactory::FACTORY_NAME,
-            'Oney'
+            'Oney',
         );
 
         $paymentMethod->getGatewayConfig()->setConfig([
@@ -88,13 +92,15 @@ final class PayPlugContext implements Context
     /**
      * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode other than PayPlug payment gateway
      */
-    public function theStoreHasAPaymentMethodWithACodeOtherThanPayplugPaymentGateway(string $paymentMethodName, string $paymentMethodCode): void
-    {
+    public function theStoreHasAPaymentMethodWithACodeOtherThanPayplugPaymentGateway(
+        string $paymentMethodName,
+        string $paymentMethodCode,
+    ): void {
         $this->createPaymentMethodPayPlug(
             $paymentMethodName,
             $paymentMethodCode,
             $paymentMethodCode,
-            ''
+            '',
         );
 
         $this->paymentMethodManager->flush();
@@ -106,7 +112,7 @@ final class PayPlugContext implements Context
         string $factoryName,
         string $description = '',
         bool $addForCurrentChannel = true,
-        int $position = null
+        int $position = null,
     ): PaymentMethodInterface {
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $this->paymentMethodExampleFactory->create([

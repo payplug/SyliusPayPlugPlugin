@@ -18,10 +18,12 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class PaymentStateResolver implements PaymentStateResolverInterface
 {
+    public $stateMachineFactory;
+
     public function __construct(
         #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
         private PayPlugApiClientInterface $payPlugApiClient,
-        private EntityManagerInterface $paymentEntityManager
+        private EntityManagerInterface $paymentEntityManager,
     ) {
     }
 
@@ -30,8 +32,10 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $payment->getMethod();
 
-        if (!$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()) {
+        if (
+            !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
+            PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()
+        ) {
             return;
         }
 
@@ -79,13 +83,7 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
     private function isAuthorized(Payment $payment): bool
     {
         $now = new \DateTimeImmutable();
-        if ($payment->__isset('authorization') &&
-            $payment->__get('authorization') instanceof PaymentAuthorization &&
-            null !== $payment->__get('authorization')->__get('expires_at') &&
-            $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'))) {
-            return true;
-        }
 
-        return false;
+        return $payment->__isset('authorization') && $payment->__get('authorization') instanceof PaymentAuthorization && null !== $payment->__get('authorization')->__get('expires_at') && $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'));
     }
 }

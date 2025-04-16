@@ -25,37 +25,29 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
-use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 class PayPlugPaymentDataCreator
 {
     private const DELIVERY_TYPE_BILLING = 'BILLING';
+
     private const DELIVERY_TYPE_NEW = 'NEW';
+
     private const PAYPLUG_CARD_ID_OTHER = 'other';
 
-    private CanSaveCardCheckerInterface $canSaveCardChecker;
-    private RepositoryInterface $payplugCardRepository;
-    private RequestStack $requestStack;
-    private PayplugFeatureChecker $payplugFeatureChecker;
-
     public function __construct(
-        CanSaveCardCheckerInterface $canSaveCard,
-        RepositoryInterface $payplugCardRepository,
-        RequestStack $requestStack,
-        PayplugFeatureChecker $payplugFeatureChecker,
+        private CanSaveCardCheckerInterface $canSaveCardChecker,
+        private RepositoryInterface $payplugCardRepository,
+        private RequestStack $requestStack,
+        private PayplugFeatureChecker $payplugFeatureChecker,
     ) {
-        $this->canSaveCardChecker = $canSaveCard;
-        $this->payplugCardRepository = $payplugCardRepository;
-        $this->requestStack = $requestStack;
-        $this->payplugFeatureChecker = $payplugFeatureChecker;
     }
 
     public function create(
         PaymentInterface $payment,
         string $gatewayFactoryName,
-        array $context = []
+        array $context = [],
     ): ArrayObject {
         /** @var OrderInterface $order */
         $order = $payment->getOrder();
@@ -90,8 +82,10 @@ class PayPlugPaymentDataCreator
 
         $paymentMethod = $payment->getMethod();
 
-        if (PayPlugGatewayFactory::FACTORY_NAME === $gatewayFactoryName &&
-            $paymentMethod instanceof PaymentMethodInterface) {
+        if (
+            PayPlugGatewayFactory::FACTORY_NAME === $gatewayFactoryName &&
+            $paymentMethod instanceof PaymentMethodInterface
+        ) {
             $details['allow_save_card'] = false;
             $details = $this->alterPayPlugDetailsForOneClick($paymentMethod, $details);
             $details = $this->alterPayPlugDetailsForDeferredCapture($paymentMethod, $details);
@@ -155,7 +149,7 @@ class PayPlugPaymentDataCreator
     private function loadPhoneNumbers(
         ?array $phoneData,
         ?string &$mobilePhone = null,
-        ?string &$landingPhone = null
+        ?string &$landingPhone = null,
     ): void {
         if (null === $phoneData) {
             return;
@@ -175,12 +169,12 @@ class PayPlugPaymentDataCreator
         AddressInterface $billing,
         CustomerInterface $customer,
         OrderInterface $order,
-        ArrayObject &$details
+        ArrayObject &$details,
     ): void {
         //Sylius does not require any phone number so we have to considere it null
         $billingPhone = null !== $billing->getPhoneNumber() ? $this->formatNumber(
             $billing->getPhoneNumber(),
-            $billing->getCountryCode()
+            $billing->getCountryCode(),
         ) : null;
         $this->loadPhoneNumbers($billingPhone, $billingMobilePhone, $billingLandingPhone);
 
@@ -207,11 +201,11 @@ class PayPlugPaymentDataCreator
         CustomerInterface $customer,
         OrderInterface $order,
         string $deliveryType,
-        ArrayObject &$details
+        ArrayObject &$details,
     ): void {
         $shippingPhone = null !== $shipping->getPhoneNumber() ? $this->formatNumber(
             $shipping->getPhoneNumber(),
-            $shipping->getCountryCode()
+            $shipping->getCountryCode(),
         ) : null;
         $this->loadPhoneNumbers($shippingPhone, $shippingMobilePhone, $shippingLandingPhone);
 
@@ -234,8 +228,10 @@ class PayPlugPaymentDataCreator
         ];
     }
 
-    private function alterPayPlugDetailsForOneClick(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
-    {
+    private function alterPayPlugDetailsForOneClick(
+        PaymentMethodInterface $paymentMethod,
+        ArrayObject $details,
+    ): ArrayObject {
         if (!$this->canSaveCardChecker->isAllowed($paymentMethod)) {
             return $details;
         }
@@ -243,9 +239,11 @@ class PayPlugPaymentDataCreator
         /** @var string|null $cardId */
         $cardId = $this->requestStack->getSession()->get('payplug_payment_method');
 
-        if ((null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
-            $paymentMethod
-        )) {
+        if (
+            (null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
+                $paymentMethod,
+            )
+        ) {
             $details['allow_save_card'] = true;
 
             return $details;
@@ -267,8 +265,10 @@ class PayPlugPaymentDataCreator
         return $details;
     }
 
-    private function alterPayPlugDetailsForDeferredCapture(PaymentMethodInterface $paymentMethod, ArrayObject $details): ArrayObject
-    {
+    private function alterPayPlugDetailsForDeferredCapture(
+        PaymentMethodInterface $paymentMethod,
+        ArrayObject $details,
+    ): ArrayObject {
         if (!$this->payplugFeatureChecker->isDeferredCaptureEnabled($paymentMethod)) {
             return $details;
         }
@@ -307,7 +307,7 @@ class PayPlugPaymentDataCreator
         $shipment = $order->getShipments()->current();
 
         $expectedDeliveryDate = (new DateTime())->add(new DateInterval('P7D'))->format('Y-m-d');
-        $deliveryType = $this->retrieveDeliveryType($shipment);
+        $deliveryType = $this->retrieveDeliveryType();
         $data = [];
 
         foreach ($order->getItems() as $orderItem) {
@@ -318,7 +318,7 @@ class PayPlugPaymentDataCreator
                 'merchant_item_id' => (null !== $orderItem->getVariant()) ? $orderItem->getVariant()->getCode(
                 ) : 'none',
                 'brand' => $orderItem->getProductName(),
-                'name' => $orderItem->getProductName().' '.$orderItem->getVariantName(),
+                'name' => $orderItem->getProductName() . ' ' . $orderItem->getVariantName(),
                 'total_amount' => $orderItem->getTotal(),
                 'price' => $orderItem->getUnitPrice(),
                 'quantity' => $orderItem->getQuantity(),
@@ -331,7 +331,7 @@ class PayPlugPaymentDataCreator
     /**
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    private function retrieveDeliveryType(ShipmentInterface $shipment): string
+    private function retrieveDeliveryType(): string
     {
         // Possible delivery type : [storepickup, networkpickup, travelpickup, carrier, edelivery]
         return 'storepickup';

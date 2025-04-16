@@ -23,7 +23,7 @@ final class UpdatePaymentStateCommand extends Command
     public function __construct(
         private PaymentRepositoryInterface $paymentRepository,
         private PaymentStateResolverInterface $paymentStateResolver,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
     ) {
         parent::__construct();
     }

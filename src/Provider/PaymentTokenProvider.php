@@ -14,9 +14,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 final class PaymentTokenProvider
 {
     public function __construct(
-        Payum $payum,
+        private Payum $payum,
         #[Autowire('sylius_shop_order_after_pay')]
-        string $afterPayRoute
+        private string $afterPayRoute,
     ) {
     }
 
@@ -36,14 +36,14 @@ final class PaymentTokenProvider
             return $tokenFactory->createAuthorizeToken(
                 $gatewayConfig->getGatewayName(),
                 $payment,
-                $this->afterPayRoute
+                $this->afterPayRoute,
             );
         }
 
         return $tokenFactory->createCaptureToken(
             $gatewayConfig->getGatewayName(),
             $payment,
-            $this->afterPayRoute
+            $this->afterPayRoute,
         );
     }
 }

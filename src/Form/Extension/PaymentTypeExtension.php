@@ -23,26 +23,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PaymentTypeExtension extends AbstractTypeExtension
 {
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
-    private $translator;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker */
-    private $orderChecker;
-
-    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
-
-    private RequestStack $requestStack;
-
     public function __construct(
-        RequestStack $requestStack,
-        TranslatorInterface $translator,
-        OneyOrderChecker $orderChecker,
-        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        private RequestStack $requestStack,
+        private TranslatorInterface $translator,
+        private OneyOrderChecker $orderChecker,
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider,
     ) {
-        $this->requestStack = $requestStack;
-        $this->translator = $translator;
-        $this->orderChecker = $orderChecker;
-        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     /**
@@ -50,7 +36,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
      */
     public function buildForm(
         FormBuilderInterface $builder,
-        array $options
+        array $options,
     ): void {
         $builder
             ->add('oney_payment_choice', ChoiceType::class, [
@@ -79,8 +65,10 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     return;
                 }
 
-                if (PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() &&
-                    (false === $event->getForm()->has('payplug_card_choice') || null === $event->getForm()->get('payplug_card_choice')->getData())) {
+                if (
+                    PayPlugGatewayFactory::FACTORY_NAME === $paymentMethod->getGatewayConfig()->getFactoryName() &&
+                    (false === $event->getForm()->has('payplug_card_choice') || null === $event->getForm()->get('payplug_card_choice')->getData())
+                ) {
                     return;
                 }
 
@@ -91,8 +79,10 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     return;
                 }
 
-                if (OneyGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName() ||
-                    false === $event->getForm()->has('oney_payment_choice')) {
+                if (
+                    OneyGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName() ||
+                    false === $event->getForm()->has('oney_payment_choice')
+                ) {
                     return;
                 }
 
@@ -106,12 +96,12 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                 $errors = [];
                 if (!$this->orderChecker->isOrderInfoCorrect($order)) {
                     $errors[] = new FormError(
-                        $this->translator->trans('payplug_sylius_payplug_plugin.form.oney_error')
+                        $this->translator->trans('payplug_sylius_payplug_plugin.form.oney_error'),
                     );
                 }
                 // Possible other checks here
 
-                if (\count($errors) > 0) {
+                if ($errors !== []) {
                     \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->get('method')->addError($error);
                     });

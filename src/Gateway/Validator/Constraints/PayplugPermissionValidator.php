@@ -6,7 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
-use PayPlug\SyliusPayPlugPlugin\Checker\PermissionCanSaveCardsChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -15,11 +14,8 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 final class PayplugPermissionValidator extends ConstraintValidator
 {
-    private PayPlugApiClientFactory $apiClientFactory;
-
-    public function __construct(PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
     {
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function validate(mixed $value, Constraint $constraint): void
@@ -53,7 +49,7 @@ final class PayplugPermissionValidator extends ConstraintValidator
             }
 
             return;
-        } catch (UnauthorizedException|\LogicException $exception) {
+        } catch (UnauthorizedException | \LogicException) {
             return;
         }
     }

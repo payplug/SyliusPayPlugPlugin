@@ -23,16 +23,16 @@ final class OneySimulationExtension extends AbstractExtension
         private OneySimulationDataProviderInterface $oneySimulationDataProvider,
         private RequestStack $requestStack,
         private OrderRepositoryInterface $orderRepository,
-        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider,
     ) {
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('oney_simulation_data', [$this, 'getSimulationData']),
-            new TwigFunction('oney_supported_choices', [$this, 'getSupportedPaymentChoices']),
-            new TwigFunction('is_oney_without_fees', [$this, 'isPaymentChoiceWithoutFees']),
+            new TwigFunction('oney_simulation_data', $this->getSimulationData(...)),
+            new TwigFunction('oney_supported_choices', $this->getSupportedPaymentChoices(...)),
+            new TwigFunction('is_oney_without_fees', $this->isPaymentChoiceWithoutFees(...)),
         ];
     }
 
@@ -71,9 +71,9 @@ final class OneySimulationExtension extends AbstractExtension
 
     public function isPaymentChoiceWithoutFees(): bool
     {
-        return \count(\array_filter(
+        return \array_filter(
             $this->getSupportedPaymentChoices(),
-            fn (string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true)
-        )) > 0;
+            fn (string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true),
+        ) !== [];
     }
 }

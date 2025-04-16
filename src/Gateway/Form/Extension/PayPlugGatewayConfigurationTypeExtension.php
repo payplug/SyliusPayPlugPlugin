@@ -18,11 +18,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtension
 {
-    private TranslatorInterface $translator;
-
-    public function __construct(TranslatorInterface $translator)
+    public function __construct(private TranslatorInterface $translator)
     {
-        $this->translator = $translator;
     }
 
     /**

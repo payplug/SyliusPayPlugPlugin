@@ -17,12 +17,8 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
  */
 final class IsPayPlugSecretKeyValidator extends ConstraintValidator
 {
-    /** @var PayPlugApiClientFactory */
-    private $apiClientFactory;
-
-    public function __construct(PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
     {
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function validate($value, Constraint $constraint): void
@@ -42,7 +38,7 @@ final class IsPayPlugSecretKeyValidator extends ConstraintValidator
             \Payplug\Authentication::getPermissions();
             $apiClient = $this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $value);
             $apiClient->getAccount(true);
-        } catch (UnauthorizedException $exception) {
+        } catch (UnauthorizedException) {
             $this->context->buildViolation($constraint->message)
                 ->addViolation();
         }

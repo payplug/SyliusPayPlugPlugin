@@ -17,22 +17,13 @@ use Webmozart\Assert\Assert;
 
 abstract class AbstractSupportedRefundPaymentMethodsProvider
 {
-    protected RefundPaymentMethodsProviderInterface $decorated;
-
-    protected RequestStack $requestStack;
-
-    protected OrderRepositoryInterface $orderRepository;
-
     protected string $gatewayFactoryName = '';
 
     public function __construct(
-        RefundPaymentMethodsProviderInterface $decorated,
-        RequestStack $requestStack,
-        OrderRepositoryInterface $orderRepository
+        protected RefundPaymentMethodsProviderInterface $decorated,
+        protected RequestStack $requestStack,
+        protected OrderRepositoryInterface $orderRepository,
     ) {
-        $this->decorated = $decorated;
-        $this->requestStack = $requestStack;
-        $this->orderRepository = $orderRepository;
     }
 
     public function findForChannel(ChannelInterface $channel): array
@@ -119,10 +110,6 @@ abstract class AbstractSupportedRefundPaymentMethodsProvider
             return false;
         }
 
-        if ($this->gatewayFactoryName !== $gatewayConfig->getFactoryName()) {
-            return false;
-        }
-
-        return true;
+        return $this->gatewayFactoryName === $gatewayConfig->getFactoryName();
     }
 }

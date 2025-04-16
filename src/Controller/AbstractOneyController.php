@@ -33,7 +33,7 @@ abstract class AbstractOneyController extends AbstractController
         protected FactoryInterface $orderItemFactory,
         protected OrderModifierInterface $orderModifier,
         protected OrderItemQuantityModifierInterface $itemQuantityModifier,
-        protected OneyRulesExtension $oneyRulesExtension
+        protected OneyRulesExtension $oneyRulesExtension,
     ) {
     }
 
@@ -42,7 +42,7 @@ abstract class AbstractOneyController extends AbstractController
         int $quantity,
         ChannelInterface $channel,
         string $localeCode,
-        string $currencyCode
+        string $currencyCode,
     ): OrderInterface {
         /** @var OrderInterface $tempCart */
         $tempCart = $this->orderFactory->createNew();

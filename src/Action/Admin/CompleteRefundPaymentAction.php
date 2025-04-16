@@ -33,7 +33,7 @@ final class CompleteRefundPaymentAction
         private RouterInterface $router,
         private MessageBusInterface $messageBus,
         private RelatedPaymentIdProviderInterface $relatedPaymentIdProvider,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
     ) {
     }
 
@@ -52,20 +52,20 @@ final class CompleteRefundPaymentAction
                 $refundPayment->getAmount(),
                 $refundPayment->getCurrencyCode(),
                 $refundPayment->getPaymentMethod()->getId(),
-                $this->relatedPaymentIdProvider->getForRefundPayment($refundPayment)
+                $this->relatedPaymentIdProvider->getForRefundPayment($refundPayment),
             ));
 
             if (self::COMPLETED_STATE !== $refundPayment->getState()) {
                 $this->refundPaymentCompletedStateApplier->apply($refundPayment);
             }
             $this->requestStack->getSession()->getFlashBag()->add('success', 'sylius_refund.refund_payment_completed');
-        } catch (Throwable $throwable) {
+        } catch (Throwable) {
             $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.impossible_to_refund_this_payment'));
         }
 
         return new RedirectResponse($this->router->generate(
             'sylius_admin_order_show',
-            ['id' => $order->getId()]
+            ['id' => $order->getId()],
         ));
     }
 }

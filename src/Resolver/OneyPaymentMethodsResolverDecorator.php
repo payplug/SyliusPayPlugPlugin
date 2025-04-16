@@ -24,7 +24,7 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
         #[AutowireDecorated]
         private PaymentMethodsResolverInterface $decorated,
         private CurrencyContextInterface $currencyContext,
-        private OneyCheckerInterface $oneyChecker
+        private OneyCheckerInterface $oneyChecker,
     ) {
     }
 
@@ -56,10 +56,12 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
                 $countryCodeBilling = $order->getBillingAddress()->getCountryCode();
             }
 
-            if (!$this->oneyChecker->isEnabled() ||
+            if (
+                !$this->oneyChecker->isEnabled() ||
                 !$this->oneyChecker->isPriceEligible($subject->getAmount() ?? 0, $activeCurrencyCode) ||
                 !$this->oneyChecker->isNumberOfProductEligible($order->getItemUnits()->count()) ||
-                !$this->oneyChecker->isCountryEligible($countryCodeShipping, $countryCodeBilling)) {
+                !$this->oneyChecker->isCountryEligible($countryCodeShipping, $countryCodeBilling)
+            ) {
                 unset($supportedMethods[$key]);
             }
         }

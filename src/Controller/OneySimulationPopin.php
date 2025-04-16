@@ -34,7 +34,7 @@ final class OneySimulationPopin extends AbstractOneyController
                 [
                     'data' => $simulationData,
                     'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($cart),
-                ]
+                ],
             );
         }
 
@@ -44,7 +44,7 @@ final class OneySimulationPopin extends AbstractOneyController
     private function renderSimulateForProductVariant(
         OrderInterface $cart,
         string $productVariantCode,
-        int $quantity
+        int $quantity,
     ): Response {
         $productVariant = $this->productVariantRepository->findOneBy(['code' => $productVariantCode]);
         Assert::isInstanceOf($productVariant, ProductVariantInterface::class);
@@ -60,7 +60,7 @@ final class OneySimulationPopin extends AbstractOneyController
             $quantity,
             $channel,
             $cart->getLocaleCode(),
-            $cart->getCurrencyCode()
+            $cart->getCurrencyCode(),
         );
 
         $simulationData = $this->oneySimulationDataProvider->getForCart($tempCart);
@@ -70,7 +70,7 @@ final class OneySimulationPopin extends AbstractOneyController
             [
                 'data' => $simulationData,
                 'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($tempCart),
-            ]
+            ],
         );
     }
 }

@@ -56,11 +56,6 @@ final class OneyChecker implements OneyCheckerInterface
 
         $allowedCountries = $this->client->getAccount()['configuration']['oney']['allowed_countries'];
 
-        if (!in_array($shippingCountry, $allowedCountries, true) ||
-            !in_array($billingCountry, $allowedCountries, true)) {
-            return false;
-        }
-
-        return true;
+        return in_array($shippingCountry, $allowedCountries, true) && in_array($billingCountry, $allowedCountries, true);
     }
 }

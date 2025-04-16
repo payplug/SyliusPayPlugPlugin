@@ -49,7 +49,7 @@ final class RefundContext implements Context
         NotifyAction $notifyAction,
         NotificationCheckerInterface $notificationChecker,
         EntityManagerInterface $entityManager,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository
+        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
     ) {
         $this->payPlugApiMocker = $payPlugApiMocker;
         $this->managingOrdersContext = $managingOrdersContext;
@@ -77,7 +77,7 @@ final class RefundContext implements Context
         OrderInterface $order,
         int $unitNumber,
         string $productName,
-        string $paymentMethod
+        string $paymentMethod,
     ): void {
         $this->payPlugApiMocker->mockApiRetrieveNotRefundablePayment(function () use (
             $order,
@@ -127,7 +127,7 @@ final class RefundContext implements Context
     {
         $this->notificationChecker->checkNotification(
             $errorMessage,
-            NotificationType::failure()
+            NotificationType::failure(),
         );
     }
 
@@ -138,7 +138,7 @@ final class RefundContext implements Context
     {
         $this->notificationChecker->checkNotification(
             $successMessage,
-            NotificationType::success()
+            NotificationType::success(),
         );
     }
 
@@ -149,7 +149,7 @@ final class RefundContext implements Context
         OrderInterface $order,
         int $unitNumber,
         string $productName,
-        string $paymentMethod
+        string $paymentMethod,
     ): void {
         $this->payPlugApiMocker->mockApiRetrievePayment(function () use (
             $order,

@@ -30,7 +30,7 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
     public function __construct(
         private PaymentRepositoryInterface $paymentRepository,
         private Payum $payum,
-        private PayPlugApiClientFactory $payPlugApiClientFactory
+        private PayPlugApiClientFactory $payPlugApiClientFactory,
     ) {
     }
 
@@ -51,7 +51,7 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
             $paymentGateway->getGatewayName(),
             $payment,
             'sylius_shop_order_thank_you',
-            []
+            [],
         );
 
         $secretKey = $paymentGateway->getConfig()['secretKey'];
@@ -64,7 +64,8 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
         }
 
         //if both fields authorization and authorized_at are present and filled, the authorization was successful
-        if ($resource->__isset('authorization') &&
+        if (
+            $resource->__isset('authorization') &&
             $resource->__isset('authorized_at') &&
             null !== $resource->__get('authorization') &&
             null !== $resource->__get('authorized_at')

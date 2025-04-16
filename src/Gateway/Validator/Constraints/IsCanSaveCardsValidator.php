@@ -15,16 +15,13 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 /**
  * @Annotation
+ *
  * @deprecated Use PayplugPermission constraint instead
  */
 final class IsCanSaveCardsValidator extends ConstraintValidator
 {
-    /** @var PayPlugApiClientFactory */
-    private $apiClientFactory;
-
-    public function __construct(PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
     {
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function validate($value, Constraint $constraint): void
@@ -42,7 +39,7 @@ final class IsCanSaveCardsValidator extends ConstraintValidator
         $secretKey = $this->context->getRoot()->getData()->getGatewayConfig()->getConfig()['secretKey'];
 
         try {
-            if (true === $value) {
+            if ($value) {
                 $checker = new PermissionCanSaveCardsChecker($this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey));
                 if (false === $checker->isEnabled()) {
                     $this->context->buildViolation($constraint->message)->addViolation();
@@ -50,7 +47,7 @@ final class IsCanSaveCardsValidator extends ConstraintValidator
             }
 
             return;
-        } catch (UnauthorizedException|\LogicException $exception) {
+        } catch (UnauthorizedException | \LogicException) {
             return;
         }
     }

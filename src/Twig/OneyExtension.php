@@ -14,34 +14,18 @@ use Twig\TwigFunction;
 
 final class OneyExtension extends AbstractExtension
 {
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $gatewayConfigRepository;
-
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $paymentMethodRepository;
-
-    /** @var \Sylius\Component\Channel\Context\ChannelContextInterface */
-    private $channelContext;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker */
-    private $oneyChecker;
-
     public function __construct(
-        RepositoryInterface $gatewayConfigRepository,
-        RepositoryInterface $paymentMethodRepository,
-        ChannelContextInterface $channelContext,
-        OneyChecker $oneyChecker
+        private RepositoryInterface $gatewayConfigRepository,
+        private RepositoryInterface $paymentMethodRepository,
+        private ChannelContextInterface $channelContext,
+        private OneyChecker $oneyChecker,
     ) {
-        $this->gatewayConfigRepository = $gatewayConfigRepository;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->channelContext = $channelContext;
-        $this->oneyChecker = $oneyChecker;
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('is_oney_enabled', [$this, 'isOneyEnabled']),
+            new TwigFunction('is_oney_enabled', $this->isOneyEnabled(...)),
         ];
     }
 

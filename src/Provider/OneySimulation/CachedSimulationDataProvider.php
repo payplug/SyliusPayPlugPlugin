@@ -18,7 +18,7 @@ final class CachedSimulationDataProvider implements OneySimulationDataProviderIn
         #[AutowireDecorated]
         private OneySimulationDataProviderInterface $decorated,
         private CacheInterface $cache,
-        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider,
     ) {
     }
 

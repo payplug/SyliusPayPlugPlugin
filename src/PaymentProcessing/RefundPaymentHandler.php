@@ -29,7 +29,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
         private UnitRefundTotalCalculatorInterface $unitRefundTotalCalculator,
         private RemainingTotalProviderInterface $remainingTotalProvider,
         private ObjectRepository $refundPaymentRepository,
-        private RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier
+        private RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier,
     ) {
     }
 
@@ -57,7 +57,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
             $this->parseIdsToUnitRefunds($items, RefundType::orderItemUnit(), OrderItemUnitRefund::class),
             $this->parseIdsToUnitRefunds($shipments, RefundType::shipment(), ShipmentRefund::class),
             $payment->getMethod()->getId(),
-            ''
+            '',
         );
     }
 
@@ -119,7 +119,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
             foreach ($orderItem->getUnits() as $itemUnit) {
                 $items[$itemUnit->getId()] = $this->remainingTotalProvider->getTotalLeftToRefund(
                     $itemUnit->getId(),
-                    RefundType::orderItemUnit()
+                    RefundType::orderItemUnit(),
                 );
             }
         }
@@ -137,7 +137,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
         foreach ($order->getAdjustments(AdjustmentInterface::SHIPPING_ADJUSTMENT) as $shipment) {
             $items[$shipment->getId()] = $this->remainingTotalProvider->getTotalLeftToRefund(
                 $shipment->getId(),
-                RefundType::shipment()
+                RefundType::shipment(),
             );
         }
 

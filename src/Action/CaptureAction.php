@@ -46,30 +46,13 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     /** @var GenericTokenFactoryInterface|null */
     private $tokenFactory;
 
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    private RequestStack $requestStack;
-
-    private AbortPaymentProcessor $abortPaymentProcessor;
-
-    private RepositoryInterface $payplugCardRepository;
-
     public function __construct(
-        LoggerInterface $logger,
-        TranslatorInterface $translator,
-        AbortPaymentProcessor $abortPaymentProcessor,
-        RequestStack $requestStack,
-        RepositoryInterface $payplugCardRepository
+        private LoggerInterface $logger,
+        private TranslatorInterface $translator,
+        private AbortPaymentProcessor $abortPaymentProcessor,
+        private RequestStack $requestStack,
+        private RepositoryInterface $payplugCardRepository,
     ) {
-        $this->logger = $logger;
-        $this->translator = $translator;
-        $this->abortPaymentProcessor = $abortPaymentProcessor;
-        $this->requestStack = $requestStack;
-        $this->payplugCardRepository = $payplugCardRepository;
     }
 
     public function setGenericTokenFactory(GenericTokenFactoryInterface $genericTokenFactory = null): void
@@ -87,16 +70,20 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
 
-        if (isset($details['payment_method']) &&
-            ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY === $details['payment_method']) {
+        if (
+            isset($details['payment_method']) &&
+            ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY === $details['payment_method']
+        ) {
             $this->abortPaymentProcessor->process($paymentModel);
             $details['status'] = PayPlugApiClientInterface::STATUS_CANCELED;
 
             return;
         }
 
-        if (PayPlugApiClientInterface::FAILED === ($details['status'] ?? null) &&
-            PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION === ($details['integration'] ?? null)) {
+        if (
+            PayPlugApiClientInterface::FAILED === ($details['status'] ?? null) &&
+            PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION === ($details['integration'] ?? null)
+        ) {
             // Do not try to capture a failed integrated payment and do not remove status
             return;
         }
@@ -108,14 +95,17 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             return;
         }
 
-        if (isset($details['status'], $details['payment_id']) &&
-            PayPlugApiClientInterface::STATUS_CREATED !== $details['status']) {
+        if (
+            isset($details['status'], $details['payment_id']) &&
+            PayPlugApiClientInterface::STATUS_CREATED !== $details['status']
+        ) {
             return;
         }
 
-        /* @var Capture $request */
-        if (array_key_exists('status', $paymentModel->getDetails())
-            && PayPlugApiClientInterface::STATUS_CAPTURED === $paymentModel->getDetails()['status']) {
+        if (
+            array_key_exists('status', $paymentModel->getDetails()) &&
+            PayPlugApiClientInterface::STATUS_CAPTURED === $paymentModel->getDetails()['status']
+        ) {
             return;
         }
 
@@ -126,7 +116,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
 
         $details['hosted_payment'] = [
             'return_url' => $token->getAfterUrl(),
-            'cancel_url' => $token->getTargetUrl().'?&'.http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
+            'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
         if (isset($details['status']) && 'pending' === $details['status']) {
@@ -135,14 +125,16 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             unset($details['status']);
         }
 
-        if (!in_array(
-            $details['payment_method'],
-            array_merge(
-                [ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY],
-                OneyGatewayFactory::PAYMENT_CHOICES
-            ),
-            true
-        )) {
+        if (
+            !in_array(
+                $details['payment_method'],
+                array_merge(
+                    [ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY],
+                    OneyGatewayFactory::PAYMENT_CHOICES,
+                ),
+                true,
+            )
+        ) {
             // clean other detail values
             if ($details->offsetExists('payment_context')) {
                 unset($details['payment_context']);
@@ -180,10 +172,12 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 }
 
                 $now = new \DateTimeImmutable();
-                if ($payment->__isset('authorization') &&
+                if (
+                    $payment->__isset('authorization') &&
                     $payment->__get('authorization') instanceof PaymentAuthorization &&
                     null !== $payment->__get('authorization')->__get('expires_at') &&
-                    $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'))) {
+                    $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'))
+                ) {
                     return;
                 }
 
@@ -191,20 +185,20 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 $details['hosted_payment'] = [
                     'payment_url' => $payment->hosted_payment->payment_url,
                     'return_url' => $token->getAfterUrl(),
-                    'cancel_url' => $token->getTargetUrl().'?&'.http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
+                    'cancel_url' => $token->getTargetUrl() . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
                 ];
 
                 $oneClickToken = $this->tokenFactory->createCaptureToken(
                     $token->getGatewayName(),
                     $token->getDetails(),
-                    'payplug_sylius_oneclick_verification'
+                    'payplug_sylius_oneclick_verification',
                 );
 
                 throw new HttpRedirect($oneClickToken->getAfterUrl());
             }
 
             throw new HttpRedirect($payment->hosted_payment->payment_url);
-        } catch (ForbiddenException $forbiddenException) {
+        } catch (ForbiddenException) {
             $accountData = $this->payPlugApiClient->getAccount(true);
             $canSaveCard = (bool) $accountData['permissions']['can_save_cards'];
 
@@ -228,7 +222,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             $this->notifyErrors($details, $errorObject);
 
             throw new HttpRedirect($details['hosted_payment']['cancel_url']);
-        } catch (UnknownApiErrorException $unknownApiErrorException) {
+        } catch (UnknownApiErrorException) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
             $this->displayGenericError($details);
 
@@ -275,9 +269,10 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
     private function createPayment(ArrayObject $details, PaymentInterface $paymentModel): Payment
     {
         try {
-            if ($details->offsetExists('payment_id')
-                && $details->offsetExists('status')
-                && $details->offsetExists('is_live')
+            if (
+                $details->offsetExists('payment_id') &&
+                $details->offsetExists('status') &&
+                $details->offsetExists('is_live')
             ) {
                 $this->abortPaymentProcessor->process($paymentModel);
                 unset($details['status'], $details['payment_id'], $details['is_live']);
@@ -302,6 +297,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
             return $payment;
         } catch (BadRequestException $badRequestException) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
+
             throw $badRequestException;
         } catch (\Throwable $throwable) {
             $details['status'] = PayPlugApiClientInterface::FAILED;
@@ -321,7 +317,7 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 'error',
                 $this->translator->trans('payplug_sylius_payplug_plugin.ui.error.billing.postcode', [
                     '%postalCode%' => $details['billing']['postcode'],
-                ])
+                ]),
             );
         }
 
@@ -330,12 +326,14 @@ final class CaptureAction implements ActionInterface, ApiAwareInterface, Gateway
                 'error',
                 $this->translator->trans('payplug_sylius_payplug_plugin.ui.error.shipping.postcode', [
                     '%postalCode%' => $details['shipping']['postcode'],
-                ])
+                ]),
             );
         }
 
-        if (!isset($errorDetails['details']['billing']['postcode']) &&
-            !isset($errorDetails['details']['shipping']['postcode'])) {
+        if (
+            !isset($errorDetails['details']['billing']['postcode']) &&
+            !isset($errorDetails['details']['shipping']['postcode'])
+        ) {
             $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.api_unknow_error');
         }
     }

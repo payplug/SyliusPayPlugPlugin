@@ -10,10 +10,15 @@ namespace PayPlug\SyliusPayPlugPlugin\Const;
 final class Permission
 {
     public const USE_LIVE_MODE = 'use_live_mode';
+
     public const CAN_SAVE_CARD = 'can_save_cards';
+
     public const CAN_CREATE_DEFERRED_PAYMENT = 'can_create_deferred_payment';
+
     public const CAN_USE_INTEGRATED_PAYMENTS = 'can_use_integrated_payments';
+
     public const CAN_CREATE_INSTALLMENT_PLAN = 'can_create_installment_plan';
+
     public const CAN_USE_ONEY = 'can_use_oney';
 
     public static function getAll(): array

@@ -19,7 +19,7 @@ final class AmericanExpressPaymentMethodsResolverDecorator implements PaymentMet
     public function __construct(
         #[AutowireDecorated]
         private PaymentMethodsResolverInterface $decorated,
-        private SupportedMethodsProvider $supportedMethodsProvider
+        private SupportedMethodsProvider $supportedMethodsProvider,
     ) {
     }
 
@@ -32,7 +32,7 @@ final class AmericanExpressPaymentMethodsResolverDecorator implements PaymentMet
             $supportedMethods,
             AmericanExpressGatewayFactory::FACTORY_NAME,
             AmericanExpressGatewayFactory::AUTHORIZED_CURRENCIES,
-            $subject->getAmount() ?? 0
+            $subject->getAmount() ?? 0,
         );
     }
 

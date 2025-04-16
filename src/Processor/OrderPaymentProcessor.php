@@ -18,6 +18,8 @@ use Webmozart\Assert\Assert;
 #[AsDecorator('sylius.order_processing.order_payment_processor.checkout')]
 final class OrderPaymentProcessor implements OrderProcessorInterface
 {
+    public $stateMachineFactory;
+
     public function __construct(
         #[AutowireDecorated]
         private OrderProcessorInterface $baseOrderPaymentProcessor,

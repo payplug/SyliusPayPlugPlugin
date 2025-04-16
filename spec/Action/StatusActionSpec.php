@@ -22,7 +22,7 @@ final class StatusActionSpec extends ObjectBehavior
         FactoryInterface $stateMachineFactory,
         RefundPaymentHandlerInterface $refundPaymentHandler,
         PaymentNotificationHandler $paymentNotificationHandler,
-        RequestStack $requestStack
+        RequestStack $requestStack,
     ): void {
         $this->beConstructedWith($stateMachineFactory, $refundPaymentHandler, $paymentNotificationHandler, $requestStack);
     }
@@ -45,7 +45,7 @@ final class StatusActionSpec extends ObjectBehavior
     public function it_executes(
         GetStatusInterface $request,
         PaymentInterface $payment,
-        GatewayInterface $gateway
+        GatewayInterface $gateway,
     ): void {
         $this->setGateway($gateway);
 
@@ -59,7 +59,7 @@ final class StatusActionSpec extends ObjectBehavior
 
     public function it_supports_only_get_status_request_and_array_access(
         GetStatusInterface $request,
-        PaymentInterface $payment
+        PaymentInterface $payment,
     ): void {
         $request->getModel()->willReturn($payment);
         $this->supports($request)->shouldReturn(true);

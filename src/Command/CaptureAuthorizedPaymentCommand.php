@@ -17,6 +17,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'payplug:capture-authorized-payments', description: 'Capture payplug authorized payments older than X days (default 6)')]
 class CaptureAuthorizedPaymentCommand extends Command
 {
+    public $stateMachineFactory;
+
     public function __construct(
         // private Factory $stateMachineFactory,
         private PaymentRepositoryInterface $paymentRepository,
@@ -35,14 +37,14 @@ class CaptureAuthorizedPaymentCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $days = \filter_var($input->getOption('days'), FILTER_VALIDATE_INT);
+        $days = \filter_var($input->getOption('days'), \FILTER_VALIDATE_INT);
         if (false === $days) {
             throw new \InvalidArgumentException('Invalid number of days provided.');
         }
 
         $payments = $this->paymentRepository->findAllAuthorizedOlderThanDays($days);
 
-        if (\count($payments) === 0) {
+        if ($payments === []) {
             $this->logger->debug('[Payplug] No authorized payments found.');
         }
 
@@ -61,6 +63,7 @@ class CaptureAuthorizedPaymentCommand extends Command
                     'paymentId' => $payment->getId(),
                     'exception' => $e->getMessage(),
                 ]);
+
                 continue;
             }
 

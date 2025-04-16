@@ -19,7 +19,7 @@ final class BancontactPaymentMethodsResolverDecorator implements PaymentMethodsR
     public function __construct(
         #[AutowireDecorated]
         private PaymentMethodsResolverInterface $decorated,
-        private SupportedMethodsProvider $supportedMethodsProvider
+        private SupportedMethodsProvider $supportedMethodsProvider,
     ) {
     }
 
@@ -32,7 +32,7 @@ final class BancontactPaymentMethodsResolverDecorator implements PaymentMethodsR
             $supportedMethods,
             BancontactGatewayFactory::FACTORY_NAME,
             BancontactGatewayFactory::AUTHORIZED_CURRENCIES,
-            $subject->getAmount() ?? 0
+            $subject->getAmount() ?? 0,
         );
     }
 
