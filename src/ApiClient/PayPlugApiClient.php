@@ -15,7 +15,7 @@ use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin;
-use Sylius\Bundle\CoreBundle\Application\Kernel;
+use Sylius\Bundle\CoreBundle\SyliusCoreBundle;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Contracts\Cache\CacheInterface;
 use Webmozart\Assert\Assert;
@@ -49,7 +49,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         HttpClient::addDefaultUserAgentProduct(
             'PayPlug-Sylius',
             PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/' . Kernel::VERSION,
+            'Sylius/' . SyliusCoreBundle::VERSION,
         );
     }
 
@@ -62,7 +62,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         HttpClient::addDefaultUserAgentProduct(
             'PayPlug-Sylius',
             PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/' . Kernel::VERSION,
+            'Sylius/' . SyliusCoreBundle::VERSION,
         );
     }
 
