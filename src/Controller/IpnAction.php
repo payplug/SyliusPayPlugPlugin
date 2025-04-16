@@ -23,37 +23,20 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Webmozart\Assert\Assert;
 
+#[AsController]
 class IpnAction
 {
-    private LoggerInterface $logger;
-
-    private PaymentNotificationHandler $paymentNotificationHandler;
-
-    private RefundNotificationHandler $refundNotificationHandler;
-
-    private PayPlugApiClientFactoryInterface $apiClientFactory;
-
-    private PayPlugApiClientInterface $payPlugApiClient;
-
-    private PaymentRepositoryInterface $paymentRepository;
-    private EntityManagerInterface $entityManager;
-
     public function __construct(
-        LoggerInterface $logger,
-        PaymentNotificationHandler $paymentNotificationHandler,
-        RefundNotificationHandler $refundNotificationHandler,
-        PayPlugApiClientFactoryInterface $apiClientFactory,
-        PaymentRepositoryInterface $paymentRepository,
-        EntityManagerInterface $entityManager
+        private LoggerInterface $logger,
+        private PaymentNotificationHandler $paymentNotificationHandler,
+        private RefundNotificationHandler $refundNotificationHandler,
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
+        private PaymentRepositoryInterface $paymentRepository,
+        private EntityManagerInterface $entityManager
     ) {
-        $this->logger = $logger;
-        $this->paymentNotificationHandler = $paymentNotificationHandler;
-        $this->refundNotificationHandler = $refundNotificationHandler;
-        $this->apiClientFactory = $apiClientFactory;
-        $this->paymentRepository = $paymentRepository;
-        $this->entityManager = $entityManager;
     }
 
     public function __invoke(Request $request): JsonResponse

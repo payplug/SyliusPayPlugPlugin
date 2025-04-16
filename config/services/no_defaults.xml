@@ -7,15 +7,15 @@
     <!-- This file carry all services that cannot be defined in main with parent and default -->
 
     <services>
-        <service id="payplug_sylius_payplug_plugin.repository.payment"
-                 class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository"
-                 parent="sylius.repository.payment" />
         <service
-                id="PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface"
-                class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepository"
-                parent="sylius.repository.payment_method"
-        >
-        </service>
-
+            id="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface"
+            class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository"
+            parent="sylius.repository.payment"
+        />
+        <service
+            id="PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface"
+            class="PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepository"
+            parent="sylius.repository.payment_method"
+        />
     </services>
 </container>

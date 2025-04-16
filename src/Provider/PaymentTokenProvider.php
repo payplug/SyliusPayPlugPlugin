@@ -9,19 +9,15 @@ use Payum\Core\Payum;
 use Payum\Core\Security\TokenInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class PaymentTokenProvider
 {
-    /** @var Payum */
-    private $payum;
-
-    /** @var string */
-    private $afterPayRoute;
-
-    public function __construct(Payum $payum, string $afterPayRoute)
-    {
-        $this->payum = $payum;
-        $this->afterPayRoute = $afterPayRoute;
+    public function __construct(
+        Payum $payum,
+        #[Autowire('sylius_shop_order_after_pay')]
+        string $afterPayRoute
+    ) {
     }
 
     public function getPaymentToken(PaymentInterface $payment): TokenInterface

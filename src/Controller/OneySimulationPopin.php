@@ -9,8 +9,10 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Webmozart\Assert\Assert;
 
+#[AsController]
 final class OneySimulationPopin extends AbstractOneyController
 {
     public function __invoke(Request $request): Response

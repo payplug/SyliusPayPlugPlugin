@@ -5,24 +5,23 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Processor;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
-use SM\Factory\FactoryInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Order\Model\OrderInterface;
 use Sylius\Component\Order\Processor\OrderProcessorInterface;
 use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Webmozart\Assert\Assert;
 
+#[AsDecorator('sylius.order_processing.order_payment_processor.checkout')]
 final class OrderPaymentProcessor implements OrderProcessorInterface
 {
-    private OrderProcessorInterface $baseOrderPaymentProcessor;
-
-
     public function __construct(
-        OrderProcessorInterface $baseOrderPaymentProcessor,
+        #[AutowireDecorated]
+        private OrderProcessorInterface $baseOrderPaymentProcessor,
     ) {
-        $this->baseOrderPaymentProcessor = $baseOrderPaymentProcessor;
     }
 
     public function process(OrderInterface $order): void

@@ -12,17 +12,16 @@
         <defaults autowire="true" autoconfigure="true">
             <bind key="$oneyClient" type="service" id="payplug_sylius_payplug_plugin.api_client.oney" />
             <bind key="$applePayClient" type="service" id="payplug_sylius_payplug_plugin.api_client.apple_pay" />
-            <bind key="$payplugLogger" type="service" id="monolog.logger.payum" />
+            <!--<bind key="$payplugLogger" type="service" id="monolog.logger.payum" />-->
         </defaults>
 
-        <prototype namespace="PayPlug\SyliusPayPlugPlugin\"
-                   resource="../src/{Checker,EventSubscriber,Form,Twig,Validator,Provider/OneySimulation}/*" />
-        <prototype namespace="PayPlug\SyliusPayPlugPlugin\Controller\"
-                   resource="../src/Controller" >
-            <tag name="controller.service_arguments"/>
-        </prototype>
+        <!--{Controller,Checker,EventSubscriber,Form,Twig,Validator,Provider/OneySimulation}-->
+        <prototype
+            namespace="PayPlug\SyliusPayPlugPlugin\"
+            resource="../src/{Action,Command,Controller,Creator,Checker,Cli,EventListener,EventSubscriber,Form,Handler,Twig,Validator,PaymentProcessing,Processor,Provider,Resolver}/*"
+        />
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OrderController"
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Controller\OrderController"
                  class="PayPlug\SyliusPayPlugPlugin\Controller\OrderController"
                  public="true"
                  parent="sylius.controller.order"
@@ -30,119 +29,103 @@
             <argument key="$applePayPaymentProvider" type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />
             <argument key="$lockFactory" type="service" id="lock.default.factory" />
             <argument key="$logger" type="service" id="logger" />
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Controller\IpnAction" public="true">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Controller\IpnAction" public="true">
             <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" key="$paymentRepository" />
-        </service>
+        </service>-->
 
         <service
-                id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor"
-                decorates="sylius.order_processing.order_payment_processor.checkout"
-        >
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor.inner" />
-        </service>
+            id="PayPlug\SyliusPayPlugPlugin\Controller\OrderController"
+            parent="sylius.controller.order"
+        />
 
-        <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
+        <!--<service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
             <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
             <argument type="service" id="sylius.manager.payment" />
-        </service>
+        </service>-->
 
-        <service id="payplug_sylius_payplug_plugin.payment_processing.refund" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor" public="true">
-            <argument type="service" id="request_stack" />
-            <argument type="service" id="monolog.logger.payum" />
-            <argument type="service" id="translator" />
-            <argument type="service" id="sylius_refund.repository.refund_payment" />
-            <argument type="service" id="payplug.repository.payplug_refund_history" />
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface" />
-        </service>
-
-        <service id="payplug_sylius_payplug_plugin.payment_processing.abort" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AbortPaymentProcessor" public="true">
-            <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
-        </service>
-
-        <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
+        <!--<service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
             <argument type="service" id="sylius_refund.calculator.unit_refund_total" />
             <argument type="service" id="sylius_refund.provider.remaining_total" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="sylius_refund.state_resolver.refund_payment_completed_applier" />
-        </service>
+        </service>-->
 
-        <service id="payplug_sylius_payplug_plugin.payment_processing.capture" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\CaptureAuthorizedPaymentProcessor" public="true">
-        </service>
+        <!--<service id="payplug_sylius_payplug_plugin.payment_processing.capture" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\CaptureAuthorizedPaymentProcessor" public="true" />-->
 
-        <service id="payplug_sylius_payplug_plugin.command.payment_state" class="PayPlug\SyliusPayPlugPlugin\Cli\UpdatePaymentStateCommand">
+        <!--<service id="payplug_sylius_payplug_plugin.command.payment_state" class="PayPlug\SyliusPayPlugPlugin\Cli\UpdatePaymentStateCommand">
             <argument type="service" id="payplug_sylius_payplug_plugin.repository.payment" />
             <argument type="service" id="payplug_sylius_payplug_plugin.resolver.payment_state" />
             <argument type="service" id="monolog.logger.payum" />
             <tag name="console.command" />
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Command\CaptureAuthorizedPaymentCommand" class="PayPlug\SyliusPayPlugPlugin\Command\CaptureAuthorizedPaymentCommand">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Command\CaptureAuthorizedPaymentCommand" class="PayPlug\SyliusPayPlugPlugin\Command\CaptureAuthorizedPaymentCommand">
             <argument key="$paymentRepository" type="service" id="payplug_sylius_payplug_plugin.repository.payment" />
             <tag name="console.command" />
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin" class="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin" class="PayPlug\SyliusPayPlugPlugin\Controller\OneySimulationPopin">
             <argument type="service" id="sylius.repository.product_variant" key="$productVariantRepository" />
-        </service>
-        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible" class="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible">
+        </service>-->
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible" class="PayPlug\SyliusPayPlugPlugin\Controller\OneyIsProductEligible">
             <argument type="service" id="sylius.repository.product_variant" key="$productVariantRepository" />
-        </service>
-        <service id="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction" class="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction">
+        </service>-->
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction" class="PayPlug\SyliusPayPlugPlugin\Controller\OneClickAction">
             <argument type="service" id="sylius.repository.payment" key="$paymentRepository" />
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator"
                 decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator.inner"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator"
                 decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
             <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator"
                 decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator.inner"/>
             <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator"
                 decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator.inner"/>
             <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\AmericanExpressPaymentMethodsResolverDecorator"
                 decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\AmericanExpressPaymentMethodsResolverDecorator.inner"/>
             <argument type="service" key="$supportedMethodsProvider" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider"/>
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider">
             <argument type="service" id="sylius.context.currency"/>
-        </service>
+        </service>-->
 
-        <service id="payplug.apple_pay_order.provider" class="PayPlug\SyliusPayPlugPlugin\Provider\ApplePayOrderProvider" public="true">
-<!--            <argument type="service" id="sylius.context.cart"/>-->
+<!--        <service id="payplug.apple_pay_order.provider" class="PayPlug\SyliusPayPlugPlugin\Provider\ApplePayOrderProvider" public="true">
+&lt;!&ndash;            <argument type="service" id="sylius.context.cart"/>&ndash;&gt;
         </service>
 
         <service id="PayPlug\SyliusPayPlugPlugin\MessageHandler\RefundPaymentGeneratedHandler">
@@ -150,16 +133,16 @@
             <argument type="service" id="sylius.repository.payment" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
-<!--            <argument type="service" id="sm.factory" />-->
+&lt;!&ndash;            <argument type="service" id="sm.factory" />&ndash;&gt;
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
             <argument type="service" id="logger" />
             <argument type="service" id="request_stack" />
             <argument type="service" id="sylius.repository.order" />
             <argument type="service" id="translator.default" />
             <tag name="messenger.message_handler" bus="sylius.event_bus" />
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
                 decorates="sylius_refund.provider.refund_payment_methods"
                 decoration-inner-name="sylius_refund.provider.refund_payment_methods.inner"
@@ -169,9 +152,9 @@
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
             <argument>%sylius_refund.supported_gateways%</argument>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
                 decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"
@@ -180,9 +163,9 @@
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator"
                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator"
                 decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator.inner"
@@ -191,9 +174,9 @@
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator"
                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator"
                 decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator.inner"
@@ -202,9 +185,9 @@
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\BancontactSupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\AmexSupportedRefundPaymentMethodsProviderDecorator"
                 decorates="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator"
                 decoration-inner-name="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator.inner"
@@ -213,9 +196,9 @@
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\ApplePaySupportedRefundPaymentMethodsProviderDecorator.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\CompleteRefundPaymentAction">
             <argument type="service" id="request_stack" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="sylius.repository.order" />
@@ -226,9 +209,9 @@
             <argument type="service" id="translator"/>
 
             <tag name="controller.service_arguments"/>
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Action\Admin\RefundUnitsAction">
             <argument type="service" id="sylius.command_bus" />
             <argument type="service" id="request_stack" />
             <argument type="service" id="router" />
@@ -236,15 +219,15 @@
             <argument type="service" id="monolog.logger" />
 
             <tag name="controller.service_arguments"/>
-        </service>
+        </service>-->
 
         <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider" />
-        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider"
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider"
                  decorates="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface">
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\CachedSimulationDataProvider.inner"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
                 id="PayPlug\SyliusPayPlugPlugin\Creator\RefundUnitsCommandCreatorDecorator"
                 decorates="sylius_refund.creator.request_command"
                 decoration-inner-name="sylius_refund.creator.request_command.inner"
@@ -252,42 +235,42 @@
         >
             <argument type="service" id="sylius_refund.creator.request_command.inner"/>
             <argument type="service" id="sylius_refund.converter.request_to_refund_units"/>
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
             id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler"
             public="false"
         >
             <argument type="service" id="monolog.logger.payum" />
             <argument type="service" id="payplug.repository.payplug_card" />
             <argument type="service" id="payplug.factory.payplug_card" />
-        </service>
+        </service>-->
 
-        <service
+        <!--<service
             id="PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler"
             public="false"
         >
             <argument type="service" id="payplug.repository.payplug_refund_history" />
-            <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
+&lt;!&ndash;            <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />&ndash;&gt;
             <argument type="service" id="sylius.command_bus" />
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\EventListener\AccountMenuListener">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\EventListener\AccountMenuListener">
             <tag name="kernel.event_listener" event="sylius.menu.shop.account" method="addAccountMenuItems" />
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Controller\CardController">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Controller\CardController">
             <argument type="service" key="$payPlugApiClient" id="payplug_sylius_payplug_plugin.api_client.payplug" />
-        </service>
+        </service>-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider" />
-        <service id="PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator" />
-        <service id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />
+<!--        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider" />-->
+<!--        <service id="PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator" />-->
+<!--        <service id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />-->
 
-        <service id="PayPlug\SyliusPayPlugPlugin\Provider\PaymentTokenProvider">
+        <!--<service id="PayPlug\SyliusPayPlugPlugin\Provider\PaymentTokenProvider">
             <argument type="service" id="payum" />
             <argument type="string">sylius_shop_order_after_pay</argument>
-        </service>
+        </service>-->
 
     </services>
 </container>

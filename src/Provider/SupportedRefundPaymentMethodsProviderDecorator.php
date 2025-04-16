@@ -12,23 +12,25 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+#[AsDecorator('sylius_refund.provider.refund_payment_methods')]
 final class SupportedRefundPaymentMethodsProviderDecorator extends AbstractSupportedRefundPaymentMethodsProvider implements RefundPaymentMethodsProviderInterface
 {
-    protected array $supportedRefundGateways;
-
     protected string $gatewayFactoryName = PayPlugGatewayFactory::FACTORY_NAME;
 
     public function __construct(
+        #[AutowireDecorated]
         RefundPaymentMethodsProviderInterface $decorated,
         RequestStack $requestStack,
         OrderRepositoryInterface $orderRepository,
-        array $supportedRefundGateways
+        #[Autowire('%sylius_refund.supported_gateways%')]
+        protected array $supportedRefundGateways
     ) {
         parent::__construct($decorated, $requestStack, $orderRepository);
-        $this->supportedRefundGateways = $supportedRefundGateways;
     }
 
     protected function find(array $paymentMethods, OrderInterface $order): array

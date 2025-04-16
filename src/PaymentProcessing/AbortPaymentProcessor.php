@@ -7,14 +7,16 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 use Payplug\Exception\HttpException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
+#[Autoconfigure(public: true)]
 class AbortPaymentProcessor
 {
-    private PayPlugApiClientInterface $payPlugApiClient;
-
-    public function __construct(PayPlugApiClientInterface $payPlugApiClient)
-    {
-        $this->payPlugApiClient = $payPlugApiClient;
+    public function __construct(
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
+        private PayPlugApiClientInterface $payPlugApiClient
+    ) {
     }
 
     public function process(PaymentInterface $payment): void

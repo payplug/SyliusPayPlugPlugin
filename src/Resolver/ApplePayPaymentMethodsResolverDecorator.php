@@ -12,30 +12,25 @@ use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Webmozart\Assert\Assert;
 
+#[AsDecorator('sylius.resolver.payment_methods')]
 final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
 {
-    private PaymentMethodsResolverInterface $decorated;
-
-    private SupportedMethodsProvider $supportedMethodsProvider;
-
-    private ApplePayCheckerInterface $applePayChecker;
-
     public function __construct(
-        PaymentMethodsResolverInterface $decorated,
-        SupportedMethodsProvider $supportedMethodsProvider,
-        ApplePayCheckerInterface $applePayChecker
+        #[AutowireDecorated]
+        private PaymentMethodsResolverInterface $decorated,
+        private SupportedMethodsProvider $supportedMethodsProvider,
+        private ApplePayCheckerInterface $applePayChecker
     ) {
-        $this->decorated = $decorated;
-        $this->supportedMethodsProvider = $supportedMethodsProvider;
-        $this->applePayChecker = $applePayChecker;
     }
 
-    public function getSupportedMethods(BasePaymentInterface $payment): array
+    public function getSupportedMethods(BasePaymentInterface $subject): array
     {
-        Assert::isInstanceOf($payment, Payment::class);
-        $supportedMethods = $this->decorated->getSupportedMethods($payment);
+        Assert::isInstanceOf($subject, Payment::class);
+        $supportedMethods = $this->decorated->getSupportedMethods($subject);
 
         foreach ($supportedMethods as $key => $paymentMethod) {
             Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
@@ -56,12 +51,12 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
             $supportedMethods,
             ApplePayGatewayFactory::FACTORY_NAME,
             ApplePayGatewayFactory::AUTHORIZED_CURRENCIES,
-            $payment->getAmount() ?? 0
+            $subject->getAmount() ?? 0
         );
     }
 
-    public function supports(BasePaymentInterface $payment): bool
+    public function supports(BasePaymentInterface $subject): bool
     {
-        return $this->decorated->supports($payment);
+        return $this->decorated->supports($subject);
     }
 }

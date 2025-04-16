@@ -19,29 +19,19 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 
+#[AsController]
 class OneClickAction extends AbstractController implements GatewayAwareInterface, ApiAwareInterface
 {
     use GatewayAwareTrait;
     use ApiAwareTrait;
 
-    /** @var PaymentRepositoryInterface */
-    private $paymentRepository;
-
-    /** @var Payum */
-    private $payum;
-
-    /** @var PayPlugApiClientFactory */
-    private $payPlugApiClientFactory;
-
     public function __construct(
-        PaymentRepositoryInterface $paymentRepository,
-        Payum $payum,
-        PayPlugApiClientFactory $payPlugApiClientFactory
+        private PaymentRepositoryInterface $paymentRepository,
+        private Payum $payum,
+        private PayPlugApiClientFactory $payPlugApiClientFactory
     ) {
-        $this->paymentRepository = $paymentRepository;
-        $this->payum = $payum;
-        $this->payPlugApiClientFactory = $payPlugApiClientFactory;
     }
 
     public function __invoke(Request $request): Response

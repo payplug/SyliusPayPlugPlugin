@@ -14,56 +14,27 @@ use Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplierInterfac
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
+#[AsController]
 final class CompleteRefundPaymentAction
 {
     private const COMPLETED_STATE = 'completed';
 
-    /** @var ObjectRepository */
-    private $refundPaymentRepository;
-
-    /** @var RefundPaymentCompletedStateApplierInterface */
-    private $refundPaymentCompletedStateApplier;
-
-    /** @var RouterInterface */
-    private $router;
-
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var MessageBusInterface */
-    private $messageBus;
-
-    /** @var RelatedPaymentIdProviderInterface */
-    private $relatedPaymentIdProvider;
-
-    /** @var \Symfony\Contracts\Translation\TranslatorInterface */
-    private $translator;
-
-    private RequestStack $requestStack;
-
     public function __construct(
-        RequestStack $requestStack,
-        ObjectRepository $refundPaymentInterface,
-        OrderRepositoryInterface $orderRepository,
-        RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier,
-        RouterInterface $router,
-        MessageBusInterface $messageBus,
-        RelatedPaymentIdProviderInterface $relatedPaymentIdProvider,
-        TranslatorInterface $translator
+        private RequestStack $requestStack,
+        private ObjectRepository $refundPaymentRepository,
+        private OrderRepositoryInterface $orderRepository,
+        private RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier,
+        private RouterInterface $router,
+        private MessageBusInterface $messageBus,
+        private RelatedPaymentIdProviderInterface $relatedPaymentIdProvider,
+        private TranslatorInterface $translator
     ) {
-        $this->requestStack = $requestStack;
-        $this->refundPaymentRepository = $refundPaymentInterface;
-        $this->refundPaymentCompletedStateApplier = $refundPaymentCompletedStateApplier;
-        $this->router = $router;
-        $this->orderRepository = $orderRepository;
-        $this->messageBus = $messageBus;
-        $this->relatedPaymentIdProvider = $relatedPaymentIdProvider;
-        $this->translator = $translator;
     }
 
     public function __invoke(string $orderNumber, string $id): Response

@@ -18,29 +18,19 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Notify;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
     use ApiAwareTrait;
 
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler */
-    private $paymentNotificationHandler;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler */
-    private $refundNotificationHandler;
-
     public function __construct(
-        LoggerInterface $logger,
-        PaymentNotificationHandler $paymentNotificationHandler,
-        RefundNotificationHandler $refundNotificationHandler
+        #[Autowire('@monolog.logger.payum')]
+        private LoggerInterface $logger,
+        private PaymentNotificationHandler $paymentNotificationHandler,
+        private RefundNotificationHandler $refundNotificationHandler
     ) {
-        $this->logger = $logger;
-        $this->paymentNotificationHandler = $paymentNotificationHandler;
-        $this->refundNotificationHandler = $refundNotificationHandler;
     }
 
     public function execute($request): void

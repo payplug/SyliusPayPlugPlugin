@@ -10,29 +10,19 @@ use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
-use SM\Factory\FactoryInterface;
 use SM\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class PaymentStateResolver implements PaymentStateResolverInterface
 {
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    /** @var PayPlugApiClientInterface */
-    private $payPlugApiClient;
-
-    /** @var EntityManagerInterface */
-    private $paymentEntityManager;
-
     public function __construct(
-        PayPlugApiClientInterface $payPlugApiClient,
-        EntityManagerInterface $paymentEntityManager
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
+        private PayPlugApiClientInterface $payPlugApiClient,
+        private EntityManagerInterface $paymentEntityManager
     ) {
-        $this->payPlugApiClient = $payPlugApiClient;
-        $this->paymentEntityManager = $paymentEntityManager;
     }
 
     public function resolve(PaymentInterface $payment): void

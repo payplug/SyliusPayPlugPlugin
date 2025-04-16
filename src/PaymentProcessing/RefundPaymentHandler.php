@@ -25,28 +25,12 @@ use Webmozart\Assert\Assert;
 
 final class RefundPaymentHandler implements RefundPaymentHandlerInterface
 {
-    /** @var RemainingTotalProviderInterface */
-    private $remainingTotalProvider;
-
-    /** @var UnitRefundTotalCalculatorInterface */
-    private $unitRefundTotalCalculator;
-
-    /** @var ObjectRepository */
-    private $refundPaymentRepository;
-
-    /** @var RefundPaymentCompletedStateApplierInterface */
-    private $refundPaymentCompletedStateApplier;
-
     public function __construct(
-        UnitRefundTotalCalculatorInterface $unitRefundTotalCalculator,
-        RemainingTotalProviderInterface $remainingTotalProvider,
-        ObjectRepository $refundPaymentInterface,
-        RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier
+        private UnitRefundTotalCalculatorInterface $unitRefundTotalCalculator,
+        private RemainingTotalProviderInterface $remainingTotalProvider,
+        private ObjectRepository $refundPaymentRepository,
+        private RefundPaymentCompletedStateApplierInterface $refundPaymentCompletedStateApplier
     ) {
-        $this->unitRefundTotalCalculator = $unitRefundTotalCalculator;
-        $this->remainingTotalProvider = $remainingTotalProvider;
-        $this->refundPaymentRepository = $refundPaymentInterface;
-        $this->refundPaymentCompletedStateApplier = $refundPaymentCompletedStateApplier;
     }
 
     public function handle(Refund $refund, PaymentInterface $payment): RefundUnits

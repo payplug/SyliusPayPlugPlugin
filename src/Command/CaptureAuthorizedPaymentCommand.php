@@ -7,38 +7,28 @@ namespace PayPlug\SyliusPayPlugPlugin\Command;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use SM\Factory\Factory;
 use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'payplug:capture-authorized-payments', description: 'Capture payplug authorized payments older than X days (default 6)')]
 class CaptureAuthorizedPaymentCommand extends Command
 {
-    private Factory $stateMachineFactory;
-    private PaymentRepositoryInterface $paymentRepository;
-    private EntityManagerInterface $entityManager;
-    private LoggerInterface $logger;
-
     public function __construct(
-        // Factory $stateMachineFactory,
-        PaymentRepositoryInterface $paymentRepository,
-        EntityManagerInterface $entityManager,
-        LoggerInterface $logger,
+        // private Factory $stateMachineFactory,
+        private PaymentRepositoryInterface $paymentRepository,
+        private EntityManagerInterface $entityManager,
+        private LoggerInterface $logger,
     ) {
-        // $this->stateMachineFactory = $stateMachineFactory;
-        $this->paymentRepository = $paymentRepository;
-        $this->entityManager = $entityManager;
-        $this->logger = $logger;
-
         parent::__construct();
     }
 
     protected function configure(): void
     {
-        $this->setName('payplug:capture-authorized-payments')
-            ->setDescription('Capture payplug authorized payments older than X days (default 6)')
+        $this
             ->addOption('days', 'd', InputOption::VALUE_OPTIONAL, 'Number of days to wait before capturing authorized payments', 6)
         ;
     }

@@ -13,33 +13,28 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Webmozart\Assert\Assert;
 
+#[AsDecorator('sylius.resolver.payment_methods')]
 final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolverInterface
 {
-    private CurrencyContextInterface $currencyContext;
-
-    private PaymentMethodsResolverInterface $decorated;
-
-    private OneyCheckerInterface $oneyChecker;
-
     public function __construct(
-        PaymentMethodsResolverInterface $decorated,
-        CurrencyContextInterface $currencyContext,
-        OneyCheckerInterface $oneyChecker
+        #[AutowireDecorated]
+        private PaymentMethodsResolverInterface $decorated,
+        private CurrencyContextInterface $currencyContext,
+        private OneyCheckerInterface $oneyChecker
     ) {
-        $this->currencyContext = $currencyContext;
-        $this->decorated = $decorated;
-        $this->oneyChecker = $oneyChecker;
     }
 
-    public function getSupportedMethods(BasePaymentInterface $payment): array
+    public function getSupportedMethods(BasePaymentInterface $subject): array
     {
-        Assert::isInstanceOf($payment, Payment::class);
-        $supportedMethods = $this->decorated->getSupportedMethods($payment);
+        Assert::isInstanceOf($subject, Payment::class);
+        $supportedMethods = $this->decorated->getSupportedMethods($subject);
 
         /** @var OrderInterface $order */
-        $order = $payment->getOrder();
+        $order = $subject->getOrder();
 
         $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
 
@@ -62,7 +57,7 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
             }
 
             if (!$this->oneyChecker->isEnabled() ||
-                !$this->oneyChecker->isPriceEligible($payment->getAmount() ?? 0, $activeCurrencyCode) ||
+                !$this->oneyChecker->isPriceEligible($subject->getAmount() ?? 0, $activeCurrencyCode) ||
                 !$this->oneyChecker->isNumberOfProductEligible($order->getItemUnits()->count()) ||
                 !$this->oneyChecker->isCountryEligible($countryCodeShipping, $countryCodeBilling)) {
                 unset($supportedMethods[$key]);
@@ -72,8 +67,8 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
         return $supportedMethods;
     }
 
-    public function supports(BasePaymentInterface $payment): bool
+    public function supports(BasePaymentInterface $subject): bool
     {
-        return $this->decorated->supports($payment);
+        return $this->decorated->supports($subject);
     }
 }

@@ -11,11 +11,8 @@ use Webmozart\Assert\Assert;
 
 final class SupportedMethodsProvider
 {
-    private CurrencyContextInterface $currencyContext;
-
-    public function __construct(CurrencyContextInterface $currencyContext)
+    public function __construct(private CurrencyContextInterface $currencyContext)
     {
-        $this->currencyContext = $currencyContext;
     }
 
     public function provide(array $supportedMethods, string $factoryName, array $authorizedCurrencies, int $paymentAmount): array

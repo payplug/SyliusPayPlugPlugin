@@ -36,20 +36,17 @@ use Sylius\Component\Resource\ResourceActions;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Webmozart\Assert\Assert;
 
+#[AsController]
 final class OrderController extends BaseOrderController
 {
     private const APPLE_ERROR_RESPONSE_CODE = 0;
     private const APPLE_SUCCESS_RESPONSE_CODE = 1;
-
-    private ApplePayPaymentProvider $applePayPaymentProvider;
-    private \SM\Factory\FactoryInterface $stateMachineFactory;
-    private LockFactory $lockFactory;
-    private LoggerInterface $logger;
 
     public function __construct(
         MetadataInterface $metadata,
@@ -69,9 +66,9 @@ final class OrderController extends BaseOrderController
         ?StateMachineInterface $stateMachine,
         ResourceUpdateHandlerInterface $resourceUpdateHandler,
         ResourceDeleteHandlerInterface $resourceDeleteHandler,
-        ApplePayPaymentProvider $applePayPaymentProvider,
-        LockFactory $lockFactory,
-        LoggerInterface $logger
+        private ApplePayPaymentProvider $applePayPaymentProvider,
+        private LockFactory $lockFactory,
+        private LoggerInterface $logger
     ) {
         parent::__construct(
             $metadata,
@@ -92,10 +89,6 @@ final class OrderController extends BaseOrderController
             $resourceUpdateHandler,
             $resourceDeleteHandler
         );
-
-        $this->applePayPaymentProvider = $applePayPaymentProvider;
-        $this->lockFactory = $lockFactory;
-        $this->logger = $logger;
     }
 
     public function initiateApplePaySessionAction(Request $request): Response

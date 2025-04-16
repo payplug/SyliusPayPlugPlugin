@@ -22,42 +22,28 @@ use Sylius\RefundPlugin\Model\OrderItemUnitRefund;
 use Sylius\RefundPlugin\Model\RefundType;
 use Sylius\RefundPlugin\Model\ShipmentRefund;
 use Sylius\RefundPlugin\Model\UnitRefundInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
+#[AsDecorator('sylius_refund.creator.request_command')]
 class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterface
 {
     private const MINIMUM_REFUND_AMOUNT = 10;
 
-    /** @var RequestCommandCreatorInterface */
-    private $decorated;
-
-    /** @var PaymentMethodRepositoryInterface */
-    private $paymentMethodRepository;
-
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var PayPlugApiClientInterface */
-    private $oneyClient;
-
     public function __construct(
-        RequestCommandCreatorInterface $decorated,
+        #[AutowireDecorated]
+        private RequestCommandCreatorInterface $decorated,
+        #[Autowire('@sylius_refund.converter.request_to_refund_units')]
         private RequestToRefundUnitsConverterInterface | RefundUnitsConverterInterface $requestToRefundUnitsConverter,
-        PaymentMethodRepositoryInterface $paymentMethodRepository,
-        OrderRepositoryInterface $orderRepository,
-        TranslatorInterface $translator,
-        PayPlugApiClientInterface $oneyClient
+        private PaymentMethodRepositoryInterface $paymentMethodRepository,
+        private OrderRepositoryInterface $orderRepository,
+        private TranslatorInterface $translator,
+        private PayPlugApiClientInterface $oneyClient
     ) {
-        $this->decorated = $decorated;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->orderRepository = $orderRepository;
-        $this->translator = $translator;
-        $this->oneyClient = $oneyClient;
     }
 
     public function fromRequest(Request $request): RefundUnits

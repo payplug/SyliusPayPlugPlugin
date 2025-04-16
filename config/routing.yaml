@@ -61,7 +61,7 @@ payplug_shop_checkout_apple_prepare:
             repository:
                 method: find
                 arguments:
-                    - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"
+                    - "expr:service('PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider').getCurrentCart()"
 
 payplug_shop_checkout_apple_confirm:
     path: /payplug/apple-pay/complete/{orderId}
@@ -73,7 +73,7 @@ payplug_shop_checkout_apple_confirm:
             repository:
                 method: find
                 arguments:
-                    - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"
+                    - "expr:service('PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider').getCurrentCart()"
 
 payplug_shop_checkout_apple_cancel:
     path: /payplug/apple-pay/cancel/{orderId}
@@ -85,7 +85,7 @@ payplug_shop_checkout_apple_cancel:
             repository:
                 method: find
                 arguments:
-                    - "expr:service('payplug.apple_pay_order.provider').getCurrentCart()"
+                    - "expr:service('PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider').getCurrentCart()"
 
 payplug_sylius_integrated_payment_init:
     path: /{_locale}/payplug/integrated_payment/init/{paymentMethodId}

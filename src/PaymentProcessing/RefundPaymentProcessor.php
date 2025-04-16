@@ -6,7 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Exception;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
@@ -21,39 +20,23 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Autoconfigure(public: true)]
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
-    private RequestStack $requestStack;
-
-    private PayPlugApiClientInterface $payPlugApiClient;
-
-    private LoggerInterface $logger;
-
-    private TranslatorInterface $translator;
-
-    private RepositoryInterface $refundPaymentRepository;
-
-    private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository;
-
-    private PayPlugApiClientFactoryInterface $apiClientFactory;
-
     public function __construct(
-        RequestStack $requestStack,
-        LoggerInterface $logger,
-        TranslatorInterface $translator,
-        RepositoryInterface $refundPaymentRepository,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        PayPlugApiClientFactoryInterface $apiClientFactory
+        private RequestStack $requestStack,
+        #[Autowire('@monolog.logger.payum')]
+        private LoggerInterface $logger,
+        private TranslatorInterface $translator,
+        private RepositoryInterface $refundPaymentRepository,
+        private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
+        private PayPlugApiClientFactoryInterface $apiClientFactory
     ) {
-        $this->requestStack = $requestStack;
-        $this->logger = $logger;
-        $this->translator = $translator;
-        $this->refundPaymentRepository = $refundPaymentRepository;
-        $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function process(PaymentInterface $payment): void

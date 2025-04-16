@@ -6,25 +6,20 @@ namespace PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation;
 
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider;
 use Sylius\Component\Core\Model\OrderInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+#[AsDecorator(OneySimulationDataProvider::class)]
 final class CachedSimulationDataProvider implements OneySimulationDataProviderInterface
 {
-    private OneySimulationDataProviderInterface $decorated;
-
-    private CacheInterface $cache;
-
-    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
-
     public function __construct(
-        OneySimulationDataProviderInterface $decorated,
-        CacheInterface $cache,
-        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        #[AutowireDecorated]
+        private OneySimulationDataProviderInterface $decorated,
+        private CacheInterface $cache,
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
     ) {
-        $this->decorated = $decorated;
-        $this->cache = $cache;
-        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     public function getForCart(OrderInterface $cart): array

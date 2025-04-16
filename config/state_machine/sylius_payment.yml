@@ -4,13 +4,13 @@ winzou_state_machine:
             before:
                 payplug_sylius_payplug_plugin_refund_process:
                     on: ["refund"]
-                    do: ["@payplug_sylius_payplug_plugin.payment_processing.refund", "process"]
+                    do: ["@PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\RefundPaymentHandler", "process"]
                     args: ["object"]
                 payplug_sylius_payplug_plugin_failed_process:
                     on: ["fail"]
-                    do: ["@payplug_sylius_payplug_plugin.payment_processing.abort", "process"]
+                    do: ["@PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\AbortPaymentProcessor", "process"]
                     args: ["object"]
                 payplug_sylius_payplug_plugin_complete:
                     on: ["complete"]
-                    do: ["@payplug_sylius_payplug_plugin.payment_processing.capture", "process"]
+                    do: ["@PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\CaptureAuthorizedPaymentProcessor", "process"]
                     args: ["object"]

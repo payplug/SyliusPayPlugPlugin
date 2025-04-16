@@ -18,32 +18,13 @@ use Webmozart\Assert\Assert;
 
 final class OneySimulationExtension extends AbstractExtension
 {
-    /** @var \Sylius\Component\Order\Context\CartContextInterface */
-    private $cartContext;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface */
-    private $oneySimulationDataProvider;
-
-    /** @var \Symfony\Component\HttpFoundation\RequestStack */
-    private $requestStack;
-
-    /** @var \Sylius\Component\Core\Repository\OrderRepositoryInterface */
-    private $orderRepository;
-
-    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
-
     public function __construct(
-        CartContextInterface $cartContext,
-        OneySimulationDataProviderInterface $oneySimulationDataProvider,
-        RequestStack $requestStack,
-        OrderRepositoryInterface $orderRepository,
-        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        private CartContextInterface $cartContext,
+        private OneySimulationDataProviderInterface $oneySimulationDataProvider,
+        private RequestStack $requestStack,
+        private OrderRepositoryInterface $orderRepository,
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
     ) {
-        $this->cartContext = $cartContext;
-        $this->oneySimulationDataProvider = $oneySimulationDataProvider;
-        $this->requestStack = $requestStack;
-        $this->orderRepository = $orderRepository;
-        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     public function getFunctions(): array

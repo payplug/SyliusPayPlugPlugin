@@ -18,45 +18,22 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Repository\CustomerRepositoryInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Lock\LockFactory;
 
 class PaymentNotificationHandler
 {
-    /** @var \Psr\Log\LoggerInterface */
-    private $logger;
-
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $payplugCardRepository;
-
-    /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
-    private $payplugCardFactory;
-
-    /** @var \Sylius\Component\Core\Repository\CustomerRepositoryInterface */
-    private $customerRepository;
-
-    private EntityManagerInterface $entityManager;
-
-    private LockFactory $lockFactory;
-
-    private RequestStack $requestStack;
-
     public function __construct(
-        LoggerInterface $logger,
-        RepositoryInterface $payplugCardRepository,
-        FactoryInterface $payplugCardFactory,
-        CustomerRepositoryInterface $customerRepository,
-        EntityManagerInterface $entityManager,
-        LockFactory $lockFactory,
-        RequestStack $requestStack
+        #[Autowire('@monolog.logger.payum')]
+        private LoggerInterface $logger,
+        private RepositoryInterface $payplugCardRepository,
+        private FactoryInterface $payplugCardFactory,
+        private CustomerRepositoryInterface $customerRepository,
+        private EntityManagerInterface $entityManager,
+        private LockFactory $lockFactory,
+        private RequestStack $requestStack
     ) {
-        $this->logger = $logger;
-        $this->payplugCardRepository = $payplugCardRepository;
-        $this->payplugCardFactory = $payplugCardFactory;
-        $this->customerRepository = $customerRepository;
-        $this->entityManager = $entityManager;
-        $this->lockFactory = $lockFactory;
-        $this->requestStack = $requestStack;
     }
 
     public function treat(PaymentInterface $payment, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void

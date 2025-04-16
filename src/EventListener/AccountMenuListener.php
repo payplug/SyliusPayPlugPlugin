@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventListener;
 
 use Sylius\Bundle\UiBundle\Menu\Event\MenuBuilderEvent;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
+#[AsEventListener(event: 'sylius.menu.shop.account', method: 'addAccountMenuItems')]
 final class AccountMenuListener
 {
     public function addAccountMenuItems(MenuBuilderEvent $event): void

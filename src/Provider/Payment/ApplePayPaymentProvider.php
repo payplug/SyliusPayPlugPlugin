@@ -37,33 +37,16 @@ use Webmozart\Assert\Assert;
 
 class ApplePayPaymentProvider
 {
-    private PaymentFactoryInterface $paymentFactory;
-    // private StateMachineFactoryInterface $stateMachineFactory;
-    private PaymentMethodRepositoryInterface $paymentMethodRepository;
-    private PayPlugPaymentDataCreator $paymentDataCreator;
-    private PayPlugApiClientInterface $applePayClient;
-    private EntityManagerInterface $entityManager;
-    private OrderTokenAssignerInterface $orderTokenAssigner;
-    private RouterInterface $router;
-
     public function __construct(
-        PaymentFactoryInterface $paymentFactory,
-        // StateMachineFactoryInterface $stateMachineFactory,
-        PaymentMethodRepositoryInterface $paymentMethodRepository,
-        PayPlugPaymentDataCreator $paymentDataCreator,
-        PayPlugApiClientInterface $applePayClient,
-        EntityManagerInterface $entityManager,
-        OrderTokenAssignerInterface $orderTokenAssigner,
-        RouterInterface $router
+        private PaymentFactoryInterface $paymentFactory,
+        // private StateMachineFactoryInterface $stateMachineFactory;
+        private PaymentMethodRepositoryInterface $paymentMethodRepository,
+        private PayPlugPaymentDataCreator $paymentDataCreator,
+        private PayPlugApiClientInterface $applePayClient,
+        private EntityManagerInterface $entityManager,
+        private OrderTokenAssignerInterface $orderTokenAssigner,
+        private RouterInterface $router
     ) {
-        $this->paymentFactory = $paymentFactory;
-        $this->stateMachineFactory = $stateMachineFactory;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->paymentDataCreator = $paymentDataCreator;
-        $this->applePayClient = $applePayClient;
-        $this->entityManager = $entityManager;
-        $this->orderTokenAssigner = $orderTokenAssigner;
-        $this->router = $router;
     }
 
     public function provide(Request $request, OrderInterface $order): PaymentInterface

@@ -36,56 +36,18 @@ use Webmozart\Assert\Assert;
 
 final class RefundPaymentGeneratedHandler
 {
-    /** @var EntityManagerInterface */
-    private $entityManager;
-
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    /** @var RefundPaymentProcessor */
-    private $refundPaymentProcessor;
-
-    /** @var PaymentRepositoryInterface */
-    private $paymentRepository;
-
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var RefundHistoryRepositoryInterface */
-    private $payplugRefundHistoryRepository;
-
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var RepositoryInterface */
-    private $refundPaymentRepository;
-    private RequestStack $requestStack;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
-        PaymentRepositoryInterface $paymentRepository,
-        RepositoryInterface $refundPaymentRepository,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        // FactoryInterface $stateMachineFactory,
-        RefundPaymentProcessor $refundPaymentProcessor,
-        LoggerInterface $logger,
-        RequestStack $requestStack,
-        OrderRepositoryInterface $orderRepository,
-        TranslatorInterface $translator
+        private EntityManagerInterface $entityManager,
+        private PaymentRepositoryInterface $paymentRepository,
+        private RepositoryInterface $refundPaymentRepository,
+        private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
+        // private FactoryInterface $stateMachineFactory,
+        private RefundPaymentProcessor $refundPaymentProcessor,
+        private LoggerInterface $logger,
+        private RequestStack $requestStack,
+        private OrderRepositoryInterface $orderRepository,
+        private TranslatorInterface $translator
     ) {
-        $this->entityManager = $entityManager;
-        $this->paymentRepository = $paymentRepository;
-        $this->refundPaymentRepository = $refundPaymentRepository;
-        $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
-        // $this->stateMachineFactory = $stateMachineFactory;
-        $this->refundPaymentProcessor = $refundPaymentProcessor;
-        $this->logger = $logger;
-        $this->requestStack = $requestStack;
-        $this->orderRepository = $orderRepository;
-        $this->translator = $translator;
     }
 
     public function __invoke(RefundPaymentGenerated $message): void

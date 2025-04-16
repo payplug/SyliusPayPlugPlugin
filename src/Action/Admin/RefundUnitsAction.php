@@ -6,42 +6,29 @@ namespace PayPlug\SyliusPayPlugPlugin\Action\Admin;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use Sylius\RefundPlugin\Creator\RefundUnitsCommandCreatorInterface;
 use Sylius\RefundPlugin\Creator\RequestCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[AsController]
 final class RefundUnitsAction
 {
-    /** @var MessageBusInterface */
-    private $commandBus;
-
-    /** @var UrlGeneratorInterface */
-    private $router;
-
-    /** @var LoggerInterface */
-    private $logger;
-
     public function __construct(
-        MessageBusInterface $commandBus,
+        private MessageBusInterface $commandBus,
         private RequestStack $requestStack,
-        UrlGeneratorInterface $router,
-        private RequestCommandCreatorInterface | RefundUnitsCommandCreatorInterface $commandCreator,
-        LoggerInterface $logger
+        private UrlGeneratorInterface $router,
+        #[Autowire('@sylius_refund.creator.request_command')]
+        private RequestCommandCreatorInterface $commandCreator,
+        private LoggerInterface $logger
     ) {
-        $this->commandBus = $commandBus;
-        $this->router = $router;
-        $this->logger = $logger;
-
-        if ($this->commandCreator instanceof RefundUnitsCommandCreatorInterface) {
-            trigger_deprecation('sylius/refund-plugin', '1.4', sprintf('Passing an instance of %s as constructor argument for %s is deprecated as of Sylius Refund Plugin 1.4 and will be removed in 2.0. Pass an instance of %s instead.', RefundUnitsCommandCreatorInterface::class, self::class, RequestCommandCreatorInterface::class));
-        }
     }
 
     public function __invoke(Request $request): Response

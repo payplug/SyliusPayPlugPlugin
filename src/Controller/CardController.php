@@ -12,41 +12,24 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[AsController]
 final class CardController extends AbstractController
 {
-    /** @var CustomerContextInterface */
-    private $customerContext;
-
-    /** @var EntityRepository */
-    private $payplugCardRepository;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var PayPlugApiClientInterface */
-    private $payPlugApiClient;
-
-    private RequestStack $requestStack;
-    private ManagerRegistry $managerRegistry;
-
     public function __construct(
-        CustomerContextInterface $customerContext,
-        EntityRepository $payplugCardRepository,
-        TranslatorInterface $translator,
-        PayPlugApiClientInterface $payPlugApiClient,
-        RequestStack $requestStack,
-        ManagerRegistry $managerRegistry
+        private CustomerContextInterface $customerContext,
+        private EntityRepository $payplugCardRepository,
+        private TranslatorInterface $translator,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
+        private PayPlugApiClientInterface $payPlugApiClient,
+        private RequestStack $requestStack,
+        private ManagerRegistry $managerRegistry
     ) {
-        $this->customerContext = $customerContext;
-        $this->payplugCardRepository = $payplugCardRepository;
-        $this->translator = $translator;
-        $this->payPlugApiClient = $payPlugApiClient;
-        $this->requestStack = $requestStack;
-        $this->managerRegistry = $managerRegistry;
     }
 
     public function indexAction(): Response

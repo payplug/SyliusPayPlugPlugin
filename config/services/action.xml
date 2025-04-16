@@ -5,8 +5,7 @@
         <defaults public="true" autowire="true" autoconfigure="true" />
 
         <service id="payplug_sylius_payplug_plugin.action.capture" class="PayPlug\SyliusPayPlugPlugin\Action\CaptureAction">
-            <argument type="service" key="$logger" id="monolog.logger.payum" />
-            <argument type="service" key="$abortPaymentProcessor" id="payplug_sylius_payplug_plugin.payment_processing.abort" />
+<!--            <argument type="service" key="$logger" id="monolog.logger.payum" />-->
             <tag name="payum.action" factory="payplug" alias="payum.action.capture" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.capture" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.capture" />
@@ -14,8 +13,8 @@
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.status" class="PayPlug\SyliusPayPlugPlugin\Action\StatusAction">
-            <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler" />
+<!--            <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />-->
+<!--            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler" />-->
             <tag name="payum.action" factory="payplug" alias="payum.action.status" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.status" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.status" />
@@ -30,9 +29,9 @@
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.notify" class="PayPlug\SyliusPayPlugPlugin\Action\NotifyAction">
-            <argument type="service" id="monolog.logger.payum" />
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler" />
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler" />
+<!--            <argument type="service" id="monolog.logger.payum" />-->
+<!--            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler" />-->
+<!--            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler" />-->
             <tag name="payum.action" factory="payplug" alias="payum.action.notify" />
             <tag name="payum.action" factory="payplug_oney" alias="payum.action.notify" />
             <tag name="payum.action" factory="payplug_bancontact" alias="payum.action.notify" />
