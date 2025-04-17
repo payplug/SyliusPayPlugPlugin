@@ -9,7 +9,7 @@
             <argument type="service" id="sylius.behat.context.ui.admin.managing_orders" />
             <argument type="service" id="Tests\Sylius\RefundPlugin\Behat\Context\Ui\RefundingContext" />
             <argument type="service" id="payplug_sylius_payplug_plugin.action.notify" />
-            <argument type="service" id="sylius.behat.notification_checker" />
+            <argument type="service" id="sylius.behat.notification_checker.admin" />
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="payplug.repository.payplug_refund_history"/>
 
