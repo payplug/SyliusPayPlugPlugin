@@ -52,6 +52,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
             'paths' => $paths,
             'form_themes' => [
                 '@PayPlugSyliusPayPlugPlugin/form/form_gateway_config_row.html.twig',
+                '@PayPlugSyliusPayPlugPlugin/form/sylius_checkout_select_payment_row.html.twig',
                 '@PayPlugSyliusPayPlugPlugin/form/complete_info_popin.html.twig',
             ],
         ]);

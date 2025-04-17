@@ -1,199 +1,33 @@
-{% block _sylius_payment_method_gatewayConfig_factoryName_row %}
-    {% set isOney = constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') in form.vars.value %}
-    {% if isOney %}
-        <div class="field">
-            <div class="ui message positive">
-                <div class="content">
-                    <div class="header">{{ ('payplug_sylius_payplug_plugin.ui.oney_gateway_config.info')|trans({'%link%': 'https://support.payplug.com/hc/fr/articles/360015899980-Le-paiement-fractionn%C3%A9-garanti-avec-Oney-sur-Sylius'})|raw }}</div>
-                </div>
+{% block _sylius_admin_payment_method_gatewayConfig_factoryName_help %}
+    <div class="col-12 mt-3">
+        {% set isOney = constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') in form.vars.value %}
+        {% if isOney %}
+            <div class="alert alert-success" role="alert">
+                <p>{{ ('payplug_sylius_payplug_plugin.ui.oney_gateway_config.info')|trans({'%link%': 'https://support.payplug.com/hc/fr/articles/360015899980-Le-paiement-fractionn%C3%A9-garanti-avec-Oney-sur-Sylius'})|raw }}</p>
             </div>
-        </div>
-    {% endif %}
-    <div class="{% if required %}required {% endif %}{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
-        {{- form_row(form, not isOney ? {'attr': {'style': 'margin: 0 0 1rem;'}} : {}) -}}
+        {% endif %}
     </div>
 {% endblock %}
 
-{% block _sylius_payment_method_gatewayConfig_config_secretKey_row %}
-    {% set hasFeesFor = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FEES_FOR') in form.parent.children|keys %}
-    {% if hasFeesFor %}
-        </div>{# close previous <div.two.fields> to avoid 2 columns #}
-    {% endif %}
-    <div class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %}">
-        {{- form_label(form) -}}
+{% block _sylius_admin_payment_method_gatewayConfig_config_payplug_checkbox_widget %}
+    <div class="form-switch ms-n5">
         {{- form_widget(form) -}}
-        <span style="font-size: 0.8rem; font-style: italic">
-            {{- form_help(form) -}}
-        </span>
-        {% for error in errors %}
-            <div class="ui red pointing label sylius-validation-error">
-                {{ error.message|raw }}
-            </div>
-        {% endfor %}
     </div>
-    {% if hasFeesFor %}
-        <div class="required field">
-    {% endif %}
 {% endblock %}
 
-{% block _sylius_payment_method_gatewayConfig_config_fees_for_row %}
+{% block _sylius_admin_payment_method_gatewayConfig_config_fees_for_row %}
     <div {{ block('widget_container_attributes') }}>
-        <div class="inline fields">
-            <div class="field {% if required %}required {% endif %}">
-                {{ form_label(form) }}
+        {{ form_label(form) }}
+        {%- for child in form %}
+            <div class="form-check form-check-inline">
+                {{- form_widget(child, {'attr': 'client' in child.vars.value ? {'checked': 'checked'} : {}}, sylius_test_form_attribute('option')) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
             </div>
-            {%- for child in form %}
-                <div class="field">
-                    <div class="ui radio checkbox">
-                        {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
-                        {{- form_widget(child, {'attr': 'client' in child.vars.value ? {'checked': 'checked'} : {}}, sylius_test_form_attribute('option')) -}}
-                    </div>
-                </div>
-            {% endfor -%}
-        </div>
-        {{- form_errors(form) -}}
+        {% endfor -%}
     </div>
-    <style>
-        {{ '#' ~ form.vars.id }} .ui.radio.checkbox input:checked ~ label:after {
-            background-color: #1abb9c;
-        }
-    </style>
+    {{- form_errors(form) -}}
 {% endblock %}
 
-{% block _sylius_payment_method_gatewayConfig_config_payplug_checkbox_row %}
-    <div class="{% if required %}required {% endif %}field{% if (not compound or force_error|default(false)) and not valid %} error{% endif %} ui toggle checkbox">
-        <div class="ui toggle checkbox" style="margin-top: 2rem; margin-bottom: 0.8rem;">
-            {{- form_label(form) -}}
-            {{- form_widget(form) -}}
-        </div>
-
-        <span style="font-size: 0.8rem; font-style: italic;">
-            {{- form_help(form) -}}
-        </span>
-        {% for error in errors %}
-            <div class="ui red pointing label sylius-validation-error">
-                {{ error.message|raw }}
-            </div>
-        {% endfor %}
-    </div>
-{% endblock %}
-
-{% block _sylius_payment_method_enabled_errors %}
-    {% for error in errors %}
-        <div class="ui red pointing label sylius-validation-error">
-            {{ error.message|raw }}
-        </div>
-    {% endfor %}
-{% endblock %}
-
-{% block _sylius_checkout_select_payment_payments_entry_oney_payment_choice_row %}
-    {% set data = oney_simulation_data() %}
-    {% import "@SyliusShop/Common/Macro/money.html.twig" as money %}
-    <div class="oney-payment-choice__container">
-        <div class="oney-payment-choice__tab">
-            {% for keyChoice, choice in form.vars.choices %}
-                <a class="tablink" href="javascript:void(0);" data-id="{{ choice.value }}">
-                    <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ choice.value ~ '.svg') }}">
-                    {% if choice.value|split('oney_')|last not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
-                        <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
-                    {% endif %}
-                    <p>{{ ('payplug_sylius_payplug_plugin.ui.' ~ choice.value ~ '_payment')|trans }}</p>
-                </a>
-            {% endfor %}
-        </div>
-        {% for keyChoice, choice in form.vars.choices %}
-            {% if data is not empty %}
-                {% set nx_with_fees = (choice.value|split('_', 2))[1] %}
-                {% set grand_total = data[nx_with_fees]['down_payment_amount'] %}
-            {% endif %}
-            <div class="oney-payment-choice__item oney-payment-choice__item--{{ choice.value }}" id="{{ choice.value }}">
-                <input
-                        type="radio"
-                        value="{{ choice.value }}"
-                        id="oney_choice_{{ keyChoice }}"
-                        name="{{ form.vars.full_name }}"
-                        class="oney-payment-choice__input payment-choice__input"
-                        {% if form.vars.value is not empty %}
-                            {{ form.vars.value == choice.value ? 'checked="checked"' : '' }}
-                        {% elseif loop.index is same as(1) %}
-                            checked="checked"
-                        {% endif %}
-                >
-                <label for="oney_choice_{{ keyChoice }}" class="oney-payment-choice__label">
-                    <span class="oney-payment-choice__header">
-                            <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ choice.value ~ '.svg') }}">
-                            {% if choice.value|split('oney_')|last not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
-                                <img class="oney-payment__image" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/logo.svg') }}">
-                            {% endif %}
-                        <p>{{ ('payplug_sylius_payplug_plugin.ui.' ~ choice.value ~ '_payment')|trans }}</p>
-                    </span>
-                    {% if data is not empty %}
-                        <span class="oney-payment-choice__content">
-                            <p><span><strong>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.current_total'|trans }} : </strong></span><span><strong>{{ money.convertAndFormat(data['current_total']) }}</strong></span></p>
-                            <p>
-                                <span>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.down_payment_amount'|trans }} : </span><span><strong>{{ money.convertAndFormat(data[nx_with_fees]['down_payment_amount']) }}</strong></span>
-                                {% if data[nx_with_fees]['total_cost'] > 0 %}
-                                    <small>({{ 'payplug_sylius_payplug_plugin.ui.payment_choice.total_cost'|trans }} : <strong>{{ money.convertAndFormat(data[nx_with_fees]['total_cost']) }}</strong> {{ 'payplug_sylius_payplug_plugin.ui.payment_choice.effective_annual_percentage_rate'|trans }} : <strong>{{ data[nx_with_fees]['effective_annual_percentage_rate'] ~ '%' }}</strong>)</small>
-                                {% endif %}
-                            </p>
-                            {% for key, installment in data[nx_with_fees]['installments'] %}
-                                {% set grand_total = grand_total + installment['amount'] %}
-                                <p><span>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.installment_amount'|trans }} {{ key + 1 }} :</span><span><strong>{{ money.convertAndFormat(installment.amount) }}</strong></span></p>
-                            {% endfor %}
-                            {% if data[nx_with_fees]['total_cost'] > 0 %}
-                                <p><span><strong>{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.grand_total'|trans }} :</strong></span><span><strong>{{ money.convertAndFormat(grand_total) }}</strong></span></p>
-                            {% else %}
-                                <p class="oney-without-fees-financing">{{ 'payplug_sylius_payplug_plugin.ui.payment_choice.total_cost'|trans }} : <strong>{{ money.convertAndFormat(data[nx_with_fees]['total_cost']) }}</strong> {{ 'payplug_sylius_payplug_plugin.ui.payment_choice.effective_annual_percentage_rate'|trans }} : <strong>{{ data[nx_with_fees]['effective_annual_percentage_rate'] ~ '%' }}</strong></p>
-                            {% endif %}
-                        </span>
-                    {% endif %}
-                </label>
-            </div>
-        {% endfor %}
-    </div>
-{% endblock %}
-
-{% block _sylius_checkout_select_payment_payments_entry_payplug_card_choice_row %}
-    <div class="payplug-payment-choice__container">
-        {% for card in sylius.customer.cards %}
-            {% set cardExpirationDate = ("%04d"|format(card.expirationYear) ~ '-' ~ "%02d"|format(card.expirationMonth))|date("Y-m") %}
-            {% if cardExpirationDate >= "now"|date("Y-m") %}
-                <div class="payplug-payment-choice__item payplug-payment-choice__item--card-{{ card.id }}" id="card-{{ card.id }}">
-                    <input type="radio"
-                           value="{{ card.id }}"
-                           id="payplug_choice_card_{{ card.id }}"
-                           name="{{ form.vars.full_name }}"
-                           class="payplug-payment-choice__input payment-choice__input"
-                           {% if form.vars.value is not empty %}
-                               {{ form.vars.value == card.id ? 'checked="checked"' : '' }}
-                           {% elseif loop.index is same as(1) %}
-                               checked="checked"
-                           {% endif %}
-                    >
-                    <label for="payplug_choice_card_{{ card.id }}" class="payplug-payment-choice__label">
-                        <span class="payplug-payment-choice__header">
-                            <span class="card-type">{{ card.brand|e }} ****{{ card.last4|e }}</span>
-                            <span class="card-expiry">{{ ('payplug_sylius_payplug_plugin.ui.card_expires_on')|trans }} <span>{{ "%02d"|format(card.expirationMonth) ~ '/' ~ "%04d"|format(card.expirationYear) }}</span></span>
-                        </span>
-                    </label>
-                </div>
-            {% endif %}
-        {% endfor %}
-        <div class="payplug-payment-choice__item payplug-payment-choice__item--card-other" id="card-other">
-            <input type="radio"
-                   value="other"
-                   id="payplug_choice_card_other"
-                   name="{{ form.vars.full_name }}"
-                   class="payplug-payment-choice__input payment-choice__input"
-                   {% if form.vars.value is not empty %}
-                       {{ form.vars.value == 'other' ? 'checked="checked"' : '' }}
-                   {% elseif sylius.customer.cards is empty %}
-                       checked="checked"
-                   {% endif %}
-            >
-            <label for="payplug_choice_card_other" class="payplug-payment-choice__label">
-                <span class="payplug-payment-choice__header">{{ ('payplug_sylius_payplug_plugin.ui.pay_with_another_card')|trans }}</span>
-            </label>
-        </div>
-    </div>
+{% block _sylius_admin_payment_method_gatewayConfig_config_fees_for_label %}
+    <span class="col-form-label d-inline-block">{{ label|trans }}</span>
 {% endblock %}
