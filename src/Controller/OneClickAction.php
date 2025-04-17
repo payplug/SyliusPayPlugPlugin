@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
 class OneClickAction extends AbstractController implements GatewayAwareInterface, ApiAwareInterface
@@ -34,6 +35,7 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
     ) {
     }
 
+    #[Route(path: '/{_locale}/payment/capture/{payum_token}/1-click-checkup', name: 'payplug_sylius_oneclick_verification', methods: ['GET'])]
     public function __invoke(Request $request): Response
     {
         $token = $this->payum->getHttpRequestVerifier()->verify($request);

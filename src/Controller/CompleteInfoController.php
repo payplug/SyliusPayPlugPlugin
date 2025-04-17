@@ -17,6 +17,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Webmozart\Assert\Assert;
 
@@ -30,6 +31,7 @@ final class CompleteInfoController extends AbstractController
     ) {
     }
 
+    #[Route(path: '/{_locale}/payplug/oney_complete_info', name: 'payplug_sylius_oney_complete_info', methods: ['GET', 'POST'])]
     public function __invoke(
         Request $request,
         CartContextInterface $cartContext,

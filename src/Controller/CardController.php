@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[AsController]
@@ -32,6 +33,7 @@ final class CardController extends AbstractController
     ) {
     }
 
+    #[Route(path: '/{_locale}/account/saved-cards', name: 'payplug_sylius_card_account_index', methods: ['GET'])]
     public function indexAction(): Response
     {
         $customer = $this->customerContext->getCustomer();
@@ -48,6 +50,7 @@ final class CardController extends AbstractController
         ]);
     }
 
+    #[Route(path: '/{_locale}/account/saved-cards/delete/{id}', name: 'payplug_sylius_card_account_delete', methods: ['DELETE'])]
     public function deleteAction(int $id): Response
     {
         $customer = $this->customerContext->getCustomer();

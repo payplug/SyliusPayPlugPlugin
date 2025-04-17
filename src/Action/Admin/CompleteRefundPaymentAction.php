@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
@@ -37,6 +38,7 @@ final class CompleteRefundPaymentAction
     ) {
     }
 
+    #[Route(path: '/orders/{orderNumber}/refund-payments/{id}/complete', name: 'sylius_admin_refund_payment_complete', methods: ['POST'])]
     public function __invoke(string $orderNumber, string $id): Response
     {
         /** @var RefundPaymentInterface $refundPayment */

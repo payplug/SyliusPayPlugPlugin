@@ -10,11 +10,13 @@ use Sylius\Component\Core\Model\ProductVariantInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
 #[AsController]
 final class OneySimulationPopin extends AbstractOneyController
 {
+    #[Route(path: '/{_locale}/payplug/oney_popin', name: 'payplug_sylius_oney_simulation_popin', methods: ['GET'])]
     public function __invoke(Request $request): Response
     {
         /** @var OrderInterface $cart */

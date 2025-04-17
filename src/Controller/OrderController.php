@@ -39,6 +39,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Webmozart\Assert\Assert;
 
@@ -94,6 +95,22 @@ final class OrderController extends BaseOrderController
         );
     }
 
+    #[Route(
+        path: '/payplug/apple-pay/prepare/{orderId}',
+        name: 'payplug_shop_checkout_apple_prepare',
+        options: [
+            '_sylius' => [
+                'flash' => false,
+                'repository' => [
+                    'method' => 'find',
+                    'arguments' => [
+                        'expr:service("PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider").getCurrentCart()',
+                    ],
+                ],
+            ],
+        ],
+        methods: ['GET', 'POST'],
+    )]
     public function initiateApplePaySessionAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
@@ -189,6 +206,22 @@ final class OrderController extends BaseOrderController
         }
     }
 
+    #[Route(
+        path: '/payplug/apple-pay/complete/{orderId}',
+        name: 'payplug_shop_checkout_apple_confirm',
+        options: [
+            '_sylius' => [
+                'flash' => false,
+                'repository' => [
+                    'method' => 'find',
+                    'arguments' => [
+                        'expr:service("PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider").getCurrentCart()',
+                    ],
+                ],
+            ],
+        ],
+        methods: ['GET', 'POST'],
+    )]
     public function confirmApplePayPaymentAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
@@ -286,6 +319,22 @@ final class OrderController extends BaseOrderController
         return new JsonResponse($response, Response::HTTP_OK);
     }
 
+    #[Route(
+        path: '/payplug/apple-pay/cancel/{orderId}',
+        name: 'payplug_shop_checkout_apple_cancel',
+        options: [
+            '_sylius' => [
+                'flash' => false,
+                'repository' => [
+                    'method' => 'find',
+                    'arguments' => [
+                        'expr:service("PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider").getCurrentCart()',
+                    ],
+                ],
+            ],
+        ],
+        methods: ['GET', 'POST'],
+    )]
     public function cancelApplePaySessionAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);

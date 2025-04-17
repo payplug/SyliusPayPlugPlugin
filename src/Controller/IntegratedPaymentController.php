@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
 final class IntegratedPaymentController extends AbstractController
@@ -48,6 +49,7 @@ final class IntegratedPaymentController extends AbstractController
      *
      * @see https://docs.payplug.com/api/integratedref.html#trigger-a-payment
      */
+    #[Route(path: '/{_locale}/payplug/integrated-payment/init', name: 'payplug_sylius_integrated_payment_init', methods: ['GET', 'POST'])]
     public function initPaymentAction(Request $request, int $paymentMethodId): Response
     {
         $paymentMethod = $this->paymentMethodRepository->find($paymentMethodId);

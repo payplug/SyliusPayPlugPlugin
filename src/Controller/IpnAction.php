@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
 #[AsController]
@@ -41,6 +42,7 @@ class IpnAction
     ) {
     }
 
+    #[Route(path: '/payplug/ipn', name: 'payplug_sylius_ipn', methods: ['GET', 'POST'])]
     public function __invoke(Request $request): JsonResponse
     {
         $input = $request->getContent();

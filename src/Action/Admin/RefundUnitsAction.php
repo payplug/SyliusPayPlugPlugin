@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsController]
@@ -31,6 +32,7 @@ final class RefundUnitsAction
     ) {
     }
 
+    #[Route(path: '/orders/{orderNumber}/refunds-units', name: 'sylius_refund_refund_units', methods: ['POST'])]
     public function __invoke(Request $request): Response
     {
         try {

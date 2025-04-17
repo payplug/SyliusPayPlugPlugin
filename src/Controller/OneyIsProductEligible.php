@@ -10,11 +10,13 @@ use Sylius\Component\Core\Model\ProductVariantInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
 #[AsController]
 final class OneyIsProductEligible extends AbstractOneyController
 {
+    #[Route(path: '/{_locale}/payplug/oney/is-product-eligible', name: 'payplug_sylius_oney_is_product_eligible', methods: ['GET'])]
     public function __invoke(Request $request): JsonResponse
     {
         /** @var OrderInterface $cart */
