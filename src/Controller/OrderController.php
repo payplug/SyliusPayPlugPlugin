@@ -70,7 +70,6 @@ final class OrderController extends BaseOrderController
         ResourceUpdateHandlerInterface $resourceUpdateHandler,
         ResourceDeleteHandlerInterface $resourceDeleteHandler,
         ApplePayPaymentProvider $applePayPaymentProvider,
-        \SM\Factory\FactoryInterface $stateMachineFactory,
         LockFactory $lockFactory,
         LoggerInterface $logger
     ) {
@@ -95,7 +94,6 @@ final class OrderController extends BaseOrderController
         );
 
         $this->applePayPaymentProvider = $applePayPaymentProvider;
-        $this->stateMachineFactory = $stateMachineFactory;
         $this->lockFactory = $lockFactory;
         $this->logger = $logger;
     }

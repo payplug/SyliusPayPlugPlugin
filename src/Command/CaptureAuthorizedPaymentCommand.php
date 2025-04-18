@@ -22,12 +22,12 @@ class CaptureAuthorizedPaymentCommand extends Command
     private LoggerInterface $logger;
 
     public function __construct(
-        Factory $stateMachineFactory,
+        // Factory $stateMachineFactory,
         PaymentRepositoryInterface $paymentRepository,
         EntityManagerInterface $entityManager,
         LoggerInterface $logger,
     ) {
-        $this->stateMachineFactory = $stateMachineFactory;
+        // $this->stateMachineFactory = $stateMachineFactory;
         $this->paymentRepository = $paymentRepository;
         $this->entityManager = $entityManager;
         $this->logger = $logger;

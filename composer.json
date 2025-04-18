@@ -14,11 +14,11 @@
         "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^3.1",
         "php-http/message-factory": "^1.1",
-        "sylius/refund-plugin": "^1.4",
-        "sylius/sylius": "^1.11.0",
-        "symfony/asset": "^4.4|^5.0|^6.0",
-        "symfony/lock": "^4.4|^5.0|^6.0",
-        "symfony/validator": "^4.4|^5.0|^6.0"
+        "sylius/refund-plugin": "^2.0",
+        "sylius/sylius": "^2.0",
+        "symfony/asset": "^6.0|^7.0",
+        "symfony/lock": "^6.0|^7.0",
+        "symfony/validator": "^6.0|^7.0"
     },
     "require-dev": {
         "behat/behat": "^3.7",

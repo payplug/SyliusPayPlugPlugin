@@ -38,7 +38,7 @@ use Webmozart\Assert\Assert;
 class ApplePayPaymentProvider
 {
     private PaymentFactoryInterface $paymentFactory;
-    private StateMachineFactoryInterface $stateMachineFactory;
+    // private StateMachineFactoryInterface $stateMachineFactory;
     private PaymentMethodRepositoryInterface $paymentMethodRepository;
     private PayPlugPaymentDataCreator $paymentDataCreator;
     private PayPlugApiClientInterface $applePayClient;
@@ -48,7 +48,7 @@ class ApplePayPaymentProvider
 
     public function __construct(
         PaymentFactoryInterface $paymentFactory,
-        StateMachineFactoryInterface $stateMachineFactory,
+        // StateMachineFactoryInterface $stateMachineFactory,
         PaymentMethodRepositoryInterface $paymentMethodRepository,
         PayPlugPaymentDataCreator $paymentDataCreator,
         PayPlugApiClientInterface $applePayClient,

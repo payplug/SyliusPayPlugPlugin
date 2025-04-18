@@ -18,14 +18,11 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
 {
     private OrderProcessorInterface $baseOrderPaymentProcessor;
 
-    private FactoryInterface $stateMachineFactory;
 
     public function __construct(
         OrderProcessorInterface $baseOrderPaymentProcessor,
-        FactoryInterface $stateMachineFactory
     ) {
         $this->baseOrderPaymentProcessor = $baseOrderPaymentProcessor;
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
     public function process(OrderInterface $order): void

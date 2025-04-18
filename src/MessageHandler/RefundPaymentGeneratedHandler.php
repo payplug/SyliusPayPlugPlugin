@@ -69,7 +69,7 @@ final class RefundPaymentGeneratedHandler
         PaymentRepositoryInterface $paymentRepository,
         RepositoryInterface $refundPaymentRepository,
         RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        FactoryInterface $stateMachineFactory,
+        // FactoryInterface $stateMachineFactory,
         RefundPaymentProcessor $refundPaymentProcessor,
         LoggerInterface $logger,
         RequestStack $requestStack,
@@ -80,7 +80,7 @@ final class RefundPaymentGeneratedHandler
         $this->paymentRepository = $paymentRepository;
         $this->refundPaymentRepository = $refundPaymentRepository;
         $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
-        $this->stateMachineFactory = $stateMachineFactory;
+        // $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentProcessor = $refundPaymentProcessor;
         $this->logger = $logger;
         $this->requestStack = $requestStack;

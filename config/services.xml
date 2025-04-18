@@ -28,7 +28,6 @@
                  parent="sylius.controller.order"
         >
             <argument key="$applePayPaymentProvider" type="service" id="PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider" />
-            <argument key="$stateMachineFactory" type="service" id="sm.factory" />
             <argument key="$lockFactory" type="service" id="lock.default.factory" />
             <argument key="$logger" type="service" id="logger" />
         </service>
@@ -42,11 +41,9 @@
                 decorates="sylius.order_processing.order_payment_processor.checkout"
         >
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Processor\OrderPaymentProcessor.inner" />
-            <argument type="service" id="sm.factory" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.resolver.payment_state" class="PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolver">
-            <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.api_client.payplug" />
             <argument type="service" id="sylius.manager.payment" />
         </service>
@@ -65,10 +62,10 @@
         </service>
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandler" public="true">
-            <argument type="service" id="Sylius\RefundPlugin\Calculator\UnitRefundTotalCalculator" />
-            <argument type="service" id="Sylius\RefundPlugin\Provider\RemainingTotalProvider" />
+            <argument type="service" id="sylius_refund.calculator.unit_refund_total" />
+            <argument type="service" id="sylius_refund.provider.remaining_total" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
-            <argument type="service" id="Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplier" />
+            <argument type="service" id="sylius_refund.state_resolver.refund_payment_completed_applier" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.payment_processing.capture" class="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\CaptureAuthorizedPaymentProcessor" public="true">
@@ -98,7 +95,7 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator"
-                decorates="sylius.payment_methods_resolver"
+                decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\OneyPaymentMethodsResolverDecorator.inner"/>
@@ -106,7 +103,7 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator"
-                decorates="sylius.payment_methods_resolver"
+                decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\PayPlugPaymentMethodsResolverDecorator.inner"/>
@@ -115,7 +112,7 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator"
-                decorates="sylius.payment_methods_resolver"
+                decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\BancontactPaymentMethodsResolverDecorator.inner"/>
@@ -124,7 +121,7 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator"
-                decorates="sylius.payment_methods_resolver"
+                decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\ApplePayPaymentMethodsResolverDecorator.inner"/>
@@ -133,7 +130,7 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Resolver\AmericanExpressPaymentMethodsResolverDecorator"
-                decorates="sylius.payment_methods_resolver"
+                decorates="sylius.resolver.payment_methods"
                 public="false"
         >
             <argument type="service" key="$decorated" id="PayPlug\SyliusPayPlugPlugin\Resolver\AmericanExpressPaymentMethodsResolverDecorator.inner"/>
@@ -153,7 +150,7 @@
             <argument type="service" id="sylius.repository.payment" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="payplug.repository.payplug_refund_history" />
-            <argument type="service" id="sm.factory" />
+<!--            <argument type="service" id="sm.factory" />-->
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund" />
             <argument type="service" id="logger" />
             <argument type="service" id="request_stack" />
@@ -164,11 +161,11 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Provider\SupportedRefundPaymentMethodsProviderDecorator"
-                decorates="Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface"
-                decoration-inner-name="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"
+                decorates="sylius_refund.provider.refund_payment_methods"
+                decoration-inner-name="sylius_refund.provider.refund_payment_methods.inner"
                 public="false"
         >
-            <argument type="service" id="Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider.inner"/>
+            <argument type="service" id="sylius_refund.provider.refund_payment_methods.inner"/>
             <argument type="service" id="request_stack"/>
             <argument type="service" id="sylius.repository.order"/>
             <argument>%sylius_refund.supported_gateways%</argument>
@@ -222,7 +219,7 @@
             <argument type="service" id="request_stack" />
             <argument type="service" id="sylius_refund.repository.refund_payment" />
             <argument type="service" id="sylius.repository.order" />
-            <argument type="service" id="Sylius\RefundPlugin\StateResolver\RefundPaymentCompletedStateApplier" />
+            <argument type="service" id="sylius_refund.state_resolver.refund_payment_completed_applier" />
             <argument type="service" id="router" />
             <argument type="service" id="sylius.event_bus" />
             <argument type="service" id="Sylius\RefundPlugin\Provider\RelatedPaymentIdProviderInterface" />
@@ -235,7 +232,7 @@
             <argument type="service" id="sylius.command_bus" />
             <argument type="service" id="request_stack" />
             <argument type="service" id="router" />
-            <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator" />
+            <argument type="service" id="sylius_refund.creator.request_command" />
             <argument type="service" id="monolog.logger" />
 
             <tag name="controller.service_arguments"/>
@@ -249,12 +246,12 @@
 
         <service
                 id="PayPlug\SyliusPayPlugPlugin\Creator\RefundUnitsCommandCreatorDecorator"
-                decorates="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator"
-                decoration-inner-name="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator.inner"
+                decorates="sylius_refund.creator.request_command"
+                decoration-inner-name="sylius_refund.creator.request_command.inner"
                 public="false"
         >
-            <argument type="service" id="Sylius\RefundPlugin\Creator\RefundUnitsCommandCreator.inner"/>
-            <argument type="service" id="Sylius\RefundPlugin\Converter\Request\RequestToRefundUnitsConverterInterface"/>
+            <argument type="service" id="sylius_refund.creator.request_command.inner"/>
+            <argument type="service" id="sylius_refund.converter.request_to_refund_units"/>
         </service>
 
         <service

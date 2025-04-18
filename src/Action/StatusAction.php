@@ -27,9 +27,6 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
     use GatewayAwareTrait;
     use ApiAwareTrait;
 
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
     /** @var RefundPaymentHandlerInterface */
     private $refundPaymentHandler;
 
@@ -38,12 +35,10 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
     private RequestStack $requestStack;
 
     public function __construct(
-        FactoryInterface $stateMachineFactory,
         RefundPaymentHandlerInterface $refundPaymentHandler,
         PaymentNotificationHandler $paymentNotificationHandler,
         RequestStack $requestStack
     ) {
-        $this->stateMachineFactory = $stateMachineFactory;
         $this->refundPaymentHandler = $refundPaymentHandler;
         $this->paymentNotificationHandler = $paymentNotificationHandler;
         $this->requestStack = $requestStack;

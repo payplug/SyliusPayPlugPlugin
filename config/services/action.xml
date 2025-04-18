@@ -14,7 +14,6 @@
         </service>
 
         <service id="payplug_sylius_payplug_plugin.action.status" class="PayPlug\SyliusPayPlugPlugin\Action\StatusAction">
-            <argument type="service" id="sm.factory" />
             <argument type="service" id="payplug_sylius_payplug_plugin.payment_processing.refund_handler" />
             <argument type="service" id="PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler" />
             <tag name="payum.action" factory="payplug" alias="payum.action.status" />

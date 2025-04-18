@@ -28,11 +28,9 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
     private $paymentEntityManager;
 
     public function __construct(
-        FactoryInterface $stateMachineFactory,
         PayPlugApiClientInterface $payPlugApiClient,
         EntityManagerInterface $paymentEntityManager
     ) {
-        $this->stateMachineFactory = $stateMachineFactory;
         $this->payPlugApiClient = $payPlugApiClient;
         $this->paymentEntityManager = $paymentEntityManager;
     }

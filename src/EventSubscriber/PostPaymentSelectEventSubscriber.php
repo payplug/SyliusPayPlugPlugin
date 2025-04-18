@@ -28,7 +28,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
-        private FactoryInterface $stateMachineFactory,
+        // private FactoryInterface $stateMachineFactory,
     ) {
     }
 
