@@ -1,5 +1,6 @@
-{% import '@SyliusUi/Macro/buttons.html.twig' as buttons %}
-{% import '@SyliusUi/Macro/messages.html.twig' as messages %}
+{% import '@SyliusShop/shared/buttons.html.twig' as buttons %}
+{% import '@SyliusShop/shared/messages.html.twig' as messages %}
+{% set savedCards = get_hookable_context().savedCards %}
 
 <div class="ui hidden divider"></div>
 <div class="sylius-grid-wrapper">

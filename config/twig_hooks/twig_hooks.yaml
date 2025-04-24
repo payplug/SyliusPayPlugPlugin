@@ -1,0 +1,13 @@
+sylius_twig_hooks:
+    hooks:
+        'sylius_shop.base#stylesheets':
+            payplug_styles:
+                template: '@PayPlugSyliusPayPlugPlugin/stylesheets/saved_cards.html.twig'
+                priority: 1
+        'sylius.shop.account.saved_cards.index.subcontent':
+            header:
+                template: '@SyliusShop/Account/SavedCards/Index/_header.html.twig'
+                priority: 20
+            subcontent:
+                template: "@SyliusShop/Account/SavedCards/Index/_subcontent.html.twig"
+                priority: 10

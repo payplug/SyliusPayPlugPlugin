@@ -19,7 +19,7 @@ final class AccountMenuListener
             ])
             ->setAttribute('type', 'link')
             ->setLabel('payplug_sylius_payplug_plugin.ui.account.saved_cards.title')
-            ->setLabelAttribute('icon', 'credit card')
+            ->setLabelAttribute('icon', 'tabler:credit-card')
         ;
     }
 }

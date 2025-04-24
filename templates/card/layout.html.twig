@@ -1,32 +1,28 @@
-{% extends '@SyliusShop/Account/layout.html.twig' %}
+{% extends '@SyliusShop/account/common/index.html.twig' %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    {{ sylius_template_event('sylius.shop.account.saved_cards.layout.stylesheets') }}
-{% endblock %}
+{% from '@SyliusShop/shared/breadcrumbs.html.twig' import breadcrumbs as breadcrumbs %}
 
 {% block content %}
-    {% block breadcrumb %}
-        <div class="ui breadcrumb">
-            <a href="{{ path('sylius_shop_homepage') }}" class="section">{{ 'sylius.ui.home'|trans }}</a>
-            <div class="divider"> / </div>
-            <a href="{{ path('sylius_shop_account_dashboard') }}" class="section">{{ 'sylius.ui.my_account'|trans }}</a>
-            <div class="divider"> / </div>
-            <div class="active section">{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.title'|trans }}</div>
-        </div>
-    {% endblock %}
-
-    <div class="ui stackable grid">
-        <div class="four wide column">
-            {{ sylius_template_event('sylius.shop.account.layout.menu') }}
-        </div>
-        <div class="twelve wide column">
-            {{ sylius_template_event('sylius.shop.account.layout.before_subcontent') }}
-
-            {% block subcontent %}
+    <div class="container mb-auto">
+        <div class="row my-4">
+            {% block breadcrumb %}
+                <div class="col-12">
+                    {{ breadcrumbs([
+                        { label: 'sylius.ui.home'|trans, path: path('sylius_shop_homepage')},
+                        { label: 'sylius.ui.my_account'|trans, path: path('sylius_shop_account_dashboard')},
+                        { label: 'payplug_sylius_payplug_plugin.ui.account.saved_cards.title'|trans, active: true}
+                    ]) }}
+                </div>
             {% endblock %}
 
-            {{ sylius_template_event('sylius.shop.account.layout.after_subcontent') }}
+            <div class="col-12 col-md-3 mb-4 mb-md-0">
+                {% hook 'sylius_shop.account.common.index.content.menu' %}
+            </div>
+
+            <div class="col-12 col-md-9">
+                {% block subcontent %}
+                {% endblock %}
+            </div>
         </div>
     </div>
 {% endblock %}

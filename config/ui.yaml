@@ -21,34 +21,6 @@ sylius_ui:
             blocks:
                 oney_common:
                     template: '@PayPlugSyliusPayPlugPlugin/stylesheets/oney_common.html.twig'
-        sylius.shop.account.saved_cards.index.header.content:
-            blocks:
-                legacy:
-                    template: "@SyliusUi/Block/_legacySonataEvent.html.twig"
-                    context:
-                        event: sylius.shop.account.saved_cards.index.header
-        sylius.shop.account.saved_cards.layout.stylesheets:
-            blocks:
-                saved_cards:
-                    template: '@PayPlugSyliusPayPlugPlugin/stylesheets/saved_cards.html.twig'
-        sylius.shop.account.saved_cards.index.subcontent:
-            blocks:
-                header:
-                    template: '@SyliusShop/Account/SavedCards/Index/_header.html.twig'
-                    priority: 20
-                after_content_header_legacy:
-                    template: "@SyliusUi/Block/_legacySonataEvent.html.twig"
-                    priority: 15
-                    context:
-                        event: sylius.shop.account.order.index.after_content_header
-                subcontent:
-                    template: "@SyliusShop/Account/SavedCards/Index/_subcontent.html.twig"
-                    priority: 10
-                after_grid_legacy:
-                    template: "@SyliusUi/Block/_legacySonataEvent.html.twig"
-                    priority: 5
-                    context:
-                        event: sylius.shop.account.order.index.after_grid
         sylius.admin.payment_method.create.stylesheets: &cssEvt
             blocks:
                 payment_methods_css:
