@@ -28,8 +28,6 @@ sylius_ui:
         sylius.admin.payment_method.update.stylesheets: *cssEvt
         sylius.shop.checkout.select_payment.before_form: &selectPayment
             blocks:
-                select_payment_css:
-                    template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
                 select_payment_js:
                     template: '@PayPlugSyliusPayPlugPlugin/javascripts/select_payment_js.html.twig'
         sylius.shop.order.select_payment.before_form: *selectPayment

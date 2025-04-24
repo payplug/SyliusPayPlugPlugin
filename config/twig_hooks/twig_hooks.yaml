@@ -11,3 +11,7 @@ sylius_twig_hooks:
             subcontent:
                 template: "@SyliusShop/Account/SavedCards/Index/_subcontent.html.twig"
                 priority: 10
+
+        'sylius_shop.shared.form.select_payment.payment.choice.details':
+            select_payment_css:
+                template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
