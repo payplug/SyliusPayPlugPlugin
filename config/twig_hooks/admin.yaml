@@ -1,6 +1,6 @@
 sylius_twig_hooks:
     hooks:
-        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug':
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug': &payplugGateway
             secret_key: &secretKey
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/secret_key.html.twig'
                 priority: 0
@@ -13,14 +13,20 @@ sylius_twig_hooks:
             deferred_capture:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/deferred_capture.html.twig'
                 priority: 0
-        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_oney':
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_oney': &oneyGateway
             secret_key: *secretKey
             fees_for:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/fees_for.html.twig'
                 priority: 0
-        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_bancontact':
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_bancontact': &bancontactGateway
             secret_key: *secretKey
-        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_apple_pay':
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_apple_pay': &applePayGateway
             secret_key: *secretKey
-        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_american_express':
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_american_express': &amexGateway
             secret_key: *secretKey
+
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug': *payplugGateway
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_oney': *oneyGateway
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_bancontact': *bancontactGateway
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_apple_pay': *applePayGateway
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_american_express': *amexGateway
