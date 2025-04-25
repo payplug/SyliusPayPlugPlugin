@@ -4,7 +4,8 @@
     "keywords": [
         "sylius",
         "sylius-plugin",
-        "payplug"
+        "payplug",
+        "symfony-ux"
     ],
     "description": "PayPlug payment plugin for Sylius applications.",
     "license": "MIT",

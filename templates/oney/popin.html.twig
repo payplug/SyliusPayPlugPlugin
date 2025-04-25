@@ -1,11 +1,7 @@
-{% import "@SyliusShop/Common/Macro/money.html.twig" as money %}
+{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
+
 {% if data is empty %}
     {% set data = ineligibilityData %}
-    {% if is_oney_without_fees() %}
-        {% set logo_name = '3x4x-without-fees.svg' %}
-    {% else %}
-        {% set logo_name = '3x4x.svg' %}
-    {% endif %}
     <div class="oney-popin__header">
         <a class="close" href="javascript:void(0);" title="{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}">
             <span></span><span></span>
@@ -36,8 +32,10 @@
         {% for key, choice in oney_supported_choices() %}
             <section class="section-{{ choice }}">
                 <div>
-                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ (key + 3) ~ 'x.svg') }}"
-                         alt="Paiement en {{ key + 3 }}x"/>
+                    <img
+                        src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ (key + 3) ~ 'x.svg') }}"
+                        alt="{{ ('payplug_sylius_payplug_plugin.ui.oney_x' ~ (key + 3) ~ '_with_fees_payment')|trans }}"
+                    />
                 </div>
                 <div>
                     {{ 'payplug_sylius_payplug_plugin.ui.popin_paiement_desc'|trans({

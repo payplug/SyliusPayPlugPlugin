@@ -13,37 +13,41 @@
     {% else %}
         {% set logo_name = logo_disabled %}
     {% endif %}
-    <div class="oney-info">
+    <div
+        class="oney-info"
+        {{ stimulus_controller('@payplug/sylius-payplug-plugin/oney-popin', {
+            eligibleUrl: path('payplug_sylius_oney_is_product_eligible'),
+            popinUrl: path('payplug_sylius_oney_simulation_popin'),
+            productMeta: {
+                product_variant_code: (hookable_metadata.context.product|sylius_resolve_variant).code,
+                img: {
+                    true: asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_enabled),
+                    false: asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_disabled)
+                },
+            },
+            translations: {
+                reason: 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans,
+                close: 'payplug_sylius_payplug_plugin.ui.popin_close'|trans
+            }
+        }) }}
+    >
+        <div class="sylius-shop-loader d-none">
+            <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
+        </div>
         <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" class="oney-logo" alt="oney-logo"/>
-        <div class="ui inverted dimmer">
-            <div class="ui loader"></div>
-        </div>
-        <div class="oney-popin {% if oney_product_eligible() %}enabled{% else %}disabled{% endif %}"
-             data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}">
+        <img
+            src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}"
+            class="oney-logo"
+            alt="Oney Logo"
+        />
+        <div
+            class="oney-popin {% if oney_product_eligible() %}enabled{% else %}disabled{% endif %}"
+            {{ stimulus_target('@payplug/sylius-payplug-plugin/oney-popin', 'popin') }}
+        ></div>
+        <div {{ stimulus_target('@payplug/sylius-payplug-plugin/oney-popin', 'variantCodes') }}>
+            {% for variant_codes in sylius_product_variant_codes(hookable_metadata.context.product, sylius.channel) %}
+                <div {% for key, option in variant_codes %}data-{{ key }}="{{ option }}"{% endfor %}></div>
+            {% endfor %}
         </div>
     </div>
-    <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_popin/index.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_popin/index.css') }}">
-    <div id="payplug-product-variant-codes">
-        {% for variantCodes in sylius_product_variant_codes(product, sylius.channel) %}
-            <div {% for key, option in variantCodes %}data-{{ key }}="{{ option }}"{% endfor %}></div>
-        {% endfor %}
-    </div>
-    <script type="text/javascript">//<![CDATA[
-      {% autoescape 'js' %}
-        var productMeta = {
-          product_variant_code: "{{ (product|sylius_resolve_variant).code }}",
-          url: "{{ path('payplug_sylius_oney_is_product_eligible') }}",
-          img: {
-            true: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_enabled) }}",
-            false: "{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_disabled) }}",
-          }
-        }
-        var translations = {
-          reason: "{{ 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans }}",
-          close: "{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}"
-        }
-      {% endautoescape %}
-    //]]></script>
 {% endif %}
