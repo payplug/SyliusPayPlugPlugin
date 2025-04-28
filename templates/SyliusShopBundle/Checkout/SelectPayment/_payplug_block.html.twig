@@ -16,7 +16,7 @@
     {% set hasSavedCards = true %}
 {% endif %}
 
-<div class="content">
+<div class="content" {{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}>
     <a class="header">
         {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
     </a>

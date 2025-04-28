@@ -1,3 +1,4 @@
+// TODO: Delete this file (moved to integrated-payment_controller.js)
 const IntegratedPayment = {
   options: {
     api: null,

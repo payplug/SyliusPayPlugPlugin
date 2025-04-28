@@ -24,6 +24,12 @@
           "@payplug/sylius-payplug-plugin/dist/shop/oney_common/index.css": true,
           "@payplug/sylius-payplug-plugin/dist/shop/oney_popin/index.css": true
         }
+      },
+      "integrated-payment": {
+        "main": "shop/controllers/integrated-payment_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
       }
     }
   },
