@@ -9,6 +9,7 @@ export default class extends Controller {
     eligibleUrl: String,
     popinUrl: String,
     productMeta: Object,
+    imagesMap: Object,
     translations: Object,
   }
   inputs = {
@@ -77,7 +78,7 @@ export default class extends Controller {
       url: this.eligibleUrlValue,
       data: this.productMetaValue,
       success: (res) => {
-        $(this.element).find(".oney-logo").attr("src", this.productMetaValue.img[res.isEligible]);
+        $(this.element).find(".oney-logo").attr("src", this.imagesMapValue[res.isEligible ? 'enabled' : 'disabled']);
         res.isEligible
           ? $(this.popinTarget).removeClass("disabled").addClass("enabled")
           : $(this.popinTarget).removeClass("enabled").addClass("disabled");

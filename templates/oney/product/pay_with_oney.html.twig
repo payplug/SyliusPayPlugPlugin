@@ -20,10 +20,10 @@
             popinUrl: path('payplug_sylius_oney_simulation_popin'),
             productMeta: {
                 product_variant_code: (hookable_metadata.context.product|sylius_resolve_variant).code,
-                img: {
-                    true: asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_enabled),
-                    false: asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_disabled)
-                },
+            },
+            imagesMap: {
+                enabled: asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_enabled),
+                disabled: asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_disabled)
             },
             translations: {
                 reason: 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans,
