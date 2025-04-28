@@ -1,135 +1,22 @@
+{% set form = hookable_metadata.context.form %}
+{% set method = hookable_metadata.context.method %}
+{% set order = hookable_metadata.context.order %}
+{% set factoryName = method.gatewayConfig.factoryName %}
+
 {% set oneyFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
 {% set payplugFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayplugGatewayFactory::FACTORY_NAME') %}
 {% set bancontactFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\BancontactGatewayFactory::FACTORY_NAME') %}
 {% set applePayFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') %}
 {% set americanExpressFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\AmericanExpressGatewayFactory::FACTORY_NAME') %}
 
-{% set checkboxClass = '' %}
-{% if method.gatewayConfig.factoryName == oneyFactoryName %}
-    {% set checkboxClass = 'checkbox-oney' %}
-{% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
-    {% set checkboxClass = 'checkbox-payplug' %}
-{% elseif method.gatewayConfig.factoryName == bancontactFactoryName %}
-    {% set checkboxClass = 'checkbox-bancontact' %}
-{% elseif method.gatewayConfig.factoryName == applePayFactoryName %}
-    {% set checkboxClass = 'checkbox-applepay' %}
-{% elseif method.gatewayConfig.factoryName == americanExpressFactoryName %}
-    {% set checkboxClass = 'checkbox-american-express' %}
+{% if factoryName == oneyFactoryName %}
+    {% hook '#payplug_oney' %}
+{% elseif factoryName == payplugFactoryName %}
+    {% hook '#payplug' %}
+{% elseif factoryName == bancontactFactoryName %}
+    {% hook '#payplug_bancontact' %}
+{% elseif factoryName == applePayFactoryName %}
+    {% hook '#payplug_apple_pay' %}
+{% elseif factoryName == americanExpressFactoryName %}
+    {% hook '#payplug_american_express' %}
 {% endif %}
-
-{% set showOney = false %}
-{% set hasSavedCards = false %}
-
-{% if method.gatewayConfig.factoryName == oneyFactoryName and form.parent.parent.oney_payment_choice is defined %}
-    {% set showOney = true %}
-{% elseif is_granted('ROLE_USER')
-    and method.gatewayConfig.factoryName == payplugFactoryName
-    and form.parent.parent.payplug_card_choice is defined
-    and is_save_card_enabled(method)
-    and sylius.customer.cards is not empty
-%}
-    {% set hasSavedCards = true %}
-{% endif %}
-
-<div class="item payment-item" {{ sylius_test_html_attribute('payment-item') }}>
-    <div class="field">
-        <div class="ui radio checkbox {{ checkboxClass }}" {{ sylius_test_html_attribute('payment-method-checkbox') }}>
-            {{ form_widget(form, sylius_test_form_attribute('payment-method-select')) }}
-        </div>
-    </div>
-    <div class="content">
-        <a class="header">
-            {% if method.gatewayConfig.factoryName == oneyFactoryName %}
-                <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
-                    {% if ((form.parent.parent.oney_payment_choice.vars.choices|last).value|split('oney_')|last) not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
-                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" class="oney-logo" alt="Oney"/>
-                    {% else %}
-                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-without-fees.svg') }}" class="oney-logo" alt="Oney Sans Frais"/>
-                    {% endif %}
-                </label>
-            {% elseif method.gatewayConfig.factoryName == payplugFactoryName %}
-                {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
-            {% elseif method.gatewayConfig.factoryName == applePayFactoryName %}
-                <div class="apple-pay-method">
-                    <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="apple-pay">{{ form.vars.label }}
-                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/apple-pay/logo.svg') }}" class="apple-pay-logo" alt="Apple Pay" height="45" width="60" />
-                    </label>
-                </div>
-            {% elseif method.gatewayConfig.factoryName == americanExpressFactoryName %}
-                <div class="american-express-method">
-                    <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="american-express">{{ form.vars.label }}
-                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/american-express/logo.svg') }}" class="american-express-logo" alt="American Express" height="45" width="60" />
-                    </label>
-                </div>
-            {% elseif method.gatewayConfig.factoryName == bancontactFactoryName %}
-                <div class="bancontact-method">
-                    <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="bancontact">{{ form.vars.label }}
-                        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/bancontact/logo.svg') }}" class="bancontact-logo" alt="Bancontact" height="45" width="60" />
-                    </label>
-                </div>
-            {% else %}
-                {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': ''}}) }}
-            {% endif %}
-        </a>
-        {% if method.description is not null %}
-            <div class="description">
-                <p>{{ method.description }}</p>
-            </div>
-        {% endif %}
-        {% if showOney %}
-            <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
-                {{ form_row(form.parent.parent.oney_payment_choice) }}
-            </div>
-            {% if app.session is not null and app.session.get('oney_has_error') == true %}
-                <script type="text/javascript">
-                    /* <![CDATA[ */
-                    var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}?tokenValue={{ order.tokenValue }}';
-                    /* ]] */
-                </script>
-            {% endif %}
-        {% elseif hasSavedCards %}
-            <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
-                {{ form_row(form.parent.parent.payplug_card_choice) }}
-            </div>
-        {% endif %}
-        {% if method.gatewayConfig.factoryName is same as payplugFactoryName and method.gatewayConfig.config.integratedPayment is defined and method.gatewayConfig.config.integratedPayment is same as true %}
-            {% include '@PayPlugSyliusPayPlugPlugin/form/integrated.html.twig' with {
-                'paymentMethod': method,
-                'payment': order.getLastPayment('cart'),
-                'hasSavedCards': hasSavedCards,
-            } %}
-        {% endif %}
-        {% if method.gatewayConfig.factoryName == applePayFactoryName %}
-            <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
-            <script>
-                const applePaySessionRequestSettings = {
-                    "countryCode": "{% if sylius.channel.defaultLocale.code|length == 2 %}{{ sylius.channel.defaultLocale.code }}{% else %}{{ sylius.channel.defaultLocale.code|slice(3, 2) }}{% endif %}",
-                    "currencyCode": "{{ sylius.channel.baseCurrency.code }}",
-                    "merchantCapabilities": [
-                        "supports3DS"
-                    ],
-                    "supportedNetworks": [
-                        "visa",
-                        "mastercard"
-                    ],
-                    "total": {
-                        "label": "",
-                        "type": "final",
-                        "amount": {{ order.total / 100 }}
-                    },
-                    'applicationData': btoa(JSON.stringify({
-                        'apple_pay_domain': "{{ sylius.channel.hostname }}"
-                    }))
-                };
-            </script>
-            <apple-pay-button id="payplug-applepay-btn"
-                              buttonstyle="black"
-                              type="pay"
-                              locale="{{ app.request.locale }}"
-                              data-validate-merchant-route="{{ path('payplug_shop_checkout_apple_prepare', {'orderId': order.id}) }}"
-                              data-payment-authorized-route="{{ path('payplug_shop_checkout_apple_confirm', {'orderId': order.id}) }}"
-                              data-session-cancel-route="{{ path('payplug_shop_checkout_apple_cancel', {'orderId': order.id}) }}"
-            ></apple-pay-button>
-        {% endif %}
-    </div>
-</div>

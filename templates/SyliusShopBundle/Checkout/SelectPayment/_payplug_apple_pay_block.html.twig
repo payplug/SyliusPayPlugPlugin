@@ -1,0 +1,51 @@
+{% set form = hookable_metadata.context.form %}
+{% set method = hookable_metadata.context.method %}
+{% set order = hookable_metadata.context.order %}
+{% set factoryName = method.gatewayConfig.factoryName %}
+{% set code = method.code %}
+
+{% set applePayFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') %}
+{% set checkboxClass = 'checkbox-applepay' %}
+
+<div class="content">
+    <a class="header">
+        <div class="apple-pay-method">
+            <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="apple-pay">{{ form.vars.label }}
+                <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/apple-pay/logo.svg') }}" class="apple-pay-logo" alt="Apple Pay" height="45" width="60" />
+            </label>
+        </div>
+    </a>
+
+    <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
+    {# TODO: Move in controller ? #}
+    <script>
+        const applePaySessionRequestSettings = {
+            "countryCode": "{% if sylius.channel.defaultLocale.code|length == 2 %}{{ sylius.channel.defaultLocale.code }}{% else %}{{ sylius.channel.defaultLocale.code|slice(3, 2) }}{% endif %}",
+            "currencyCode": "{{ sylius.channel.baseCurrency.code }}",
+            "merchantCapabilities": [
+                "supports3DS"
+            ],
+            "supportedNetworks": [
+                "visa",
+                "mastercard"
+            ],
+            "total": {
+                "label": "",
+                "type": "final",
+                "amount": {{ order.total / 100 }}
+            },
+            'applicationData': btoa(JSON.stringify({
+                'apple_pay_domain': "{{ sylius.channel.hostname }}"
+            }))
+        };
+    </script>
+    <apple-pay-button id="payplug-applepay-btn"
+                      buttonstyle="black"
+                      type="pay"
+                      locale="{{ app.request.locale }}"
+                      data-validate-merchant-route="{{ path('payplug_shop_checkout_apple_prepare', {'orderId': order.id}) }}"
+                      data-payment-authorized-route="{{ path('payplug_shop_checkout_apple_confirm', {'orderId': order.id}) }}"
+                      data-session-cancel-route="{{ path('payplug_shop_checkout_apple_cancel', {'orderId': order.id}) }}"
+    ></apple-pay-button>
+</div>
+
