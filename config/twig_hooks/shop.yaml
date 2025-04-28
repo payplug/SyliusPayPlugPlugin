@@ -4,3 +4,7 @@ sylius_twig_hooks:
             pay_with_oney:
                 template: '@PayPlugSyliusPayPlugPlugin/oney/product/pay_with_oney.html.twig'
                 priority: 101
+        'sylius_shop.cart.index.content.form.sections.general#right':
+            pay_with_oney:
+                template: '@PayPlugSyliusPayPlugPlugin/oney/cart/pay_with_oney.html.twig'
+                priority: 1

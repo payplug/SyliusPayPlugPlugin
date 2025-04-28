@@ -15,35 +15,41 @@
         {% set data = oney_ineligible_reasons() %}
         {% set logo_name = logo_disabled %}
     {% endif %}
-    <div class="oney-info">
-        <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
-        <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}" class="oney-logo" alt="oney-logo"/>
-        <div class="ui inverted dimmer">
-            <div class="ui loader"></div>
+    <div
+        class="oney-info mt-n4 mb-4"
+        {{ stimulus_controller('@payplug/sylius-payplug-plugin/oney-popin', {
+            popinUrl: path('payplug_sylius_oney_simulation_popin'),
+            translations: {
+                reason: 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans,
+                close: 'payplug_sylius_payplug_plugin.ui.popin_close'|trans
+            }
+        }) }}
+    >
+        <div class="sylius-shop-loader d-none">
+            <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
         </div>
-        <div class="oney-popin {% if data is not empty %}disabled{% else %}enabled{% endif %}"
-             data-popin-url="{{ path('payplug_sylius_oney_simulation_popin') }}">{% if data is not empty %}
-            <div class="oney-popin__header">
-                <a class="close" href="javascript:void(0);" title="{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}">
-                    <span></span><span></span>
-                </a>
-            </div>
-            <div class="oney-popin__content">
-                {% for reason in data.reasons %}
-                    <p class="reasons">{{ reason|trans(data.trans_params) }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}</div>
-        <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_cart/index.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_popin/index.js') }}"></script>
-        <script type="text/javascript">//<![CDATA[
-            {% autoescape 'js' %}
-              var translations = {
-                reason: "{{ 'payplug_sylius_payplug_plugin.ui.oney_unavailable'|trans }}",
-                close: "{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}"
-              }
-            {% endautoescape %}
-          //]]></script>
-        <link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/oney_popin/index.css') }}">
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.or_pay_with_oney'|trans }}</span>
+        <img
+            src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/' ~ logo_name) }}"
+            class="oney-logo"
+            alt="Oney Logo"
+        />
+        <div
+            class="oney-popin {% if data is not empty %}disabled{% else %}enabled{% endif %}"
+            {{ stimulus_target('@payplug/sylius-payplug-plugin/oney-popin', 'popin') }}
+        >
+            {% if data is not empty %}
+                <div class="oney-popin__header">
+                    <a class="close" href="javascript:void(0);" title="{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}">
+                        <span></span><span></span>
+                    </a>
+                </div>
+                <div class="oney-popin__content">
+                    {% for reason in data.reasons %}
+                        <p class="reasons">{{ reason|trans(data.trans_params) }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
     </div>
 {% endif %}

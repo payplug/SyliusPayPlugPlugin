@@ -106,11 +106,13 @@ export default class extends Controller {
     $(this.element).on("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (!$(this.popinTarget).is(":empty") && $(this.popinTarget).text().trim() === this.storage) {
-        $(this.popinTarget).fadeIn();
-        return;
+      if (this.hasEligibleUrlValue) {
+        if (!$(this.popinTarget).is(":empty") && $(this.popinTarget).text().trim() === this.storage) {
+          $(this.popinTarget).fadeIn();
+          return;
+        }
       }
-      // content isn't loaded yet
+      // content isn't loaded yet or cart route
       this.toggleLoader();
       this.load();
     });
