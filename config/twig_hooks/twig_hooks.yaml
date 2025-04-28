@@ -6,8 +6,8 @@ sylius_twig_hooks:
                 priority: 1
         'sylius.shop.account.saved_cards.index.subcontent':
             header:
-                template: '@SyliusShop/Account/SavedCards/Index/_header.html.twig'
+                template: '@PayPlugSyliusPayPlugPlugin/Account/SavedCards/Index/_header.html.twig'
                 priority: 20
             subcontent:
-                template: "@SyliusShop/Account/SavedCards/Index/_subcontent.html.twig"
+                template: "@PayPlugSyliusPayPlugPlugin/Account/SavedCards/Index/_subcontent.html.twig"
                 priority: 10
