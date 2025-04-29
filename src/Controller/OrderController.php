@@ -4,24 +4,11 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
-use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Provider\Payment\ApplePayPaymentProvider;
 use Psr\Log\LoggerInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\OrderBundle\Controller\OrderController as BaseOrderController;
-use Sylius\Bundle\ResourceBundle\Controller\AuthorizationCheckerInterface;
-use Sylius\Bundle\ResourceBundle\Controller\EventDispatcherInterface;
-use Sylius\Bundle\ResourceBundle\Controller\FlashHelperInterface;
-use Sylius\Bundle\ResourceBundle\Controller\NewResourceFactoryInterface;
-use Sylius\Bundle\ResourceBundle\Controller\RedirectHandlerInterface;
-use Sylius\Bundle\ResourceBundle\Controller\RequestConfigurationFactoryInterface;
-use Sylius\Bundle\ResourceBundle\Controller\ResourceDeleteHandlerInterface;
-use Sylius\Bundle\ResourceBundle\Controller\ResourceFormFactoryInterface;
-use Sylius\Bundle\ResourceBundle\Controller\ResourcesCollectionProviderInterface;
-use Sylius\Bundle\ResourceBundle\Controller\ResourceUpdateHandlerInterface;
-use Sylius\Bundle\ResourceBundle\Controller\SingleResourceProviderInterface;
-use Sylius\Bundle\ResourceBundle\Controller\StateMachineInterface;
-use Sylius\Bundle\ResourceBundle\Controller\ViewHandlerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
@@ -29,9 +16,6 @@ use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
-use Sylius\Component\Resource\Factory\FactoryInterface;
-use Sylius\Component\Resource\Metadata\MetadataInterface;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\Component\Resource\ResourceActions;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,59 +25,24 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Contracts\Service\Attribute\Required;
 use Webmozart\Assert\Assert;
 
 #[AsController]
 final class OrderController extends BaseOrderController
 {
-    public $stateMachineFactory;
-
     private const APPLE_ERROR_RESPONSE_CODE = 0;
 
     private const APPLE_SUCCESS_RESPONSE_CODE = 1;
 
-    public function __construct(
-        MetadataInterface $metadata,
-        RequestConfigurationFactoryInterface $requestConfigurationFactory,
-        ?ViewHandlerInterface $viewHandler,
-        RepositoryInterface $repository,
-        FactoryInterface $factory,
-        NewResourceFactoryInterface $newResourceFactory,
-        ObjectManager $manager,
-        SingleResourceProviderInterface $singleResourceProvider,
-        ResourcesCollectionProviderInterface $resourcesFinder,
-        ResourceFormFactoryInterface $resourceFormFactory,
-        RedirectHandlerInterface $redirectHandler,
-        FlashHelperInterface $flashHelper,
-        AuthorizationCheckerInterface $authorizationChecker,
-        EventDispatcherInterface $eventDispatcher,
-        ?StateMachineInterface $stateMachine,
-        ResourceUpdateHandlerInterface $resourceUpdateHandler,
-        ResourceDeleteHandlerInterface $resourceDeleteHandler,
-        private ApplePayPaymentProvider $applePayPaymentProvider,
-        private LockFactory $lockFactory,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(
-            $metadata,
-            $requestConfigurationFactory,
-            $viewHandler,
-            $repository,
-            $factory,
-            $newResourceFactory,
-            $manager,
-            $singleResourceProvider,
-            $resourcesFinder,
-            $resourceFormFactory,
-            $redirectHandler,
-            $flashHelper,
-            $authorizationChecker,
-            $eventDispatcher,
-            $stateMachine,
-            $resourceUpdateHandler,
-            $resourceDeleteHandler,
-        );
-    }
+    #[Required]
+    private StateMachineInterface $stateMachineAbstraction;
+    #[Required]
+    private ApplePayPaymentProvider $applePayPaymentProvider;
+    #[Required]
+    private LockFactory $lockFactory;
+    #[Required]
+    private LoggerInterface $logger;
 
     #[Route(
         path: '/payplug/apple-pay/prepare/{orderId}',
@@ -156,10 +105,8 @@ final class OrderController extends BaseOrderController
                 return $initializeEventResponse;
             }
 
-            $orderCheckoutStateMachine = $this->stateMachineFactory->get($resource, OrderCheckoutTransitions::GRAPH);
-
-            if ($orderCheckoutStateMachine->can('select_payment')) {
-                $orderCheckoutStateMachine->apply('select_payment');
+            if ($this->stateMachineAbstraction->can($resource, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_SELECT_PAYMENT)) {
+                $this->stateMachineAbstraction->apply($resource, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_SELECT_PAYMENT);
             }
 
             $payment = $this->applePayPaymentProvider->provide($request, $resource);
@@ -297,10 +244,8 @@ final class OrderController extends BaseOrderController
         $order = $lastPayment->getOrder();
         Assert::isInstanceOf($order, OrderInterface::class);
 
-        $orderCheckoutStateMachine = $this->stateMachineFactory->get($order, OrderCheckoutTransitions::GRAPH);
-
-        if ($orderCheckoutStateMachine->can('complete')) {
-            $orderCheckoutStateMachine->apply('complete');
+        if ($this->stateMachineAbstraction->can($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE)) {
+            $this->stateMachineAbstraction->apply($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE);
         }
 
         $this->manager->flush();
@@ -393,12 +338,9 @@ final class OrderController extends BaseOrderController
                 ]);
             }
 
-            $orderCheckoutStateMachine = $this->stateMachineFactory->get($resource, OrderCheckoutTransitions::GRAPH);
-
-            if ($orderCheckoutStateMachine->can('select_shipping')) {
-                $orderCheckoutStateMachine->apply('select_shipping');
+            if ($this->stateMachineAbstraction->can($resource, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_SELECT_SHIPPING)) {
+                $this->stateMachineAbstraction->apply($resource, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_SELECT_SHIPPING);
             }
-
             $this->manager->flush();
 
             $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
