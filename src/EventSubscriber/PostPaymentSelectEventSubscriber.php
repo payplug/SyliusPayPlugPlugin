@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -18,8 +19,6 @@ use Webmozart\Assert\Assert;
 
 final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 {
-    public $stateMachineFactory;
-
     private const CHECKOUT_ROUTE = 'sylius_shop_checkout_select_payment';
 
     private const UPDATE_ORDER_PAYMENT_ROUTE = 'sylius_shop_order_show';
@@ -29,7 +28,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
-        // private FactoryInterface $stateMachineFactory,
+        private StateMachineInterface $stateMachine,
     ) {
     }
 
@@ -131,9 +130,8 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private function applyToComplete(OrderInterface $order): void
     {
-        $stateMachine = $this->stateMachineFactory->get($order, OrderCheckoutTransitions::GRAPH);
-        if ($stateMachine->can(OrderCheckoutTransitions::TRANSITION_COMPLETE)) {
-            $stateMachine->apply(OrderCheckoutTransitions::TRANSITION_COMPLETE);
+        if ($this->stateMachine->can($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE)) {
+            $this->stateMachine->apply($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE);
         }
 
         $this->entityManager->flush();
