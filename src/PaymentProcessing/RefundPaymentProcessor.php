@@ -17,12 +17,15 @@ use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\PaymentTransitions;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Workflow\Attribute\AsCompletedListener;
+use Symfony\Component\Workflow\Event\CompletedEvent;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Autoconfigure(public: true)]
@@ -39,6 +42,17 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
         private PayPlugApiClientFactoryInterface $apiClientFactory,
     ) {
+    }
+
+    #[AsCompletedListener(workflow: PaymentTransitions::GRAPH, transition: PaymentTransitions::TRANSITION_REFUND)]
+    public function onRefundCompleteTransitionEvent(CompletedEvent $event): void
+    {
+        $subject = $event->getSubject();
+        if (!$subject instanceof PaymentInterface) {
+            return;
+        }
+
+        $this->process($subject);
     }
 
     public function process(PaymentInterface $payment): void

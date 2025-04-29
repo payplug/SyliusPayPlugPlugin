@@ -7,8 +7,11 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 use Payplug\Exception\HttpException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Workflow\Attribute\AsCompletedListener;
+use Symfony\Component\Workflow\Event\CompletedEvent;
 
 #[Autoconfigure(public: true)]
 class AbortPaymentProcessor
@@ -17,6 +20,17 @@ class AbortPaymentProcessor
         #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
         private PayPlugApiClientInterface $payPlugApiClient,
     ) {
+    }
+
+    #[AsCompletedListener(workflow: PaymentTransitions::GRAPH, transition: PaymentTransitions::TRANSITION_FAIL)]
+    public function onFailedCompleteTransitionEvent(CompletedEvent $event): void
+    {
+        $subject = $event->getSubject();
+        if (!$subject instanceof PaymentInterface) {
+            return;
+        }
+
+        $this->process($subject);
     }
 
     public function process(PaymentInterface $payment): void

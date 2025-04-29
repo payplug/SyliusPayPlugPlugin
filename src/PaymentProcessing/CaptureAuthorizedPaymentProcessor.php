@@ -11,6 +11,9 @@ use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\Workflow\Attribute\AsCompletedListener;
+use Symfony\Component\Workflow\Event\CompletedEvent;
 
 final class CaptureAuthorizedPaymentProcessor
 {
@@ -18,6 +21,17 @@ final class CaptureAuthorizedPaymentProcessor
         private PayPlugApiClientFactory $apiClientFactory,
         private PaymentNotificationHandler $paymentNotificationHandler,
     ) {
+    }
+
+    #[AsCompletedListener(workflow: PaymentTransitions::GRAPH, transition: PaymentTransitions::TRANSITION_COMPLETE)]
+    public function onCompletePaymentTransitionEvent(CompletedEvent $event): void
+    {
+        $subject = $event->getSubject();
+        if (!$subject instanceof PaymentInterface) {
+            return;
+        }
+
+        $this->process($subject);
     }
 
     public function process(PaymentInterface $payment): void
