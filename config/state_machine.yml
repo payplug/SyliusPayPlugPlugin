@@ -1,3 +1,10 @@
-imports:
-    - { resource: "state_machine/sylius_payment.yml" }
-    - { resource: "state_machine/sylius_order_payment.yaml" }
+framework:
+    workflows:
+        !php/const Sylius\Component\Core\OrderPaymentTransitions::GRAPH:
+            transitions:
+                oney_request_payment: # Allow to request payment from authorized (for Oney)
+                    from:
+                        - cart
+                        - authorized
+                    to:
+                        - awaiting_payment

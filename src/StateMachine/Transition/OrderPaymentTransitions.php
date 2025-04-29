@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\StateMachine\Transition;
 
-interface OrderPaymentTransitions
-{
-    public const GRAPH = 'payplug_sylius_order_payment';
+use Sylius\Component\Core\OrderPaymentTransitions as BaseOrderPaymentTransitions;
 
-    public const TRANSITION_REQUEST_PAYMENT = 'request_payment';
+interface OrderPaymentTransitions extends BaseOrderPaymentTransitions
+{
+    public const TRANSITION_ONEY_REQUEST_PAYMENT = 'oney_request_payment';
 }

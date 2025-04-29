@@ -21,6 +21,7 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -62,6 +63,7 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
     use ApiAwareTrait;
 
     public function __construct(
+        private StateMachineInterface $stateMachine,
         private RefundPaymentHandlerInterface $refundPaymentHandler,
         private PaymentNotificationHandler $paymentNotificationHandler,
         private RequestStack $requestStack,
@@ -177,14 +179,10 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         /** @var OrderInterface $order */
         $order = $payment->getOrder();
 
-        $stateMachine = $this->stateMachineFactory->get($order, OrderPaymentTransitions::GRAPH);
-
-        if (!$stateMachine->can(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)) {
+        if (!$this->stateMachine->can($order, OrderPaymentTransitions::GRAPH, OrderPaymentTransitions::TRANSITION_ONEY_REQUEST_PAYMENT)) {
             return;
         }
 
-        $this->stateMachineFactory
-            ->get($order, OrderPaymentTransitions::GRAPH)
-            ->apply(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT);
+        $this->stateMachine->apply($order, OrderPaymentTransitions::GRAPH, OrderPaymentTransitions::TRANSITION_ONEY_REQUEST_PAYMENT);
     }
 }
