@@ -49,7 +49,7 @@ final class IntegratedPaymentController extends AbstractController
      *
      * @see https://docs.payplug.com/api/integratedref.html#trigger-a-payment
      */
-    #[Route(path: '/{_locale}/payplug/integrated-payment/init', name: 'payplug_sylius_integrated_payment_init', methods: ['GET', 'POST'])]
+    #[Route(path: '/{_locale}/payplug/integrated-payment/init/{paymentMethodId}', name: 'payplug_sylius_integrated_payment_init', methods: ['GET', 'POST'])]
     public function initPaymentAction(Request $request, int $paymentMethodId): Response
     {
         $paymentMethod = $this->paymentMethodRepository->find($paymentMethodId);
