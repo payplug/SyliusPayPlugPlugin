@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Processor;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -18,11 +19,10 @@ use Webmozart\Assert\Assert;
 #[AsDecorator('sylius.order_processing.order_payment_processor.checkout')]
 final class OrderPaymentProcessor implements OrderProcessorInterface
 {
-    public $stateMachineFactory;
-
     public function __construct(
         #[AutowireDecorated]
         private OrderProcessorInterface $baseOrderPaymentProcessor,
+        private StateMachineInterface $stateMachine
     ) {
     }
 
@@ -45,8 +45,7 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
             null !== $payment &&
             ApplePayGatewayFactory::FACTORY_NAME !== $this->getFactoryName($payment)
         ) {
-            $stateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
-            $stateMachine->apply(PaymentTransitions::TRANSITION_CANCEL);
+            $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL);
         }
 
         $this->baseOrderPaymentProcessor->process($order);
