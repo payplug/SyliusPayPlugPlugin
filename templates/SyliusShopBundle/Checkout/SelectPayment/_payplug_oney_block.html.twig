@@ -12,7 +12,7 @@
     {% set showOney = true %}
 {% endif %}
 
-<div class="content">
+<div class="content" {{ stimulus_controller('@payplug/sylius-payplug-plugin/oney-payment') }}>
     <a class="header">
         {% if factoryName == oneyFactoryName %}
             <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
@@ -26,10 +26,9 @@
     </a>
 
     {% if showOney %}
-        {# TODO: Remove that. It is in another hook
-            <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
-                {{ form_row(form.parent.parent.oney_payment_choice) }}
-            </div>#}
+        <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
+            {{ form_row(form.parent.parent.oney_payment_choice) }}
+        </div>
         {% if app.session is not null and app.session.get('oney_has_error') == true %}
             {# TODO: Move that in controller?#}
             <script type="text/javascript">

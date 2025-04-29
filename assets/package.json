@@ -30,6 +30,12 @@
         "webpackMode": "lazy",
         "fetch": "lazy",
         "enabled": true
+      },
+      "oney-payment": {
+        "main": "shop/controllers/oney-payment_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
       }
     }
   },
