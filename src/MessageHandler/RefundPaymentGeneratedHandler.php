@@ -18,6 +18,7 @@ use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -35,14 +36,12 @@ use Webmozart\Assert\Assert;
 
 final class RefundPaymentGeneratedHandler
 {
-    public $stateMachineFactory;
-
     public function __construct(
         private EntityManagerInterface $entityManager,
         private PaymentRepositoryInterface $paymentRepository,
         private RepositoryInterface $refundPaymentRepository,
         private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        // private FactoryInterface $stateMachineFactory,
+        private StateMachineInterface $stateMachine,
         private RefundPaymentProcessor $refundPaymentProcessor,
         private LoggerInterface $logger,
         private RequestStack $requestStack,
@@ -84,8 +83,7 @@ final class RefundPaymentGeneratedHandler
             ) {
                 /** @var RefundPayment $refundPayment */
                 $refundPayment = $this->refundPaymentRepository->find($message->id());
-                $stateMachine = $this->stateMachineFactory->get($refundPayment, RefundPaymentTransitions::GRAPH);
-                $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
+                $this->stateMachine->apply($refundPayment, RefundPaymentTransitions::GRAPH, RefundPaymentTransitions::TRANSITION_COMPLETE);
                 $this->entityManager->flush();
 
                 $refundHistory->setProcessed(true);
@@ -115,8 +113,7 @@ final class RefundPaymentGeneratedHandler
 
         /** @var RefundPayment $refundPayment */
         $refundPayment = $this->refundPaymentRepository->find($message->id());
-        $stateMachine = $this->stateMachineFactory->get($refundPayment, RefundPaymentTransitions::GRAPH);
-        $stateMachine->apply(RefundPaymentTransitions::TRANSITION_COMPLETE);
+        $this->stateMachine->apply($refundPayment, RefundPaymentTransitions::GRAPH, RefundPaymentTransitions::TRANSITION_COMPLETE);
 
         $this->entityManager->flush();
     }
