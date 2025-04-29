@@ -114,41 +114,39 @@ export default class extends Controller {
   }
 
   load() {
-    // TODO: integratedPaymentApi???
-    const integratedPaymentApi = new Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
-    this.options.api = integratedPaymentApi; //  = new Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
+    this.options.api = new Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
 
-    integratedPaymentApi.setDisplayMode3ds(Payplug.DisplayMode3ds.LIGHTBOX);
+    this.options.api.setDisplayMode3ds(Payplug.DisplayMode3ds.LIGHTBOX);
 
-    this.options.form.cardHolder = integratedPaymentApi.cardHolder(
+    this.options.form.cardHolder = this.options.api.cardHolder(
       document.querySelector('.cardHolder-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.cardholder
       }
     );
-    this.options.form.pan = integratedPaymentApi.cardNumber(
+    this.options.form.pan = this.options.api.cardNumber(
       document.querySelector('.pan-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.pan
       }
     );
-    this.options.form.cvv = integratedPaymentApi.cvv(
+    this.options.form.cvv = this.options.api.cvv(
       document.querySelector('.cvv-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.cvv
       }
     );
-    this.options.form.exp = integratedPaymentApi.expiration(
+    this.options.form.exp = this.options.api.expiration(
       document.querySelector('.exp-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.exp
       }
     );
-    this.options.schemes = integratedPaymentApi.getSupportedSchemes();
+    this.options.schemes = this.options.api.getSupportedSchemes();
     this.bindEvents();
     this.fieldValidation();
   }
@@ -157,9 +155,9 @@ export default class extends Controller {
     document.querySelector('#paid').addEventListener('click', (event) => {
       event.preventDefault();
 
-      this.options.api.validateForm(); // integratedPaymentApi.validateForm();
+      this.options.api.validateForm();
     });
-    this.options.api.onValidateForm(async (aaa) => { // integratedPaymentApi.onValidateForm(async ({isFormValid}) => {
+    this.options.api.onValidateForm(async (aaa) => {
       const {isFormValid} = aaa;
       if (isFormValid) {
         this.toggleLoader();
@@ -173,21 +171,21 @@ export default class extends Controller {
           this.options.scheme = chosenScheme.value;
         }
         if (payplug_integrated_payment_params.payment_id !== undefined) {
-          integratedPaymentApi.pay(payplug_integrated_payment_params.payment_id, this.options.scheme, {save_card: this.options.save_card});
+          this.options.api.pay(payplug_integrated_payment_params.payment_id, this.options.scheme, {save_card: this.options.save_card});
           return;
         }
         const response = await fetch(payplug_integrated_payment_params.routes.init_payment, {method: 'POST'});
         const data = await response.json();
-        this.options.api.pay(data.payment_id, this.options.scheme, {save_card: this.options.save_card}); // integratedPaymentApi.pay(data.payment_id, this.options.scheme, {save_card: this.options.save_card});
+        this.options.api.pay(data.payment_id, this.options.scheme, {save_card: this.options.save_card});
       }
     });
-    this.options.api.onCompleted((event) => { // integratedPaymentApi.onCompleted((event) => {
+    this.options.api.onCompleted((event) => {
       if (event.error) {
         console.error(event.error);
         return;
       }
       document.querySelector('input[name=payplug_integrated_payment_token]').value = event.token;
-      document.querySelector('form[name=sylius_checkout_select_payment]').submit();
+      document.querySelector('form[name=sylius_shop_checkout_select_payment]').submit();
     });
   }
 
