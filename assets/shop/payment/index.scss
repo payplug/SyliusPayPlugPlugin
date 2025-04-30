@@ -261,6 +261,17 @@
     z-index: 3;
 }
 
+.american-express-label::after{content: "";
+    background-image: var(--logo);
+    display: inline-block;
+    width: 60px;
+    height: 25px;
+    background-repeat: no-repeat;
+    background-position: 0 -11px;
+    background-size: 60px 45px;
+    float: right;
+}
+
 @media screen and (max-width: 991px) {
     .oney-payment-choice,
     .payplug-payment-choice {

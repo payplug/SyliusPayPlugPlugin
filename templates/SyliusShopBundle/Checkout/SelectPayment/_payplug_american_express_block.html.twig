@@ -7,14 +7,7 @@
 {% set americanExpressFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\AmericanExpressGatewayFactory::FACTORY_NAME') %}
 {% set checkboxClass = 'checkbox-american-express' %}
 
-<div class="content">
-    <a class="header">
-
-        <div class="american-express-method">
-            <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="american-express">{{ form.vars.label }}
-                <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/american-express/logo.svg') }}" class="american-express-logo" alt="American Express" height="45" width="60" />
-            </label>
-        </div>
-    </a>
-</div>
-
+<div {{ stimulus_controller('@payplug/sylius-payplug-plugin/american-express-payment', {
+    inputId: form.vars.id,
+    logoUrl: asset('bundles/payplugsyliuspayplugplugin/assets/american-express/logo.svg')
+}) }}></div>
