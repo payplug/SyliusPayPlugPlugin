@@ -37,8 +37,8 @@
         "fetch": "lazy",
         "enabled": true
       },
-      "american-express-payment": {
-        "main": "shop/controllers/american-express-payment_controller.js",
+      "payment-logo": {
+        "main": "shop/controllers/payment-logo_controller.js",
         "webpackMode": "lazy",
         "fetch": "lazy",
         "enabled": true

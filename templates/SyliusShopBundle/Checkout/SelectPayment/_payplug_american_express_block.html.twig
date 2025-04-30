@@ -1,13 +1,7 @@
 {% set form = hookable_metadata.context.form %}
-{% set method = hookable_metadata.context.method %}
-{% set order = hookable_metadata.context.order %}
-{% set factoryName = method.gatewayConfig.factoryName %}
-{% set code = method.code %}
 
-{% set americanExpressFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\AmericanExpressGatewayFactory::FACTORY_NAME') %}
-{% set checkboxClass = 'checkbox-american-express' %}
-
-<div {{ stimulus_controller('@payplug/sylius-payplug-plugin/american-express-payment', {
+<div {{ stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
     inputId: form.vars.id,
-    logoUrl: asset('bundles/payplugsyliuspayplugplugin/assets/american-express/logo.svg')
+    logoUrl: asset('bundles/payplugsyliuspayplugplugin/assets/american-express/logo.svg'),
+    className: 'american-express-label'
 }) }}></div>

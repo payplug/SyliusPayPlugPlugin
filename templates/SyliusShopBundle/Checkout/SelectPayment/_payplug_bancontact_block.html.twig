@@ -1,18 +1,7 @@
 {% set form = hookable_metadata.context.form %}
-{% set method = hookable_metadata.context.method %}
-{% set order = hookable_metadata.context.order %}
-{% set factoryName = method.gatewayConfig.factoryName %}
-{% set code = method.code %}
 
-{% set bancontactFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\BancontactGatewayFactory::FACTORY_NAME') %}
-{% set checkboxClass = 'checkbox-bancontact' %}
-
-<div class="content">
-    <a class="header">
-        <div class="bancontact-method">
-            <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="bancontact">{{ form.vars.label }}
-                <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/bancontact/logo.svg') }}" class="bancontact-logo" alt="Bancontact" height="45" width="60" />
-            </label>
-        </div>
-    </a>
-</div>
+<div {{ stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
+    inputId: form.vars.id,
+    logoUrl: asset('bundles/payplugsyliuspayplugplugin/assets/bancontact/logo.svg'),
+    className: 'bancontact-label'
+}) }}></div>

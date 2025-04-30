@@ -261,7 +261,8 @@
     z-index: 3;
 }
 
-.american-express-label::after{content: "";
+.payment-label-with-image::after {
+    content: "";
     background-image: var(--logo);
     display: inline-block;
     width: 60px;
@@ -270,6 +271,10 @@
     background-position: 0 -11px;
     background-size: 60px 45px;
     float: right;
+}
+
+.bancontacy-label::after{
+    margin-left: 5px;
 }
 
 @media screen and (max-width: 991px) {
