@@ -41,15 +41,15 @@
         <div>{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.scheme.label'|trans }}</div>
         <div class="payplugIntegratedPayment__schemes">
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--cb">
-                <input type="radio" name="schemeOptions" value="cb" />
+                <input type="radio" name="" value="cb" class="schemeOptions" /> {# No name to not trigger LiveComponent #}
                 <span></span>
             </label>
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--visa">
-                <input type="radio" name="schemeOptions" value="visa"/>
+                <input type="radio" name="" value="visa" class="schemeOptions" /> {# No name to not trigger LiveComponent #}
                 <span></span>
             </label>
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--mastercard">
-                <input type="radio" name="schemeOptions" value="mastercard" />
+                <input type="radio" name="" value="mastercard" class="schemeOptions" /> {# No name to not trigger LiveComponent #}
                 <span></span>
             </label>
         </div>
@@ -83,7 +83,7 @@
     </div>
     {% if is_save_card_enabled(paymentMethod) %}
         <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--saveCard">
-            <input type="checkbox" name="savecard" id="savecard">
+            <input type="checkbox" id="savecard" name="" />{# No name to not trigger LiveComponent #}
             <label for="savecard">
                 <span></span>
                 {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.save_card.label'|trans }}

@@ -157,15 +157,14 @@ export default class extends Controller {
 
       this.options.api.validateForm();
     });
-    this.options.api.onValidateForm(async (aaa) => {
-      const {isFormValid} = aaa;
+    this.options.api.onValidateForm(async ({ isFormValid }) => {
       if (isFormValid) {
         this.toggleLoader();
         const saveCardElement = document.querySelector('#savecard');
         if (null !== saveCardElement) {
           this.options.save_card = saveCardElement.checked;
         }
-        const chosenScheme = document.querySelector('[name=schemeOptions]:checked');
+        const chosenScheme = document.querySelector('input.schemeOptions:checked');
         this.options.scheme = Payplug.Scheme.AUTO;
         if (null !== chosenScheme) {
           this.options.scheme = chosenScheme.value;
