@@ -33,28 +33,28 @@ use Symfony\Component\HttpFoundation\RequestStack;
     name: 'payum.action',
     attributes: [
         'factory' => PayPlugGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.status',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => OneyGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.status',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => BancontactGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.status',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.status',
     ],
 )]
 final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface

@@ -23,28 +23,28 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
     name: 'payum.action',
     attributes: [
         'factory' => PayPlugGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.convert_payment',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => OneyGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.convert_payment',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => BancontactGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.convert_payment',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.convert_payment',
     ],
 )]
 final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface

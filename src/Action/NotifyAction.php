@@ -31,28 +31,28 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
     name: 'payum.action',
     attributes: [
         'factory' => PayPlugGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.notify',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => OneyGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.notify',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => BancontactGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.notify',
     ],
 )]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
         'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
-        'alias' => 'payum.action.capture',
+        'alias' => 'payum.action.notify',
     ],
 )]
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
