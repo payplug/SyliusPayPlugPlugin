@@ -22,11 +22,10 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Notify;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-#[AsAlias(id: 'payplug_sylius_payplug_plugin.action.notify', public: true)]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
@@ -55,6 +54,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
         'alias' => 'payum.action.notify',
     ],
 )]
+#[Autoconfigure(public: true)]
 final class NotifyAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;

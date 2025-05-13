@@ -36,13 +36,12 @@ use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
-#[AsAlias(id: 'payplug_sylius_payplug_plugin.action.capture', public: true)]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
@@ -71,6 +70,7 @@ use Webmozart\Assert\Assert;
         'alias' => 'payum.action.capture',
     ],
 )]
+#[Autoconfigure(public: true)]
 final class CaptureAction implements ActionInterface, ApiAwareInterface, GatewayAwareInterface, GenericTokenFactoryAwareInterface
 {
     use GatewayAwareTrait;

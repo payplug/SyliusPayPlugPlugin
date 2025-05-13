@@ -21,3 +21,15 @@ services:
 
     PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface:
         class: PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider
+
+    payplug_sylius_payplug_plugin.action.capture:
+        class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction
+
+    payplug_sylius_payplug_plugin.action.status:
+        class: PayPlug\SyliusPayPlugPlugin\Action\StatusAction
+
+    payplug_sylius_payplug_plugin.action.convert_payment:
+        class: PayPlug\SyliusPayPlugPlugin\Action\ConvertPaymentAction
+
+    payplug_sylius_payplug_plugin.action.notify:
+        class: PayPlug\SyliusPayPlugPlugin\Action\NotifyAction

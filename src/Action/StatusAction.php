@@ -24,11 +24,10 @@ use Payum\Core\Request\GetStatusInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-#[AsAlias(id: 'payplug_sylius_payplug_plugin.action.status', public: true)]
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
@@ -57,6 +56,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
         'alias' => 'payum.action.status',
     ],
 )]
+#[Autoconfigure(public: true)]
 final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
     use GatewayAwareTrait;
