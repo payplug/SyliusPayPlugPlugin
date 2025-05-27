@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Doctrine\Common\Collections\Collection;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
@@ -27,14 +28,11 @@ class AbstractGatewayConfigurationType extends AbstractType
     public const VALIDATION_GROUPS = ['Default', 'sylius'];
 
     protected string $noTestKeyMessage = '';
-
     protected string $noAccessMessage = '';
-
     protected string $gatewayFactoryTitle = '';
-
     protected string $gatewayFactoryName = '';
 
-    protected string $gatewayBaseCurrencyCode = 'EUR';
+    protected string $gatewayBaseCurrencyCode = PayPlugGatewayFactory::BASE_CURRENCY_CODE;
 
     public function __construct(
         protected TranslatorInterface $translator,

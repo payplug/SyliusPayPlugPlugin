@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Creator;
 
+use ArrayObject;
 use DateInterval;
 use DateTime;
 use libphonenumber\NumberParseException;
@@ -18,7 +19,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -46,7 +46,6 @@ class PayPlugPaymentDataCreator
 
     public function create(
         PaymentInterface $payment,
-        string $gatewayFactoryName,
         array $context = [],
     ): ArrayObject {
         /** @var OrderInterface $order */
@@ -55,7 +54,7 @@ class PayPlugPaymentDataCreator
         /** @var CustomerInterface $customer */
         $customer = $order->getCustomer();
 
-        $details = ArrayObject::ensureArrayObject($payment->getDetails());
+        $details = new ArrayObject($payment->getDetails());
         $details['amount'] = $payment->getAmount();
         $details['currency'] = $payment->getCurrencyCode();
 
@@ -81,6 +80,7 @@ class PayPlugPaymentDataCreator
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
         $paymentMethod = $payment->getMethod();
+        $gatewayFactoryName = $paymentMethod->getGatewayConfig()?->getFactoryName();
 
         if (
             PayPlugGatewayFactory::FACTORY_NAME === $gatewayFactoryName &&

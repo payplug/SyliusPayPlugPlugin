@@ -6,7 +6,7 @@ services:
 
     PayPlug\SyliusPayPlugPlugin\:
         resource: '../src/*'
-        exclude: '../src/{ApiClient,DependencyInjection,Entity,Exception,Gateway,Model,Repository,PayPlugSyliusPayPlugPlugin.php}'
+        exclude: '../src/{ApiClient,DependencyInjection,Entity,Exception,Model,Repository,PayPlugSyliusPayPlugPlugin.php}'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
@@ -33,3 +33,24 @@ services:
 
     payplug_sylius_payplug_plugin.action.notify:
         class: PayPlug\SyliusPayPlugPlugin\Action\NotifyAction
+
+    payplug_sylius_payplug_plugin.command_provider.payplug:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: 'payplug' # The gateway factory name should match the one used in the payment method configuration
+              
+    #Redirection performer
+    payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug:
+        class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.http_response_provider.payplug
+                index_by: action
+        tags:
+            - name: sylius.payment_request.provider.http_response
+              gateway_factory: 'payplug'

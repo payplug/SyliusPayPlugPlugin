@@ -5,7 +5,15 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
+#[AutoconfigureTag(
+    'sylius.gateway_configuration_type',
+    [
+        'type' => 'sylius_payment',
+        'label' => 'payplug'
+    ]
+)]
 final class PayPlugGatewayConfigurationType extends AbstractGatewayConfigurationType
 {
     protected string $gatewayFactoryTitle = PayPlugGatewayFactory::FACTORY_TITLE;

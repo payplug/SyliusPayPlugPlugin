@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PayPlug\SyliusPayPlugPlugin\Command;
+namespace PayPlug\SyliusPayPlugPlugin\Console\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
