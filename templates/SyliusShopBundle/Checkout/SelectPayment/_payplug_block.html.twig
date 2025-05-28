@@ -16,7 +16,12 @@
     {% set hasSavedCards = true %}
 {% endif %}
 
-<div class="content" {{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}>
+{% set integratedPayment = false %}
+{% if method.gatewayConfig.config.integratedPayment is defined and method.gatewayConfig.config.integratedPayment is same as true %}
+    {% set integratedPayment = true %}
+{% endif %}
+
+<div class="content" {% if integratedPayment is same as true %}{{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}{% endif %}>
     <a class="header">
         {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
     </a>
@@ -28,7 +33,7 @@
         </div>
     {% endif %}
 
-    {% if method.gatewayConfig.config.integratedPayment is defined and method.gatewayConfig.config.integratedPayment is same as true %}
+    {% if integratedPayment %}
         {# TODO: Use hook? #}
         {% include '@PayPlugSyliusPayPlugPlugin/form/integrated.html.twig' with {
             'paymentMethod': method,
