@@ -10,8 +10,8 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 #[AutoconfigureTag(
     'sylius.gateway_configuration_type',
     [
-        'type' => 'sylius_payment',
-        'label' => 'payplug'
+        'type' => 'payplug',
+        'label' => 'payplug_sylius_payplug_plugin.ui.payplug_gateway_label'
     ]
 )]
 final class PayPlugGatewayConfigurationType extends AbstractGatewayConfigurationType

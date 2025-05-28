@@ -12,17 +12,6 @@
             <tag name="payum.gateway_factory_builder"
                  factory="payplug" />
         </service>
-        <service id="payplug_sylius_payplug_plugin.form.type.payplug_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PayPlugGatewayConfigurationType">
-            <tag name="sylius.gateway_configuration_type"
-                 type="payplug"
-                 label="payplug_sylius_payplug_plugin.ui.payplug_gateway_label" />
-            <tag name="form.type" />
-        </service>
-        <service id="payplug_sylius_payplug_plugin.form.type_extension.payplug_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\PayPlugGatewayConfigurationTypeExtension">
-            <tag name="form.type_extension" />
-        </service>
 
         <!-- Gateway Oney By PayPlug -->
         <service id="payplug_sylius_payplug_plugin.gateway_factory.oney"
@@ -30,17 +19,6 @@
             <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory</argument>
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_oney"/>
-        </service>
-        <service id="payplug_sylius_payplug_plugin.form.type.oney_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\OneyGatewayConfigurationType">
-            <tag name="sylius.gateway_configuration_type"
-                 type="payplug_oney"
-                 label="payplug_sylius_payplug_plugin.ui.oney_gateway_label" />
-            <tag name="form.type" />
-        </service>
-        <service id="payplug_sylius_payplug_plugin.form.type_extension.oney_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\OneyGatewayConfigurationTypeExtension">
-            <tag name="form.type_extension" />
         </service>
 
         <!-- Gateway Bancontact by PayPlug -->
@@ -50,13 +28,6 @@
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_bancontact"/>
         </service>
-        <service id="payplug_sylius_payplug_plugin.form.type.bancontact_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\BancontactGatewayConfigurationType">
-            <tag name="sylius.gateway_configuration_type"
-                 type="payplug_bancontact"
-                 label="payplug_sylius_payplug_plugin.ui.bancontact_gateway_label" />
-            <tag name="form.type" />
-        </service>
 
         <!-- Gateway Apple Pay by PayPlug -->
         <service id="payplug_sylius_payplug_plugin.gateway_factory.apple_pay"
@@ -65,13 +36,6 @@
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_apple_pay"/>
         </service>
-        <service id="payplug_sylius_payplug_plugin.form.type.apple_pay_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\ApplePayGatewayConfigurationType">
-            <tag name="sylius.gateway_configuration_type"
-                 type="payplug_apple_pay"
-                 label="payplug_sylius_payplug_plugin.ui.apple_pay_gateway_label" />
-            <tag name="form.type" />
-        </service>
 
         <!-- Gateway American Express by PayPlug -->
         <service id="payplug_sylius_payplug_plugin.gateway_factory.american_express"
@@ -79,13 +43,6 @@
             <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory</argument>
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_american_express"/>
-        </service>
-        <service id="payplug_sylius_payplug_plugin.form.type.american_express_gateway_configuration"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AmericanExpressGatewayConfigurationType">
-            <tag name="sylius.gateway_configuration_type"
-                 type="payplug_american_express"
-                 label="payplug_sylius_payplug_plugin.ui.american_express_gateway_label" />
-            <tag name="form.type" />
         </service>
 
         <service id="payplug_sylius_payplug_plugin.is_oney_enabled_validator"
