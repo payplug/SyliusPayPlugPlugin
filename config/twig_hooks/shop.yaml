@@ -8,3 +8,14 @@ sylius_twig_hooks:
             pay_with_oney:
                 template: '@PayPlugSyliusPayPlugPlugin/oney/cart/pay_with_oney.html.twig'
                 priority: 1
+        'sylius_shop.account.saved_card#stylesheets':
+            payplug_styles:
+                template: '@PayPlugSyliusPayPlugPlugin/stylesheets/saved_cards.html.twig'
+                priority: 1
+        'sylius.shop.account.saved_cards.index.subcontent':
+            header:
+                template: '@PayPlugSyliusPayPlugPlugin/Account/SavedCards/Index/_header.html.twig'
+                priority: 20
+            subcontent:
+                template: "@PayPlugSyliusPayPlugPlugin/Account/SavedCards/Index/_subcontent.html.twig"
+                priority: 10
