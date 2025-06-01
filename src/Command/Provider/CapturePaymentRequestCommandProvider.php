@@ -68,5 +68,7 @@ final class CapturePaymentRequestCommandProvider implements PaymentRequestComman
         ) {
             return true;
         }
+
+        return false;
     }
 }
