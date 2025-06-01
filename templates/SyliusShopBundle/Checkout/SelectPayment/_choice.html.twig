@@ -9,14 +9,5 @@
 {% set applePayFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') %}
 {% set americanExpressFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\AmericanExpressGatewayFactory::FACTORY_NAME') %}
 
-{% if factoryName == oneyFactoryName %}
-    {% hook '#payplug_oney' %}
-{% elseif factoryName == payplugFactoryName %}
-    {% hook '#payplug' %}
-{% elseif factoryName == bancontactFactoryName %}
-    {% hook '#payplug_bancontact' %}
-{% elseif factoryName == applePayFactoryName %}
-    {% hook '#payplug_apple_pay' %}
-{% elseif factoryName == americanExpressFactoryName %}
-    {% hook '#payplug_american_express' %}
-{% endif %}
+{% hook '#' ~ factoryName %}
+
