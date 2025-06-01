@@ -41,6 +41,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
         $builder
             ->add('oney_payment_choice', ChoiceType::class, [
                 'mapped' => false,
+                'block_prefix' => 'oney_payment_choice',
                 'choices' => $this->oneySupportedPaymentChoiceProvider->getSupportedPaymentChoices(true),
             ])
             ->add('payplug_card_choice', TextType::class, [
