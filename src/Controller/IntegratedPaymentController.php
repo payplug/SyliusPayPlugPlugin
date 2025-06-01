@@ -79,7 +79,7 @@ final class IntegratedPaymentController extends AbstractController
             throw new BadRequestHttpException('Unsupported payment method of Integrated Payment');
         }
 
-        $paymentData = $this->paymentDataCreator->create($payment, $factoryName);
+        $paymentData = $this->paymentDataCreator->create($payment);
         // Mandatory
         $paymentData['integration'] = PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION;
         $this->logger->debug('Payplug Payment data for creation', $paymentData->getArrayCopy());

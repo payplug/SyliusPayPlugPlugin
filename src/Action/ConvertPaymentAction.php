@@ -62,7 +62,7 @@ final class ConvertPaymentAction implements ActionInterface, ApiAwareInterface
         /** @var PaymentInterface $payment */
         $payment = $request->getSource();
 
-        $details = $this->paymentDataCreator->create($payment, $this->payPlugApiClient->getGatewayFactoryName());
+        $details = $this->paymentDataCreator->create($payment);
 
         $request->setResult((array) $details);
     }
