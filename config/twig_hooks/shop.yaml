@@ -20,13 +20,12 @@ sylius_twig_hooks:
                 template: "@PayPlugSyliusPayPlugPlugin/Account/SavedCards/Index/_subcontent.html.twig"
                 priority: 10
 
-        ##############
-        ## Checkout ##
-        ##############
+
         # TODO: check if this is possible only on select_payment page
         'sylius_shop.checkout#stylesheets':
             select_payment_css:
                 template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
+
         'sylius_shop.order#stylesheets':
             select_payment_css:
                 template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
