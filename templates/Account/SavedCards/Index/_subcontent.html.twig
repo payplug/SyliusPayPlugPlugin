@@ -7,8 +7,8 @@
     {% if savedCards|length == 0 %}
         {{ messages.info('payplug_sylius_payplug_plugin.ui.account.saved_cards.no_results_to_display') }}
     {% else %}
-        <div class="ui segment spaceless sylius-grid-table-wrapper sylius-customer-account-saved-cards-grid">
-            <table class="ui stackable very basic celled table">
+        <div class="sylius-grid-table-wrapper sylius-customer-account-saved-cards-grid">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.brand'|trans }}</th>
@@ -45,9 +45,7 @@
                                 </td>
                             {% endif %}
                             <td class="actions">
-                                <div class="ui icon labeled buttons">
-                                    {{ buttons.delete(path('payplug_sylius_card_account_delete', {'id': savedCard.id}), null, true, savedCard.id) }}
-                                </div>
+                                {{ buttons.delete(path('payplug_sylius_card_account_delete', {'id': savedCard.id}), null, true, savedCard.id) }}
                             </td>
                         </tr>
                     {% endfor %}
