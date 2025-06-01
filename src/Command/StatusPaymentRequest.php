@@ -11,5 +11,10 @@ class StatusPaymentRequest implements PaymentRequestHashAwareInterface
 {
     use PaymentRequestHashAwareTrait;
 
-    public function __construct(protected ?string $hash) {}
+    public function __construct(protected ?string $hash, private string $forcedStatus = '') {}
+
+    public function getForcedStatus() : string
+    {
+        return $this->forcedStatus;
+    }
 }

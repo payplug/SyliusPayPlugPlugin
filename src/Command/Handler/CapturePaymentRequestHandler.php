@@ -37,9 +37,10 @@ final class CapturePaymentRequestHandler
         $client = $this->apiClientFactory->createForPaymentMethod($paymentRequest->getPayment()->getMethod());
         $data = $this->paymentDataCreator->create($payment)->getArrayCopy();
 
+        $returnUrl = $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
         $data['hosted_payment'] = [
-            'return_url' => $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL),
-            'cancel_url' => $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL)
+            'return_url' => $returnUrl,
+            'cancel_url' => $returnUrl . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
         $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
@@ -51,7 +52,7 @@ final class CapturePaymentRequestHandler
             ...$payment->getDetails(),
             'status' => PayPlugApiClientInterface::STATUS_CREATED,
             'payment_id' => $payplugPayment->__get('id'),
-            ['payplug_response' =>  $arrayPayplugPayment],
+            'payplug_response' =>  $arrayPayplugPayment,
         ]);
 
         $paymentRequest->setResponseData(array_merge($arrayPayplugPayment, [

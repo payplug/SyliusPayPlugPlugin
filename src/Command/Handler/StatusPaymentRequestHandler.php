@@ -11,6 +11,7 @@ use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Payment\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -28,7 +29,11 @@ final class StatusPaymentRequestHandler
     {
         $paymentRequest = $this->paymentRequestProvider->provide($statusPaymentRequest);
         $payment = $paymentRequest->getPayment();
-
+        if ('' !== $statusPaymentRequest->getForcedStatus()) {
+            $this->handleForcedStatus($statusPaymentRequest, $paymentRequest);
+            return;
+        }
+        // We don't have a forced status, so we retrieve the payment status from PayPlug
         $client = $this->apiClientFactory->createForPaymentMethod($paymentRequest->getPayment()->getMethod());
         $payplugPayment = $client->retrieve($payment->getDetails()['payment_id'] ?? throw new \LogicException('No PayPlug payment ID found in payment details.'));
 
@@ -47,16 +52,35 @@ final class StatusPaymentRequestHandler
         );
     }
 
+    private function handleForcedStatus(StatusPaymentRequest $statusPaymentRequest, PaymentRequestInterface $paymentRequest): void
+    {
+        $payment = $paymentRequest->getPayment();
+
+        $payment->setDetails([
+            ...$payment->getDetails(),
+            'status' => $statusPaymentRequest->getForcedStatus(),
+        ]);
+
+        $this->updatePaymentState($payment);
+
+        // Mark the PaymentRequest as completed
+        $this->stateMachine->apply(
+            $paymentRequest,
+            PaymentRequestTransitions::GRAPH,
+            PaymentRequestTransitions::TRANSITION_COMPLETE
+        );
+    }
+
     private function updatePaymentState(PaymentInterface $payment): void
     {
         match ($payment->getDetails()['status'] ?? '') {
-            PayPlugApiClientInterface::STATUS_CANCELED => $this->stateMachine
+            PayPlugApiClientInterface::STATUS_ABORTED, PayPlugApiClientInterface::STATUS_CANCELED => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL),
             PayPlugApiClientInterface::STATUS_AUTHORIZED => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_AUTHORIZE),
             PayPlugApiClientInterface::STATUS_CAPTURED => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE),
-            PayPlugApiClientInterface::STATUS_ABORTED, PayPlugApiClientInterface::FAILED => $this->stateMachine
+            PayPlugApiClientInterface::FAILED => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_FAIL),
             default => throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? '')),
         };
