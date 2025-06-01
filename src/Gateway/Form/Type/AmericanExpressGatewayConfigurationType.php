@@ -11,7 +11,8 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
     'sylius.gateway_configuration_type',
     [
         'type' => 'payplug_american_express',
-        'label' => 'payplug_sylius_payplug_plugin.ui.american_express_gateway_label'
+        'label' => 'payplug_sylius_payplug_plugin.ui.american_express_gateway_label',
+        'priority' => 70,
     ]
 )]
 final class AmericanExpressGatewayConfigurationType extends AbstractGatewayConfigurationType
