@@ -34,6 +34,7 @@ services:
     payplug_sylius_payplug_plugin.action.notify:
         class: PayPlug\SyliusPayPlugPlugin\Action\NotifyAction
 
+    ## Default Payplug Gateway ##
     payplug_sylius_payplug_plugin.command_provider.payplug:
         class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
         arguments:
@@ -42,9 +43,7 @@ services:
                 index_by: 'action'
         tags:
             - name: sylius.payment_request.command_provider
-              gateway_factory: 'payplug' # The gateway factory name should match the one used in the payment method configuration
-              
-    #Redirection performer
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory::FACTORY_NAME
     payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug:
         class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
         arguments:
@@ -53,4 +52,86 @@ services:
                 index_by: action
         tags:
             - name: sylius.payment_request.provider.http_response
-              gateway_factory: 'payplug'
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory::FACTORY_NAME
+
+    ## Oney Payplug Gateway ##
+    payplug_sylius_payplug_plugin.command_provider.payplug_oney:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug_oney
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory::FACTORY_NAME
+    payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug_oney:
+        class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.http_response_provider.payplug_oney
+                index_by: action
+        tags:
+            - name: sylius.payment_request.provider.http_response
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory::FACTORY_NAME
+              
+
+    ## Bancontact Payplug Gateway ##
+    payplug_sylius_payplug_plugin.command_provider.payplug_bancontact:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug_bancontact
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory::FACTORY_NAME
+    payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug_bancontact:
+        class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.http_response_provider.payplug_bancontact
+                index_by: action
+        tags:
+            - name: sylius.payment_request.provider.http_response
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory::FACTORY_NAME
+
+
+    ## Amex Payplug Gateway ##
+    payplug_sylius_payplug_plugin.command_provider.payplug_american_express:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug_american_express
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory::FACTORY_NAME
+    payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug_american_express:
+        class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.http_response_provider.payplug_american_express
+                index_by: action
+        tags:
+            - name: sylius.payment_request.provider.http_response
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory::FACTORY_NAME
+
+    ## Apple Pay Payplug Gateway ##
+    payplug_sylius_payplug_plugin.command_provider.payplug_apple_pay:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug_apple_pay
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory::FACTORY_NAME
+    payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug_apple_pay:
+        class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.http_response_provider.payplug_apple_pay
+                index_by: action
+        tags:
+            - name: sylius.payment_request.provider.http_response
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory::FACTORY_NAME

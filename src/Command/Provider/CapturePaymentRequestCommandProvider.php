@@ -11,6 +11,22 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
     'payplug_sylius_payplug_plugin.command_provider.payplug',
     ['action' => PaymentRequestInterface::ACTION_CAPTURE]
 )]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_oney',
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+)]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_bancontact',
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+)]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_american_express',
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+)]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_apple_pay',
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+)]
 final class CapturePaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function supports(PaymentRequestInterface $paymentRequest): bool
