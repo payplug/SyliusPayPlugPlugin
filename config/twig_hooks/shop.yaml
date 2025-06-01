@@ -20,27 +20,32 @@ sylius_twig_hooks:
                 template: "@PayPlugSyliusPayPlugPlugin/Account/SavedCards/Index/_subcontent.html.twig"
                 priority: 10
 
+        ##############
+        ## Checkout ##
+        ##############
         # TODO: check if this is possible only on select_payment page
         'sylius_shop.checkout#stylesheets':
+            select_payment_css:
+                template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
+        'sylius_shop.order#stylesheets':
             select_payment_css:
                 template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
 
         'sylius_shop.shared.form.select_payment.payment.choice.details':
             payplug_choice:
                 template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/Checkout/SelectPayment/_choice.html.twig'
-
-        'sylius_shop.checkout.select_payment.content.form.select_payment.payment.choice.details#payplug':
+        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug':
             payplug_block:
                 template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/Checkout/SelectPayment/_payplug_block.html.twig'
-        'sylius_shop.checkout.select_payment.content.form.select_payment.payment.choice.details#payplug_oney':
+        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_oney':
             payplug_oney_block:
                 template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/Checkout/SelectPayment/_payplug_oney_block.html.twig'
-        'sylius_shop.checkout.select_payment.content.form.select_payment.payment.choice.details#payplug_bancontact':
+        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_bancontact':
             payplug_bancontact_block:
                 template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/Checkout/SelectPayment/_payplug_bancontact_block.html.twig'
-        'sylius_shop.checkout.select_payment.content.form.select_payment.payment.choice.details#payplug_apple_pay':
+        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_apple_pay':
             payplug_apple_pay_block:
                 template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/Checkout/SelectPayment/_payplug_apple_pay_block.html.twig'
-        'sylius_shop.checkout.select_payment.content.form.select_payment.payment.choice.details#payplug_american_express':
+        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_american_express':
             payplug_american_express_block:
                 template: '@PayPlugSyliusPayPlugPlugin/SyliusShopBundle/Checkout/SelectPayment/_payplug_american_express_block.html.twig'
