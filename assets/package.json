@@ -29,7 +29,10 @@
         "main": "shop/controllers/integrated-payment_controller.js",
         "webpackMode": "lazy",
         "fetch": "lazy",
-        "enabled": true
+        "enabled": true,
+        "autoimport": {
+          "@payplug/sylius-payplug-plugin/dist/shop/payment/integrated.css": true
+        }
       },
       "oney-payment": {
         "main": "shop/controllers/oney-payment_controller.js",

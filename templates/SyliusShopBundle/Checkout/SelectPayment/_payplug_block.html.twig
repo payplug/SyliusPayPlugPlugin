@@ -21,20 +21,18 @@
     {% set integratedPayment = true %}
 {% endif %}
 
-<div class="content" {% if integratedPayment is same as true %}{{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}{% endif %}>
+<div class="content">
     <a class="header">
         {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
     </a>
 
     {% if hasSavedCards %}
-        {# TODO: Is it ok to have form_row? #}
         <div class="payplug-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
             {{ form_row(form.parent.parent.payplug_card_choice) }}
         </div>
     {% endif %}
 
     {% if integratedPayment %}
-        {# TODO: Use hook? #}
         {% include '@PayPlugSyliusPayPlugPlugin/form/integrated.html.twig' with {
             'paymentMethod': method,
             'payment': order.getLastPayment('cart'),
@@ -42,4 +40,3 @@
         } %}
     {% endif %}
 </div>
-

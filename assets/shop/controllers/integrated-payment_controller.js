@@ -1,11 +1,18 @@
 import { Controller } from '@hotwired/stimulus';
+import WebFont from 'webfontloader';
 
 export default class extends Controller {
   static values = {
     code: String,
     factoryName: String,
   }
-
+  initialize() {
+    WebFont.load({
+      google: {
+        families: ["Poppins:400,600"],
+      },
+    });
+  }
   connect() {
     this.options = {
       api: null,
@@ -87,9 +94,7 @@ export default class extends Controller {
       })
     });
   }
-
   getPaymentMethodSelectors({ methodCode, checked } = {}) {
-    // const baseSelector = '[id*=sylius_checkout_select_payment_payments]'; // old id
     const baseSelector = '[id*=sylius_shop_checkout_select_payment_payments]';
 
     if (methodCode) {
@@ -100,7 +105,6 @@ export default class extends Controller {
     }
     return document.querySelectorAll(baseSelector);
   }
-
   openFields() {
     document.querySelector('.payplugIntegratedPayment').classList.add('payplugIntegratedPayment--loaded');
     document.querySelector('button[type=submit]').classList.add('disabled');
@@ -112,7 +116,6 @@ export default class extends Controller {
     document.querySelector('.payplugIntegratedPayment').classList.remove('payplugIntegratedPayment--loaded');
     document.querySelector('button[type=submit]').classList.remove('disabled');
   }
-
   load() {
     this.options.api = new Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
 
@@ -150,7 +153,6 @@ export default class extends Controller {
     this.bindEvents();
     this.fieldValidation();
   }
-
   bindEvents() {
     document.querySelector('#paid').addEventListener('click', (event) => {
       event.preventDefault();
@@ -187,7 +189,6 @@ export default class extends Controller {
       document.querySelector('form[name=sylius_shop_checkout_select_payment]').submit();
     });
   }
-
   fieldValidation () {
     Object.keys(this.options.form).forEach((key) => {
       const field = this.options.form[key];
@@ -213,32 +214,7 @@ export default class extends Controller {
       });
     })
   }
-  fieldValidationNOT_WORKING () {
-    $.each(this.options.form, function (key, field) {
-      field.onChange(function(err) {
-        if (err.error) {
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.remove('payplugIntegratedPayment__error--hide');
-          document.querySelector(`.${key}-input-container`).classList.add('payplugIntegratedPayment__container--invalid');
-          if (err.error.name === "FIELD_EMPTY") {
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.remove('payplugIntegratedPayment__error--hide');
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
-          } else {
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.remove('payplugIntegratedPayment__error--hide');
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.add('payplugIntegratedPayment__error--hide');
-          }
-        } else {
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.add('payplugIntegratedPayment__error--hide');
-          document.querySelector(`.${key}-input-container`).classList.remove('payplugIntegratedPayment__container--invalid');
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.add('payplugIntegratedPayment__error--hide');
-          this.options.fieldsValid[key] = true;
-          this.options.fieldsEmpty[key] = false;
-        }
-      });
-    });
-  }
-
   toggleLoader() {
-    document.querySelector('.payplugIntegratedPayment').querySelector('.dimmer').classList.toggle('active');
+    document.querySelector('.payplugIntegratedPayment').querySelector('.sylius-shop-loader').classList.toggle('d-none');
   }
 }

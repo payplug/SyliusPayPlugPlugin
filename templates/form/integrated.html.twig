@@ -23,10 +23,12 @@
   }
   /* ]] */
 </script>
-
-<div class="payplugIntegratedPayment">
-    <div class="ui inverted dimmer">
-        <div class="ui loader"></div>
+<div
+    class="payplugIntegratedPayment"
+    {{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}
+>
+    <div class="sylius-shop-loader d-none">
+        <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
     </div>
     <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--cardHolder cardHolder-input-container"></div>
     <div class="payplugIntegratedPayment__error payplugIntegratedPayment__error--cardHolder payplugIntegratedPayment__error--hide">
@@ -41,15 +43,15 @@
         <div>{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.scheme.label'|trans }}</div>
         <div class="payplugIntegratedPayment__schemes">
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--cb">
-                <input type="radio" name="" value="cb" class="schemeOptions" /> {# No name to not trigger LiveComponent #}
+                <input type="radio" name="schemeOptions" value="cb" id="schemeOption_cb" data-live-ignore />
                 <span></span>
             </label>
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--visa">
-                <input type="radio" name="" value="visa" class="schemeOptions" /> {# No name to not trigger LiveComponent #}
+                <input type="radio" name="schemeOptions" value="visa" id="schemeOption_visa" data-live-ignore />
                 <span></span>
             </label>
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--mastercard">
-                <input type="radio" name="" value="mastercard" class="schemeOptions" /> {# No name to not trigger LiveComponent #}
+                <input type="radio" name="schemeOptions" value="mastercard" id="schemeOption_mastercard" data-live-ignore />
                 <span></span>
             </label>
         </div>
@@ -110,11 +112,8 @@
         <img class="payplug-logo" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/images/integrated/logo-payplug.png') }}" />
     </div>
     <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--privacy-policy">
-        <a href="https://www.payplug.com/privacy-policy" target="_blank">{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.privacy_policy.label'|trans }}</a>
+        <a class="btn-link" href="https://www.payplug.com/privacy-policy" target="_blank">{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.privacy_policy.label'|trans }}</a>
     </div>
 </div>
 
 <input type="hidden" name="payplug_integrated_payment_token" id="payplug_integrated_payment_token" />
-
-<link rel="stylesheet" href="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/payment/integrated.css') }}">
-<script src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/payment/integrated.js') }}"></script>
