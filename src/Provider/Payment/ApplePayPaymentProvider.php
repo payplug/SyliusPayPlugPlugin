@@ -245,7 +245,7 @@ class ApplePayPaymentProvider
         $targetTransition = $this->stateMachine->getTransitionToState($payment, PaymentTransitions::GRAPH, $targetState);
 
         if (null !== $targetTransition) {
-            $this->stateMachine->apply($payment,PaymentTransitions::GRAPH, $targetTransition);
+            $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, $targetTransition);
         }
     }
 
@@ -258,7 +258,7 @@ class ApplePayPaymentProvider
         $targetTransition = $this->stateMachine->getTransitionToState($order, OrderPaymentTransitions::GRAPH, $targetState);
 
         if (null !== $targetTransition) {
-            $this->stateMachine->apply($order,OrderPaymentTransitions::GRAPH, $targetTransition);
+            $this->stateMachine->apply($order, OrderPaymentTransitions::GRAPH, $targetTransition);
         }
     }
 
@@ -271,7 +271,7 @@ class ApplePayPaymentProvider
         $targetTransition = $this->stateMachine->getTransitionToState($order, OrderCheckoutTransitions::GRAPH, $targetState);
 
         if (null !== $targetTransition) {
-            $this->stateMachine->apply($order,OrderCheckoutTransitions::GRAPH, $targetTransition);
+            $this->stateMachine->apply($order, OrderCheckoutTransitions::GRAPH, $targetTransition);
         }
     }
 

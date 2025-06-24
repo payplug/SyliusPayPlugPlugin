@@ -33,7 +33,7 @@
     {% endif %}
 
     {% if integratedPayment %}
-        {% include '@PayPlugSyliusPayPlugPlugin/form/integrated.html.twig' with {
+        {% include '@PayPlugSyliusPayPlugPlugin/shop/integrated/index.html.twig' with {
             'paymentMethod': method,
             'payment': order.getLastPayment('cart'),
             'hasSavedCards': hasSavedCards,

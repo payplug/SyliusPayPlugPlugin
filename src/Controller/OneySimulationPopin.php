@@ -32,7 +32,7 @@ final class OneySimulationPopin extends AbstractOneyController
             $simulationData = $this->oneySimulationDataProvider->getForCart($cart);
 
             return $this->render(
-                '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
+                '@PayPlugSyliusPayPlugPlugin/shop/oney/popin.html.twig',
                 [
                     'data' => $simulationData,
                     'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($cart),
@@ -68,7 +68,7 @@ final class OneySimulationPopin extends AbstractOneyController
         $simulationData = $this->oneySimulationDataProvider->getForCart($tempCart);
 
         return $this->render(
-            '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
+            '@PayPlugSyliusPayPlugPlugin/shop/oney/popin.html.twig',
             [
                 'data' => $simulationData,
                 'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($tempCart),

@@ -39,13 +39,12 @@ final class CardController extends AbstractController
         $customer = $this->customerContext->getCustomer();
 
         if (!$customer instanceof CustomerInterface) {
-            return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
+            return $this->render('@PayPlugSyliusPayPlugPlugin/shop/saved_cards/index.html.twig', [
                 'savedCards' => [],
             ]);
         }
 
-        return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
-            /* @phpstan-ignore-next-line */
+        return $this->render('@PayPlugSyliusPayPlugPlugin/shop/saved_cards/index.html.twig', [
             'savedCards' => $customer->getCards(),
         ]);
     }

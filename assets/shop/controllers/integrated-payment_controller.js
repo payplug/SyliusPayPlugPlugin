@@ -1,6 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 import WebFont from 'webfontloader';
 
+/* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static values = {
     code: String,
@@ -59,26 +60,25 @@ export default class extends Controller {
     }
 
     if (payplug_integrated_payment_params.has_saved_cards) {
-      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]:not([name=schemeOptions])')
-        .forEach((element) => {
-          element.addEventListener('change', (e) => { // TODO: function
-            if (
-              'payplug_choice_card_other' === e.currentTarget.id
-              && e.currentTarget.checked
-              || e.target.value === payplug_integrated_payment_params.payment_method_code
-              && document.querySelector('#payplug_choice_card_other').checked
-            ) {
-              this.openFields(); // TODO: this.openFields()
-              return;
-            }
-            this.closeFields();
-          })
+      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]:not([name=schemeOptions])').forEach((element) => {
+        element.addEventListener('change', (e) => {
+          if (
+            'payplug_choice_card_other' === e.currentTarget.id &&
+            e.currentTarget.checked ||
+            e.target.value === payplug_integrated_payment_params.payment_method_code &&
+            document.querySelector('#payplug_choice_card_other').checked
+          ) {
+            this.openFields();
+            return;
+          }
+          this.closeFields();
         })
+      })
       return;
     }
 
-    const paplugIsChecked = this.getPaymentMethodSelectors({ methodCode: payplug_integrated_payment_params.payment_method_code, checked: true });
-    if (paplugIsChecked.length) {
+    const isChecked = this.getPaymentMethodSelectors({ methodCode: payplug_integrated_payment_params.payment_method_code, checked: true });
+    if (isChecked.length) {
       this.openFields();
     }
 

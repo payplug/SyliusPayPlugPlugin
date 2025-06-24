@@ -41,6 +41,7 @@
     </div>
     <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--scheme">
         <div>{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.scheme.label'|trans }}</div>
+        {# @todo: adding radio prop name will lead to an invalid model name but it doesn't matter for now #}
         <div class="payplugIntegratedPayment__schemes">
             <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--cb">
                 <input type="radio" name="schemeOptions" value="cb" id="schemeOption_cb" data-live-ignore />

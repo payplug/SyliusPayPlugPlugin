@@ -37,10 +37,13 @@ final class OrderController extends BaseOrderController
 
     #[Required]
     private StateMachineInterface $stateMachineAbstraction;
+
     #[Required]
     private ApplePayPaymentProvider $applePayPaymentProvider;
+
     #[Required]
     private LockFactory $lockFactory;
+
     #[Required]
     private LoggerInterface $logger;
 

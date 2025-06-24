@@ -16,7 +16,7 @@
   "symfony": {
     "controllers": {
       "oney-popin": {
-        "main": "controllers/oney/popin_controller.js",
+        "main": "shop/controllers/oney-popin_controller.js",
         "enabled": true,
         "webpackMode": "lazy",
         "fetch": "lazy",
@@ -42,6 +42,12 @@
       },
       "payment-logo": {
         "main": "shop/controllers/payment-logo_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
+      },
+      "checkout-select-payment": {
+        "main": "shop/controllers/checkout-select-payment_controller.js",
         "webpackMode": "lazy",
         "fetch": "lazy",
         "enabled": true

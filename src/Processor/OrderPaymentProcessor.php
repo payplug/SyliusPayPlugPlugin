@@ -22,7 +22,7 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
     public function __construct(
         #[AutowireDecorated]
         private OrderProcessorInterface $baseOrderPaymentProcessor,
-        private StateMachineInterface $stateMachine
+        private StateMachineInterface $stateMachine,
     ) {
     }
 
