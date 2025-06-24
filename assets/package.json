@@ -48,6 +48,9 @@
       },
       "checkout-select-payment": {
         "main": "shop/controllers/checkout-select-payment_controller.js",
+        "autoimport": {
+          "@payplug/sylius-payplug-plugin/dist/shop/payment/index.css": true
+        },
         "webpackMode": "lazy",
         "fetch": "lazy",
         "enabled": true

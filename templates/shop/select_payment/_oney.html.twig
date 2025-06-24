@@ -12,7 +12,20 @@
     {% set showOney = true %}
 {% endif %}
 
-<div class="content" {{ stimulus_controller('@payplug/sylius-payplug-plugin/oney-payment') }}>
+{% set values = {
+    modal: '.oney-complete-info-popin',
+    area: 'body[data-route=sylius_shop_checkout_select_payment]'
+} %}
+
+{% if app.session is not null and app.session.get('oney_has_error') == true %}
+    {% set completeInfoRoute = {route: path('payplug_sylius_oney_complete_info') ~ '?tokenValue=' ~ order.tokenValue} %}
+    {% set values = values|merge(completeInfoRoute) %}
+{% endif %}
+
+<div
+    class="content"
+    {{ stimulus_controller('@payplug/sylius-payplug-plugin/oney-payment', values) }}
+>
     <a class="header">
         {% if factoryName == oneyFactoryName %}
             <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
@@ -26,17 +39,13 @@
     </a>
 
     {% if showOney %}
-        <div class="oney-payment-choice payment-method-choice" data-payment-input-id="{{ form.vars.id }}">
+        <div
+            class="payment-method-choice oney-payment-choice"
+            {{ stimulus_target('@payplug/sylius-payplug-plugin/checkout-select-payment', 'trigger') }}
+            data-payment-input-id="{{ form.vars.id }}"
+        >
             {{ form_row(form.parent.parent.oney_payment_choice) }}
         </div>
-        {% if app.session is not null and app.session.get('oney_has_error') == true %}
-            {# TODO: Move that in controller?#}
-            <script type="text/javascript">
-                /* <![CDATA[ */
-                var completeInfoRoute = '{{ path("payplug_sylius_oney_complete_info") }}?tokenValue={{ order.tokenValue }}';
-                /* ]] */
-            </script>
-        {% endif %}
     {% endif %}
 </div>
 

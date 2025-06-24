@@ -3,18 +3,12 @@ import $ from 'jquery';
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
+  static values = {
+    modal: String,
+    area: String,
+    route: String,
+  }
   connect() {
-    this.options = {
-      completeInfo: {
-        modal: '.oney-complete-info-popin',
-        area: '.ui.grid',
-      },
-    };
-
-    if (typeof completeInfoRoute !== 'undefined') {
-      this.modalAppear();
-    }
-
     this.tabs();
     window.addEventListener('resize', () => {
       setTimeout(this.tabs, 100);
@@ -50,55 +44,51 @@ export default class extends Controller {
       });
     });
   }
-  modalAppear() {
-    const self = this;
-    let path = completeInfoRoute;
+  routeValueChanged() {
+    if (!this.hasRouteValue) {
+      return;
+    }
+
+    let path = this.routeValue;
     $.get(path).then((data) => {
-      $('body .pusher').append('<div class="overlay"></div>');
-      $(self.options.completeInfo.area).addClass("inactive");
-      $(self.options.completeInfo.area).parent().append(data);
-      self.modalEvents();
-    });
-  }
-  modalFadeaway() {
-    $(this.options.completeInfo.modal).fadeOut(300, () => {
-      $(this.options.completeInfo.area).removeClass('inactive');
-      $('.overlay').hide();
+      const modalTpl = document.querySelector('.modal');
+      this.modal = new window.bootstrap.Modal(modalTpl);
+      $(modalTpl).find('.modal-body').html(data);
+      this.modal.show();
+      $('form[name=form]').on('submit', (e) => {
+        this.modalSubmit(e);
+      });
     });
   }
   modalSubmit(evt) {
-    const self = this;
     evt.preventDefault();
-    $(evt.currentTarget).addClass('loading');
-
+    if (!this.hasRouteValue) {
+      return;
+    }
+    $('.sylius-shop-loader').toggleClass("d-none");
     $.ajax({
       method: 'post',
-      url: completeInfoRoute,
+      url: this.routeValue,
       data: $(evt.currentTarget).serialize(),
-      success: function (res) {
+      success: (res) => {
         if (Array.isArray(res)) {
-          $(`${self.options.completeInfo.modal}__content`).fadeOut(() => {
-            $(`${self.options.completeInfo.modal}__success`).show();
+          $('.sylius-shop-loader').toggleClass("d-none");
+          $(`${this.modalValue}__content`).fadeOut(() => {
+            $(`${this.modalValue}__success`).show();
           });
           setTimeout(() => {
-            self.modalFadeaway();
+            this.modal.hide();
+            window.location.reload();
           }, 2500);
-        } else {
-          $(self.options.completeInfo.modal).html(res);
         }
-        self.modalEvents();
       },
-      error: function (res) {
-        console.log(res);
+      error: (res) => {
+        $('.sylius-shop-loader').toggleClass("d-none");
+        $(this.modalValue).html(res.responseText);
+        $('form[name=form]').on('submit', (e) => {
+          this.modalSubmit(e);
+        });
       },
-    });
-  }
-  modalEvents() {
-    $('.close').on('click', () => {
-      this.modalFadeaway();
-    });
-    $('form[name=form]').on('submit', (e) => {
-      this.modalSubmit(e);
     });
   }
 }

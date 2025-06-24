@@ -20,6 +20,10 @@ sylius_twig_hooks:
                 template: "@PayPlugSyliusPayPlugPlugin/shop/saved_cards/index/_subcontent.html.twig"
                 priority: 10
 
+        'sylius_shop.checkout.select_payment':
+            modal:
+                template: '@PayPlugSyliusPayPlugPlugin/shared/modal/index.html.twig'
+                priority: 0
 
         # TODO: check if this is possible only on select_payment page
         'sylius_shop.checkout#stylesheets':

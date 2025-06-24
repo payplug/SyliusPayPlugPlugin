@@ -1,35 +1,17 @@
-<div class="oney-complete-info-popin ui segment">
-    <div class="oney-complete-info-popin__header">
-        <a class="close" href="javascript:void(0);" title="{{ 'payplug_sylius_payplug_plugin.ui.popin_close'|trans }}">
-            <span></span><span></span>
-        </a>
-    </div>
+{% form_theme form '@SyliusShop/form/theme.html.twig' %}
+
+<div class="oney-complete-info-popin">
     <div class="oney-complete-info-popin__content">
-        <div class="ui dividing header">
-            <h3>{{ 'payplug_sylius_payplug_plugin.form.complete_info.missing_title'|trans }}</h3>
-        </div>
         {{ form_start(form, {'attr': {'class': 'ui form loadable', 'novalidate': 'novalidate'}}) }}
         {% set phoneField = form.billing_phone ?? form.shipping_phone ?? form.phone ?? null %}
         {% if phoneField is not null %}
-            <div class="required field">
-                <label for="{{ phoneField.vars.id }}"
-                       class="required">{{ 'payplug_sylius_payplug_plugin.form.complete_info.phone'|trans }}</label>
-                {{ form_widget(phoneField, {attr: {class: 'required'}}) }}
-                {{ form_errors(phoneField) }}
-            </div>
+            {{ form_row(phoneField, {attr: {class: 'required'}}) }}
         {% endif %}
         {% if form.email is defined %}
-            <div class="required field">
-                <label for="{{ form.email.vars.id }}"
-                       class="required">{{ 'payplug_sylius_payplug_plugin.form.complete_info.email'|trans }}</label>
-                {{ form_widget(form.email, {attr: {class: 'required'}}) }}
-                {{ form_errors(form.email) }}
-            </div>
+            {{ form_row(form.email, {attr: {class: 'required'}}) }}
         {% endif %}
         <div>
-            {{ form_widget(form.submit, { label: 'payplug_sylius_payplug_plugin.form.complete_info.submit', attr: { class: 'ui large primary button' }}) }}
-            <a class="close"
-               href="javascript:void(0);">{{ 'payplug_sylius_payplug_plugin.ui.cancel'|trans }}</a>
+            {{ form_row(form.submit, { label: 'payplug_sylius_payplug_plugin.form.complete_info.submit', attr: { class: 'btn btn-primary' }}) }}
         </div>
         {{ form_rest(form) }}
         {{ form_end(form) }}
