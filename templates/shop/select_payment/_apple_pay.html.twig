@@ -7,7 +7,10 @@
 {% set applePayFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') %}
 {% set checkboxClass = 'checkbox-applepay' %}
 
-<div class="content">
+<div
+    class="content"
+    {{ stimulus_controller('@payplug/sylius-payplug-plugin/apple-pay') }}
+>
     <a class="header">
         <div class="apple-pay-method">
             <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="apple-pay">{{ form.vars.label }}
@@ -17,8 +20,8 @@
     </a>
 
     <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
-    {# TODO: Move in controller ? #}
     <script>
+      /* <![CDATA[ */
         const applePaySessionRequestSettings = {
             "countryCode": "{% if sylius.channel.defaultLocale.code|length == 2 %}{{ sylius.channel.defaultLocale.code }}{% else %}{{ sylius.channel.defaultLocale.code|slice(3, 2) }}{% endif %}",
             "currencyCode": "{{ sylius.channel.baseCurrency.code }}",
@@ -38,6 +41,7 @@
                 'apple_pay_domain': "{{ sylius.channel.hostname }}"
             }))
         };
+      /* ]] */
     </script>
     <apple-pay-button id="payplug-applepay-btn"
                       buttonstyle="black"

@@ -54,6 +54,12 @@
         "webpackMode": "lazy",
         "fetch": "lazy",
         "enabled": true
+      },
+      "apple-pay": {
+        "main": "shop/controllers/apple-pay_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
       }
     }
   },
