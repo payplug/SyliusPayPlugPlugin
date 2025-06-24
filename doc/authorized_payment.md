@@ -46,6 +46,8 @@ winzou_state_machine:
 > [!NOTE]
 > This configuration is already added by the plugin.
 
+### With Winzou State Machine
+
 For example, if you want to trigger the capture when an order is shipped, you can create a callback on the `sylius_order_shipping` state machine.
 
 File: `config/packages/winzou_state_machine.yaml`
@@ -93,6 +95,58 @@ class CaptureOrderProcessor
             ->get($payment, PaymentTransitions::GRAPH)
             ->apply(PaymentTransitions::TRANSITION_COMPLETE);
 
+        if (PaymentInterface::STATE_COMPLETED !== $payment->getState()) {
+            throw new \LogicException('Oh no! Payment capture failed 💸');
+        }
+    }
+}
+```
+
+### With Symfony Workflow (default in Sylius 2)
+
+If you are using Symfony Workflow, you can create a custom action to capture the payment, with a transition listener.
+
+File: `src/StateMachine/CaptureOrderProcessor.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\StateMachine;
+
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
+use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\OrderShippingTransitions;
+use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\Workflow\Attribute\AsTransitionListener;
+use Symfony\Component\Workflow\Event\TransitionEvent;
+
+final class CaptureOrderProcessor
+{
+    public function __construct(private StateMachineInterface $stateMachine)
+    {
+    }
+
+    #[AsTransitionListener(
+        workflow: OrderShippingTransitions::GRAPH,
+        transition: OrderShippingTransitions::TRANSITION_SHIP,
+    )]
+    public function onShip(TransitionEvent $event): void
+    {
+        $order = $event->getSubject();
+        if (!$order instanceof OrderInterface) {
+            throw new \LogicException('Expected an instance of OrderInterface');
+        }
+
+        $payment = $order->getLastPayment(PaymentInterface::STATE_AUTHORIZED);
+        if (null === $payment) {
+            // No payment in authorized state, nothing to do here
+            return;
+        }
+
+        $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE);
         if (PaymentInterface::STATE_COMPLETED !== $payment->getState()) {
             throw new \LogicException('Oh no! Payment capture failed 💸');
         }

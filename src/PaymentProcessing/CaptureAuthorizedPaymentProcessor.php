@@ -13,7 +13,9 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\Workflow\Attribute\AsCompletedListener;
+use Symfony\Component\Workflow\Attribute\AsTransitionListener;
 use Symfony\Component\Workflow\Event\CompletedEvent;
+use Symfony\Component\Workflow\Event\TransitionEvent;
 
 final class CaptureAuthorizedPaymentProcessor
 {
@@ -23,8 +25,8 @@ final class CaptureAuthorizedPaymentProcessor
     ) {
     }
 
-    #[AsCompletedListener(workflow: PaymentTransitions::GRAPH, transition: PaymentTransitions::TRANSITION_COMPLETE)]
-    public function onCompletePaymentTransitionEvent(CompletedEvent $event): void
+    #[AsTransitionListener(workflow: PaymentTransitions::GRAPH, transition: PaymentTransitions::TRANSITION_COMPLETE)]
+    public function onCompletePaymentTransitionEvent(TransitionEvent $event): void
     {
         $subject = $event->getSubject();
         if (!$subject instanceof PaymentInterface) {
