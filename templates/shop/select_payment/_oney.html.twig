@@ -17,7 +17,7 @@
     area: 'body[data-route=sylius_shop_checkout_select_payment]'
 } %}
 
-{% if app.session is not null and app.session.get('oney_has_error') == true %}
+{% if app.session is not null and app.session.flashbag.get('oney_has_error')|first is same as true %}
     {% set completeInfoRoute = {route: path('payplug_sylius_oney_complete_info') ~ '?tokenValue=' ~ order.tokenValue} %}
     {% set values = values|merge(completeInfoRoute) %}
 {% endif %}

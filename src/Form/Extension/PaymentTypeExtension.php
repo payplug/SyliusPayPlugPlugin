@@ -50,7 +50,6 @@ final class PaymentTypeExtension extends AbstractTypeExtension
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (): void {
                 // Remove on preset data, it'll be readded if needed in post_submit
-                $this->requestStack->getSession()->remove('oney_has_error');
                 $this->requestStack->getSession()->remove('payplug_payment_method');
             })
             ->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event): void {
@@ -106,7 +105,7 @@ final class PaymentTypeExtension extends AbstractTypeExtension
                     \array_walk($errors, static function (FormError $error) use ($event): void {
                         $event->getForm()->get('method')->addError($error);
                     });
-                    $this->requestStack->getSession()->set('oney_has_error', true);
+                    $this->requestStack->getSession()->getFlashBag()->add('oney_has_error', true);
 
                     return;
                 }

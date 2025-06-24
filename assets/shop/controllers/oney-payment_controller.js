@@ -13,7 +13,6 @@ export default class extends Controller {
     window.addEventListener('resize', () => {
       setTimeout(this.tabs, 100);
     });
-
     this.tabsHandler();
   }
   tabs() {
@@ -48,31 +47,30 @@ export default class extends Controller {
     if (!this.hasRouteValue) {
       return;
     }
-
+    this.modalAppear();
+  }
+  modalAppear() {
     let path = this.routeValue;
     $.get(path).then((data) => {
       const modalTpl = document.querySelector('.modal');
       this.modal = new window.bootstrap.Modal(modalTpl);
       $(modalTpl).find('.modal-body').html(data);
       this.modal.show();
-      $('form[name=form]').on('submit', (e) => {
-        this.modalSubmit(e);
-      });
+      this.bindModalEvents();
     });
   }
-  modalSubmit(evt) {
-    evt.preventDefault();
+  modalSubmit(e) {
     if (!this.hasRouteValue) {
       return;
     }
+    e.preventDefault();
     $('.sylius-shop-loader').toggleClass("d-none");
     $.ajax({
       method: 'post',
       url: this.routeValue,
-      data: $(evt.currentTarget).serialize(),
+      data: $(e.currentTarget).serialize(),
       success: (res) => {
         if (Array.isArray(res)) {
-          $('.sylius-shop-loader').toggleClass("d-none");
           $(`${this.modalValue}__content`).fadeOut(() => {
             $(`${this.modalValue}__success`).show();
           });
@@ -83,12 +81,15 @@ export default class extends Controller {
         }
       },
       error: (res) => {
-        $('.sylius-shop-loader').toggleClass("d-none");
         $(this.modalValue).html(res.responseText);
-        $('form[name=form]').on('submit', (e) => {
-          this.modalSubmit(e);
-        });
+        this.bindModalEvents();
       },
+      complete: () => {
+        $('.sylius-shop-loader').toggleClass("d-none");
+      }
     });
+  }
+  bindModalEvents() {
+    $('form[name=form]').on('submit', (e) => this.modalSubmit(e));
   }
 }
