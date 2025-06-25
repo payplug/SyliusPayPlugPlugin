@@ -26,38 +26,13 @@ abstract class AbstractSupportedRefundPaymentMethodsProvider
     ) {
     }
 
-    public function findForChannel(ChannelInterface $channel): array
+    public function findForOrder(OrderInterface $order): array
     {
-        $paymentMethods = $this->decorated->findForChannel($channel);
+        $paymentMethods = $this->decorated->findForOrder($order);
         $request = $this->requestStack->getCurrentRequest();
         if (!$request instanceof Request || 'sylius_refund_order_refunds_list' !== $request->get('_route')) {
             return $paymentMethods;
         }
-
-        $orderNumber = $request->get('orderNumber');
-        if (!is_string($orderNumber)) {
-            return $paymentMethods;
-        }
-
-        /** @var OrderInterface|null $order */
-        $order = $this->orderRepository->findOneByNumber($orderNumber);
-
-        if (!$order instanceof OrderInterface) {
-            return $paymentMethods;
-        }
-
-        return $this->find($paymentMethods, $order);
-    }
-
-    /**
-     * See Sylius\RefundPlugin\Provider\SupportedRefundPaymentMethodsProvider
-     * The "findForChannel" method is deprecated and will be removed in 2.0. Use "findForOrder" instead
-     */
-    public function findForOrder(OrderInterface $order): array
-    {
-        $channel = $order->getChannel();
-        Assert::notNull($channel);
-        $paymentMethods = $this->decorated->findForChannel($channel);
 
         return $this->find($paymentMethods, $order);
     }
