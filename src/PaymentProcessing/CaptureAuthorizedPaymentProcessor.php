@@ -12,9 +12,7 @@ use Payum\Core\Bridge\Spl\ArrayObject;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\PaymentTransitions;
-use Symfony\Component\Workflow\Attribute\AsCompletedListener;
 use Symfony\Component\Workflow\Attribute\AsTransitionListener;
-use Symfony\Component\Workflow\Event\CompletedEvent;
 use Symfony\Component\Workflow\Event\TransitionEvent;
 
 final class CaptureAuthorizedPaymentProcessor
