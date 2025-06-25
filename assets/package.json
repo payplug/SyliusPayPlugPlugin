@@ -21,8 +21,8 @@
         "webpackMode": "lazy",
         "fetch": "lazy",
         "autoimport": {
-          "@payplug/sylius-payplug-plugin/dist/shop/oney_common/index.css": true,
-          "@payplug/sylius-payplug-plugin/dist/shop/oney_popin/index.css": true
+          "@payplug/sylius-payplug-plugin/shop/dist/oney_common/index.css": true,
+          "@payplug/sylius-payplug-plugin/shop/dist/oney_popin/index.css": true
         }
       },
       "integrated-payment": {
@@ -31,7 +31,7 @@
         "fetch": "lazy",
         "enabled": true,
         "autoimport": {
-          "@payplug/sylius-payplug-plugin/dist/shop/payment/integrated.css": true
+          "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
         }
       },
       "oney-payment": {
@@ -49,7 +49,7 @@
       "checkout-select-payment": {
         "main": "shop/controllers/checkout-select-payment_controller.js",
         "autoimport": {
-          "@payplug/sylius-payplug-plugin/dist/shop/payment/index.css": true
+          "@payplug/sylius-payplug-plugin/shop/dist/payment/index.css": true
         },
         "webpackMode": "lazy",
         "fetch": "lazy",
