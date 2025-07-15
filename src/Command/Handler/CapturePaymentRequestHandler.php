@@ -26,6 +26,7 @@ final class CapturePaymentRequestHandler
         private PayPlugPaymentDataCreator $paymentDataCreator,
         #[Autowire(service: 'sylius_shop.provider.order_pay.after_pay_url')]
         private UrlProviderInterface $afterPayUrlProvider,
+        private UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function __invoke(CapturePaymentRequest $capturePaymentRequest): void
@@ -44,6 +45,9 @@ final class CapturePaymentRequestHandler
         ];
 
         $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $notificationUrl = $this->urlGenerator->generate('sylius_payment_method_notify', ['code' => $payment->getMethod()?->getCode()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $details['notification_url'] = $notificationUrl;
 
         $paymentRequest->setPayload($data);
         $payplugPayment = $client->createPayment($data);

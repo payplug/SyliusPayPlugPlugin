@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
+use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
-use PayPlug\SyliusPayPlugPlugin\Command\StatusPaymentRequest;
+use PayPlug\SyliusPayPlugPlugin\Command\NotifyPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
-use Sylius\Component\Payment\Model\PaymentInterface;
-use Sylius\Component\Payment\Model\PaymentRequestInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
-final class StatusPaymentRequestHandler
+class NotifyPaymentRequestHandler
 {
     public function __construct(
         private PaymentRequestProviderInterface $paymentRequestProvider,
@@ -26,50 +26,47 @@ final class StatusPaymentRequestHandler
         private PaymentNotificationHandler $paymentNotificationHandler,
     ) {}
 
-    public function __invoke(StatusPaymentRequest $statusPaymentRequest): void
+    public function __invoke(NotifyPaymentRequest $notifyPaymentRequest): void
     {
-        $paymentRequest = $this->paymentRequestProvider->provide($statusPaymentRequest);
+        $paymentRequest = $this->paymentRequestProvider->provide($notifyPaymentRequest);
         $payment = $paymentRequest->getPayment();
-        if ('' !== $statusPaymentRequest->getForcedStatus()) {
-            $this->handleForcedStatus($statusPaymentRequest, $paymentRequest);
+        if ($payment->getState() !== PaymentInterface::STATE_COMPLETED) {
+            // If the payment is already completed, we do not need to notify again
+            $this->stateMachine->apply(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_COMPLETE
+            );
+
             return;
         }
-        // We don't have a forced status, so we retrieve the payment status from PayPlug
-        $client = $this->apiClientFactory->createForPaymentMethod($paymentRequest->getPayment()->getMethod());
-        $payplugPayment = $client->retrieve($payment->getDetails()['payment_id'] ?? throw new \LogicException('No PayPlug payment ID found in payment details.'));
+        try {
 
-        $paymentRequest->setResponseData((array) $payplugPayment);
-        $details = new \ArrayObject($payment->getDetails());
-        $this->paymentNotificationHandler->treat($payment, $payplugPayment, $details);
+            // Payload contains what's send by payplug, no need to retrieve it from PayPlug
+            $payplugPayment = Payment::fromAttributes(json_decode($paymentRequest->getPayload()['http_request']['content'] ?? '{}', true));
+            $details = new \ArrayObject($payment->getDetails());
+            $this->paymentNotificationHandler->treat($payment, $payplugPayment, $details);
 
-        $payment->setDetails($details->getArrayCopy());
-        $this->updatePaymentState($payment);
+            $payment->setDetails($details->getArrayCopy());
+            $this->updatePaymentState($payment);
+            throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? ''));
 
-        // Mark the PaymentRequest as completed
-        $this->stateMachine->apply(
-            $paymentRequest,
-            PaymentRequestTransitions::GRAPH,
-            PaymentRequestTransitions::TRANSITION_COMPLETE
-        );
-    }
+            $this->stateMachine->apply(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_COMPLETE
+            );
 
-    private function handleForcedStatus(StatusPaymentRequest $statusPaymentRequest, PaymentRequestInterface $paymentRequest): void
-    {
-        $payment = $paymentRequest->getPayment();
-
-        $payment->setDetails([
-            ...$payment->getDetails(),
-            'status' => $statusPaymentRequest->getForcedStatus(),
-        ]);
-
-        $this->updatePaymentState($payment);
-
-        // Mark the PaymentRequest as completed
-        $this->stateMachine->apply(
-            $paymentRequest,
-            PaymentRequestTransitions::GRAPH,
-            PaymentRequestTransitions::TRANSITION_COMPLETE
-        );
+        } catch (\Throwable $e) {
+            $paymentRequest->setResponseData([
+                'error' => $e->getMessage(),
+            ]);
+            $this->stateMachine->apply(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_FAIL
+            );
+        }
     }
 
     private function updatePaymentState(PaymentInterface $payment): void
