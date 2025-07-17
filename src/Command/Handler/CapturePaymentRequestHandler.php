@@ -44,8 +44,6 @@ final class CapturePaymentRequestHandler
             'cancel_url' => $returnUrl . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
 
-        $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
-
         $notificationUrl = $this->urlGenerator->generate('sylius_payment_method_notify', ['code' => $payment->getMethod()?->getCode()], UrlGeneratorInterface::ABSOLUTE_URL);
         $details['notification_url'] = $notificationUrl;
 

@@ -38,12 +38,8 @@ final class CapturePaymentRequestCommandProvider implements PaymentRequestComman
 
     public function provide(PaymentRequestInterface $paymentRequest): object
     {
-        $payment = $paymentRequest->getPayment();
-        $details = $payment->getDetails();
-
         if ($this->isAlreadyCreated($paymentRequest)) {
             // The payment has already been created, let's use the offline capture request to be redirected to the thank-you page
-            // TODO: use our own AlreadyPaidCapturePaymentRequest class
             return new OfflineCapturePaymentRequest($paymentRequest->getId());
         }
 
@@ -54,7 +50,6 @@ final class CapturePaymentRequestCommandProvider implements PaymentRequestComman
     {
         $payment = $paymentRequest->getPayment();
         $details = $payment->getDetails();
-
         if (
             isset($details['status'], $details['payment_id']) &&
             PayPlugApiClientInterface::STATUS_CREATED !== $details['status']

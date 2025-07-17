@@ -49,14 +49,12 @@ class NotifyPaymentRequestHandler
 
             $payment->setDetails($details->getArrayCopy());
             $this->updatePaymentState($payment);
-            throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? ''));
 
             $this->stateMachine->apply(
                 $paymentRequest,
                 PaymentRequestTransitions::GRAPH,
                 PaymentRequestTransitions::TRANSITION_COMPLETE
             );
-
         } catch (\Throwable $e) {
             $paymentRequest->setResponseData([
                 'error' => $e->getMessage(),
