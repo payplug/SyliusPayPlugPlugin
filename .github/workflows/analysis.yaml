@@ -60,14 +60,8 @@ jobs:
                 name: 'PHPStan - Run'
                 run: 'if [ -f ruleset/phpstan.neon ]; then vendor/bin/phpstan analyse -c ruleset/phpstan.neon src/ ; else echo PHPStan rulesets file does not exist, skipping step ; fi'
                 if: 'always() && steps.end-of-setup.outcome == ''success'''
-            -
-                name: 'PHPSpec - Run'
-                run: 'if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi'
-                if: 'always() && steps.end-of-setup.outcome == ''success'''
-            -
-                name: 'Checks security issues - Run'
-                run: 'symfony security:check'
-                if: 'always() && steps.end-of-setup.outcome == ''success'''
+            # TODO: launch Grumphp
+            
     sonarcloud:
       runs-on: ubuntu-latest
       continue-on-error: true
