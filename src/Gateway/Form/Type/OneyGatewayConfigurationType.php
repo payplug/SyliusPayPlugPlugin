@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
         'type' => 'payplug_oney',
         'label' => 'payplug_sylius_payplug_plugin.ui.oney_gateway_label',
         'priority' => 90,
-    ]
+    ],
 )]
 final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationType
 {

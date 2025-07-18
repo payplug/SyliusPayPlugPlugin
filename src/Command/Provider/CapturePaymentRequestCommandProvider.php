@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Command\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
@@ -11,23 +13,23 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug',
-    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_oney',
-    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_bancontact',
-    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_american_express',
-    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_apple_pay',
-    ['action' => PaymentRequestInterface::ACTION_CAPTURE]
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
 final class CapturePaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {

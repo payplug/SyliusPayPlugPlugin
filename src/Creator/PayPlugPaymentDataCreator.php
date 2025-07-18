@@ -80,7 +80,7 @@ class PayPlugPaymentDataCreator
         $this->addShippingInfo($shipping, $customer, $order, $deliveryType, $details);
 
         $paymentMethod = $payment->getMethod();
-        $gatewayFactoryName = $paymentMethod->getGatewayConfig()?->getFactoryName();
+        $gatewayFactoryName = $paymentMethod?->getGatewayConfig()?->getFactoryName();
 
         if (
             PayPlugGatewayFactory::FACTORY_NAME === $gatewayFactoryName &&
@@ -96,7 +96,7 @@ class PayPlugPaymentDataCreator
             $details->offsetSet('payment_context', $this->getCartContext($order));
         }
 
-        $this->addPaymentMethodFieldToDetails($details, $gatewayFactoryName);
+        $this->addPaymentMethodFieldToDetails($details, $gatewayFactoryName ?? '');
 
         return $details;
     }

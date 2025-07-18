@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
         'type' => 'payplug_apple_pay',
         'label' => 'payplug_sylius_payplug_plugin.ui.apple_pay_gateway_label',
         'priority' => 70,
-    ]
+    ],
 )]
 final class ApplePayGatewayConfigurationType extends AbstractGatewayConfigurationType
 {

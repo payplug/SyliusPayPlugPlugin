@@ -76,7 +76,6 @@ class ApplePayPaymentProvider
 
         $paymentDataObject = $this->paymentDataCreator->create(
             $payment,
-            ApplePayGatewayFactory::FACTORY_NAME,
             [
                 'apple_pay' => [
                     'domain_name' => $order->getChannel()->getHostname(),

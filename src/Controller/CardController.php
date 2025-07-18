@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Payplug\Exception\NotFoundException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
+use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
@@ -38,14 +39,13 @@ final class CardController extends AbstractController
     {
         $customer = $this->customerContext->getCustomer();
 
-        if (!$customer instanceof CustomerInterface) {
-            return $this->render('@PayPlugSyliusPayPlugPlugin/shop/saved_cards/index.html.twig', [
-                'savedCards' => [],
-            ]);
+        $savedCards = [];
+        if ($customer instanceof CardsOwnerInterface) {
+            $savedCards = $customer->getCards();
         }
 
         return $this->render('@PayPlugSyliusPayPlugPlugin/shop/saved_cards/index.html.twig', [
-            'savedCards' => $customer->getCards(),
+            'savedCards' => $savedCards,
         ]);
     }
 

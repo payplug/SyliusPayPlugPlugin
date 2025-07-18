@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
         'type' => 'payplug_bancontact',
         'label' => 'payplug_sylius_payplug_plugin.ui.bancontact_gateway_label',
         'priority' => 80,
-    ]
+    ],
 )]
 final class BancontactGatewayConfigurationType extends AbstractGatewayConfigurationType
 {

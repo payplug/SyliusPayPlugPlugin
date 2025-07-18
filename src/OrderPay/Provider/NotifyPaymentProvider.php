@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * This provider is used to retrieve the payment from the order based on the request payload that Payplug sends.
+ *
  * @see \Sylius\Bundle\PaymentBundle\Action\PaymentMethodNotifyAction
  */
 #[AsNotifyPaymentProvider]
@@ -26,6 +27,7 @@ final class NotifyPaymentProvider implements NotifyPaymentProviderInterface
 
     public function getPayment(Request $request, PaymentMethodInterface $paymentMethod): PaymentInterface
     {
+        /** @var string|null $orderNumber */
         $orderNumber = $request->getPayload()->all('metadata')['order_number'] ?? null;
         if (null === $orderNumber) {
             throw new \InvalidArgumentException('Order number not found in request payload');
@@ -45,7 +47,7 @@ final class NotifyPaymentProvider implements NotifyPaymentProviderInterface
 
     public function supports(Request $request, PaymentMethodInterface $paymentMethod): bool
     {
-        return \str_contains($paymentMethod->getGatewayConfig()?->getFactoryName(), 'payplug') &&
+        return \str_contains($paymentMethod->getGatewayConfig()?->getFactoryName() ?? '', 'payplug') &&
             $request->getPayload()->has('id') &&
             $request->getPayload()->has('metadata');
     }

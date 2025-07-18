@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
         'type' => 'payplug_american_express',
         'label' => 'payplug_sylius_payplug_plugin.ui.american_express_gateway_label',
         'priority' => 70,
-    ]
+    ],
 )]
 final class AmericanExpressGatewayConfigurationType extends AbstractGatewayConfigurationType
 {

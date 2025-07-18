@@ -52,7 +52,7 @@ class CaptureAuthorizedPaymentCommand extends Command
                 'paymentId' => $payment->getId(),
                 'orderNumber' => $payment->getOrder()?->getNumber() ?? 'N/A',
             ]);
-            $output->writeln(sprintf('Capturing payment %d (order #%s)', $payment->getId(), $payment->getOrder()?->getNumber() ?? 'N/A'));
+            $output->writeln(sprintf('Capturing payment %d (order #%s)', $payment->getId(), $payment->getOrder()?->getNumber() ?? 'N/A')); // @phpstan-ignore-line
 
             try {
                 $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE);

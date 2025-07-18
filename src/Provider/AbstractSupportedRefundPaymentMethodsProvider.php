@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use Payum\Core\Model\GatewayConfigInterface;
-use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -13,7 +12,6 @@ use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Webmozart\Assert\Assert;
 
 abstract class AbstractSupportedRefundPaymentMethodsProvider
 {

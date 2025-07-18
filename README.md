@@ -85,6 +85,7 @@ In local environment, the plugin will not work properly because you will not be 
    namespace App\Entity\Customer;
 
    use Doctrine\ORM\Mapping as ORM;
+   use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
    use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
    use Sylius\Component\Core\Model\Customer as BaseCustomer;
 
@@ -94,7 +95,7 @@ In local environment, the plugin will not work properly because you will not be 
    */
    #[ORM\Entity]
    #[ORM\Table(name: 'sylius_customer')]
-   class Customer extends BaseCustomer
+   class Customer extends BaseCustomer implements CardsOwnerInterface
    {
       use CustomerTrait;
    }

@@ -35,16 +35,16 @@ final class OrderController extends BaseOrderController
 
     private const APPLE_SUCCESS_RESPONSE_CODE = 1;
 
-    #[Required]
+    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
     private StateMachineInterface $stateMachineAbstraction;
 
-    #[Required]
+    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
     private ApplePayPaymentProvider $applePayPaymentProvider;
 
-    #[Required]
+    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
     private LockFactory $lockFactory;
 
-    #[Required]
+    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
     private LoggerInterface $logger;
 
     #[Route(

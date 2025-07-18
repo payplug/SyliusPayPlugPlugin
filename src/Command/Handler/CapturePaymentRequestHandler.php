@@ -33,9 +33,14 @@ final class CapturePaymentRequestHandler
     {
         // Retrieve the current PaymentRequest based on the hash provided in the CapturePaymentRequest command
         $paymentRequest = $this->paymentRequestProvider->provide($capturePaymentRequest);
+        /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
         $payment = $paymentRequest->getPayment();
+        $method = $payment->getMethod();
+        if (null === $method) {
+            throw new \LogicException('Payment method is not set for the payment.');
+        }
 
-        $client = $this->apiClientFactory->createForPaymentMethod($paymentRequest->getPayment()->getMethod());
+        $client = $this->apiClientFactory->createForPaymentMethod($method);
         $data = $this->paymentDataCreator->create($payment)->getArrayCopy();
 
         $returnUrl = $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
@@ -45,7 +50,7 @@ final class CapturePaymentRequestHandler
         ];
 
         $notificationUrl = $this->urlGenerator->generate('sylius_payment_method_notify', ['code' => $payment->getMethod()?->getCode()], UrlGeneratorInterface::ABSOLUTE_URL);
-        $details['notification_url'] = $notificationUrl;
+        $data['notification_url'] = $notificationUrl;
 
         $paymentRequest->setPayload($data);
         $payplugPayment = $client->createPayment($data);
@@ -54,18 +59,18 @@ final class CapturePaymentRequestHandler
             ...$payment->getDetails(),
             'status' => PayPlugApiClientInterface::STATUS_CREATED,
             'payment_id' => $payplugPayment->__get('id'),
-            'payplug_response' =>  $arrayPayplugPayment,
+            'payplug_response' => $arrayPayplugPayment,
         ]);
 
         $paymentRequest->setResponseData(array_merge($arrayPayplugPayment, [
             'payment_id' => $payplugPayment->__get('id'),
-            'redirect_url' => $payplugPayment->hosted_payment->payment_url
+            'redirect_url' => $payplugPayment->hosted_payment->payment_url, // @phpstan-ignore-line
         ]));
 
         $this->stateMachine->apply(
             $paymentRequest,
             PaymentRequestTransitions::GRAPH,
-            PaymentRequestTransitions::TRANSITION_COMPLETE
+            PaymentRequestTransitions::TRANSITION_COMPLETE,
         );
     }
 }

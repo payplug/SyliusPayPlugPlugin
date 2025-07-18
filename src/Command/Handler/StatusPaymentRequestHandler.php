@@ -29,13 +29,21 @@ final class StatusPaymentRequestHandler
     public function __invoke(StatusPaymentRequest $statusPaymentRequest): void
     {
         $paymentRequest = $this->paymentRequestProvider->provide($statusPaymentRequest);
+        /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
         $payment = $paymentRequest->getPayment();
         if ('' !== $statusPaymentRequest->getForcedStatus()) {
             $this->handleForcedStatus($statusPaymentRequest, $paymentRequest);
+
             return;
         }
+        $method = $payment->getMethod();
+        if (null === $method) {
+            throw new \LogicException('Payment method is not set for the payment.');
+        }
+
         // We don't have a forced status, so we retrieve the payment status from PayPlug
-        $client = $this->apiClientFactory->createForPaymentMethod($paymentRequest->getPayment()->getMethod());
+        $client = $this->apiClientFactory->createForPaymentMethod($method);
+        // @phpstan-ignore-next-line - getDetails() return mixed
         $payplugPayment = $client->retrieve($payment->getDetails()['payment_id'] ?? throw new \LogicException('No PayPlug payment ID found in payment details.'));
 
         $paymentRequest->setResponseData((array) $payplugPayment);
@@ -49,12 +57,14 @@ final class StatusPaymentRequestHandler
         $this->stateMachine->apply(
             $paymentRequest,
             PaymentRequestTransitions::GRAPH,
-            PaymentRequestTransitions::TRANSITION_COMPLETE
+            PaymentRequestTransitions::TRANSITION_COMPLETE,
         );
     }
 
-    private function handleForcedStatus(StatusPaymentRequest $statusPaymentRequest, PaymentRequestInterface $paymentRequest): void
-    {
+    private function handleForcedStatus(
+        StatusPaymentRequest $statusPaymentRequest,
+        PaymentRequestInterface $paymentRequest,
+    ): void {
         $payment = $paymentRequest->getPayment();
 
         $payment->setDetails([
@@ -68,7 +78,7 @@ final class StatusPaymentRequestHandler
         $this->stateMachine->apply(
             $paymentRequest,
             PaymentRequestTransitions::GRAPH,
-            PaymentRequestTransitions::TRANSITION_COMPLETE
+            PaymentRequestTransitions::TRANSITION_COMPLETE,
         );
     }
 
@@ -83,7 +93,7 @@ final class StatusPaymentRequestHandler
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE),
             PayPlugApiClientInterface::FAILED => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_FAIL),
-            default => throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? '')),
+            default => throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? '')), // @phpstan-ignore-line - getDetails() return mixed
         };
     }
 }

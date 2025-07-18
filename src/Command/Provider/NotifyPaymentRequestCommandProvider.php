@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PayPlug\SyliusPayPlugPlugin\Command\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyPaymentRequest;
@@ -9,23 +11,23 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug',
-    ['action' => PaymentRequestInterface::ACTION_NOTIFY]
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_oney',
-    ['action' => PaymentRequestInterface::ACTION_NOTIFY]
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_bancontact',
-    ['action' => PaymentRequestInterface::ACTION_NOTIFY]
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_american_express',
-    ['action' => PaymentRequestInterface::ACTION_NOTIFY]
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
 )]
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug_apple_pay',
-    ['action' => PaymentRequestInterface::ACTION_NOTIFY]
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
 )]
 final class NotifyPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {

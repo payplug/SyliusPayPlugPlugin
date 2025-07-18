@@ -21,7 +21,7 @@ trait CustomerTrait
     protected $cards;
 
     /**
-     * @return Collection|Card[]
+     * @return Collection<Card>
      */
     public function getCards(): Collection
     {
