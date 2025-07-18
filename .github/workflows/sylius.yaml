@@ -20,11 +20,11 @@ jobs:
                 php:
                     - 8.2
                 sylius:
-                    - 1.12.0
+                    - 2.1.0
                 symfony:
-                    - 6.2
+                    - 6.4
                 node:
-                    - 14.x
+                    - 18.x
         env:
             APP_ENV: test
             package-name: payplug/sylius-payplug-plugin
@@ -54,7 +54,7 @@ jobs:
                 run: 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT'
             -
                 name: 'Composer - Set cache'
-                uses: actions/cache@v3
+                uses: actions/cache@v4
                 id: cache-composer
                 with:
                     path: '${{ steps.composer-cache.outputs.dir }}'
@@ -73,7 +73,7 @@ jobs:
                 run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
             -
                 name: 'Yarn - Set Cache'
-                uses: actions/cache@v3
+                uses: actions/cache@v4
                 with:
                     path: '${{ steps.yarn-cache.outputs.dir }}'
                     key: 'node-${{ matrix.node }}-yarn-${{ hashFiles(''**/package.json **/yarn.lock'') }}'
