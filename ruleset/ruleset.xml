@@ -3,7 +3,12 @@
          xsi:noNamespaceSchemaLocation="../vendor/squizlabs/php_codesniffer/phpcs.xsd">
     <arg name="colors"/>
     <arg name="extensions" value="php"/>
-    <rule ref="PSR12"/>
+    <rule ref="PSR12">
+        <!-- This rules doesn't match with single_line_empty_body -->
+        <exclude name="PSR2.Classes.ClassDeclaration.OpenBraceNewLine"/>
+        <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore"/>
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
+    </rule>
 
     <rule ref="Generic.PHP.ForbiddenFunctions">
         <properties>

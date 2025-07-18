@@ -16,4 +16,5 @@ return static function (ECSConfig $ecsConfig): void {
 
     /** @phpstan-ignore-next-line  */
     $ecsConfig->rule(\SlevomatCodingStandard\Sniffs\Classes\RequireMultiLineMethodSignatureSniff::class);
+    $ecsConfig->skip([\PhpCsFixer\Fixer\Basic\BracesFixer::class]);
 };
