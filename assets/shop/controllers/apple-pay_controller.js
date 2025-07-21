@@ -143,7 +143,7 @@ export default class extends Controller {
     session.begin();
   }
   disableNextStepButton() {
-    const nextStepButton = $('form[name="sylius_shop_checkout_select_payment"] [data-test-next-step]');
+    const nextStepButton = $('form[name*="checkout_select_payment"] [data-test-next-step]');
     nextStepButton.replaceWith(
       $("<span/>", {
         id: 'next-step',
@@ -153,7 +153,7 @@ export default class extends Controller {
     );
   }
   enableNextStepButton() {
-    const nextStepButton = $('form[name="sylius_shop_checkout_select_payment"] [data-test-next-step]');
+    const nextStepButton = $('form[name*="checkout_select_payment"] [data-test-next-step]');
     nextStepButton.replaceWith(
       $("<button/>", {
         type: 'submit',

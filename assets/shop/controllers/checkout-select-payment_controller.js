@@ -4,12 +4,13 @@ import $ from 'jquery';
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['trigger'];
+  form= null;
 
   connect() {
     this.toggleGateway();
 
-    const form = document.querySelector('form[name="sylius_shop_checkout_select_payment"]');
-    form.addEventListener('submit', (event) => {
+    this.form = document.querySelector('form[name*="checkout_select_payment"]');
+    this.form.addEventListener('submit', (event) => {
       this.handleForm();
     });
   }
@@ -24,11 +25,11 @@ export default class extends Controller {
       }
     })
 
-    if (checkedPaymentMethodInput.length) {
+    if (checkedPaymentMethodInput?.length) {
       $(`.payment-method-choice[data-payment-input-id="${$(checkedPaymentMethodInput).attr('id')}"]`).show();
     }
 
-    const $inputs = $('input[id*=sylius_shop_checkout_select_payment_payments]');
+    const $inputs = $('input[id*="checkout_select_payment_payments"]');
     $inputs.on('change', (event) => {
       const clickedPaymentMethodId = $(event.currentTarget).attr('id');
       $('.payment-method-choice').slideUp(); // Hide others
@@ -43,6 +44,6 @@ export default class extends Controller {
     }
 
     $('input#payplug_choice_card_other').attr('disabled', true);
-    $('form[name="sylius_shop_checkout_select_payment_payments"]').submit();
+    this.form.submit();
   }
 }

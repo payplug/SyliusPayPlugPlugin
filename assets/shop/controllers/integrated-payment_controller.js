@@ -95,7 +95,7 @@ export default class extends Controller {
     });
   }
   getPaymentMethodSelectors({ methodCode, checked } = {}) {
-    const baseSelector = '[id*=sylius_shop_checkout_select_payment_payments]';
+    const baseSelector = '[id*=checkout_select_payment_payments]';
 
     if (methodCode) {
       if (checked) {
@@ -186,7 +186,7 @@ export default class extends Controller {
         return;
       }
       document.querySelector('input[name=payplug_integrated_payment_token]').value = event.token;
-      document.querySelector('form[name=sylius_shop_checkout_select_payment]').submit();
+      document.querySelector('form[name*="checkout_select_payment"]').submit();
     });
   }
   fieldValidation () {
