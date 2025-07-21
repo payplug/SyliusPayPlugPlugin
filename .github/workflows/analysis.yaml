@@ -61,8 +61,9 @@ jobs:
                 run: 'if [ -f ruleset/phpstan.neon ]; then vendor/bin/phpstan analyse -c ruleset/phpstan.neon src/ ; else echo PHPStan rulesets file does not exist, skipping step ; fi'
                 if: 'always() && steps.end-of-setup.outcome == ''success'''
             # TODO: launch Grumphp
-            
+
     sonarcloud:
+      if: github.event.repository.fork != true
       runs-on: ubuntu-latest
       continue-on-error: true
       steps:
