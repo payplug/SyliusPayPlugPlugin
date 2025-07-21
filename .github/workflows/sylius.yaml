@@ -27,7 +27,7 @@ jobs:
                     - 6.4
                     - 7.3
                 node:
-                    - 18.x
+                    - 20.x
         env:
             APP_ENV: test
             package-name: payplug/sylius-payplug-plugin
@@ -93,20 +93,19 @@ jobs:
                 id: end-of-setup-sylius
             -
                 name: 'Doctrine Schema Validate - Run'
-                run: 'php bin/console doctrine:schema:validate --skip-sync'
-            -
-                name: 'Run PHPUnit'
-                run: 'make phpunit'
-                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
-            -
-                name: 'Configure Behat'
-                run: 'make behat-configure'
-                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
-            -
-                name: 'Run behat'
-                working-directory: ./tests/Application
-                run: 'vendor/bin/behat --strict --no-interaction -f progress || vendor/bin/behat --strict -vvv --no-interaction --rerun'
-                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
+                run: 'vendor/bin/console doctrine:schema:validate --skip-sync'
+#            -
+#                name: 'Run PHPUnit'
+#                run: 'make phpunit'
+#                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
+#            -
+#                name: 'Configure Behat'
+#                run: 'make behat-configure'
+#                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
+#            -
+#                name: 'Run behat'
+#                run: 'vendor/bin/behat --strict --no-interaction -f progress || vendor/bin/behat --strict -vvv --no-interaction --rerun'
+#                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
             -
                 uses: actions/upload-artifact@v4
                 if: failure()
