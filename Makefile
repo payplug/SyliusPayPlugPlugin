@@ -19,7 +19,8 @@ reset: ## Remove dependencies
 	rm -rf vendor
 .PHONY: reset
 
-phpunit: phpunit-configure phpunit-run ## Run PHPUnit
+phpunit: ## Run PHPUnit tests
+	./vendor/bin/phpunit
 .PHONY: phpunit
 
 ###
@@ -35,12 +36,7 @@ install-sylius:
 	${COMPOSER} require --dev sylius/test-application:"^${SYLIUS_VERSION}@alpha" -n -W # TODO: Remove alpha when stable
 	${COMPOSER} test-application:install
 
-phpunit-configure:
-	cp phpunit.xml.dist ${TEST_DIRECTORY}/phpunit.xml
-	echo -e "\nMOCK_SERVER_HOST=localhost\nMOCK_SERVER_PORT=8987\n" >> ${TEST_DIRECTORY}/.env.test.local
 
-phpunit-run:
-	./vendor/bin/phpunit
 
 behat-configure: ## Configure Behat
 	(cd ${TEST_DIRECTORY} && cp behat.yml.dist behat.yml)
