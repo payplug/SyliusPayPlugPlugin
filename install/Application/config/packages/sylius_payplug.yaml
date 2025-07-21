@@ -1,2 +1,0 @@
-imports:
-    - { resource: "@PayPlugSyliusPayPlugPlugin/config/config.yml" }
