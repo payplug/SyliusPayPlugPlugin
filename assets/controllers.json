@@ -1,0 +1,41 @@
+{
+    "controllers": {
+        "@payplug/sylius-payplug-plugin": {
+            "oney-popin": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/oney_common/index.css": true,
+                    "@payplug/sylius-payplug-plugin/shop/dist/oney_popin/index.css": true
+                }
+            },
+            "integrated-payment": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
+                }
+            },
+            "oney-payment": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "payment-logo": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "checkout-select-payment": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/index.css": true
+                }
+            },
+            "apple-pay": {
+                "enabled": true,
+                "fetch": "lazy"
+            }
+        }
+    },
+    "entrypoints": []
+}
