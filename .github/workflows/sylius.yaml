@@ -19,10 +19,13 @@ jobs:
             matrix:
                 php:
                     - 8.2
+                    - 8.4
                 sylius:
                     - 2.1.0
+                    - 2.0.0
                 symfony:
                     - 6.4
+                    - 7.3
                 node:
                     - 18.x
         env:
@@ -43,9 +46,6 @@ jobs:
                 uses: actions/setup-node@v3
                 with:
                     node-version: '${{ matrix.node }}'
-            -
-                name: 'Wkhtmltopdf - Install'
-                run: "sudo apt-get update\nsudo apt-get install xvfb libfontconfig wkhtmltopdf\nprintf '#!/bin/bash\\nxvfb-run -a --server-args=\"-screen 0, 1024x768x24\" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh\nsudo chmod a+x /usr/bin/wkhtmltopdf.sh\nsudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf\n"
             -
                 uses: actions/checkout@v3
             -
@@ -80,27 +80,19 @@ jobs:
                     restore-keys: "node-${{ matrix.node }}-yarn-\n"
             -
                 name: 'Install Sylius-Standard and Plugin'
-                run: 'make install -e SYLIUS_VERSION=${{ matrix.sylius }} SYMFONY_VERSION=${{ matrix.symfony }} PHP_VERSION=${{ matrix.php }}'
-            -
-                name: 'Output PHP version for Symfony CLI'
-                working-directory: ./tests/Application
-                run: 'php -v | head -n 1 | awk ''{ print $2 }'' > .php-version'
+                run: 'make install -e SYLIUS_VERSION=${{ matrix.sylius }} SYMFONY_VERSION=${{ matrix.symfony }}'
             -
                 name: 'Install certificates'
-                working-directory: ./tests/Application
                 run: 'symfony server:ca:install'
             -
                 name: 'Run Chrome headless'
-                working-directory: ./tests/Application
                 run: 'google-chrome-stable --enable-automation --disable-background-networking --no-default-browser-check --no-first-run --disable-popup-blocking --disable-default-apps --allow-insecure-localhost --disable-translate --disable-extensions --no-sandbox --enable-features=Metal --headless --remote-debugging-port=9222 --window-size=2880,1800 --proxy-server=''direct://'' --proxy-bypass-list=''*'' https://127.0.0.1 > /dev/null 2>&1 &'
             -
                 name: 'Run webserver'
-                working-directory: ./tests/Application
-                run: 'symfony server:start --port=8080 --dir=public --daemon'
+                run: 'symfony server:start --port=8080 --daemon'
                 id: end-of-setup-sylius
             -
                 name: 'Doctrine Schema Validate - Run'
-                working-directory: ./tests/Application
                 run: 'php bin/console doctrine:schema:validate --skip-sync'
             -
                 name: 'Run PHPUnit'
