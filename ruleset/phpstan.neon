@@ -12,11 +12,9 @@ parameters:
         # Makes PHPStan crash
         - ../src/DependencyInjection/
         - ../migrations
-
         # Test dependencies
-        - ../tests/Application?
+        - ../tests/TestApplication?
         - ../tests/PHPUnit
-        - ../install
     ignoreErrors:
         - identifier: missingType.iterableValue
         - identifier: missingType.generics
