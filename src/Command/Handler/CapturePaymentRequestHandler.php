@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
+use Payplug\Exception\HttpException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\CapturePaymentRequest;
@@ -40,6 +41,23 @@ final class CapturePaymentRequestHandler
             throw new \LogicException('Payment method is not set for the payment.');
         }
 
+        if (PayPlugApiClientInterface::STATUS_CREATED === ($payment->getDetails()['status'] ?? null)) {
+            $paymentRequest->setResponseData([
+                'retry' => true,
+                'message' => 'Payment already created',
+                'payment_id' => $payment->getDetails()['payment_id'] ?? 'unknown',
+                'redirect_url' => $payment->getDetails()['redirect_url'] ?? null, // @phpstan-ignore-line
+            ]);
+
+            $this->stateMachine->apply(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_COMPLETE,
+            );
+
+            return;
+        }
+
         $client = $this->apiClientFactory->createForPaymentMethod($method);
         $data = $this->paymentDataCreator->create($payment)->getArrayCopy();
 
@@ -53,13 +71,26 @@ final class CapturePaymentRequestHandler
         $data['notification_url'] = $notificationUrl;
 
         $paymentRequest->setPayload($data);
-        $payplugPayment = $client->createPayment($data);
+
+        try {
+            $payplugPayment = $client->createPayment($data);
+        } catch (HttpException $exception) {
+            $paymentRequest->setResponseData(\json_decode($exception->getHttpResponse(), true)); // @phpstan-ignore-line
+            $this->stateMachine->apply(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_FAIL,
+            );
+
+            return;
+        }
         $arrayPayplugPayment = (array) $payplugPayment;
         $payment->setDetails([
             ...$payment->getDetails(),
             'status' => PayPlugApiClientInterface::STATUS_CREATED,
             'payment_id' => $payplugPayment->__get('id'),
             'payplug_response' => $arrayPayplugPayment,
+            'redirect_url' => $payplugPayment->hosted_payment->payment_url, // @phpstan-ignore-line
         ]);
 
         $paymentRequest->setResponseData(array_merge($arrayPayplugPayment, [
