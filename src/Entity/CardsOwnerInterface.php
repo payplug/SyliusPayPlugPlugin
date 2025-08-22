@@ -13,5 +13,5 @@ interface CardsOwnerInterface
      */
     public function getCards(): Collection;
 
-    public function addCard(Card $card): static;
+    public function addCard(Card $card): self;
 }
