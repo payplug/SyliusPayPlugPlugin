@@ -47,35 +47,5 @@
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_american_express"/>
         </service>
-
-        <service id="payplug_sylius_payplug_plugin.is_oney_enabled_validator"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabledValidator">
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
-            <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabledValidator" />
-        </service>
-
-        <service id="payplug_sylius_payplug_plugin.is_payplug_secret_key_validator"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValidator">
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
-            <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValidator" />
-        </service>
-
-        <service id="payplug_sylius_payplug_plugin.is_can_save_cards_validator"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCardsValidator">
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
-            <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSaveCardsValidator" />
-        </service>
-
-        <service id="payplug_sylius_payplug_plugin.is_can_save_payment_method_validator"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethodValidator">
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
-            <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethodValidator" />
-        </service>
-
-        <service id="payplug_sylius_payplug_plugin.permission_validator"
-                 class="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermissionValidator">
-            <argument type="service" id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
-            <tag name="validator.constraint_validator" alias="PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermissionValidator" />
-        </service>
     </services>
 </container>
