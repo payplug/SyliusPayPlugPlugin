@@ -25,9 +25,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         $xmlloader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__, 2) . '/config/services'));
 
         $ymlloader->load('services.yaml');
-        // TODO: migrate to YAML
         $xmlloader->load('client.xml');
-        $xmlloader->load('gateway.xml');
     }
 
     public function prepend(ContainerBuilder $container): void
