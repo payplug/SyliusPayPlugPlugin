@@ -1,5 +1,4 @@
 imports:
     - { resource: "state_machine.yml" }
     - { resource: "resources.yaml" }
-#    - { resource: "ui.yaml" }
     - { resource: "twig_hooks/*.yaml" }
