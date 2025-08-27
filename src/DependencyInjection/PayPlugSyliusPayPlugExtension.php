@@ -40,12 +40,10 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
             return;
         }
 
-        // TODO: check if still mandatory on v2
         $container->prependExtensionConfig('twig', [
             'form_themes' => [
                 '@PayPlugSyliusPayPlugPlugin/form/form_gateway_config_row.html.twig',
                 '@PayPlugSyliusPayPlugPlugin/form/sylius_checkout_select_payment_row.html.twig',
-                '@PayPlugSyliusPayPlugPlugin/form/complete_info_popin.html.twig',
             ],
         ]);
     }
