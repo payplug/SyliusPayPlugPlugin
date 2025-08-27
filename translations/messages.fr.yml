@@ -143,7 +143,7 @@ payplug_sylius_payplug_plugin:
         base_currency_not_euro: |
             Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
         only_one_gateway_allowed: |
-            Attention, le moyen de paiement %gateway_title% existe déjà. Pour le modifier, rendez-vous sur vos <a href="/admin/payment-methods/" target="_blank">moyens de paiement</a>.
+            Attention, le moyen de paiement %gateway_title% existe déjà. Pour le modifier, rendez-vous sur vos moyens de paiement.
         one_click_enable: Activer le One click
         one_click_help: |
             Permettez à vos clients d'enregistrer leurs coordonnées de carte de paiement pour effectuer ultérieurement
