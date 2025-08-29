@@ -22,6 +22,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * TODO : !!! Check if this controller is still needed
+ */
 #[AsController]
 class OneClickAction extends AbstractController implements GatewayAwareInterface, ApiAwareInterface
 {
@@ -56,8 +59,7 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
             [],
         );
 
-        $secretKey = $paymentGateway->getConfig()['secretKey'];
-        $this->payPlugApiClient = $this->payPlugApiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey);
+        $this->payPlugApiClient = $this->payPlugApiClientFactory->createForPaymentMethod($paymentMethod);
         $resource = $this->payPlugApiClient->retrieve((string) $payment->getDetails()['payment_id']);
 
         //if is_paid is true, you can consider the payment as being fully paid,

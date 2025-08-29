@@ -138,10 +138,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
         $this->logger->info('[PayPlug] Start refund payment', ['payment_id' => $details['payment_id']]);
 
-        $gatewayConfig = $paymentMethod->getGatewayConfig()->getConfig();
-
-        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName, $gatewayConfig['secretKey']);
-
-        $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
+        $this->payPlugApiClient = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
     }
 }

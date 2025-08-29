@@ -80,8 +80,7 @@ class IpnAction
             return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
 
-        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName, $gatewayConfig['secretKey']);
-        $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
+        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName);
 
         try {
             $resource = $this->payPlugApiClient->treat($input);

@@ -8,7 +8,7 @@ use Sylius\Component\Payment\Model\PaymentMethodInterface;
 
 interface PayPlugApiClientFactoryInterface
 {
-    public function create(string $factoryName, ?string $key = null): PayPlugApiClientInterface;
+    public function create(string $factoryName): PayPlugApiClientInterface;
 
     public function createForPaymentMethod(PaymentMethodInterface $paymentMethod): PayPlugApiClientInterface;
 }
