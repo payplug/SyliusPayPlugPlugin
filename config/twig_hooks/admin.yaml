@@ -26,8 +26,20 @@ sylius_twig_hooks:
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_american_express': &amexGateway
             live_checkbox: *liveCheckbox
 
-        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug': *payplugGateway
-        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_oney': *oneyGateway
-        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_bancontact': *bancontactGateway
-        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_apple_pay': *applePayGateway
-        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_american_express': *amexGateway
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug':
+            <<: *payplugGateway
+            renew_oauth: &renewOAuth
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/renew_oauth.html.twig'
+                priority: -5
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_oney':
+            <<: *oneyGateway
+            renew_oauth: *renewOAuth
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_bancontact':
+            <<: *bancontactGateway
+            renew_oauth: *renewOAuth
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_apple_pay':
+            <<: *applePayGateway
+            renew_oauth: *renewOAuth
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_american_express':
+            <<: *amexGateway
+            renew_oauth: *renewOAuth

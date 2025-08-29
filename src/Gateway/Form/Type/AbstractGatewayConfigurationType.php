@@ -61,6 +61,13 @@ class AbstractGatewayConfigurationType extends AbstractType
                 'help_html' => true,
                 'required' => false,
             ])
+            ->add('renew_oauth', CheckboxType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.ui.renew_oauth',
+                'help' => 'payplug_sylius_payplug_plugin.ui.renew_oauth_help',
+                'help_html' => true,
+                'mapped' => false,
+                'required' => false,
+            ])
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
                 $this->checkCreationRequirements(
                     $this->gatewayFactoryTitle,
