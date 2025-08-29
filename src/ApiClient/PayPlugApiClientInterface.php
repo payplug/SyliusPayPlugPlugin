@@ -35,11 +35,6 @@ interface PayPlugApiClientInterface
 
     public const REFUNDED = 'refunded';
 
-    /**
-     * @deprecated
-     */
-    public function initialise(string $secretKey): void;
-
     public function getConfiguration(): Payplug;
 
     public function getAccount(bool $refresh = false): array;

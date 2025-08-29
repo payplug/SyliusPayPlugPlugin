@@ -53,19 +53,6 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         );
     }
 
-    /**
-     * @deprecated use DI instead to get a pre-configured client
-     */
-    public function initialise(string $secretKey): void
-    {
-        Payplug::setSecretKey($secretKey);
-        HttpClient::addDefaultUserAgentProduct(
-            'PayPlug-Sylius',
-            PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/' . SyliusCoreBundle::VERSION,
-        );
-    }
-
     public function getAccount(bool $refresh = false): array
     {
         $cacheKey = 'payplug_account_' . substr($this->configuration->getToken(), 8);

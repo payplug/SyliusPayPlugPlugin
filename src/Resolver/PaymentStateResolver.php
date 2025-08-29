@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
@@ -20,8 +21,7 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
 {
     public function __construct(
         private StateMachineInterface $stateMachine,
-        #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
-        private PayPlugApiClientInterface $payPlugApiClient,
+        private PayPlugApiClientFactory $payPlugApiClientFactory,
         private EntityManagerInterface $paymentEntityManager,
     ) {
     }
@@ -43,9 +43,8 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
             return;
         }
 
-        $gatewayConfig = $paymentMethod->getGatewayConfig()->getConfig();
-        $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
-        $payment = $this->payPlugApiClient->retrieve((string) $details['payment_id']);
+        $payplugApiClient = $this->payPlugApiClientFactory->createForPaymentMethod($paymentMethod);
+        $payment = $payplugApiClient->retrieve((string) $details['payment_id']);
 
         switch (true) {
             case $payment->is_paid:
