@@ -17,10 +17,6 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 )]
 final class AmericanExpressGatewayConfigurationType extends AbstractGatewayConfigurationType
 {
-    protected string $noTestKeyMessage = 'payplug_sylius_payplug_plugin.american_express.can_not_save_method_with_test_key';
-
-    protected string $noAccessMessage = 'payplug_sylius_payplug_plugin.american_express.can_not_save_method_no_access';
-
     protected string $gatewayFactoryTitle = AmericanExpressGatewayFactory::FACTORY_TITLE;
 
     protected string $gatewayFactoryName = AmericanExpressGatewayFactory::FACTORY_NAME;

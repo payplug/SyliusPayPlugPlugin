@@ -16,28 +16,30 @@ payplug_sylius_payplug_plugin:
         can_not_save_cards: |
             You do not have access to this feature. For more information,
             please contact us at: <a href="mailto:support@payplug.com" target="_blank">support@payplug.com</a>
-    bancontact:
+    payplug_bancontact:
         can_not_save_method_with_test_key: |
-            The Bancontact payment method is not available for the TEST mode. 
-            Please activate the LIVE mode by adding the corresponding secret key.
+            The Bancontact payment method is not available for the TEST mode.
+            Please activate the LIVE mode.
         can_not_save_method_no_access: |
-            You don't have access to this feature yet. 
-            To activate Bancontact, please fill in 
-            <a href="https://support.payplug.com/hc/en-gb/requests/new?ticket_form_id=4583813991452" target="_blank">this form</a> 
+            You don't have access to this feature yet.
+            To activate Bancontact, please fill in
+            <a href="https://support.payplug.com/hc/en-gb/requests/new?ticket_form_id=4583813991452" target="_blank">this form</a>
             and activate the LIVE mode.
-    apple_pay:
+    payplug_apple_pay:
         can_not_save_method_with_test_key: |
             The Apple Pay payment method is not available for the TEST mode.
+            Please activate the LIVE mode.
         can_not_save_method_no_access: |
-            You don't have access to this feature yet. 
-            To activate Apple Pay, please fill in 
+            You don't have access to this feature yet.
+            To activate Apple Pay, please fill in
             <a href="https://support.payplug.com/hc/en-gb/requests/new?ticket_form_id=5965121371548" target="_blank">this form</a>
             and activate the LIVE mode.
-    american_express:
+    payplug_american_express:
         can_not_save_method_with_test_key: |
             The American Express payment method is not available for the TEST mode.
+            Please activate the LIVE mode.
         can_not_save_method_no_access: |
-            You don't have access to this feature yet. 
-            To activate American Express, please fill in 
+            You don't have access to this feature yet.
+            To activate American Express, please fill in
             <a href="https://support.payplug.com/hc/en-gb/requests/new?ticket_form_id=6331992459420" target="_blank">this form</a>
             and activate the LIVE mode.

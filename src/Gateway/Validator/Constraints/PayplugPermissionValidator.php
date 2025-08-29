@@ -6,11 +6,10 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
-use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 final class PayplugPermissionValidator extends ConstraintValidator
 {
@@ -24,22 +23,13 @@ final class PayplugPermissionValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, PayplugPermission::class);
         }
 
-        if (null === $value || '' === $value) {
+        if (!$value instanceof PaymentMethodInterface) {
             return;
         }
-
-        if (!is_bool($value)) {
-            throw new UnexpectedValueException($value, 'boolean');
-        }
-
-        if (false === $value) {
-            return;
-        }
-
-        $secretKey = $this->context->getRoot()->getData()->getGatewayConfig()->getConfig()['secretKey'];
+        $paymentMethod = $value;
 
         try {
-            $client = $this->apiClientFactory->create(PayPlugGatewayFactory::FACTORY_NAME, $secretKey);
+            $client = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
             $accountPermissions = $client->getPermissions();
 
             if (false === $accountPermissions[$constraint->permission]) {

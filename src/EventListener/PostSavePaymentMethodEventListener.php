@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventListener;
 
 use Payplug\Authentication;
+use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -20,6 +21,7 @@ final class PostSavePaymentMethodEventListener
     public function __construct(
         private RequestStack $requestStack,
         private RouterInterface $router,
+        private PaymentMethodValidator $paymentMethodValidator,
     ) {
     }
 
@@ -37,6 +39,10 @@ final class PostSavePaymentMethodEventListener
 
     public function onUpdate(ResourceControllerEvent $event): void
     {
+        $paymentMethod = $event->getSubject();
+        if (!$paymentMethod instanceof PaymentMethodInterface) {
+            return;
+        }
         $request = $this->requestStack->getCurrentRequest();
         if (null === $request) {
             return;
@@ -44,10 +50,8 @@ final class PostSavePaymentMethodEventListener
         $isRenewal = $request->request->all('sylius_admin_payment_method')['gatewayConfig']['config']['renew_oauth'] ?? false;
         $isRenewal = \filter_var($isRenewal, \FILTER_VALIDATE_BOOLEAN);
         if (true !== $isRenewal) {
-            return;
-        }
-        $paymentMethod = $event->getSubject();
-        if (!$paymentMethod instanceof PaymentMethodInterface) {
+            $this->paymentMethodValidator->process($paymentMethod);
+
             return;
         }
 

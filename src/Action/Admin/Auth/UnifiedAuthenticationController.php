@@ -7,11 +7,14 @@ namespace PayPlug\SyliusPayPlugPlugin\Action\Admin\Auth;
 use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Authentication;
 use Payplug\Payplug;
+use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -27,6 +30,7 @@ final class UnifiedAuthenticationController extends AbstractController
         private RouterInterface $router,
         private RepositoryInterface $paymentMethodRepository,
         private EntityManagerInterface $entityManager,
+        private PaymentMethodValidator $paymentMethodValidator,
     ) {
     }
 
@@ -89,7 +93,11 @@ final class UnifiedAuthenticationController extends AbstractController
         $this->cleanSession($request);
 
         $request->getSession()->getFlashBag()->add('success', 'payplug_sylius_payplug_plugin.ui.admin.auth.oauth_callback.success');
-        return new RedirectResponse($this->router->generate('sylius_admin_payment_method_index'));;
+
+        // Ensure that the payment method is well configured
+        $this->paymentMethodValidator->process($paymentMethod);
+
+        return new RedirectResponse($this->router->generate('sylius_admin_payment_method_update', ['id' => $paymentMethod->getId()]));
     }
 
     private function cleanSession(Request $request): void

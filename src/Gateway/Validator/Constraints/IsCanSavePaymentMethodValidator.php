@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSavePayplugPaymentMethodChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -30,13 +31,14 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
         if (!$constraint instanceof IsCanSavePaymentMethod) {
             throw new UnexpectedTypeException($constraint, IsCanSavePaymentMethod::class);
         }
-        if (null === $value || '' === $value) {
+
+        if (!$value instanceof PaymentMethodInterface) {
             return;
         }
-        $factoryName = $this->context->getRoot()->getData()->getGatewayConfig()->getFactoryName();
-        $channels = $this->context->getRoot()->getData()->getChannels();
 
-        Assert::string($value);
+        $factoryName = $value->getGatewayConfig()?->getFactoryName();
+        $channels = $value->getChannels();
+
         Assert::stringNotEmpty($factoryName);
 
         if (in_array($factoryName, self::GATEWAYS_SKIP, true)) {
@@ -44,16 +46,15 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
         }
 
         $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->create($factoryName, $value));
-
         try {
             if (!$checker->isLive()) {
-                $this->context->buildViolation($constraint->noTestKeyMessage)->addViolation();
+                $this->context->buildViolation(sprintf($constraint->noTestKeyMessage, $factoryName))->addViolation();
 
                 return;
             }
 
             if (!$checker->isEnabled($factoryName, $channels)) {
-                $this->context->buildViolation($constraint->noAccessMessage)->addViolation();
+                $this->context->buildViolation(sprintf($constraint->noAccessMessage, $factoryName))->addViolation();
             }
 
             return;

@@ -6,9 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Doctrine\Common\Collections\Collection;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
@@ -26,8 +23,6 @@ class AbstractGatewayConfigurationType extends AbstractType
 {
     public const VALIDATION_GROUPS = ['Default', 'sylius'];
 
-    protected string $noTestKeyMessage = '';
-    protected string $noAccessMessage = '';
     protected string $gatewayFactoryTitle = '';
     protected string $gatewayFactoryName = '';
 
@@ -50,14 +45,6 @@ class AbstractGatewayConfigurationType extends AbstractType
                 'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.ui.live',
                 'help' => 'payplug_sylius_payplug_plugin.ui.live_help',
-                'constraints' => [ // TODO: handle these check later
-                    new IsPayPlugSecretKeyValid(),
-                    new IsCanSavePaymentMethod([
-                        'noTestKeyMessage' => $this->noTestKeyMessage,
-                        'noAccessMessage' => $this->noAccessMessage,
-                    ]),
-                    new IsOneyEnabled(),
-                ],
                 'help_html' => true,
                 'required' => false,
             ])
