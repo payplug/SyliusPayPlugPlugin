@@ -29,10 +29,8 @@ payplug_sylius_payplug_plugin:
         error:
             billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
             shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
-        secret_key: Clé secrète
         payplug_gateway_label: Payplug
         payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
-        retrieve_secret_key_in_api_configuration_portal: Retrouvez vos Secret Key LIVE et TEST dans votre <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portail Payplug</a>
         test_mode: Mode TEST
         payplug_id: |
             ID Payplug : %paymentId%

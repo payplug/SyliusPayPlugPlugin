@@ -1,10 +1,6 @@
 sylius_twig_hooks:
     hooks:
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug': &payplugGateway
-            secret_key: &secretKey
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/secret_key.html.twig'
-                priority: 0
-                enabled: false
             live_checkbox: &liveCheckbox
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/live_checkbox.html.twig'
                 priority: 0
@@ -18,20 +14,16 @@ sylius_twig_hooks:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/deferred_capture.html.twig'
                 priority: 0
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_oney': &oneyGateway
-            secret_key: *secretKey
             live_checkbox: *liveCheckbox
             fees_for:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/fees_for.html.twig'
                 priority: 0
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_bancontact': &bancontactGateway
-            secret_key: *secretKey
             live_checkbox: *liveCheckbox
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_apple_pay': &applePayGateway
-            secret_key: *secretKey
             live_checkbox: *liveCheckbox
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_american_express': &amexGateway
-            secret_key: *secretKey
             live_checkbox: *liveCheckbox
 
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug': *payplugGateway

@@ -29,10 +29,8 @@ payplug_sylius_payplug_plugin:
         error:
             billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
             shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido
-        secret_key: ID segreto
         payplug_gateway_label: Payplug
         payment_refund_locally: Il rimborso del pagamento è stato effettuato solo a livello locale (interno).
-        retrieve_secret_key_in_api_configuration_portal: Trova il tuo ID segreto LIVE e TEST nel tuo <a href="https://portal.payplug.com/#/configuration/api" target="_blank">portale Payplug</a>
         test_mode: Modalità TEST
         payplug_id: |
             ID Payplug : %paymentId%

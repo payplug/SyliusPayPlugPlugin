@@ -14,15 +14,12 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class AbstractGatewayConfigurationType extends AbstractType
@@ -53,16 +50,7 @@ class AbstractGatewayConfigurationType extends AbstractType
                 'block_name' => 'payplug_checkbox',
                 'label' => 'payplug_sylius_payplug_plugin.ui.live',
                 'help' => 'payplug_sylius_payplug_plugin.ui.live_help',
-                'help_html' => true,
-                'required' => false,
-            ])
-            ->add('secretKey', TextType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.ui.secret_key',
-                'validation_groups' => self::VALIDATION_GROUPS,
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
-                    ]),
+                'constraints' => [ // TODO: handle these check later
                     new IsPayPlugSecretKeyValid(),
                     new IsCanSavePaymentMethod([
                         'noTestKeyMessage' => $this->noTestKeyMessage,
@@ -70,8 +58,8 @@ class AbstractGatewayConfigurationType extends AbstractType
                     ]),
                     new IsOneyEnabled(),
                 ],
-                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
                 'help_html' => true,
+                'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
                 $this->checkCreationRequirements(
