@@ -21,8 +21,10 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * Validate if the payment method is well configured.
  * If not, it adds errors in flash-bag AND disable the payment method.
  */
-class PaymentMethodValidator
+final class PaymentMethodValidator
 {
+    private const VALIDATION_GROUPS = ['Default', 'sylius'];
+
     public function __construct(
         private RequestStack $requestStack,
         private ValidatorInterface $validator,
@@ -46,10 +48,11 @@ class PaymentMethodValidator
         };
 
         foreach ($errors as $error) {
-            $this->requestStack->getSession()->getFlashBag()->add('error', $error->getMessage());
+            $this->requestStack->getSession()->getFlashBag()->add('payplug_error', $error->getMessage());
         }
         if (0 !== count($errors)) {
             $paymentMethod->disable();
+            $this->requestStack->getSession()->getFlashBag()->add('payplug_error', 'payplug_sylius_payplug_plugin.admin.payment_method_disabled');
         }
         $this->entityManager->flush();
     }
@@ -69,31 +72,30 @@ class PaymentMethodValidator
             $constraintList[] = new PayplugPermission(Permission::CAN_USE_INTEGRATED_PAYMENTS);
         }
 
-        return $this->validator->validate($paymentMethod, $constraintList);
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processOney(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsOneyEnabled()];
-        return $this->validator->validate($paymentMethod, $constraintList);
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processBancontact(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsCanSavePaymentMethod()];
-        return $this->validator->validate($paymentMethod, $constraintList);
-
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processAmex(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsCanSavePaymentMethod()];
-        return $this->validator->validate($paymentMethod, $constraintList);
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processApplePay(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsCanSavePaymentMethod()];
-        return $this->validator->validate($paymentMethod, $constraintList);
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 }

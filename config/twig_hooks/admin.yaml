@@ -1,5 +1,9 @@
 sylius_twig_hooks:
     hooks:
+        sylius_admin.payment_method.update.content:
+            payplug_flashes:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/shared/flashes.html.twig'
+                priority: 350
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug': &payplugGateway
             live_checkbox: &liveCheckbox
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/live_checkbox.html.twig'
