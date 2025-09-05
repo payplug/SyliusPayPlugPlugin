@@ -22,7 +22,6 @@ use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Workflow\Attribute\AsCompletedListener;
 use Symfony\Component\Workflow\Event\CompletedEvent;
@@ -35,7 +34,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
     public function __construct(
         private RequestStack $requestStack,
-        #[Autowire('@monolog.logger.payum')]
         private LoggerInterface $logger,
         private TranslatorInterface $translator,
         private RepositoryInterface $refundPaymentRepository,

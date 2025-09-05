@@ -32,6 +32,7 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
     {
         $this->prependTwigExtension($container);
         $this->prependDoctrineMigrations($container);
+        $this->prependMonologExtension($container);
     }
 
     private function prependTwigExtension(ContainerBuilder $container): void
@@ -46,6 +47,15 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
                 '@PayPlugSyliusPayPlugPlugin/form/sylius_checkout_select_payment_row.html.twig',
             ],
         ]);
+    }
+
+    public function prependMonologExtension(ContainerBuilder $container): void
+    {
+        if ($container->hasExtension('monolog')) {
+            $container->prependExtensionConfig('monolog', [
+                'channels' => ['payplug'],
+            ]);
+        }
     }
 
     protected function getMigrationsNamespace(): string

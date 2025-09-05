@@ -16,7 +16,6 @@ final class OneySimulationDataProvider implements OneySimulationDataProviderInte
     public function __construct(
         #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
         private PayPlugApiClientInterface $oneyClient,
-        #[Autowire('@monolog.logger.payum')]
         private LoggerInterface $logger,
         private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider,
     ) {

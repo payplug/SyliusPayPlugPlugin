@@ -7,6 +7,8 @@ services:
     PayPlug\SyliusPayPlugPlugin\:
         resource: '../src/*'
         exclude: '../src/{ApiClient,DependencyInjection,Entity,Exception,Model,Repository,PayPlugSyliusPayPlugPlugin.php}'
+        bind:
+            Psr\Log\LoggerInterface: '@monolog.logger.payplug'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
@@ -73,7 +75,7 @@ services:
         tags:
             - name: sylius.payment_request.provider.http_response
               gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory::FACTORY_NAME
-              
+
 
     ## Bancontact Payplug Gateway ##
     payplug_sylius_payplug_plugin.command_provider.payplug_bancontact:

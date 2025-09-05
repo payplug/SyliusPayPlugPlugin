@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\EventListener;
 
 use Payplug\Authentication;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
+use Psr\Log\LoggerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -22,6 +23,7 @@ final class PostSavePaymentMethodEventListener
         private RequestStack $requestStack,
         private RouterInterface $router,
         private PaymentMethodValidator $paymentMethodValidator,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -32,7 +34,11 @@ final class PostSavePaymentMethodEventListener
             return;
         }
 
-        // TODO: check if the paymentMethod is one belong to payplug
+        $gateway = $paymentMethod->getGatewayConfig();
+        if (null === $gateway || !\str_contains('payplug', $gateway->getFactoryName())) {
+            // A new payment method has been created but that is not a payplug one, do nothing
+            return;
+        }
 
         $this->startOAuth($paymentMethod, $event);
     }
@@ -47,9 +53,11 @@ final class PostSavePaymentMethodEventListener
         if (null === $request) {
             return;
         }
+
         $isRenewal = $request->request->all('sylius_admin_payment_method')['gatewayConfig']['config']['renew_oauth'] ?? false;
         $isRenewal = \filter_var($isRenewal, \FILTER_VALIDATE_BOOLEAN);
         if (true !== $isRenewal) {
+            // No need to renew the oauth token, let's validate the payment method with already existing config
             $this->paymentMethodValidator->process($paymentMethod);
 
             return;
@@ -65,13 +73,18 @@ final class PostSavePaymentMethodEventListener
             // Should never happen
             return;
         }
-        $request->getSession()->set('payplug_sylius_oauth_payment_method_id', $paymentMethod->getId());
-        $setupRedirection = $this->router->generate('payplug_sylius_admin_auth_setup_redirection', referenceType: RouterInterface::ABSOLUTE_URL);
-        $oauthCallback = $this->router->generate('payplug_sylius_admin_auth_oauth_callback', referenceType: RouterInterface::ABSOLUTE_URL);
+        try {
+            $request->getSession()->set('payplug_sylius_oauth_payment_method_id', $paymentMethod->getId());
+            $setupRedirection = $this->router->generate('payplug_sylius_admin_auth_setup_redirection', referenceType: RouterInterface::ABSOLUTE_URL);
+            $oauthCallback = $this->router->generate('payplug_sylius_admin_auth_oauth_callback', referenceType: RouterInterface::ABSOLUTE_URL);
 
-        /** @var string $payplugRedirectUrl */
-        $payplugRedirectUrl = Authentication::getRegisterUrl($setupRedirection, $oauthCallback);
-
-        $event->setResponse(new RedirectResponse($payplugRedirectUrl));
+            throw new \LogicException('No location header found');
+            /** @var string $payplugRedirectUrl */
+            $payplugRedirectUrl = Authentication::getRegisterUrl($setupRedirection, $oauthCallback);
+            $event->setResponse(new RedirectResponse($payplugRedirectUrl));
+        } catch (\Throwable $e) {
+            $this->logger->critical('Error while starting Payplug OAuth process', ['message' => $e->getMessage(), 'exception' => $e]);
+            $request->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.admin.oauth_setup_error');
+        }
     }
 }
