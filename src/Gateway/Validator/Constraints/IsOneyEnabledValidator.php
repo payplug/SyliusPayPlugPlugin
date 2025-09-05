@@ -31,18 +31,11 @@ final class IsOneyEnabledValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!is_string($value)) {
-            throw new UnexpectedValueException($value, 'string');
-        }
-        // phpstan checks
-        $form = $this->context->getRoot();
-        Assert::isInstanceOf($form, Form::class);
-
-        $paymentMethod = $form->getData();
-        if (!$paymentMethod instanceof PaymentMethodInterface) {
+        if (!$value instanceof PaymentMethodInterface) {
             return;
         }
 
+        $paymentMethod = $value;
         $gatewayConfig = $paymentMethod->getGatewayConfig();
         if (!$gatewayConfig instanceof GatewayConfigInterface) {
             return;
@@ -56,8 +49,7 @@ final class IsOneyEnabledValidator extends ConstraintValidator
         }
 
         try {
-            $checker = new OneyChecker($this->apiClientFactory->create($factoryName, $value));
-
+            $checker = new OneyChecker($this->apiClientFactory->createForPaymentMethod($paymentMethod));
             if (false === $checker->isEnabled()) {
                 $this->context->buildViolation($constraint->message)
                     ->addViolation();

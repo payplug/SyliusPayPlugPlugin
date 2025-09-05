@@ -78,7 +78,6 @@ final class PostSavePaymentMethodEventListener
             $setupRedirection = $this->router->generate('payplug_sylius_admin_auth_setup_redirection', referenceType: RouterInterface::ABSOLUTE_URL);
             $oauthCallback = $this->router->generate('payplug_sylius_admin_auth_oauth_callback', referenceType: RouterInterface::ABSOLUTE_URL);
 
-            throw new \LogicException('No location header found');
             /** @var string $payplugRedirectUrl */
             $payplugRedirectUrl = Authentication::getRegisterUrl($setupRedirection, $oauthCallback);
             $event->setResponse(new RedirectResponse($payplugRedirectUrl));
