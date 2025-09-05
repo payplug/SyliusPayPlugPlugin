@@ -127,6 +127,13 @@ payplug_sylius_payplug_plugin:
             process_order_info: |
                 Vous serez prélevé(é) lors du traitement de votre commande.
 
+        live: Mode LIVE
+        live_help: |
+            Lorsque cette option est activée, le mode <b>LIVE</b> est utilisé. <br>
+            Si elle est désactivée, le mode <b>TEST</b> sera appliqué
+        renew_oauth: Forcer la reconnexion OAuth
+        renew_oauth_help: |
+            Si cette option est cochée, un nouveau flux d’authentification sera lancé lors du clic sur le bouton "<b>Mise à jour</b>".
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:

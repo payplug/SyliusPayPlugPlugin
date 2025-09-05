@@ -107,6 +107,13 @@ payplug_sylius_payplug_plugin:
         deferred_capture:
             process_order_info: |
                 L'addebito avverrà al momento dell'elaborazione dell'ordine.
+        live: Modalità LIVE
+        live_help: |
+            Quando questa opzione è attivata, viene utilizzata la modalità <b>LIVE</b>. <br>
+            Se disattivata, verrà applicata la modalità <b>TEST</b>
+        renew_oauth: Forza la riconnessione OAuth
+        renew_oauth_help: |
+            Se questa opzione è selezionata, un nuovo flusso di autenticazione verrà avviato quando si fa clic sul pulsante "<b>Aggiorna</b>".
     form:
         oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
         complete_info:

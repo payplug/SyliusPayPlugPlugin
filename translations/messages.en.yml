@@ -107,6 +107,13 @@ payplug_sylius_payplug_plugin:
         deferred_capture:
             process_order_info: |
                 You will be charged when your order is processed.
+        live: LIVE Mode
+        live_help: |
+            When this option is enabled, <b>LIVE</b> mode is used. <br>
+            If disabled, <b>TEST</b> mode will be applied
+        renew_oauth: Force OAuth reconnection
+        renew_oauth_help: |
+            If this option is checked, a new authentication flow will be started when clicking the "<b>Update</b>" button.
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:

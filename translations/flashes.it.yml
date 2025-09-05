@@ -5,3 +5,6 @@ payplug_sylius_payplug_plugin:
         transaction_failed_1click: La transazione non è stata conclusa e non è stato effettuato alcun addebito sulla tua carta.
     warning:
         payment_success_no_card_saved: Il pagamento è andato a buon fine ma non è stato possibile salvare la tua carta di credito.
+    admin:
+        oauth_callback_success: La connessione OAuth è stata stabilita con successo.
+        payment_method_disabled: ⚠️ Il metodo di pagamento è stato disattivato perché alcuni criteri di validazione non sono soddisfatti.

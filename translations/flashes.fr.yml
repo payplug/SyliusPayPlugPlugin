@@ -5,3 +5,6 @@ payplug_sylius_payplug_plugin:
         transaction_failed_1click: La transaction a échoué, votre carte de paiement ne sera pas débitée.
     warning:
         payment_success_no_card_saved: Le paiement a été effectué avec succès, mais nous n'avons pas pu enregistrer votre carte bancaire.
+    admin:
+        oauth_callback_success: La connexion OAuth a été établie avec succès.
+        payment_method_disabled: ⚠️ La méthode de paiement a été désactivée car certains critères de validation ne sont pas remplis.
