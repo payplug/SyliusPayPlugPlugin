@@ -25,15 +25,6 @@ sylius_twig_hooks:
                 template: '@PayPlugSyliusPayPlugPlugin/shared/modal/index.html.twig'
                 priority: 0
 
-        # TODO: check if this is possible only on select_payment page
-        'sylius_shop.checkout#stylesheets':
-            select_payment_css:
-                template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
-
-        'sylius_shop.order#stylesheets':
-            select_payment_css:
-                template: '@PayPlugSyliusPayPlugPlugin/stylesheets/select_payment_css.html.twig'
-
         'sylius_shop.shared.form.select_payment.payment':
             choice:
                 template: '@PayPlugSyliusPayPlugPlugin/shared/form/select_payment/payment/choice.html.twig'
