@@ -49,6 +49,12 @@ final class PostSavePaymentMethodEventListener
         if (!$paymentMethod instanceof PaymentMethodInterface) {
             return;
         }
+        $gateway = $paymentMethod->getGatewayConfig();
+        if (null === $gateway || !\str_contains($gateway->getFactoryName(), 'payplug')) {
+            // A new payment method has been created but that is not a payplug one, do nothing
+            return;
+        }
+
         $request = $this->requestStack->getCurrentRequest();
         if (null === $request) {
             return;
