@@ -45,7 +45,7 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
             return;
         }
 
-        $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->create($factoryName, $value));
+        $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->createForPaymentMethod($value));
         try {
             if (!$checker->isLive()) {
                 $this->context->buildViolation(sprintf($constraint->noTestKeyMessage, $factoryName))->addViolation();

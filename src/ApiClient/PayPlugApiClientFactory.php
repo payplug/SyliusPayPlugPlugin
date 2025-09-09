@@ -51,17 +51,30 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
         if (true !== $config['live']) { // The live mode is not enabled, use client config for test mode
             $clientConfig = $config['test_client'];
         }
+        if (!\is_array($clientConfig)) {
+            throw new \LogicException('No client config found for ' . $gatewayConfig->getFactoryName() . '. Please renew your credentials in the PayPlug plugin configuration.');
+        }
+
         $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $config['live'] === true ? 'live' : 'test');
 
+        /** @var array<string, string> $clientConfig */
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($clientConfig) {
-            $response = Authentication::generateJWT($clientConfig['client_id'], $clientConfig['client_secret']);
-            if ([] === $response) {
+            $response = Authentication::generateJWT($clientConfig['client_id'] ?? '', $clientConfig['client_secret'] ?? '');
+            if ([] === $response || !is_array($response['httpResponse'])) {
                 throw new \LogicException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
             }
 
-            $item->expiresAfter($response['httpResponse']['expires_in']);
-            /** @var string */
-            return $response['httpResponse']['access_token'];
+            $accessToken = $response['httpResponse']['access_token'];
+            if (!is_string($accessToken)) {
+                throw new \LogicException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
+            }
+            $expiresIn = $response['httpResponse']['expires_in'];
+            if (!is_int($expiresIn)) {
+                $expiresIn = 200;
+            }
+
+            $item->expiresAfter($expiresIn);
+            return $accessToken;
         });
     }
 }

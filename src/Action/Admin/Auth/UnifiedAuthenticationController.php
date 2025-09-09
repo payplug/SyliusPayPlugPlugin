@@ -64,6 +64,7 @@ final class UnifiedAuthenticationController extends AbstractController
                     return new RedirectResponse(substr($header, 9));
                 }
             }
+            throw new \LogicException('No location header found');
         } catch (\Throwable $e) {
             $this->logger->critical('Error while perform Payplug OAuth Setup redirection', ['message' => $e->getMessage(), 'exception' => $e]);
             return $this->handleOAuthError($request);
@@ -74,13 +75,15 @@ final class UnifiedAuthenticationController extends AbstractController
     public function oauthCallback(Request $request): Response
     {
         try {
-            $code = $request->query->get('code');
+            $code = $request->query->getString('code');
+            /** @var string $clientId */
             $clientId = $request->getSession()->get('payplug_client_id');
+            /** @var string $challenge */
             $challenge = $request->getSession()->get('payplug_oauth_challenge');
             $callback = $this->generateUrl('payplug_sylius_admin_auth_oauth_callback', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
             $jwt = Authentication::generateJWTOneShot($code, $callback, $clientId, $challenge);
-            if ([] === $jwt || $jwt['httpStatus'] !== 200) {
+            if ([] === $jwt || $jwt['httpStatus'] !== 200 || !\is_array($jwt['httpResponse'])) {
                 throw new BadRequestHttpException('Error while generating JWT');
             }
             $paymentMethodId = $request->getSession()->get('payplug_sylius_oauth_payment_method_id');

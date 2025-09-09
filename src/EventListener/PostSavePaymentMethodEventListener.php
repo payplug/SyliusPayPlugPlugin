@@ -34,9 +34,7 @@ final class PostSavePaymentMethodEventListener
             return;
         }
 
-        $gateway = $paymentMethod->getGatewayConfig();
-        if (null === $gateway || !\str_contains($gateway->getFactoryName(), 'payplug')) {
-            // A new payment method has been created but that is not a payplug one, do nothing
+        if (false === $this->isPayplugPaymentMethod($paymentMethod)) {
             return;
         }
 
@@ -49,9 +47,8 @@ final class PostSavePaymentMethodEventListener
         if (!$paymentMethod instanceof PaymentMethodInterface) {
             return;
         }
-        $gateway = $paymentMethod->getGatewayConfig();
-        if (null === $gateway || !\str_contains($gateway->getFactoryName(), 'payplug')) {
-            // A new payment method has been created but that is not a payplug one, do nothing
+
+        if (false === $this->isPayplugPaymentMethod($paymentMethod)) {
             return;
         }
 
@@ -60,7 +57,7 @@ final class PostSavePaymentMethodEventListener
             return;
         }
 
-        $isRenewal = $request->request->all('sylius_admin_payment_method')['gatewayConfig']['config']['renew_oauth'] ?? false;
+        $isRenewal = $request->request->all('sylius_admin_payment_method')['gatewayConfig']['config']['renew_oauth'] ?? false; // @phpstan-ignore-line
         $isRenewal = \filter_var($isRenewal, \FILTER_VALIDATE_BOOLEAN);
         if (true !== $isRenewal) {
             // No need to renew the oauth token, let's validate the payment method with already existing config
@@ -84,12 +81,29 @@ final class PostSavePaymentMethodEventListener
             $setupRedirection = $this->router->generate('payplug_sylius_admin_auth_setup_redirection', referenceType: RouterInterface::ABSOLUTE_URL);
             $oauthCallback = $this->router->generate('payplug_sylius_admin_auth_oauth_callback', referenceType: RouterInterface::ABSOLUTE_URL);
 
-            /** @var string $payplugRedirectUrl */
+            /**
+             * @var string $payplugRedirectUrl
+             * @phpstan-ignore-next-line -- Error of return type in Payplug SDK
+             */
             $payplugRedirectUrl = Authentication::getRegisterUrl($setupRedirection, $oauthCallback);
             $event->setResponse(new RedirectResponse($payplugRedirectUrl));
         } catch (\Throwable $e) {
             $this->logger->critical('Error while starting Payplug OAuth process', ['message' => $e->getMessage(), 'exception' => $e]);
             $request->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.admin.oauth_setup_error');
         }
+    }
+
+    private function isPayplugPaymentMethod(PaymentMethodInterface $paymentMethod): bool
+    {
+        $gateway = $paymentMethod->getGatewayConfig();
+        if (null === $gateway) {
+            return false;
+        }
+        $factoryName = $gateway->getFactoryName();
+        if (null === $factoryName) {
+            return false;
+        }
+
+        return \str_contains($factoryName, 'payplug');
     }
 }
