@@ -462,11 +462,27 @@ parameters:
 			count: 1
 			path: ../src/Controller/OrderController.php
 
+		# Session Specific
 		-
 			message: '#^Cannot call method add\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 4
 			path: ../src/Controller/OrderController.php
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Action/Admin/Auth/UnifiedAuthenticationController.php
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: ../src/Validator/PaymentMethodValidator.php
+		-
+			message: '#^Cannot call method add\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: ../src/EventListener/PostSavePaymentMethodEventListener.php
 
 		-
 			message: '#^Cannot call method apply\(\) on mixed\.$#'
