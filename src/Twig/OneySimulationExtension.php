@@ -18,40 +18,21 @@ use Webmozart\Assert\Assert;
 
 final class OneySimulationExtension extends AbstractExtension
 {
-    /** @var \Sylius\Component\Order\Context\CartContextInterface */
-    private $cartContext;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface */
-    private $oneySimulationDataProvider;
-
-    /** @var \Symfony\Component\HttpFoundation\RequestStack */
-    private $requestStack;
-
-    /** @var \Sylius\Component\Core\Repository\OrderRepositoryInterface */
-    private $orderRepository;
-
-    private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider;
-
     public function __construct(
-        CartContextInterface $cartContext,
-        OneySimulationDataProviderInterface $oneySimulationDataProvider,
-        RequestStack $requestStack,
-        OrderRepositoryInterface $orderRepository,
-        OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider
+        private CartContextInterface $cartContext,
+        private OneySimulationDataProviderInterface $oneySimulationDataProvider,
+        private RequestStack $requestStack,
+        private OrderRepositoryInterface $orderRepository,
+        private OneySupportedPaymentChoiceProvider $oneySupportedPaymentChoiceProvider,
     ) {
-        $this->cartContext = $cartContext;
-        $this->oneySimulationDataProvider = $oneySimulationDataProvider;
-        $this->requestStack = $requestStack;
-        $this->orderRepository = $orderRepository;
-        $this->oneySupportedPaymentChoiceProvider = $oneySupportedPaymentChoiceProvider;
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('oney_simulation_data', [$this, 'getSimulationData']),
-            new TwigFunction('oney_supported_choices', [$this, 'getSupportedPaymentChoices']),
-            new TwigFunction('is_oney_without_fees', [$this, 'isPaymentChoiceWithoutFees']),
+            new TwigFunction('oney_simulation_data', $this->getSimulationData(...)),
+            new TwigFunction('oney_supported_choices', $this->getSupportedPaymentChoices(...)),
+            new TwigFunction('is_oney_without_fees', $this->isPaymentChoiceWithoutFees(...)),
         ];
     }
 
@@ -90,9 +71,9 @@ final class OneySimulationExtension extends AbstractExtension
 
     public function isPaymentChoiceWithoutFees(): bool
     {
-        return \count(\array_filter(
+        return \array_filter(
             $this->getSupportedPaymentChoices(),
-            fn (string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true)
-        )) > 0;
+            fn (string $choice) => \in_array($choice, OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES, true),
+        ) !== [];
     }
 }

@@ -9,43 +9,28 @@ use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Resolver\PaymentStateResolverInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'payplug:update-payment-state', description: 'Updates the payments state.')]
 final class UpdatePaymentStateCommand extends Command
 {
     use LockableTrait;
 
-    /** @var PaymentRepositoryInterface */
-    private $paymentRepository;
-
-    /** @var PaymentStateResolverInterface */
-    private $paymentStateResolver;
-
-    /** @var LoggerInterface */
-    private $logger;
-
     public function __construct(
-        PaymentRepositoryInterface $paymentRepository,
-        PaymentStateResolverInterface $paymentStateResolver,
-        LoggerInterface $logger
+        private PaymentRepositoryInterface $paymentRepository,
+        private PaymentStateResolverInterface $paymentStateResolver,
+        private LoggerInterface $logger,
     ) {
         parent::__construct();
-
-        $this->paymentRepository = $paymentRepository;
-        $this->paymentStateResolver = $paymentStateResolver;
-        $this->logger = $logger;
     }
 
     protected function configure(): void
     {
-        $this
-            ->setName('payplug:update-payment-state')
-            ->setDescription('Updates the payments state.')
-            ->setHelp('This command allows you to update the payments state for PayPlug gateway.')
-        ;
+        $this->setHelp('This command allows you to update the payments state for PayPlug gateway.');
     }
 
     /**

@@ -23,49 +23,27 @@ use Symfony\Component\Lock\LockFactory;
 
 class PaymentNotificationHandler
 {
-    /** @var \Psr\Log\LoggerInterface */
-    private $logger;
-
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $payplugCardRepository;
-
-    /** @var \Sylius\Component\Resource\Factory\FactoryInterface */
-    private $payplugCardFactory;
-
-    /** @var \Sylius\Component\Core\Repository\CustomerRepositoryInterface */
-    private $customerRepository;
-
-    private EntityManagerInterface $entityManager;
-
-    private LockFactory $lockFactory;
-
-    private RequestStack $requestStack;
-
     public function __construct(
-        LoggerInterface $logger,
-        RepositoryInterface $payplugCardRepository,
-        FactoryInterface $payplugCardFactory,
-        CustomerRepositoryInterface $customerRepository,
-        EntityManagerInterface $entityManager,
-        LockFactory $lockFactory,
-        RequestStack $requestStack
+        private LoggerInterface $logger,
+        private RepositoryInterface $payplugCardRepository,
+        private FactoryInterface $payplugCardFactory,
+        private CustomerRepositoryInterface $customerRepository,
+        private EntityManagerInterface $entityManager,
+        private LockFactory $lockFactory,
+        private RequestStack $requestStack,
     ) {
-        $this->logger = $logger;
-        $this->payplugCardRepository = $payplugCardRepository;
-        $this->payplugCardFactory = $payplugCardFactory;
-        $this->customerRepository = $customerRepository;
-        $this->entityManager = $entityManager;
-        $this->lockFactory = $lockFactory;
-        $this->requestStack = $requestStack;
     }
 
-    public function treat(PaymentInterface $payment, IVerifiableAPIResource $paymentResource, \ArrayObject $details): void
-    {
+    public function treat(
+        PaymentInterface $payment,
+        IVerifiableAPIResource $paymentResource,
+        \ArrayObject $details,
+    ): void {
         if (!$paymentResource instanceof Payment) {
             return;
         }
 
-        $lock = $this->lockFactory->createLock('payment_'.$paymentResource->id);
+        $lock = $this->lockFactory->createLock('payment_' . $paymentResource->id);
         $lock->acquire(true);
 
         $this->entityManager->refresh($payment);
@@ -144,9 +122,11 @@ class PaymentNotificationHandler
             return;
         }
 
-        if (!$paymentResource->__isset('card') ||
+        if (
+            !$paymentResource->__isset('card') ||
             null === $paymentResource->__get('card') ||
-            (null !== $paymentResource->__get('card') && null === $paymentResource->__get('card')->id)) {
+            (null !== $paymentResource->__get('card') && null === $paymentResource->__get('card')->id)
+        ) {
             return;
         }
 
@@ -193,22 +173,18 @@ class PaymentNotificationHandler
         }
 
         // Oney is reviewing the payer’s file
-        if ($paymentResource->__isset('payment_method') &&
+        if (
+            $paymentResource->__isset('payment_method') &&
             null !== $paymentResource->__get('payment_method') &&
             \array_key_exists('is_pending', $paymentResource->__get('payment_method')) &&
-            true === $paymentResource->__get('payment_method')['is_pending']) {
+            true === $paymentResource->__get('payment_method')['is_pending']
+        ) {
             return true;
         }
 
         $now = new DateTimeImmutable();
-        if ($paymentResource->__isset('authorization') &&
-            $paymentResource->__get('authorization') instanceof PaymentAuthorization &&
-            null !== $paymentResource->__get('authorization')->__get('expires_at') &&
-            $now < $now->setTimestamp($paymentResource->__get('authorization')->__get('expires_at'))) {
-            return true;
-        }
 
-        return false;
+        return $paymentResource->__isset('authorization') && $paymentResource->__get('authorization') instanceof PaymentAuthorization && null !== $paymentResource->__get('authorization')->__get('expires_at') && $now < $now->setTimestamp($paymentResource->__get('authorization')->__get('expires_at'));
     }
 
     private function isRefusedOneyPayment(IVerifiableAPIResource $paymentResource): bool
@@ -218,16 +194,6 @@ class PaymentNotificationHandler
         }
 
         // Oney has reviewed the payer’s file and refused it
-        if (!$paymentResource->is_paid &&
-            $paymentResource->__isset('payment_method') &&
-            null !== $paymentResource->__get('payment_method') &&
-            \array_key_exists('is_pending', $paymentResource->__get('payment_method')) &&
-            false === $paymentResource->__get('payment_method')['is_pending'] &&
-            \in_array($paymentResource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true)
-        ) {
-            return true;
-        }
-
-        return false;
+        return !$paymentResource->is_paid && $paymentResource->__isset('payment_method') && null !== $paymentResource->__get('payment_method') && \array_key_exists('is_pending', $paymentResource->__get('payment_method')) && false === $paymentResource->__get('payment_method')['is_pending'] && \in_array($paymentResource->__get('payment_method')['type'], OneyGatewayFactory::PAYMENT_CHOICES, true);
     }
 }

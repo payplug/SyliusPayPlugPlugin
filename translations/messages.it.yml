@@ -1,0 +1,139 @@
+payplug_sylius_payplug_plugin:
+    admin:
+        ui:
+            oney_x3_with_fees_payment: Oney 3x
+            oney_x4_with_fees_payment: Oney 4x
+            oney_x3_without_fees_payment: Oney 3x Nessuna Commissione
+            oney_x4_without_fees_payment: Oney 4x Nessuna Commissione
+    ui:
+        account:
+            saved_cards:
+                title: Carte di credito salvate
+                sub_title: Gestisci le tue carte salvate
+                brand: Marca
+                mask: Maschera
+                expire: Scade il
+                expired: Scaduto
+                no_results_to_display: Non hai una carta salvata
+                mobile:
+                    brand: "Marca :"
+                    mask: "Maschera :"
+                    expire: "Scade il :"
+                deleted_successfully: La carta é stata eliminata con successo.
+                deleted_error: C'è stato un errore. Per favore riprova tra qualche secondo.
+                confirmation_modal:
+                    confirm_card_deletion: Desideri cancellare questa carta?
+        bancontact_gateway_label: Bancontact by Payplug
+        apple_pay_gateway_label: Apple Pay by Payplug
+        american_express_gateway_label: American Express by Payplug
+        error:
+            billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
+            shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido
+        payplug_gateway_label: Payplug
+        payment_refund_locally: Il rimborso del pagamento è stato effettuato solo a livello locale (interno).
+        test_mode: Modalità TEST
+        payplug_id: |
+            ID Payplug : %paymentId%
+        payplug_refund_gateway_is_not_activated: Payplug non è stato attivato come metodo di rimborso
+        impossible_to_refund_this_payment: Non è possibile rimborsare questo pagamento
+        oney_gateway_label: Oney by Payplug
+        oney: Oney
+        oney_transaction_less_than_forty_eight_hours: Il rimborso sarà possibile 48 ore dopo l’ultima operazione di pagamento o rimborso.
+        or_pay_with_oney: Oppure paga in
+        pay: Pagamento
+        3x_payment: Pagamento in 3x
+        4x_payment: Pagamento in 4x
+        oney_x3_with_fees_payment: Pagamento in 3x
+        oney_x4_with_fees_payment: Pagamento in 4x
+        oney_x3_without_fees_payment: Pagamento in 3x senza nessuna commissione
+        oney_x4_without_fees_payment: Pagamento in 4x senza nessuna commissione
+        by_credit_cart: Con carta di credito
+        cancel: Annulla
+        popin_close: Chiudi
+        popin_paiement_desc: |
+            <p><strong> Apporto: %apport% <br>
+            + %nb_mensuality% mensualità: %mensuality%</strong> <br>
+            di cui costo del finanziamento: %cost% TAEG : %percentage%%</p>
+        payment_choice:
+            current_total: Per un importo di
+            down_payment_amount: Primo contributo di
+            effective_annual_percentage_rate: TAEG
+            total_cost: Costo del finanziamento
+            installment_amount: Mensilità n°
+            grand_total: Totale
+        popin_legal_mention: |
+            <small>
+                Offre de financement avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        too_much_quantity: Il tuo carrello deve contenere meno di %max_articles% articoli per poter pagare con Oney.
+        invalid_cart_price: L’importo totale del tuo carrello deve essere compreso tra %min_amount% e %max_amount% per poter pagare con Oney.
+        refund_minimum_amount_requirement_not_met: L’importo da rimborsare non può essere inferiore a 0.10€
+        oney_unavailable: La simulazione del tuo piano di finanziamento non è per il momento disponibile. Queste informazioni ti saranno fornite al momento del pagamento.
+        oney_gateway_config:
+            info: |
+                Permetti ai tuoi clienti di scaglionare il pagamento dei loro ordini in 3x, 4x a partire da 100€ e fino a 3000€.
+                <a href="%link%" target="_blank">Per saperne di più</a>
+            fees_for:
+                title: 'Le spese sono:'
+                client: Ripartite tra te e i tuoi clienti
+                merchant: A tuo carico
+        integrated_payment:
+            card_holder.title: 'Titolare della carta'
+            card_holder.error: 'Nome e/o Cognome non valido(i).'
+            pan.title: 'Numero di carta'
+            pan.error: 'Numero di carta non valido.'
+            cvv.title: '123'
+            cvv.error: 'CVV non valido.'
+            exp.title: "MM/AA"
+            exp.error: "Data di scadenza non valida."
+            empty: 'Campo obbligatorio.'
+            scheme.label: 'La tua carta'
+            place_order.label: 'Ordine'
+            transaction_secure.label: 'Transazione protetta da'
+            privacy_policy.label: 'Politica di confidenzialità'
+        deferred_capture:
+            process_order_info: |
+                L'addebito avverrà al momento dell'elaborazione dell'ordine.
+        live: Modalità LIVE
+        live_help: |
+            Quando questa opzione è attivata, viene utilizzata la modalità <b>LIVE</b>. <br>
+            Se disattivata, verrà applicata la modalità <b>TEST</b>
+        renew_oauth: Forza la riconnessione OAuth
+        renew_oauth_help: |
+            Se questa opzione è selezionata, un nuovo flusso di autenticazione verrà avviato quando si fa clic sul pulsante "<b>Aggiorna</b>".
+    form:
+        oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
+        complete_info:
+            missing_title: Informazioni mancanti
+            success_title: Informazioni salvate
+            success_instruction: Clicca di nuovo su “Successivo” per continuare
+            email: |
+                Per favore, inserisci il tuo indirizzo e-mail:
+            phone: |
+                Per favore, inserisci il tuo numero di cellulare:
+            submit: Convalida e continua
+        base_currency_not_euro: |
+            Il canale #channel_code# : #payment_method# è disponibile solo per i canali la cui valuta è in EURO
+        only_one_gateway_allowed: |
+            Attenzione: il metodo di pagamento %gateway_title% è già definito. Per modificarlo, vai ai tuoi metodi di pagamento.
+        one_click_enable: Attiva un clic
+        one_click_help: |
+            Consenti ai tuoi clienti di salvare i dettagli della loro carta di credito per dopo
+
+        integrated_payment_enable: Abilita il pagamento integrato
+        deferred_capture_enable: Abilita la cattura differita
+        deferred_capture_help: |
+            Assicurarsi che nel codice sorgente del progetto sia stato aggiunto un trigger di acquisizione ritardata

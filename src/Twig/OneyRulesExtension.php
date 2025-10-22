@@ -15,6 +15,7 @@ use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -22,52 +23,29 @@ use Webmozart\Assert\Assert;
 
 final class OneyRulesExtension extends AbstractExtension
 {
-    /** @var CartContextInterface */
-    private $cartContext;
-
-    /** @var OneyCheckerInterface */
-    private $oneyChecker;
-
-    /** @var PayPlugApiClientInterface */
-    private $oneyClient;
-
-    /** @var MoneyFormatterInterface */
-    private $moneyFormatter;
-
-    /** @var ProductRepositoryInterface */
-    private $productRepository;
-
-    /** @var RequestStack */
-    private $requestStack;
-
     public function __construct(
-        OneyCheckerInterface $oneyChecker,
-        CartContextInterface $cartContext,
-        PayPlugApiClientInterface $oneyClient,
-        MoneyFormatterInterface $moneyFormatter,
-        ProductRepositoryInterface $productRepository,
-        RequestStack $requestStack
+        private OneyCheckerInterface $oneyChecker,
+        private CartContextInterface $cartContext,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
+        private PayPlugApiClientInterface $oneyClient,
+        private MoneyFormatterInterface $moneyFormatter,
+        private ProductRepositoryInterface $productRepository,
+        private RequestStack $requestStack,
     ) {
-        $this->oneyChecker = $oneyChecker;
-        $this->cartContext = $cartContext;
-        $this->oneyClient = $oneyClient;
-        $this->moneyFormatter = $moneyFormatter;
-        $this->productRepository = $productRepository;
-        $this->requestStack = $requestStack;
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('oney_cart_eligible', [$this, 'isCartEligible']),
-            new TwigFunction('oney_product_eligible', [$this, 'isProductEligible']),
-            new TwigFunction('oney_ineligible_reasons', [$this, 'getReasonsOfIneligibility']),
+            new TwigFunction('oney_cart_eligible', $this->isCartEligible(...)),
+            new TwigFunction('oney_product_eligible', $this->isProductEligible(...)),
+            new TwigFunction('oney_ineligible_reasons', $this->getReasonsOfIneligibility(...)),
         ];
     }
 
     public function isCartEligible(?OrderInterface $currentCart = null): bool
     {
-        if (null === $currentCart) {
+        if (!$currentCart instanceof \Sylius\Component\Core\Model\OrderInterface) {
             /** @var OrderInterface $currentCart */
             $currentCart = $this->cartContext->getCart();
         }
@@ -91,7 +69,7 @@ final class OneyRulesExtension extends AbstractExtension
             if (null === $currencyCode) {
                 throw new \LogicException('No currency code found');
             }
-        } catch (\Throwable $throwable) {
+        } catch (\Throwable) {
             // unable to find currency_code
             return false;
         }
@@ -104,7 +82,7 @@ final class OneyRulesExtension extends AbstractExtension
         $data = [];
         $transParam = [];
 
-        if (null === $currentCart) {
+        if (!$currentCart instanceof \Sylius\Component\Core\Model\OrderInterface) {
             /** @var OrderInterface $currentCart */
             $currentCart = $this->cartContext->getCart();
         }
@@ -137,18 +115,18 @@ final class OneyRulesExtension extends AbstractExtension
                     '%min_amount%' => $this->moneyFormatter->format(
                         $account['configuration']['oney']['min_amounts'][$currencyCode],
                         $currencyCode,
-                        $currentCart->getLocaleCode()
+                        $currentCart->getLocaleCode(),
                     ),
                 ];
                 $transParam[] = [
                     '%max_amount%' => $this->moneyFormatter->format(
                         $account['configuration']['oney']['max_amounts'][$currencyCode],
                         $currencyCode,
-                        $currentCart->getLocaleCode()
+                        $currentCart->getLocaleCode(),
                     ),
                 ];
             }
-        } catch (\Throwable $throwable) {
+        } catch (\Throwable) {
             // do nothing
         }
 
@@ -164,7 +142,7 @@ final class OneyRulesExtension extends AbstractExtension
         $currentCart = $this->cartContext->getCart();
 
         $request = $this->requestStack->getCurrentRequest();
-        if (null === $request || 'sylius_shop_product_show' !== $request->get('_route')) {
+        if (!$request instanceof \Symfony\Component\HttpFoundation\Request || 'sylius_shop_product_show' !== $request->get('_route')) {
             return false;
         }
 
@@ -183,7 +161,7 @@ final class OneyRulesExtension extends AbstractExtension
             if (null === $currencyCode) {
                 throw new \LogicException('No currency code found');
             }
-        } catch (\Throwable $throwable) {
+        } catch (\Throwable) {
             // unable to find currency_code
             return false;
         }
@@ -196,7 +174,7 @@ final class OneyRulesExtension extends AbstractExtension
         $product = $this->productRepository->findOneByChannelAndSlug(
             $channel,
             $currentCart->getLocaleCode(),
-            $request->get('_route_params')['slug']
+            $request->get('_route_params')['slug'],
         );
 
         Assert::isInstanceOf($product, ProductInterface::class);

@@ -1,4 +1,0 @@
-suites:
-    main:
-        namespace: PayPlug\SyliusPayPlugPlugin
-        psr4_prefix: PayPlug\SyliusPayPlugPlugin

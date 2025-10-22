@@ -70,7 +70,7 @@ final class OneyInvalidDataRetriever
             }
 
             return PhoneNumberType::MOBILE === $this->phoneNumberUtil->getNumberType($parsedNumber);
-        } catch (\Throwable $throwable) {
+        } catch (\Throwable) {
             return false;
         }
     }

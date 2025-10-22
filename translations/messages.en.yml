@@ -1,0 +1,140 @@
+payplug_sylius_payplug_plugin:
+    admin:
+        ui:
+            oney_x3_with_fees_payment: Oney 3x
+            oney_x4_with_fees_payment: Oney 4x
+            oney_x3_without_fees_payment: Oney 3x Without Fees
+            oney_x4_without_fees_payment: Oney 4x Without Fees
+    ui:
+        account:
+            saved_cards:
+                title: Saved cards
+                sub_title: Manage your saved cards
+                brand: Brand
+                mask: Mask
+                expire: Expire
+                expired: Expired
+                no_results_to_display: You do not have saved cards
+                mobile:
+                    brand: "Brand:"
+                    mask: "Mask:"
+                    expire: "Expire:"
+                deleted_successfully: Card successfully deleted.
+                deleted_error: An error occurred. Please retry in few seconds.
+                confirmation_modal:
+                    confirm_card_deletion: Are you sure you want to delete this card?
+        bancontact_gateway_label: Bancontact by Payplug
+        apple_pay_gateway_label: Apple Pay by Payplug
+        american_express_gateway_label: American Express by Payplug
+        error:
+            billing.postcode: The postal code %postalCode% entered for the billing address is invalid
+            shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
+        payplug_gateway_label: Payplug
+        payment_refund_locally: The payment refund was made locally only.
+        test_mode: TEST Mode
+        payplug_id: |
+            Payplug ID: %paymentId%
+        payplug_refund_gateway_is_not_activated: Payplug has not been activated as a refund method
+        impossible_to_refund_this_payment: This payment cannot be refunded
+        oney_gateway_label: Oney by Payplug
+        oney: Oney
+        oney_transaction_less_than_forty_eight_hours: The refund will be possible 48 hours after the last payment or refund transaction.
+        or_pay_with_oney: Or pay in
+        pay: Payment
+        3x_payment: Pay in 3 installments
+        4x_payment: Pay in 4 installments
+        oney_x3_with_fees_payment: Payment in 3x
+        oney_x4_with_fees_payment: Payment in 4x
+        oney_x3_without_fees_payment: Payment in 3x without fees
+        oney_x4_without_fees_payment: Payment in 4x without fees
+        by_credit_cart: By credit card
+        cancel: Cancel
+        popin_close: Close
+        popin_paiement_desc: |
+            <p><strong>Downpayment: %apport% <br>
+            + %nb_mensuality% monthly installments of: %mensuality%</strong> <br>
+            Of which cost of financing: %cost% APR: %percentage%%</p>
+        payment_choice:
+            current_total: For an amount of
+            down_payment_amount: First installment of
+            effective_annual_percentage_rate: APR
+            total_cost: Financing cost
+            installment_amount: Instalment no.
+            grand_total: Total
+        popin_legal_mention: |
+            <small>
+                Offre de financement avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        too_much_quantity: To pay with Oney, your cart must contain less than %max_articles% items.
+        invalid_cart_price: To pay with Oney, the total amount of your cart must be between %min_amount% and %max_amount%.
+        refund_minimum_amount_requirement_not_met: The amount to be refunded must be at least €0.10
+        oney_unavailable: Your payment schedule simulation is temporarily unavailable. You will find this information at the payment stage.
+        oney_gateway_config:
+            info: |
+                Allow customers to spread out payments over 3 or 4 installments from 100€ to 3000€.
+                <a href="%link%" target="_blank">Learn more</a>
+            fees_for:
+                title: 'The fees are:'
+                client: Split between you and your customers
+                merchant: For you
+        integrated_payment:
+            card_holder.title: 'Cardholder name'
+            card_holder.error: 'Invalid Name and/or Last Name.'
+            pan.title: 'Card number'
+            pan.error: 'Invalid card number.'
+            cvv.title: '123'
+            cvv.error: 'Invalid CVV.'
+            exp.title: 'MM/YY'
+            exp.error: 'Invalid expiration date.'
+            empty: 'Mandatory field.'
+            scheme.label: 'Your card'
+            place_order.label: 'Place order'
+            transaction_secure.label: 'Transaction secured by'
+            privacy_policy.label: 'Privacy Policy'
+        deferred_capture:
+            process_order_info: |
+                You will be charged when your order is processed.
+        live: LIVE Mode
+        live_help: |
+            When this option is enabled, <b>LIVE</b> mode is used. <br>
+            If disabled, <b>TEST</b> mode will be applied
+        renew_oauth: Force OAuth reconnection
+        renew_oauth_help: |
+            If this option is checked, a new authentication flow will be started when clicking the "<b>Update</b>" button.
+    form:
+        oney_error: Some missing information is required to pay using Oney by Payplug
+        complete_info:
+            missing_title: Missing information
+            success_title: Saved information
+            success_instruction: Click "Next" again to continue
+            email: |
+                Please enter your email address:
+            phone: |
+                Please enter your cell phone number:
+            submit: Confirm and continue
+        base_currency_not_euro: |
+            Channel #channel_code#: #payment_method# is only available on channels with EURO as a currency
+        only_one_gateway_allowed: |
+            Please note that the %gateway_title% payment method has already been set. To change it, go to your payment methods.
+        one_click_enable: Enable One click
+        one_click_help: |
+            Allow your customers to save their credit card details for later
+
+        integrated_payment_enable: Enable payment integrated
+
+        deferred_capture_enable: Enable deferred capture
+        deferred_capture_help: |
+            Please ensure that a delayed capture trigger has been added to the project source code.

@@ -18,57 +18,23 @@ use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
 use Sylius\Component\Order\Modifier\OrderModifierInterface;
 use Sylius\Component\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Webmozart\Assert\Assert;
 
+#[AsController]
 abstract class AbstractOneyController extends AbstractController
 {
-    /** @var OneySimulationDataProviderInterface */
-    protected $oneySimulationDataProvider;
-
-    /** @var CartContextInterface */
-    protected $cartContext;
-
-    /** @var \Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductVariantRepository */
-    protected $productVariantRepository;
-
-    /** @var FactoryInterface */
-    protected $cartFactory;
-
-    /** @var FactoryInterface */
-    protected $orderItemFactory;
-
-    /** @var OrderModifierInterface */
-    protected $orderModifier;
-
-    /** @var OrderItemQuantityModifierInterface */
-    protected $itemQuantityModifier;
-
-    /** @var OneyRulesExtension */
-    protected $oneyRulesExtension;
-
-    /** @var ProductRepository */
-    protected $productRepository;
-
     public function __construct(
-        OneySimulationDataProviderInterface $oneySimulationDataProvider,
-        CartContextInterface $cartContext,
-        ProductRepository $productRepository,
-        ProductVariantRepository $productVariantRepository,
-        FactoryInterface $orderFactory,
-        FactoryInterface $orderItemFactory,
-        OrderModifierInterface $orderModifier,
-        OrderItemQuantityModifierInterface $itemQuantityModifier,
-        OneyRulesExtension $oneyRulesExtension
+        protected OneySimulationDataProviderInterface $oneySimulationDataProvider,
+        protected CartContextInterface $cartContext,
+        protected ProductRepository $productRepository,
+        protected ProductVariantRepository $productVariantRepository,
+        protected FactoryInterface $orderFactory,
+        protected FactoryInterface $orderItemFactory,
+        protected OrderModifierInterface $orderModifier,
+        protected OrderItemQuantityModifierInterface $itemQuantityModifier,
+        protected OneyRulesExtension $oneyRulesExtension,
     ) {
-        $this->oneySimulationDataProvider = $oneySimulationDataProvider;
-        $this->cartContext = $cartContext;
-        $this->productVariantRepository = $productVariantRepository;
-        $this->cartFactory = $orderFactory;
-        $this->orderItemFactory = $orderItemFactory;
-        $this->orderModifier = $orderModifier;
-        $this->itemQuantityModifier = $itemQuantityModifier;
-        $this->oneyRulesExtension = $oneyRulesExtension;
-        $this->productRepository = $productRepository;
     }
 
     protected function createTempCart(
@@ -76,10 +42,10 @@ abstract class AbstractOneyController extends AbstractController
         int $quantity,
         ChannelInterface $channel,
         string $localeCode,
-        string $currencyCode
+        string $currencyCode,
     ): OrderInterface {
         /** @var OrderInterface $tempCart */
-        $tempCart = $this->cartFactory->createNew();
+        $tempCart = $this->orderFactory->createNew();
         $tempCart->setChannel($channel);
         $tempCart->setLocaleCode($localeCode);
         $tempCart->setCurrencyCode($currencyCode);

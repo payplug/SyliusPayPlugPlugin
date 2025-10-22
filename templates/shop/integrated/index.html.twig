@@ -1,0 +1,120 @@
+{% set initRouteParam = {'paymentMethodId': paymentMethod.id} %}
+{% if order is defined and order.getCheckoutCompletedAt is not null and order.tokenValue is not null %}
+  {% set initRouteParam = initRouteParam|merge({'orderToken': order.tokenValue}) %}
+{% endif %}
+
+<script type="text/javascript" src="https://cdn.payplug.com/js/integrated-payment/v1/index.js"></script>
+<script type="text/javascript">
+  /* <![CDATA[ */
+  var payplug_integrated_payment_params = {
+    is_test_mode: '{{ is_payplug_test_mode_enabled(paymentMethod) }}',
+    has_saved_cards: '{{ hasSavedCards }}',
+    payment_method_code: '{{ paymentMethod.code }}',
+    {% if payment.details.payment_id is defined %}
+    payment_id: '{{ payment.details.payment_id }}',
+    {% endif %}
+    routes: {
+      init_payment: '{{ path('payplug_sylius_integrated_payment_init', initRouteParam) }}',
+    },
+    cardholder: '{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.card_holder.title'|trans }}',
+    pan: '{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.pan.title'|trans }}',
+    cvv: '{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.cvv.title'|trans }}',
+    exp: '{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.exp.title'|trans }}',
+  }
+  /* ]] */
+</script>
+<div
+    class="payplugIntegratedPayment"
+    {{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}
+>
+    <div class="sylius-shop-loader d-none">
+        <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
+    </div>
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--cardHolder cardHolder-input-container"></div>
+    <div class="payplugIntegratedPayment__error payplugIntegratedPayment__error--cardHolder payplugIntegratedPayment__error--hide">
+        <span class="payplugIntegratedPayment__error--hide invalidField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.card_holder.error'|trans }}
+        </span>
+        <span class="payplugIntegratedPayment__error--hide emptyField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.empty'|trans }}
+        </span>
+    </div>
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--scheme">
+        <div>{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.scheme.label'|trans }}</div>
+        {# @todo: adding radio prop name will lead to an invalid model name but it doesn't matter for now #}
+        <div class="payplugIntegratedPayment__schemes">
+            <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--cb">
+                <input type="radio" name="schemeOptions" value="cb" id="schemeOption_cb" data-live-ignore />
+                <span></span>
+            </label>
+            <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--visa">
+                <input type="radio" name="schemeOptions" value="visa" id="schemeOption_visa" data-live-ignore />
+                <span></span>
+            </label>
+            <label class="payplugIntegratedPayment__scheme payplugIntegratedPayment__scheme--mastercard">
+                <input type="radio" name="schemeOptions" value="mastercard" id="schemeOption_mastercard" data-live-ignore />
+                <span></span>
+            </label>
+        </div>
+    </div>
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--pan pan-input-container"></div>
+    <div class="payplugIntegratedPayment__error payplugIntegratedPayment__error--pan payplugIntegratedPayment__error--hide">
+        <span class="payplugIntegratedPayment__error--hide invalidField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.pan.error'|trans }}
+        </span>
+        <span class="payplugIntegratedPayment__error--hide emptyField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.empty'|trans }}
+        </span>
+    </div>
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--exp exp-input-container" ></div>
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--cvv cvv-input-container"></div>
+    <div class="payplugIntegratedPayment__error payplugIntegratedPayment__error--exp payplugIntegratedPayment__error--hide">
+        <span class="payplugIntegratedPayment__error--hide invalidField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.exp.error'|trans }}
+        </span>
+        <span class="payplugIntegratedPayment__error--hide emptyField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.empty'|trans }}
+        </span>
+    </div>
+    <div class="payplugIntegratedPayment__error payplugIntegratedPayment__error--cvv payplugIntegratedPayment__error--hide">
+        <span class="payplugIntegratedPayment__error--hide invalidField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.cvv.error'|trans }}
+        </span>
+        <span class="payplugIntegratedPayment__error--hide emptyField">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.empty'|trans }}
+        </span>
+    </div>
+    {% if is_save_card_enabled(paymentMethod) %}
+        <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--saveCard">
+            <input type="checkbox" id="savecard" name="" />{# No name to not trigger LiveComponent #}
+            <label for="savecard">
+                <span></span>
+                {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.save_card.label'|trans }}
+            </label>
+        </div>
+    {% endif %}
+
+    <div class="payplugIntegratedPayment__container">
+        <button id="paid" class="btn btn-primary" type="button">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.place_order.label'|trans }}
+        </button>
+    </div>
+    {% set config = paymentMethod.gatewayConfig.config %}
+    {% if config.deferredCapture is defined and config.deferredCapture is same as true %}
+    <div>
+        <span>{{ 'payplug_sylius_payplug_plugin.ui.deferred_capture.process_order_info'|trans }}</span>
+    </div>
+    {% endif %}
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--transaction">
+        <img class="lock-icon" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/images/integrated/lock.svg') }}" />
+        <div class="transaction-label">
+            {{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.transaction_secure.label'|trans }}
+        </div>
+        <img class="payplug-logo" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/shop/images/integrated/logo-payplug.png') }}" />
+    </div>
+    <div class="payplugIntegratedPayment__container payplugIntegratedPayment__container--privacy-policy">
+        <a class="btn-link" href="https://www.payplug.com/privacy-policy" target="_blank">{{ 'payplug_sylius_payplug_plugin.ui.integrated_payment.privacy_policy.label'|trans }}</a>
+    </div>
+</div>
+
+<input type="hidden" name="payplug_integrated_payment_token" id="payplug_integrated_payment_token" />

@@ -9,11 +9,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class ApplePayChecker implements ApplePayCheckerInterface
 {
-    private RequestStack $requestStack;
-
-    public function __construct(RequestStack $requestStack)
+    public function __construct(private RequestStack $requestStack)
     {
-        $this->requestStack = $requestStack;
     }
 
     public function isDeviceReady(): bool
@@ -32,7 +29,7 @@ final class ApplePayChecker implements ApplePayCheckerInterface
         $browsers = ['Opera', 'Edg', 'Chrome', 'Firefox', 'MSIE', 'Trident'];
 
         foreach ($browsers as $browser) {
-            if (false !== strpos($userAgent, $browser)) {
+            if (str_contains($userAgent, $browser)) {
                 return false;
             }
         }

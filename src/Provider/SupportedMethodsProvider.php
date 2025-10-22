@@ -11,15 +11,16 @@ use Webmozart\Assert\Assert;
 
 final class SupportedMethodsProvider
 {
-    private CurrencyContextInterface $currencyContext;
-
-    public function __construct(CurrencyContextInterface $currencyContext)
+    public function __construct(private CurrencyContextInterface $currencyContext)
     {
-        $this->currencyContext = $currencyContext;
     }
 
-    public function provide(array $supportedMethods, string $factoryName, array $authorizedCurrencies, int $paymentAmount): array
-    {
+    public function provide(
+        array $supportedMethods,
+        string $factoryName,
+        array $authorizedCurrencies,
+        int $paymentAmount,
+    ): array {
         $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
 
         foreach ($supportedMethods as $key => $paymentMethod) {
@@ -38,8 +39,9 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            if ($paymentAmount < $authorizedCurrencies[$activeCurrencyCode]['min_amount']
-                || $paymentAmount > $authorizedCurrencies[$activeCurrencyCode]['max_amount']
+            if (
+                $paymentAmount < $authorizedCurrencies[$activeCurrencyCode]['min_amount'] ||
+                $paymentAmount > $authorizedCurrencies[$activeCurrencyCode]['max_amount']
             ) {
                 unset($supportedMethods[$key]);
 

@@ -15,7 +15,7 @@ use Payplug\Resource\Payment;
 use Payplug\Resource\Refund;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PayPlugSyliusPayPlugPlugin;
-use Sylius\Bundle\CoreBundle\Application\Kernel;
+use Sylius\Bundle\CoreBundle\SyliusCoreBundle;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Contracts\Cache\CacheInterface;
 use Webmozart\Assert\Assert;
@@ -41,7 +41,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         ]);
         $this->factoryName = $factoryName ?? PayPlugGatewayFactory::FACTORY_NAME;
 
-        if (null === $cache) {
+        if (!$cache instanceof \Symfony\Contracts\Cache\CacheInterface) {
             $cache = new ArrayAdapter();
         }
         $this->cache = $cache;
@@ -49,33 +49,18 @@ class PayPlugApiClient implements PayPlugApiClientInterface
         HttpClient::addDefaultUserAgentProduct(
             'PayPlug-Sylius',
             PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/'.Kernel::VERSION
-        );
-    }
-
-    /**
-     * @deprecated use DI instead to get a pre-configured client
-     */
-    public function initialise(string $secretKey): void
-    {
-        Payplug::setSecretKey($secretKey);
-        HttpClient::addDefaultUserAgentProduct(
-            'PayPlug-Sylius',
-            PayPlugSyliusPayPlugPlugin::VERSION,
-            'Sylius/'.Kernel::VERSION
+            'Sylius/' . SyliusCoreBundle::VERSION,
         );
     }
 
     public function getAccount(bool $refresh = false): array
     {
-        $cacheKey = 'payplug_account_'.substr($this->configuration->getToken(), 8);
+        $cacheKey = 'payplug_account_' . substr($this->configuration->getToken(), 8);
         if ($refresh) {
             $this->cache->delete($cacheKey);
         }
 
-        return $this->cache->get($cacheKey, function (): array {
-            return Authentication::getAccount($this->configuration)['httpResponse'] ?? [];
-        });
+        return $this->cache->get($cacheKey, fn (): array => Authentication::getAccount($this->configuration)['httpResponse'] ?? []);
     }
 
     public function getGatewayFactoryName(): string
@@ -87,7 +72,7 @@ class PayPlugApiClient implements PayPlugApiClientInterface
     {
         try {
             return Authentication::getPermissions($this->configuration) ?? [];
-        } catch (UnauthorizedException $exception) {
+        } catch (UnauthorizedException) {
             return [];
         }
     }

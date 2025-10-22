@@ -23,7 +23,7 @@ default:
                 - sylius.behat.context.setup.user
 
                 - payplug_sylius_payplug_plugin.behat.context.setup.payplug
-                - payplug_sylius_payplug_plugin.behat.context.setup.order
+#                - payplug_sylius_payplug_plugin.behat.context.setup.order
 
                 - sylius.behat.context.transform.address
                 - sylius.behat.context.transform.channel

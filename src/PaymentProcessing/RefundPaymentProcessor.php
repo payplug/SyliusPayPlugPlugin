@@ -6,7 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Exception;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
@@ -18,42 +17,40 @@ use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\PaymentTransitions;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Workflow\Attribute\AsCompletedListener;
+use Symfony\Component\Workflow\Event\CompletedEvent;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[Autoconfigure(public: true)]
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
-    private RequestStack $requestStack;
-
-    private PayPlugApiClientInterface $payPlugApiClient;
-
-    private LoggerInterface $logger;
-
-    private TranslatorInterface $translator;
-
-    private RepositoryInterface $refundPaymentRepository;
-
-    private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository;
-
-    private PayPlugApiClientFactoryInterface $apiClientFactory;
+    public $payPlugApiClient;
 
     public function __construct(
-        RequestStack $requestStack,
-        LoggerInterface $logger,
-        TranslatorInterface $translator,
-        RepositoryInterface $refundPaymentRepository,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        PayPlugApiClientFactoryInterface $apiClientFactory
+        private RequestStack $requestStack,
+        private LoggerInterface $logger,
+        private TranslatorInterface $translator,
+        private RepositoryInterface $refundPaymentRepository,
+        private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
     ) {
-        $this->requestStack = $requestStack;
-        $this->logger = $logger;
-        $this->translator = $translator;
-        $this->refundPaymentRepository = $refundPaymentRepository;
-        $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
-        $this->apiClientFactory = $apiClientFactory;
+    }
+
+    #[AsCompletedListener(workflow: PaymentTransitions::GRAPH, transition: PaymentTransitions::TRANSITION_REFUND)]
+    public function onRefundCompleteTransitionEvent(CompletedEvent $event): void
+    {
+        $subject = $event->getSubject();
+        if (!$subject instanceof PaymentInterface) {
+            return;
+        }
+
+        $this->process($subject);
     }
 
     public function process(PaymentInterface $payment): void
@@ -131,7 +128,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         if (!isset($details['payment_id'])) {
             $this->requestStack->getSession()->getFlashBag()->add(
                 'info',
-                $this->translator->trans('payplug_sylius_payplug_plugin.ui.payment_refund_locally')
+                $this->translator->trans('payplug_sylius_payplug_plugin.ui.payment_refund_locally'),
             );
 
             return;
@@ -139,10 +136,6 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
 
         $this->logger->info('[PayPlug] Start refund payment', ['payment_id' => $details['payment_id']]);
 
-        $gatewayConfig = $paymentMethod->getGatewayConfig()->getConfig();
-
-        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName, $gatewayConfig['secretKey']);
-
-        $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
+        $this->payPlugApiClient = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
     }
 }

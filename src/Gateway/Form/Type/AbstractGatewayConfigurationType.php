@@ -5,51 +5,34 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Doctrine\Common\Collections\Collection;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsPayPlugSecretKeyValid;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class AbstractGatewayConfigurationType extends AbstractType
 {
     public const VALIDATION_GROUPS = ['Default', 'sylius'];
 
-    protected TranslatorInterface $translator;
-
-    protected RequestStack $requestStack;
-
-    protected string $noTestKeyMessage = '';
-
-    protected string $noAccessMessage = '';
-
     protected string $gatewayFactoryTitle = '';
-
     protected string $gatewayFactoryName = '';
 
-    protected string $gatewayBaseCurrencyCode = 'EUR';
-
-    private RepositoryInterface $gatewayConfigRepository;
+    protected string $gatewayBaseCurrencyCode = PayPlugGatewayFactory::BASE_CURRENCY_CODE;
 
     public function __construct(
-        TranslatorInterface $translator,
-        RepositoryInterface $gatewayConfigRepository,
-        RequestStack $requestStack
+        protected TranslatorInterface $translator,
+        private RepositoryInterface $gatewayConfigRepository,
+        protected RequestStack $requestStack,
     ) {
-        $this->translator = $translator;
-        $this->gatewayConfigRepository = $gatewayConfigRepository;
-        $this->requestStack = $requestStack;
     }
 
     /**
@@ -58,28 +41,25 @@ class AbstractGatewayConfigurationType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('secretKey', PasswordType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.ui.secret_key',
-                'validation_groups' => self::VALIDATION_GROUPS,
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'payplug_sylius_payplug_plugin.secret_key.not_blank',
-                    ]),
-                    new IsPayPlugSecretKeyValid(),
-                    new IsCanSavePaymentMethod([
-                        'noTestKeyMessage' => $this->noTestKeyMessage,
-                        'noAccessMessage' => $this->noAccessMessage,
-                    ]),
-                    new IsOneyEnabled(),
-                ],
-                'help' => $this->translator->trans('payplug_sylius_payplug_plugin.ui.retrieve_secret_key_in_api_configuration_portal'),
+            ->add('live', CheckboxType::class, [
+                'block_name' => 'payplug_checkbox',
+                'label' => 'payplug_sylius_payplug_plugin.ui.live',
+                'help' => 'payplug_sylius_payplug_plugin.ui.live_help',
                 'help_html' => true,
+                'required' => false,
+            ])
+            ->add('renew_oauth', CheckboxType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.ui.renew_oauth',
+                'help' => 'payplug_sylius_payplug_plugin.ui.renew_oauth_help',
+                'help_html' => true,
+                'mapped' => false,
+                'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
                 $this->checkCreationRequirements(
                     $this->gatewayFactoryTitle,
                     $this->gatewayFactoryName,
-                    $event->getForm()
+                    $event->getForm(),
                 );
 
                 /** @phpstan-ignore-next-line */
@@ -101,7 +81,7 @@ class AbstractGatewayConfigurationType extends AbstractType
                             [
                                 '#channel_code#' => $dataFormChannel->getCode(),
                                 '#payment_method#' => $this->gatewayFactoryTitle,
-                            ]
+                            ],
                         );
                         $formChannels->get((string) $key)->addError(new FormError($message));
                         $this->requestStack->getSession()->getFlashBag()->add('error', $message);
@@ -121,7 +101,7 @@ class AbstractGatewayConfigurationType extends AbstractType
     private function checkCreationRequirements(
         string $factoryTitle,
         string $factoryName,
-        FormInterface $form
+        FormInterface $form,
     ): void {
         /** @phpstan-ignore-next-line */
         $paymentMethod = $form->getParent()->getParent()->getData();

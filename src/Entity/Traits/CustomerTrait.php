@@ -13,6 +13,7 @@ trait CustomerTrait
 {
     /**
      * @ORM\OneToMany(targetEntity=Card::class, mappedBy="customer", orphanRemoval=true)
+     *
      * @ORM\OrderBy({"id" = "DESC"})
      */
     #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'customer', orphanRemoval: true)]
@@ -20,18 +21,15 @@ trait CustomerTrait
     protected $cards;
 
     /**
-     * @return Collection|Card[]
+     * @return Collection<Card>
      */
     public function getCards(): Collection
     {
         return $this->cards->filter(function (Card $card): bool {
-            $secretKeyPrefix = \substr($card->getPaymentMethod()->getGatewayConfig()->getConfig()['secretKey'], 0, 7);
-            if (($card->isLive() && PayPlugApiClientInterface::LIVE_KEY_PREFIX === $secretKeyPrefix) ||
-                (!$card->isLive() && PayPlugApiClientInterface::TEST_KEY_PREFIX === $secretKeyPrefix)) {
-                return true;
-            }
+            $isLivePaymentMethod = $card->getPaymentMethod()->getGatewayConfig()?->getConfig()['live'] ?? false;
 
-            return false;
+            return ($card->isLive() && true === $isLivePaymentMethod) ||
+                (!$card->isLive() && false === $isLivePaymentMethod);
         });
     }
 

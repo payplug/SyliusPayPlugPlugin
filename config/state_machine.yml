@@ -1,0 +1,10 @@
+framework:
+    workflows:
+        !php/const Sylius\Component\Core\OrderPaymentTransitions::GRAPH:
+            transitions:
+                oney_request_payment: # Allow to request payment from authorized (for Oney)
+                    from:
+                        - cart
+                        - authorized
+                    to:
+                        - awaiting_payment

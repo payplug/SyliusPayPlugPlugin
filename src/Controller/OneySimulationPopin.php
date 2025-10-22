@@ -9,10 +9,14 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
+#[AsController]
 final class OneySimulationPopin extends AbstractOneyController
 {
+    #[Route(path: '/{_locale}/payplug/oney_popin', name: 'payplug_sylius_oney_simulation_popin', methods: ['GET'])]
     public function __invoke(Request $request): Response
     {
         /** @var OrderInterface $cart */
@@ -28,11 +32,11 @@ final class OneySimulationPopin extends AbstractOneyController
             $simulationData = $this->oneySimulationDataProvider->getForCart($cart);
 
             return $this->render(
-                '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
+                '@PayPlugSyliusPayPlugPlugin/shop/oney/popin.html.twig',
                 [
                     'data' => $simulationData,
                     'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($cart),
-                ]
+                ],
             );
         }
 
@@ -42,7 +46,7 @@ final class OneySimulationPopin extends AbstractOneyController
     private function renderSimulateForProductVariant(
         OrderInterface $cart,
         string $productVariantCode,
-        int $quantity
+        int $quantity,
     ): Response {
         $productVariant = $this->productVariantRepository->findOneBy(['code' => $productVariantCode]);
         Assert::isInstanceOf($productVariant, ProductVariantInterface::class);
@@ -58,17 +62,17 @@ final class OneySimulationPopin extends AbstractOneyController
             $quantity,
             $channel,
             $cart->getLocaleCode(),
-            $cart->getCurrencyCode()
+            $cart->getCurrencyCode(),
         );
 
         $simulationData = $this->oneySimulationDataProvider->getForCart($tempCart);
 
         return $this->render(
-            '@PayPlugSyliusPayPlugPlugin/oney/popin.html.twig',
+            '@PayPlugSyliusPayPlugPlugin/shop/oney/popin.html.twig',
             [
                 'data' => $simulationData,
                 'ineligibilityData' => $this->oneyRulesExtension->getReasonsOfIneligibility($tempCart),
-            ]
+            ],
         );
     }
 }

@@ -6,17 +6,16 @@ namespace PayPlug\SyliusPayPlugPlugin\Checker;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class OneyChecker implements OneyCheckerInterface
 {
     private const ONEY_PERMISSION_FIELD = 'can_use_oney';
 
-    /** @var \PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface */
-    private $client;
-
-    public function __construct(PayPlugApiClientInterface $oneyClient)
-    {
-        $this->client = $oneyClient;
+    public function __construct(
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
+        private PayPlugApiClientInterface $client,
+    ) {
     }
 
     public function isEnabled(): bool
@@ -57,11 +56,6 @@ final class OneyChecker implements OneyCheckerInterface
 
         $allowedCountries = $this->client->getAccount()['configuration']['oney']['allowed_countries'];
 
-        if (!in_array($shippingCountry, $allowedCountries, true) ||
-            !in_array($billingCountry, $allowedCountries, true)) {
-            return false;
-        }
-
-        return true;
+        return in_array($shippingCountry, $allowedCountries, true) && in_array($billingCountry, $allowedCountries, true);
     }
 }

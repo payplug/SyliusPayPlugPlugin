@@ -19,12 +19,8 @@ use Webmozart\Assert\Assert;
 
 final class IsOneyEnabledValidator extends ConstraintValidator
 {
-    /** @var PayPlugApiClientFactory */
-    private $apiClientFactory;
-
-    public function __construct(PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
     {
-        $this->apiClientFactory = $apiClientFactory;
     }
 
     public function validate($value, Constraint $constraint): void
@@ -35,18 +31,11 @@ final class IsOneyEnabledValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!is_string($value)) {
-            throw new UnexpectedValueException($value, 'string');
-        }
-        // phpstan checks
-        $form = $this->context->getRoot();
-        Assert::isInstanceOf($form, Form::class);
-
-        $paymentMethod = $form->getData();
-        if (!$paymentMethod instanceof PaymentMethodInterface) {
+        if (!$value instanceof PaymentMethodInterface) {
             return;
         }
 
+        $paymentMethod = $value;
         $gatewayConfig = $paymentMethod->getGatewayConfig();
         if (!$gatewayConfig instanceof GatewayConfigInterface) {
             return;
@@ -60,13 +49,12 @@ final class IsOneyEnabledValidator extends ConstraintValidator
         }
 
         try {
-            $checker = new OneyChecker($this->apiClientFactory->create($factoryName, $value));
-
+            $checker = new OneyChecker($this->apiClientFactory->createForPaymentMethod($paymentMethod));
             if (false === $checker->isEnabled()) {
                 $this->context->buildViolation($constraint->message)
                     ->addViolation();
             }
-        } catch (UnauthorizedException $exception) {
+        } catch (UnauthorizedException) {
             // do nothing, this should be handle by IsPayPlugSecretKeyValid Constraint
             return;
         }

@@ -15,7 +15,7 @@ final class ProductVariantsCodesExtension extends AbstractExtension
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('sylius_product_variant_codes', [$this, 'provideVariantsCodes']),
+            new TwigFunction('sylius_product_variant_codes', $this->provideVariantsCodes(...)),
         ];
     }
 

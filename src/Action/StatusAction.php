@@ -6,6 +6,10 @@ namespace PayPlug\SyliusPayPlugPlugin\Action;
 
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface;
 use PayPlug\SyliusPayPlugPlugin\StateMachine\Transition\OrderPaymentTransitions;
@@ -17,36 +21,53 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\GetStatusInterface;
-use SM\Factory\FactoryInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => PayPlugGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.status',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => OneyGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.status',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => BancontactGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.status',
+    ],
+)]
+#[AutoconfigureTag(
+    name: 'payum.action',
+    attributes: [
+        'factory' => AmericanExpressGatewayFactory::FACTORY_NAME,
+        'alias' => 'payum.action.status',
+    ],
+)]
+#[Autoconfigure(public: true)]
 final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiAwareInterface
 {
     use GatewayAwareTrait;
     use ApiAwareTrait;
 
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    /** @var RefundPaymentHandlerInterface */
-    private $refundPaymentHandler;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler */
-    private $paymentNotificationHandler;
-    private RequestStack $requestStack;
-
     public function __construct(
-        FactoryInterface $stateMachineFactory,
-        RefundPaymentHandlerInterface $refundPaymentHandler,
-        PaymentNotificationHandler $paymentNotificationHandler,
-        RequestStack $requestStack
+        private StateMachineInterface $stateMachine,
+        private RefundPaymentHandlerInterface $refundPaymentHandler,
+        private PaymentNotificationHandler $paymentNotificationHandler,
+        private RequestStack $requestStack,
     ) {
-        $this->stateMachineFactory = $stateMachineFactory;
-        $this->refundPaymentHandler = $refundPaymentHandler;
-        $this->paymentNotificationHandler = $paymentNotificationHandler;
-        $this->requestStack = $requestStack;
     }
 
     public function execute($request): void
@@ -67,14 +88,18 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         $this->gateway->execute($httpRequest = new GetHttpRequest());
 
         //If we don't have received the notification when we reach this page, call the API manually to update the status
-        if (PayPlugApiClientInterface::STATUS_CREATED === $details['status']
-            && isset($httpRequest->query['payum_token'])) {
+        if (
+            PayPlugApiClientInterface::STATUS_CREATED === $details['status'] &&
+            isset($httpRequest->query['payum_token'])
+        ) {
             $resource = $this->payPlugApiClient->retrieve($details['payment_id']);
             $this->paymentNotificationHandler->treat($request->getFirstModel(), $resource, $details);
         }
 
-        if (isset($httpRequest->query['status']) &&
-            PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']) {
+        if (
+            isset($httpRequest->query['status']) &&
+            PayPlugApiClientInterface::STATUS_CANCELED === $httpRequest->query['status']
+        ) {
             // we need to show a specific error message when the payment is cancelled using the 1click feature
             if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
                 $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
@@ -154,14 +179,10 @@ final class StatusAction implements ActionInterface, GatewayAwareInterface, ApiA
         /** @var OrderInterface $order */
         $order = $payment->getOrder();
 
-        $stateMachine = $this->stateMachineFactory->get($order, OrderPaymentTransitions::GRAPH);
-
-        if (!$stateMachine->can(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT)) {
+        if (!$this->stateMachine->can($order, OrderPaymentTransitions::GRAPH, OrderPaymentTransitions::TRANSITION_ONEY_REQUEST_PAYMENT)) {
             return;
         }
 
-        $this->stateMachineFactory
-            ->get($order, OrderPaymentTransitions::GRAPH)
-            ->apply(OrderPaymentTransitions::TRANSITION_REQUEST_PAYMENT);
+        $this->stateMachine->apply($order, OrderPaymentTransitions::GRAPH, OrderPaymentTransitions::TRANSITION_ONEY_REQUEST_PAYMENT);
     }
 }

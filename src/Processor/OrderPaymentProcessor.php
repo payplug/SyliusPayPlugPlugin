@@ -5,27 +5,25 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Processor;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
-use SM\Factory\FactoryInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Order\Model\OrderInterface;
 use Sylius\Component\Order\Processor\OrderProcessorInterface;
 use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Webmozart\Assert\Assert;
 
+#[AsDecorator('sylius.order_processing.order_payment_processor.checkout')]
 final class OrderPaymentProcessor implements OrderProcessorInterface
 {
-    private OrderProcessorInterface $baseOrderPaymentProcessor;
-
-    private FactoryInterface $stateMachineFactory;
-
     public function __construct(
-        OrderProcessorInterface $baseOrderPaymentProcessor,
-        FactoryInterface $stateMachineFactory
+        #[AutowireDecorated]
+        private OrderProcessorInterface $baseOrderPaymentProcessor,
+        private StateMachineInterface $stateMachine,
     ) {
-        $this->baseOrderPaymentProcessor = $baseOrderPaymentProcessor;
-        $this->stateMachineFactory = $stateMachineFactory;
     }
 
     public function process(OrderInterface $order): void
@@ -47,8 +45,7 @@ final class OrderPaymentProcessor implements OrderProcessorInterface
             null !== $payment &&
             ApplePayGatewayFactory::FACTORY_NAME !== $this->getFactoryName($payment)
         ) {
-            $stateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
-            $stateMachine->apply(PaymentTransitions::TRANSITION_CANCEL);
+            $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL);
         }
 
         $this->baseOrderPaymentProcessor->process($order);

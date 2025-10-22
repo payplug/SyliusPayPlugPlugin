@@ -15,7 +15,7 @@ trait ApiAwareTrait
     public function setApi($api): void
     {
         if (!$api instanceof PayPlugApiClientInterface) {
-            throw new UnsupportedApiException('Not supported.Expected an instance of '.PayPlugApiClientInterface::class);
+            throw new UnsupportedApiException('Not supported.Expected an instance of ' . PayPlugApiClientInterface::class);
         }
         $this->payPlugApiClient = $api;
     }

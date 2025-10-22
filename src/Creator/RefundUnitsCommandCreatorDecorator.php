@@ -18,46 +18,31 @@ use Sylius\RefundPlugin\Converter\RefundUnitsConverterInterface;
 use Sylius\RefundPlugin\Converter\Request\RequestToRefundUnitsConverterInterface;
 use Sylius\RefundPlugin\Creator\RequestCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
-use Sylius\RefundPlugin\Model\OrderItemUnitRefund;
 use Sylius\RefundPlugin\Model\RefundType;
-use Sylius\RefundPlugin\Model\ShipmentRefund;
 use Sylius\RefundPlugin\Model\UnitRefundInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
+#[AsDecorator('sylius_refund.creator.request_command')]
 class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterface
 {
     private const MINIMUM_REFUND_AMOUNT = 10;
 
-    /** @var RequestCommandCreatorInterface */
-    private $decorated;
-
-    /** @var PaymentMethodRepositoryInterface */
-    private $paymentMethodRepository;
-
-    /** @var OrderRepositoryInterface */
-    private $orderRepository;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var PayPlugApiClientInterface */
-    private $oneyClient;
-
     public function __construct(
-        RequestCommandCreatorInterface $decorated,
+        #[AutowireDecorated]
+        private RequestCommandCreatorInterface $decorated,
+        #[Autowire('@sylius_refund.converter.request_to_refund_units')]
         private RequestToRefundUnitsConverterInterface | RefundUnitsConverterInterface $requestToRefundUnitsConverter,
-        PaymentMethodRepositoryInterface $paymentMethodRepository,
-        OrderRepositoryInterface $orderRepository,
-        TranslatorInterface $translator,
-        PayPlugApiClientInterface $oneyClient
+        private PaymentMethodRepositoryInterface $paymentMethodRepository,
+        private OrderRepositoryInterface $orderRepository,
+        private TranslatorInterface $translator,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
+        private PayPlugApiClientInterface $oneyClient,
     ) {
-        $this->decorated = $decorated;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->orderRepository = $orderRepository;
-        $this->translator = $translator;
-        $this->oneyClient = $oneyClient;
     }
 
     public function fromRequest(Request $request): RefundUnits
@@ -70,7 +55,6 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
                 $request->request->has('sylius_refund_units') ? $request->request->all()['sylius_refund_units'] : [],
                 /* @phpstan-ignore-next-line */
                 RefundType::orderItemUnit(),
-                OrderItemUnitRefund::class,
             );
 
             /** @phpstan-ignore-next-line */
@@ -78,7 +62,6 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
                 $request->request->has('sylius_refund_shipments') ? $request->request->all()['sylius_refund_shipments'] : [],
                 /* @phpstan-ignore-next-line */
                 RefundType::shipment(),
-                ShipmentRefund::class,
             );
 
             $units = array_merge($units, $shipments);
@@ -86,7 +69,7 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
             $units = $this->requestToRefundUnitsConverter->convert($request);
         }
 
-        if (0 === count($units)) {
+        if ([] === $units) {
             throw InvalidRefundAmount::withValidationConstraint('sylius_refund.at_least_one_unit_should_be_selected_to_refund');
         }
 
@@ -99,8 +82,10 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         /** @var GatewayConfigInterface $gateway */
         $gateway = $paymentMethod->getGatewayConfig();
 
-        if (PayPlugGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName() &&
-            OneyGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName()) {
+        if (
+            PayPlugGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName() &&
+            OneyGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName()
+        ) {
             return $this->decorated->fromRequest($request); /** @phpstan-ignore-line */
         }
 
@@ -149,8 +134,10 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
 
         $now = new \DateTime();
 
-        if ($now->getTimestamp() < $data->refundable_until &&
-            $now->getTimestamp() > $data->refundable_after) {
+        if (
+            $now->getTimestamp() < $data->refundable_until &&
+            $now->getTimestamp() > $data->refundable_after
+        ) {
             return;
         }
 

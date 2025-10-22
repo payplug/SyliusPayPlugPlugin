@@ -27,7 +27,7 @@ final class OrderContext implements Context
     public function __construct(
         ObjectManager $objectManager,
         StateMachineFactoryInterface $stateMachineFactory,
-        RegistryInterface $payum
+        RegistryInterface $payum,
     ) {
         $this->objectManager = $objectManager;
         $this->stateMachineFactory = $stateMachineFactory;

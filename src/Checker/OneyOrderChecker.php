@@ -9,12 +9,8 @@ use Sylius\Component\Core\Model\OrderInterface;
 
 final class OneyOrderChecker
 {
-    /** @var \PayPlug\SyliusPayPlugPlugin\Validator\OneyInvalidDataRetriever */
-    private $invalidDataRetriever;
-
-    public function __construct(OneyInvalidDataRetriever $invalidDataRetriever)
+    public function __construct(private OneyInvalidDataRetriever $invalidDataRetriever)
     {
-        $this->invalidDataRetriever = $invalidDataRetriever;
     }
 
     /**
@@ -22,6 +18,6 @@ final class OneyOrderChecker
      */
     public function isOrderInfoCorrect(OrderInterface $order): bool
     {
-        return 0 === \count($this->invalidDataRetriever->getForOrder($order));
+        return [] === $this->invalidDataRetriever->getForOrder($order);
     }
 }

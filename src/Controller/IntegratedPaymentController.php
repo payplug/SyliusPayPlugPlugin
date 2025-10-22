@@ -20,40 +20,25 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Routing\Attribute\Route;
 
+#[AsController]
 final class IntegratedPaymentController extends AbstractController
 {
-    private CartContextInterface $cartContext;
-    /**
-     * @var RepositoryInterface<\Sylius\Component\Core\Model\PaymentMethodInterface>
-     */
-    private RepositoryInterface $paymentMethodRepository;
-    private OrderRepositoryInterface $orderRepository;
-    private PayPlugPaymentDataCreator $paymentDataCreator;
-    private PayPlugApiClientFactory $apiClientFactory;
-    private EntityManagerInterface $entityManager;
-    private LoggerInterface $logger;
-
     /**
      * @param RepositoryInterface<\Sylius\Component\Core\Model\PaymentMethodInterface> $paymentMethodRepository
      */
     public function __construct(
-        CartContextInterface $cartContext,
-        RepositoryInterface $paymentMethodRepository,
-        OrderRepositoryInterface $orderRepository,
-        PayPlugPaymentDataCreator $paymentDataCreator,
-        PayPlugApiClientFactory $apiClientFactory,
-        EntityManagerInterface $entityManager,
-        LoggerInterface $logger
+        private CartContextInterface $cartContext,
+        private RepositoryInterface $paymentMethodRepository,
+        private OrderRepositoryInterface $orderRepository,
+        private PayPlugPaymentDataCreator $paymentDataCreator,
+        private PayPlugApiClientFactory $apiClientFactory,
+        private EntityManagerInterface $entityManager,
+        private LoggerInterface $logger,
     ) {
-        $this->cartContext = $cartContext;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->orderRepository = $orderRepository;
-        $this->paymentDataCreator = $paymentDataCreator;
-        $this->apiClientFactory = $apiClientFactory;
-        $this->entityManager = $entityManager;
-        $this->logger = $logger;
     }
 
     /**
@@ -64,6 +49,7 @@ final class IntegratedPaymentController extends AbstractController
      *
      * @see https://docs.payplug.com/api/integratedref.html#trigger-a-payment
      */
+    #[Route(path: '/{_locale}/payplug/integrated-payment/init/{paymentMethodId}', name: 'payplug_sylius_integrated_payment_init', methods: ['GET', 'POST'])]
     public function initPaymentAction(Request $request, int $paymentMethodId): Response
     {
         $paymentMethod = $this->paymentMethodRepository->find($paymentMethodId);
@@ -75,7 +61,7 @@ final class IntegratedPaymentController extends AbstractController
         if (\is_string($orderToken = $request->query->get('orderToken'))) {
             $order = $this->orderRepository->findOneByTokenValue($orderToken);
         }
-        if (null === $order) {
+        if (!$order instanceof \Sylius\Component\Order\Model\OrderInterface) {
             $order = $this->cartContext->getCart();
         }
         if (!$order instanceof OrderInterface) {
@@ -93,7 +79,7 @@ final class IntegratedPaymentController extends AbstractController
             throw new BadRequestHttpException('Unsupported payment method of Integrated Payment');
         }
 
-        $paymentData = $this->paymentDataCreator->create($payment, $factoryName);
+        $paymentData = $this->paymentDataCreator->create($payment);
         // Mandatory
         $paymentData['integration'] = PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION;
         $this->logger->debug('Payplug Payment data for creation', $paymentData->getArrayCopy());

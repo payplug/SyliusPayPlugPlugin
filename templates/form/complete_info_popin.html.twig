@@ -1,0 +1,26 @@
+{% form_theme form '@SyliusShop/form/theme.html.twig' %}
+
+<div class="oney-complete-info-popin">
+    <div class="oney-complete-info-popin__content">
+        {{ form_start(form, {'attr': {'class': 'ui form loadable', 'novalidate': 'novalidate'}}) }}
+        {% set phoneField = form.billing_phone ?? form.shipping_phone ?? form.phone ?? null %}
+        {% if phoneField is not null %}
+            {{ form_row(phoneField, {attr: {class: 'required'}}) }}
+        {% endif %}
+        {% if form.email is defined %}
+            {{ form_row(form.email, {attr: {class: 'required'}}) }}
+        {% endif %}
+        <div>
+            {{ form_row(form.submit, { label: 'payplug_sylius_payplug_plugin.form.complete_info.submit', attr: { class: 'btn btn-primary' }}) }}
+        </div>
+        {{ form_rest(form) }}
+        {{ form_end(form) }}
+    </div>
+    <div class="oney-complete-info-popin__success">
+        <div class="ui header">
+            <i class="icon check"></i>
+            <h3>{{ 'payplug_sylius_payplug_plugin.form.complete_info.success_title'|trans }}</h3>
+        </div>
+        <p>{{ 'payplug_sylius_payplug_plugin.form.complete_info.success_instruction'|trans }}</p>
+    </div>
+</div>

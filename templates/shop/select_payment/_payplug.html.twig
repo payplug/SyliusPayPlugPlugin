@@ -1,0 +1,46 @@
+{% set form = hookable_metadata.context.form %}
+{% set method = hookable_metadata.context.method %}
+{% set order = hookable_metadata.context.order %}
+{% set factoryName = method.gatewayConfig.factoryName %}
+{% set code = method.code %}
+
+{% set payplugFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\PayplugGatewayFactory::FACTORY_NAME') %}
+{% set checkboxClass = 'checkbox-payplug' %}
+
+{% set hasSavedCards = false %}
+{% if is_granted('ROLE_USER')
+    and form.parent.parent.payplug_card_choice is defined
+    and is_save_card_enabled(method)
+    and sylius.customer.cards is not empty
+%}
+    {% set hasSavedCards = true %}
+{% endif %}
+
+{% set integratedPayment = false %}
+{% if method.gatewayConfig.config.integratedPayment is defined and method.gatewayConfig.config.integratedPayment is same as true %}
+    {% set integratedPayment = true %}
+{% endif %}
+
+<div class="content">
+    <a class="header">
+        {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
+    </a>
+
+    {% if hasSavedCards %}
+        <div
+            class="payment-method-choice payplug-payment-choice"
+            {{ stimulus_target('@payplug/sylius-payplug-plugin/checkout-select-payment', 'trigger') }}
+            data-payment-input-id="{{ form.vars.id }}"
+        >
+            {{ form_row(form.parent.parent.payplug_card_choice) }}
+        </div>
+    {% endif %}
+
+    {% if integratedPayment %}
+        {% include '@PayPlugSyliusPayPlugPlugin/shop/integrated/index.html.twig' with {
+            'paymentMethod': method,
+            'payment': order.getLastPayment('cart'),
+            'hasSavedCards': hasSavedCards,
+        } %}
+    {% endif %}
+</div>

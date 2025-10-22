@@ -6,30 +6,26 @@ namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Component\Locale\Context\LocaleContextInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 final class ShowMeaExtension extends AbstractExtension
 {
-    /** @var PayPlugApiClientInterface */
-    private $oneyClient;
-
-    /** @var LocaleContextInterface */
-    private $localeContext;
-
     /** @var string */
     public $localeCode;
 
-    public function __construct(LocaleContextInterface $localeContext, PayPlugApiClientInterface $oneyClient)
-    {
-        $this->localeContext = $localeContext;
-        $this->oneyClient = $oneyClient;
+    public function __construct(
+        private LocaleContextInterface $localeContext,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.oney')]
+        private PayPlugApiClientInterface $oneyClient,
+    ) {
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('can_show_mea', [$this, 'canShowMEA']),
+            new TwigFunction('can_show_mea', $this->canShowMEA(...)),
         ];
     }
 
@@ -42,11 +38,7 @@ final class ShowMeaExtension extends AbstractExtension
             return false;
         }
 
-        if ($this->getLocaleCode() === $this->oneyClient->getAccount()['country']) {
-            return true;
-        }
-
-        return false;
+        return $this->getLocaleCode() === $this->oneyClient->getAccount()['country'];
     }
 
     private function getLocaleCode(): string

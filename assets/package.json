@@ -1,0 +1,76 @@
+{
+  "name": "@payplug/sylius-payplug-plugin",
+  "license": "MIT",
+  "version": "2.0.0",
+  "keywords": [
+    "symfony-ux"
+  ],
+  "description": "Sylius Payplug Plugin",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "symfony": {
+    "controllers": {
+      "oney-popin": {
+        "main": "shop/controllers/oney-popin_controller.js",
+        "enabled": true,
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "autoimport": {
+          "@payplug/sylius-payplug-plugin/shop/dist/oney_common/index.css": true,
+          "@payplug/sylius-payplug-plugin/shop/dist/oney_popin/index.css": true
+        }
+      },
+      "integrated-payment": {
+        "main": "shop/controllers/integrated-payment_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true,
+        "autoimport": {
+          "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
+        }
+      },
+      "oney-payment": {
+        "main": "shop/controllers/oney-payment_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
+      },
+      "payment-logo": {
+        "main": "shop/controllers/payment-logo_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
+      },
+      "checkout-select-payment": {
+        "main": "shop/controllers/checkout-select-payment_controller.js",
+        "autoimport": {
+          "@payplug/sylius-payplug-plugin/shop/dist/payment/index.css": true
+        },
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
+      },
+      "apple-pay": {
+        "main": "shop/controllers/apple-pay_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
+      }
+    }
+  },
+  "peerDependencies": {
+    "@hotwired/stimulus": "^3.0.0"
+  },
+  "devDependencies": {
+    "@hotwired/stimulus": "^3.0.0"
+  },
+  "dependencies": {
+    "jquery": "^3.5.1",
+    "webfontloader": "^1.6.28"
+  }
+}

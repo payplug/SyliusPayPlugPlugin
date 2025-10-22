@@ -22,20 +22,23 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
             ->setParameter('stateProcessing', PaymentInterface::STATE_PROCESSING)
             ->getQuery()
             ->getResult()
-            ;
+        ;
     }
 
     public function findOneByPayPlugPaymentId(string $payplugPaymentId): PaymentInterface
     {
         return $this->createQueryBuilder('o')
             ->where('o.details LIKE :payplugPaymentId')
-            ->setParameter('payplugPaymentId', '%'.$payplugPaymentId.'%')
+            ->setParameter('payplugPaymentId', '%' . $payplugPaymentId . '%')
             ->getQuery()
             ->setMaxResults(1)
             ->getSingleResult()
         ;
     }
 
+    /**
+     * @return array<PaymentInterface>
+     */
     public function findAllAuthorizedOlderThanDays(int $days, ?string $gatewayFactoryName = null): array
     {
         if (null === $gatewayFactoryName) {
@@ -45,7 +48,6 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
 
         $date = (new \DateTime())->modify(sprintf('-%d days', $days));
 
-        /** @var array<PaymentInterface>  */
         return $this->createQueryBuilder('o')
             ->innerJoin('o.method', 'method')
             ->innerJoin('method.gatewayConfig', 'gatewayConfig')

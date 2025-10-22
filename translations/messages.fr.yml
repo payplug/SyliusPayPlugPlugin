@@ -1,0 +1,160 @@
+payplug_sylius_payplug_plugin:
+    admin:
+        ui:
+            oney_x3_with_fees_payment: Oney 3x
+            oney_x4_with_fees_payment: Oney 4x
+            oney_x3_without_fees_payment: Oney 3x Sans Frais
+            oney_x4_without_fees_payment: Oney 4x Sans Frais
+    ui:
+        account:
+            saved_cards:
+                title: Cartes sauvegardées
+                sub_title: Gérer vos cartes sauvegardées
+                brand: Marque
+                mask: Masque
+                expire: Expire le
+                expired: Expirée
+                no_results_to_display: Vous n'avez aucune carte sauvegardée
+                mobile:
+                    brand: "Marque :"
+                    mask: "Masque :"
+                    expire: "Expire le :"
+                deleted_successfully: Carte supprimée avec succès.
+                deleted_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
+                confirmation_modal:
+                    confirm_card_deletion: Êtes-vous sûr(e) de vouloir supprimer cette carte ?
+        bancontact_gateway_label: Bancontact by Payplug
+        apple_pay_gateway_label: Apple Pay by Payplug
+        american_express_gateway_label: American Express by Payplug
+        error:
+            billing.postcode: Le code postal %postalCode% renseigné pour l'adresse de facturation est invalide
+            shipping.postcode: Le code postal %postalCode% renseigné pour l'adresse de livraison est invalide
+        payplug_gateway_label: Payplug
+        payment_refund_locally: Le remboursement du paiement a été effectué uniquement localement.
+        test_mode: Mode TEST
+        payplug_id: |
+            ID Payplug : %paymentId%
+        payplug_refund_gateway_is_not_activated: Payplug n'a pas été activé comme méthode de remboursement
+        impossible_to_refund_this_payment: Impossible de rembourser ce paiement
+        oney_gateway_label: Oney by Payplug
+        oney: Oney
+        oney_transaction_less_than_forty_eight_hours: Le remboursement sera possible 48h après la dernière transaction de paiement ou de remboursement.
+        or_pay_with_oney: Ou payez en
+        pay: Paiement
+        without_fees: sans frais
+        oney_x3_with_fees_payment: Paiement en 3x
+        oney_x4_with_fees_payment: Paiement en 4x
+        oney_x3_without_fees_payment: Paiement en 3x sans frais
+        oney_x4_without_fees_payment: Paiement en 4x sans frais
+        by_credit_cart: Par carte bancaire
+        card_expires_on: "Expire le :"
+        pay_with_another_card: Payer avec une autre carte
+        cancel: Annuler
+        popin_close: Fermer
+        popin_paiement_desc: |
+            <p><strong> Apport : %apport% <br>
+            + %nb_mensuality% mensualités de : %mensuality%</strong> <br>
+            Dont coût du financement : %cost% TAEG : %percentage%%</p>
+        payment_choice:
+            current_total: Pour un montant de
+            down_payment_amount: Premier apport de
+            effective_annual_percentage_rate: TAEG
+            total_cost: Coût de financement
+            installment_amount: Mensualité n°
+            grand_total: Total
+        popin_legal_mention: |
+            <small>
+                Offre de financement avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        popin_legal_mention_without_fees: |
+            <small>
+                Offre de financement sans assurance avec apport
+                obligatoire, réservée aux particuliers
+                et valable pour tout achat de %min_amount% à
+                %max_amount%. Sous réserve d’acceptation par
+                Oney Bank. Vous disposez d’un délai
+                de 14 jours pour renoncer à votre
+                crédit. Oney Bank - SA au capital de
+                50 741 215€ - 40 Avenue de Flandre 59
+
+                170 Croix - 546 380 197 RCS Lille Métro-
+                pole - n° Orias 07 023 261 www.orias.fr.
+
+                Correspondance : CS 60 006 - 59895
+                Lille Cedex - www.oney.fr
+            </small>
+        too_much_quantity: Votre panier doit contenir moins de %max_articles% articles pour pouvoir payer avec Oney.
+        invalid_cart_price: Le montant total de votre panier doit être compris entre %min_amount% et %max_amount% pour payer avec Oney.
+        refund_minimum_amount_requirement_not_met: Le montant à rembourser doit être d'au moins 0.10€
+        oney_unavailable: La simulation de votre échéancier est temporairement indisponible. Vous retrouverez cette information à l'étape du paiement.
+        oney_gateway_config:
+            info: |
+                Permettez à vos clients d’échelonner le paiement de leurs commandes en 3x, 4x à partir de 100€ jusqu’à 3000€.
+                <a href="%link%" target="_blank">En savoir plus</a>
+            fees_for:
+                title: 'Les frais sont :'
+                client: Répartis entre vous et vos clients
+                merchant: À votre charge
+        integrated_payment:
+            card_holder.title: 'Nom du titulaire de la carte'
+            card_holder.error: 'Nom et/ou prénom invalide(s).'
+            pan.title: 'Numero de carte'
+            pan.error: 'Numéro de carte invalide.'
+            cvv.title: '123'
+            cvv.error: 'CVV invalide.'
+            exp.title: "MM/AA"
+            exp.error: "Date d'expiration invalide."
+            empty: 'Champ obligatoire.'
+            scheme.label: 'Votre carte'
+            save_card.label: 'Enregistrer ma carte bancaire'
+            place_order.label: 'Confirmer le paiement'
+            transaction_secure.label: 'Transaction sécurisée par'
+            privacy_policy.label: 'Politique de confidentialité'
+        deferred_capture:
+            process_order_info: |
+                Vous serez prélevé(é) lors du traitement de votre commande.
+
+        live: Mode LIVE
+        live_help: |
+            Lorsque cette option est activée, le mode <b>LIVE</b> est utilisé. <br>
+            Si elle est désactivée, le mode <b>TEST</b> sera appliqué
+        renew_oauth: Forcer la reconnexion OAuth
+        renew_oauth_help: |
+            Si cette option est cochée, un nouveau flux d’authentification sera lancé lors du clic sur le bouton "<b>Mise à jour</b>".
+    form:
+        oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
+        complete_info:
+            missing_title: Informations manquantes
+            success_title: Informations enregistrées
+            success_instruction: Cliquez à nouveau sur "Suivant" pour continuer
+            email: |
+                Veuillez saisir une adresse email valide :
+            phone: |
+                Merci de saisir votre numéro de téléphone portable :
+            submit: Valider et continuer
+        base_currency_not_euro: |
+            Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
+        only_one_gateway_allowed: |
+            Attention, le moyen de paiement %gateway_title% existe déjà. Pour le modifier, rendez-vous sur vos moyens de paiement.
+        one_click_enable: Activer le One click
+        one_click_help: |
+            Permettez à vos clients d'enregistrer leurs coordonnées de carte de paiement pour effectuer ultérieurement
+            d'autres transactions
+
+        integrated_payment_enable: Activer le Paiement Integré
+        deferred_capture_enable: Activer la capture différée
+        deferred_capture_help: |
+            Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet

@@ -9,7 +9,12 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 final class PayPlugSyliusPayPlugPlugin extends Bundle
 {
-    public const VERSION = '1.11.1';
-
     use SyliusPluginTrait;
+
+    public const VERSION = '2.x-dev';
+
+    public function getPath(): string
+    {
+        return \dirname(__DIR__);
+    }
 }

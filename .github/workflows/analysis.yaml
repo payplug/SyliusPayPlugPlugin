@@ -19,7 +19,7 @@ jobs:
                 php:
                     - 8.2
                 symfony:
-                    - '6.2.*'
+                    - '6.4.*'
         env:
             APP_ENV: test
         steps:
@@ -38,7 +38,7 @@ jobs:
                 run: 'echo "::set-output name=dir::$(composer config cache-files-dir)"'
             -
                 name: 'Composer - Set cache'
-                uses: actions/cache@v2
+                uses: actions/cache@v4
                 with:
                     path: '${{ steps.composer-cache.outputs.dir }}'
                     key: 'php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles(''**/composer.json'') }}'
@@ -58,17 +58,12 @@ jobs:
                 id: end-of-setup
             -
                 name: 'PHPStan - Run'
-                run: 'if [ -f rulesets/phpstan.neon ]; then vendor/bin/phpstan analyse -c rulesets/phpstan.neon src/ ; else echo PHPStan rulesets file does not exist, skipping step ; fi'
+                run: 'if [ -f ruleset/phpstan.neon ]; then vendor/bin/phpstan analyse -c ruleset/phpstan.neon src/ ; else echo PHPStan rulesets file does not exist, skipping step ; fi'
                 if: 'always() && steps.end-of-setup.outcome == ''success'''
-            -
-                name: 'PHPSpec - Run'
-                run: 'if [ -f phpspec.yml.dist ]; then vendor/bin/phpspec run ; else echo PHPSpec config file does not exist, skipping step ; fi'
-                if: 'always() && steps.end-of-setup.outcome == ''success'''
-            -
-                name: 'Checks security issues - Run'
-                run: 'symfony security:check'
-                if: 'always() && steps.end-of-setup.outcome == ''success'''
+            # TODO: launch Grumphp
+
     sonarcloud:
+      if: github.event.repository.fork != true
       runs-on: ubuntu-latest
       continue-on-error: true
       steps:

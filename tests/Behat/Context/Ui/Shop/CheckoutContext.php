@@ -31,7 +31,7 @@ final class CheckoutContext implements Context
         CompletePageInterface $summaryPage,
         ShowPageInterface $orderDetails,
         PayPlugApiMocker $payPlugApiMocker,
-        PaymentPageInterface $paymentPage
+        PaymentPageInterface $paymentPage,
     ) {
         $this->summaryPage = $summaryPage;
         $this->orderDetails = $orderDetails;
@@ -40,8 +40,8 @@ final class CheckoutContext implements Context
     }
 
     /**
-     * @When I confirm my order with PayPlug payment
      * @Given I have confirmed my order with PayPlug payment
+     * @When I confirm my order with PayPlug payment
      */
     public function iConfirmMyOrderWithPayPlugPayment(): void
     {
@@ -81,8 +81,8 @@ final class CheckoutContext implements Context
     }
 
     /**
-     * @When I cancel my PayPlug payment
      * @Given I have cancelled PayPlug payment
+     * @When I cancel my PayPlug payment
      */
     public function iCancelMyPayPlugPayment(): void
     {
@@ -102,8 +102,8 @@ final class CheckoutContext implements Context
     }
 
     /**
-     * @When PayPlug notified that the payment is expired
      * @Given I have left PayPlug payment page for more than 15 minutes
+     * @When PayPlug notified that the payment is expired
      */
     public function PayPlugExpiredThePayment(): void
     {

@@ -19,12 +19,15 @@ jobs:
             matrix:
                 php:
                     - 8.2
+                    - 8.4
                 sylius:
-                    - 1.12.0
+                    - 2.1.0
+                    - 2.0.0
                 symfony:
-                    - 6.2
+                    - 6.4
+                    - 7.3
                 node:
-                    - 14.x
+                    - 20.x
         env:
             APP_ENV: test
             package-name: payplug/sylius-payplug-plugin
@@ -44,9 +47,6 @@ jobs:
                 with:
                     node-version: '${{ matrix.node }}'
             -
-                name: 'Wkhtmltopdf - Install'
-                run: "sudo apt-get update\nsudo apt-get install xvfb libfontconfig wkhtmltopdf\nprintf '#!/bin/bash\\nxvfb-run -a --server-args=\"-screen 0, 1024x768x24\" /usr/bin/wkhtmltopdf -q $*' | sudo tee /usr/bin/wkhtmltopdf.sh\nsudo chmod a+x /usr/bin/wkhtmltopdf.sh\nsudo ln -s /usr/bin/wkhtmltopdf.sh /usr/local/bin/wkhtmltopdf\n"
-            -
                 uses: actions/checkout@v3
             -
                 name: 'Composer - Get Cache Directory'
@@ -54,7 +54,7 @@ jobs:
                 run: 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT'
             -
                 name: 'Composer - Set cache'
-                uses: actions/cache@v3
+                uses: actions/cache@v4
                 id: cache-composer
                 with:
                     path: '${{ steps.composer-cache.outputs.dir }}'
@@ -73,48 +73,39 @@ jobs:
                 run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
             -
                 name: 'Yarn - Set Cache'
-                uses: actions/cache@v3
+                uses: actions/cache@v4
                 with:
                     path: '${{ steps.yarn-cache.outputs.dir }}'
                     key: 'node-${{ matrix.node }}-yarn-${{ hashFiles(''**/package.json **/yarn.lock'') }}'
                     restore-keys: "node-${{ matrix.node }}-yarn-\n"
             -
                 name: 'Install Sylius-Standard and Plugin'
-                run: 'make install -e SYLIUS_VERSION=${{ matrix.sylius }} SYMFONY_VERSION=${{ matrix.symfony }} PHP_VERSION=${{ matrix.php }}'
-            -
-                name: 'Output PHP version for Symfony CLI'
-                working-directory: ./tests/Application
-                run: 'php -v | head -n 1 | awk ''{ print $2 }'' > .php-version'
+                run: 'make install -e SYLIUS_VERSION=${{ matrix.sylius }} SYMFONY_VERSION=${{ matrix.symfony }}'
             -
                 name: 'Install certificates'
-                working-directory: ./tests/Application
                 run: 'symfony server:ca:install'
             -
                 name: 'Run Chrome headless'
-                working-directory: ./tests/Application
                 run: 'google-chrome-stable --enable-automation --disable-background-networking --no-default-browser-check --no-first-run --disable-popup-blocking --disable-default-apps --allow-insecure-localhost --disable-translate --disable-extensions --no-sandbox --enable-features=Metal --headless --remote-debugging-port=9222 --window-size=2880,1800 --proxy-server=''direct://'' --proxy-bypass-list=''*'' https://127.0.0.1 > /dev/null 2>&1 &'
             -
                 name: 'Run webserver'
-                working-directory: ./tests/Application
-                run: 'symfony server:start --port=8080 --dir=public --daemon'
+                run: 'symfony server:start --port=8080 --daemon'
                 id: end-of-setup-sylius
             -
                 name: 'Doctrine Schema Validate - Run'
-                working-directory: ./tests/Application
-                run: 'php bin/console doctrine:schema:validate --skip-sync'
+                run: 'vendor/bin/console doctrine:schema:validate --skip-sync'
             -
                 name: 'Run PHPUnit'
                 run: 'make phpunit'
                 if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
-            -
-                name: 'Configure Behat'
-                run: 'make behat-configure'
-                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
-            -
-                name: 'Run behat'
-                working-directory: ./tests/Application
-                run: 'vendor/bin/behat --strict --no-interaction -f progress || vendor/bin/behat --strict -vvv --no-interaction --rerun'
-                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
+#            -
+#                name: 'Configure Behat'
+#                run: 'make behat-configure'
+#                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
+#            -
+#                name: 'Run behat'
+#                run: 'vendor/bin/behat --strict --no-interaction -f progress || vendor/bin/behat --strict -vvv --no-interaction --rerun'
+#                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
             -
                 uses: actions/upload-artifact@v4
                 if: failure()

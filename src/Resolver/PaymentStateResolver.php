@@ -7,34 +7,23 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\Model\GatewayConfigInterface;
-use SM\Factory\FactoryInterface;
-use SM\StateMachine\StateMachineInterface;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\PaymentTransitions;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class PaymentStateResolver implements PaymentStateResolverInterface
 {
-    /** @var FactoryInterface */
-    private $stateMachineFactory;
-
-    /** @var PayPlugApiClientInterface */
-    private $payPlugApiClient;
-
-    /** @var EntityManagerInterface */
-    private $paymentEntityManager;
-
     public function __construct(
-        FactoryInterface $stateMachineFactory,
-        PayPlugApiClientInterface $payPlugApiClient,
-        EntityManagerInterface $paymentEntityManager
+        private StateMachineInterface $stateMachine,
+        private PayPlugApiClientFactory $payPlugApiClientFactory,
+        private EntityManagerInterface $paymentEntityManager,
     ) {
-        $this->stateMachineFactory = $stateMachineFactory;
-        $this->payPlugApiClient = $payPlugApiClient;
-        $this->paymentEntityManager = $paymentEntityManager;
     }
 
     public function resolve(PaymentInterface $payment): void
@@ -42,62 +31,52 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $payment->getMethod();
 
-        if (!$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()) {
+        if (
+            !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
+            PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()->getFactoryName()
+        ) {
             return;
         }
 
         $details = $payment->getDetails();
-
         if (!isset($details['payment_id'])) {
             return;
         }
 
-        $gatewayConfig = $paymentMethod->getGatewayConfig()->getConfig();
-
-        $this->payPlugApiClient->initialise($gatewayConfig['secretKey']);
-
-        $paymentStateMachine = $this->stateMachineFactory->get($payment, PaymentTransitions::GRAPH);
-
-        $payment = $this->payPlugApiClient->retrieve((string) $details['payment_id']);
+        $payplugApiClient = $this->payPlugApiClientFactory->createForPaymentMethod($paymentMethod);
+        $payment = $payplugApiClient->retrieve((string) $details['payment_id']);
 
         switch (true) {
             case $payment->is_paid:
-                $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_COMPLETE);
+                $this->applyTransition($payment, PaymentTransitions::TRANSITION_COMPLETE);
 
                 break;
             case null !== $payment->failure:
-                $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_FAIL);
+                $this->applyTransition($payment, PaymentTransitions::TRANSITION_FAIL);
 
                 break;
             case $this->isAuthorized($payment):
-                $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_AUTHORIZE);
+                $this->applyTransition($payment, PaymentTransitions::TRANSITION_AUTHORIZE);
 
                 break;
             default:
-                $this->applyTransition($paymentStateMachine, PaymentTransitions::TRANSITION_PROCESS);
+                $this->applyTransition($payment, PaymentTransitions::TRANSITION_PROCESS);
         }
 
         $this->paymentEntityManager->flush();
     }
 
-    private function applyTransition(StateMachineInterface $paymentStateMachine, string $transition): void
+    private function applyTransition(Payment $payment, string $transition): void
     {
-        if ($paymentStateMachine->can($transition)) {
-            $paymentStateMachine->apply($transition);
+        if ($this->stateMachine->can($payment, PaymentTransitions::GRAPH, $transition)) {
+            $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, $transition);
         }
     }
 
     private function isAuthorized(Payment $payment): bool
     {
         $now = new \DateTimeImmutable();
-        if ($payment->__isset('authorization') &&
-            $payment->__get('authorization') instanceof PaymentAuthorization &&
-            null !== $payment->__get('authorization')->__get('expires_at') &&
-            $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'))) {
-            return true;
-        }
 
-        return false;
+        return $payment->__isset('authorization') && $payment->__get('authorization') instanceof PaymentAuthorization && null !== $payment->__get('authorization')->__get('expires_at') && $now < $now->setTimestamp($payment->__get('authorization')->__get('expires_at'));
     }
 }

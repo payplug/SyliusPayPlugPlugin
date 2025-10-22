@@ -16,33 +16,26 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Webmozart\Assert\Assert;
 
+#[AsController]
 final class CompleteInfoController extends AbstractController
 {
-    /** @var \PayPlug\SyliusPayPlugPlugin\Validator\OneyInvalidDataRetriever */
-    private $invalidDataRetriever;
-
-    /** @var \Sylius\Component\Resource\Repository\RepositoryInterface */
-    private $customerRepository;
-
-    private RepositoryInterface $orderRepository;
-
     public function __construct(
-        OneyInvalidDataRetriever $invalidDataRetriever,
-        RepositoryInterface $customerRepository,
-        RepositoryInterface $orderRepository
+        private OneyInvalidDataRetriever $invalidDataRetriever,
+        private RepositoryInterface $customerRepository,
+        private RepositoryInterface $orderRepository,
     ) {
-        $this->invalidDataRetriever = $invalidDataRetriever;
-        $this->customerRepository = $customerRepository;
-        $this->orderRepository = $orderRepository;
     }
 
+    #[Route(path: '/{_locale}/payplug/oney_complete_info', name: 'payplug_sylius_oney_complete_info', methods: ['GET', 'POST'])]
     public function __invoke(
         Request $request,
         CartContextInterface $cartContext,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
     ): Response {
         $order = $cartContext->getCart();
         $tokenValue = $request->get('tokenValue');
@@ -80,7 +73,7 @@ final class CompleteInfoController extends AbstractController
         }
 
         return $this->render('@PayPlugSyliusPayPlugPlugin/form/complete_info_popin.html.twig', [
-            'form' => $form->createView(),
+            'form' => $form,
         ]);
     }
 

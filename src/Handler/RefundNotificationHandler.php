@@ -15,27 +15,18 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 class RefundNotificationHandler
 {
-    /** @var \PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface */
-    private $payplugRefundHistoryRepository;
-
-    /** @var \PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentHandlerInterface */
-    private $refundPaymentHandler;
-
-    /** @var \Symfony\Component\Messenger\MessageBusInterface */
-    private $commandBus;
-
     public function __construct(
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
-        RefundPaymentHandlerInterface $refundPaymentHandler,
-        MessageBusInterface $commandBus
+        private RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
+        private RefundPaymentHandlerInterface $refundPaymentHandler,
+        private MessageBusInterface $commandBus,
     ) {
-        $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
-        $this->refundPaymentHandler = $refundPaymentHandler;
-        $this->commandBus = $commandBus;
     }
 
-    public function treat(PaymentInterface $payment, IVerifiableAPIResource $refundResource, \ArrayObject $details): void
-    {
+    public function treat(
+        PaymentInterface $payment,
+        IVerifiableAPIResource $refundResource,
+        \ArrayObject $details,
+    ): void {
         if (!$refundResource instanceof Refund) {
             return;
         }

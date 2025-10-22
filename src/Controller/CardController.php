@@ -8,63 +8,48 @@ use Doctrine\Persistence\ManagerRegistry;
 use Payplug\Exception\NotFoundException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
+use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+#[AsController]
 final class CardController extends AbstractController
 {
-    /** @var CustomerContextInterface */
-    private $customerContext;
-
-    /** @var EntityRepository */
-    private $payplugCardRepository;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var PayPlugApiClientInterface */
-    private $payPlugApiClient;
-
-    private RequestStack $requestStack;
-    private ManagerRegistry $managerRegistry;
-
     public function __construct(
-        CustomerContextInterface $customerContext,
-        EntityRepository $payplugCardRepository,
-        TranslatorInterface $translator,
-        PayPlugApiClientInterface $payPlugApiClient,
-        RequestStack $requestStack,
-        ManagerRegistry $managerRegistry
+        private CustomerContextInterface $customerContext,
+        private EntityRepository $payplugCardRepository,
+        private TranslatorInterface $translator,
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
+        private PayPlugApiClientInterface $payPlugApiClient,
+        private RequestStack $requestStack,
+        private ManagerRegistry $managerRegistry,
     ) {
-        $this->customerContext = $customerContext;
-        $this->payplugCardRepository = $payplugCardRepository;
-        $this->translator = $translator;
-        $this->payPlugApiClient = $payPlugApiClient;
-        $this->requestStack = $requestStack;
-        $this->managerRegistry = $managerRegistry;
     }
 
+    #[Route(path: '/{_locale}/account/saved-cards', name: 'payplug_sylius_card_account_index', methods: ['GET'])]
     public function indexAction(): Response
     {
         $customer = $this->customerContext->getCustomer();
 
-        if (!$customer instanceof CustomerInterface) {
-            return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
-                'savedCards' => [],
-            ]);
+        $savedCards = [];
+        if ($customer instanceof CardsOwnerInterface) {
+            $savedCards = $customer->getCards();
         }
 
-        return $this->render('@PayPlugSyliusPayPlugPlugin/card/index.html.twig', [
-            /* @phpstan-ignore-next-line */
-            'savedCards' => $customer->getCards(),
+        return $this->render('@PayPlugSyliusPayPlugPlugin/shop/saved_cards/index.html.twig', [
+            'savedCards' => $savedCards,
         ]);
     }
 
+    #[Route(path: '/{_locale}/account/saved-cards/delete/{id}', name: 'payplug_sylius_card_account_delete', methods: ['DELETE'])]
     public function deleteAction(int $id): Response
     {
         $customer = $this->customerContext->getCustomer();
@@ -79,7 +64,7 @@ final class CardController extends AbstractController
             return $this->redirectToRoute('payplug_sylius_card_account_index');
         }
 
-        if (true === $this->isCardExpired($card)) {
+        if ($this->isCardExpired($card)) {
             $this->removeCard($card);
 
             return $this->redirectToRoute('payplug_sylius_card_account_index');
@@ -89,7 +74,7 @@ final class CardController extends AbstractController
 
         try {
             $this->payPlugApiClient->deleteCard($cardToken);
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_error'));
 
             return $this->redirectToRoute('payplug_sylius_card_account_index');
@@ -115,13 +100,6 @@ final class CardController extends AbstractController
         $currentYear = $now->format('Y');
         $expirationYear = (string) $card->getExpirationYear();
 
-        if (
-            ($currentYear < $expirationYear) ||
-            ($currentYear === $expirationYear && $now->format('n') <= (string) $card->getExpirationMonth())
-        ) {
-            return false;
-        }
-
-        return true;
+        return $currentYear >= $expirationYear && !($currentYear === $expirationYear && $now->format('n') <= (string) $card->getExpirationMonth());
     }
 }

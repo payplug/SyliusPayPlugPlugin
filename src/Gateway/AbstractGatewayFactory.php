@@ -25,7 +25,7 @@ abstract class AbstractGatewayFactory extends GatewayFactory
             'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
         ]);
 
-        if (false !== (bool) $config['payum.api']) {
+        if ((bool) $config['payum.api']) {
             return;
         }
 

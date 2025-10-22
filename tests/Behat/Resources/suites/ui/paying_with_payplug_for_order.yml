@@ -31,7 +31,7 @@ default:
 
                 - payplug_sylius_payplug_plugin.behat.context.setup.payplug
 
-                - sylius.behat.context.ui.paypal
+#                - sylius.behat.context.ui.paypal
                 - sylius.behat.context.ui.shop.cart
                 - sylius.behat.context.ui.shop.checkout
                 - sylius.behat.context.ui.shop.checkout.addressing

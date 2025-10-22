@@ -15,8 +15,10 @@ interface PayPlugApiClientInterface
 
     public const INTEGRATED_PAYMENT_INTEGRATION = 'INTEGRATED_PAYMENT';
 
+    /** @deprecated */
     public const LIVE_KEY_PREFIX = 'sk_live';
 
+    /** @deprecated */
     public const TEST_KEY_PREFIX = 'sk_test';
 
     public const STATUS_CREATED = 'created';
@@ -34,11 +36,6 @@ interface PayPlugApiClientInterface
     public const FAILED = 'failed';
 
     public const REFUNDED = 'refunded';
-
-    /**
-     * @deprecated
-     */
-    public function initialise(string $secretKey): void;
 
     public function getConfiguration(): Payplug;
 

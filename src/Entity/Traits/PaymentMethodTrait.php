@@ -11,9 +11,7 @@ use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 
 trait PaymentMethodTrait
 {
-    /**
-     * @ORM\OneToMany(targetEntity=Card::class, mappedBy="paymentMethod", orphanRemoval=true)
-     */
+    /** @ORM\OneToMany(targetEntity=Card::class, mappedBy="paymentMethod", orphanRemoval=true) */
     #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'paymentMethod', orphanRemoval: true)]
     protected $cards;
 
@@ -23,13 +21,10 @@ trait PaymentMethodTrait
     public function getCards(): Collection
     {
         return $this->cards->filter(function (Card $card): bool {
-            $secretKeyPrefix = \substr($card->getPaymentMethod()->getGatewayConfig()->getConfig()['secretKey'], 0, 7);
-            if (($card->isLive() && PayPlugApiClientInterface::LIVE_KEY_PREFIX === $secretKeyPrefix) ||
-                (!$card->isLive() && PayPlugApiClientInterface::TEST_KEY_PREFIX === $secretKeyPrefix)) {
-                return true;
-            }
+            $isLivePaymentMethod = $card->getPaymentMethod()->getGatewayConfig()?->getConfig()['live'] ?? false;
 
-            return false;
+            return ($card->isLive() && true === $isLivePaymentMethod) ||
+                (!$card->isLive() && false === $isLivePaymentMethod);
         });
     }
 
