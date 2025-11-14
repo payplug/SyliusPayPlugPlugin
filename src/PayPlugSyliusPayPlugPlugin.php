@@ -11,7 +11,7 @@ final class PayPlugSyliusPayPlugPlugin extends Bundle
 {
     use SyliusPluginTrait;
 
-    public const VERSION = '2.x-dev';
+    public const VERSION = '2.0.0';
 
     public function getPath(): string
     {
