@@ -54,6 +54,7 @@ class PayPlugPaymentDataCreator
         /** @var CustomerInterface $customer */
         $customer = $order->getCustomer();
 
+        /** @var ArrayObject<array-key, mixed> $details */
         $details = new ArrayObject();
         $details['amount'] = $payment->getAmount();
         $details['currency'] = $payment->getCurrencyCode();
