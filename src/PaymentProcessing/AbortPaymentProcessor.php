@@ -35,12 +35,18 @@ class AbortPaymentProcessor
 
     public function process(PaymentInterface $payment): void
     {
+        $paymentId = $payment->getDetails()['payment_id'] ?? null;
+        if (null === $paymentId) {
+            // Payment not even started on payplug
+            return;
+        }
+
         try {
             // When a payment is failed on Sylius, also abort it on PayPlug.
             // This should prevent the case that if we are already on PayPlug payment page
             // and go to the order history in another tab to click on pay again, then fail the transaction
             // and go back on the first PayPlug payment page and succeed it, it stays failed as its first payment model is already failed
-            $this->payPlugApiClient->abortPayment($payment->getDetails()['payment_id']);
+            $this->payPlugApiClient->abortPayment($paymentId);
         } catch (HttpException) {
         }
     }
