@@ -45,7 +45,7 @@
         "phpstan/phpstan-doctrine": "2.0.1",
         "phpstan/phpstan-strict-rules": "2.0.1",
         "phpstan/phpstan-webmozart-assert": "2.0.0",
-        "phpunit/phpunit": "9.6.22",
+        "phpunit/phpunit": "^9.6",
         "rector/rector": "2.0.4",
         "sylius-labs/coding-standard": "4.4.0",
         "sylius/test-application": "^2.1.0@alpha",
