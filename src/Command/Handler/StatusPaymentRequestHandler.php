@@ -8,6 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\StatusPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
+use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Payment\Model\PaymentInterface;
@@ -24,6 +25,7 @@ final class StatusPaymentRequestHandler
         private StateMachineInterface $stateMachine,
         private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentNotificationHandler $paymentNotificationHandler,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(StatusPaymentRequest $statusPaymentRequest): void
@@ -43,8 +45,16 @@ final class StatusPaymentRequestHandler
 
         // We don't have a forced status, so we retrieve the payment status from PayPlug
         $client = $this->apiClientFactory->createForPaymentMethod($method);
-        // @phpstan-ignore-next-line - getDetails() return mixed
-        $payplugPayment = $client->retrieve($payment->getDetails()['payment_id'] ?? throw new \LogicException('No PayPlug payment ID found in payment details.'));
+        /** @var null|string $payplugPaymentId */
+        $payplugPaymentId = $payment->getDetails()['payment_id'] ?? null;
+        if (null === $payplugPaymentId) {
+            $this->logger->warning('No PayPlug payment ID found in payment details.', ['payment_id' => $payment->getId(), 'order_id' => $payment->getOrder()?->getId()]);
+            $payment->setDetails(['status' => PayPlugApiClientInterface::FAILED]);
+            $this->updatePaymentState($payment);
+            return;
+        }
+
+        $payplugPayment = $client->retrieve($payplugPaymentId);
 
         $paymentRequest->setResponseData((array) $payplugPayment);
         $details = new \ArrayObject($payment->getDetails());

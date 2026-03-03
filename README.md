@@ -1,11 +1,16 @@
-[![License](https://img.shields.io/packagist/l/payplug/payplug-sylius.svg)](https://github.com/payplug/SyliusPayPlugPlugin/blob/master/LICENSE)
-![CI](https://github.com/payplug/SyliusPayPlugPlugin/workflows/CI/badge.svg?branch=master)
-[![Version](https://img.shields.io/packagist/v/payplug/payplug-sylius.svg)](https://packagist.org/packages/payplug/payplug-sylius)
-[![Total Downloads](https://poser.pugx.org/payplug/payplug-sylius/downloads)](https://packagist.org/packages/payplug/payplug-sylius)
+[![License](https://img.shields.io/packagist/l/payplug/sylius-payplug-plugin.svg)](https://github.com/payplug/SyliusPayPlugPlugin/blob/master/LICENSE)
+[![CI - Analysis](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/analysis.yaml/badge.svg?branch=master)](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/analysis.yaml)
+[![CI - Sylius](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/sylius.yaml/badge.svg?branch=master)](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/sylius.yaml)
+[![Version](https://img.shields.io/packagist/v/payplug/sylius-payplug-plugin.svg)](https://packagist.org/packages/payplug/sylius-payplug-plugin)
+[![Total Downloads](https://poser.pugx.org/payplug/sylius-payplug-plugin/downloads)](https://packagist.org/packages/payplug/sylius-payplug-plugin)
 
 <p align="center">
     <a href="https://sylius.com" target="_blank">
-        <img src="https://demo.sylius.com/assets/shop/img/logo.png" />
+        <picture>
+         <source media="(prefers-color-scheme: dark)" srcset="https://media.sylius.com/sylius-logo-800-dark.png">
+         <source media="(prefers-color-scheme: light)" srcset="https://media.sylius.com/sylius-logo-800.png">
+         <img alt="Sylius Logo." src="https://media.sylius.com/sylius-logo-800.png">
+        </picture>
     </a>
 </p>
 
@@ -26,10 +31,10 @@ In local environment, the plugin will not work properly because you will not be 
 
 ## Compatibility
 
-| | Version               |
-| :--- |:----------------------|
-| PHP  | 7.4, 8.0, 8.1         |
-| Sylius | 1.9, 1.10, 1.11, 1.12 |
+| | Version |
+| :--- |:--------|
+| PHP  | ^8.2    |
+| Sylius | ^2.0    |
 
 ## Installation
 
@@ -46,14 +51,7 @@ In local environment, the plugin will not work properly because you will not be 
     bin/console doctrine:migrations:migrate
     ```
 
-3. Copy templates that are overridden by Sylius into `templates/bundles/SyliusAdminBundle`
-    
-    ```shell
-    mkdir -p templates/bundles/SyliusAdminBundle/
-    cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
-    ```
-
-4. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+3. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
 
     ```yaml
     parameters:
@@ -66,14 +64,7 @@ In local environment, the plugin will not work properly because you will not be 
             - payplug_american_express
     ```
 
-5. Add Payplug routes in `config/routes.yaml`
-
-   ```yaml
-   sylius_payplug:
-      resource: "@PayPlugSyliusPayPlugPlugin/config/routing.yaml"
-   ```
-
-8. Add Traits for Customer and PaymentMethod entities
+4. Add Traits for Customer and PaymentMethod entities
 
 * App\Entity\Customer\Customer
 
@@ -158,14 +149,14 @@ In local environment, the plugin will not work properly because you will not be 
   }
    ``` 
 
-9. Process translations
+5. Process translations
 
     ```bash
     php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
     php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
     ```
 
-10. Clear cache:
+6. Clear cache:
 
      ```shell
      php bin/console cache:clear
@@ -173,6 +164,60 @@ In local environment, the plugin will not work properly because you will not be 
 
 🎉 You are now ready to add Payplug Payment method.
 In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
+
+### Assets installation (only for Sylius 2.0.x)
+
+On sylius 2.0.x, there is no automatic load of assets.
+You need to add the following lines in `assets/shop/controllers.json` to allow Sylius to use our assets:
+
+```json
+{
+    "controllers": {
+        "@payplug/sylius-payplug-plugin": {
+            "oney-popin": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/oney_common/index.css": true,
+                    "@payplug/sylius-payplug-plugin/shop/dist/oney_popin/index.css": true
+                }
+            },
+            "integrated-payment": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
+                }
+            },
+            "oney-payment": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "payment-logo": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "checkout-select-payment": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/index.css": true
+                }
+            },
+            "apple-pay": {
+                "enabled": true,
+                "fetch": "lazy"
+            }
+        }
+    },
+    "entrypoints": []
+}
+```
+
+> [!NOTE]
+> On Sylius Standard >= 2.1, assets are automatically loaded when you install the plugin with flex.
+> If you are upgrading from a 2.0.x version, read the [upgrade guide](https://github.com/Sylius/Sylius/blob/2.1/UPGRADE-2.1.md#assets)
+
 
 ## Logs
 
@@ -199,30 +244,6 @@ Run the below command to see what Symfony services are shared with this plugin:
 $ bin/console debug:container payplug_sylius_payplug_plugin
 ```
 
-### Template overriding
-
-This plugin override some sylius templates. 
-If you plan override them also, you should retrieve them in your application.
-
-Copy Sylius templates overridden in plugin to your templates directory (e.g templates/bundles/)
-
-```shell
-mkdir -p templates/bundles/SyliusAdminBundle/
-mkdir -p templates/bundles/SyliusShopBundle/
-mkdir -p templates/bundles/SyliusUiBundle/
-cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusAdminBundle/* templates/bundles/SyliusAdminBundle/
-cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusShopBundle/* templates/bundles/SyliusShopBundle/
-cp -R vendor/payplug/sylius-payplug-plugin/templates/SyliusUiBundle/* templates/bundles/SyliusUiBundle/
-```
-
-You also need to edit your twig config to add your path to avoid our configuration to be prepended :
-```yaml
-twig:
-  paths:
-    '%kernel.project_dir%/templates/bundles/SyliusAdminBundle': SyliusAdmin
-    '%kernel.project_dir%/templates/bundles/SyliusShopBundle': SyliusShop
-    '%kernel.project_dir%/templates/bundles/SyliusUiBundle': SyliusUi
-```
 ## Development
 
 See [How to contribute](CONTRIBUTING.md).
