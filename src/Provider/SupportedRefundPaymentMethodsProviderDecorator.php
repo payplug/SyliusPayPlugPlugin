@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;

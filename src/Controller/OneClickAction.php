@@ -10,7 +10,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Payum\Core\Payum;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;

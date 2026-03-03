@@ -16,7 +16,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
