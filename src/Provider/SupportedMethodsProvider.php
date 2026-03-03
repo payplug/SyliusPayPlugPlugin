@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Webmozart\Assert\Assert;

@@ -8,7 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Checker\OneyOrderChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\OneySupportedPaymentChoiceProvider;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\PaymentType;
 use Sylius\Component\Core\Model\OrderInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
