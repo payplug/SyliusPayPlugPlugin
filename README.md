@@ -165,6 +165,60 @@ In local environment, the plugin will not work properly because you will not be 
 🎉 You are now ready to add Payplug Payment method.
 In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
 
+### Assets installation (only for Sylius 2.0.x)
+
+On sylius 2.0.x, there is no automatic load of assets.
+You need to add the following lines in `assets/shop/controllers.json` to allow Sylius to use our assets:
+
+```json
+{
+    "controllers": {
+        "@payplug/sylius-payplug-plugin": {
+            "oney-popin": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/oney_common/index.css": true,
+                    "@payplug/sylius-payplug-plugin/shop/dist/oney_popin/index.css": true
+                }
+            },
+            "integrated-payment": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
+                }
+            },
+            "oney-payment": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "payment-logo": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "checkout-select-payment": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/index.css": true
+                }
+            },
+            "apple-pay": {
+                "enabled": true,
+                "fetch": "lazy"
+            }
+        }
+    },
+    "entrypoints": []
+}
+```
+
+> [!NOTE]
+> On Sylius Standard >= 2.1, assets are automatically loaded when you install the plugin with flex.
+> If you are upgrading from a 2.0.x version, read the [upgrade guide](https://github.com/Sylius/Sylius/blob/2.1/UPGRADE-2.1.md#assets)
+
+
 ## Logs
 
 If you want to follow the logs in the production environment, you need to add the configuration in `config/packages/prod/monolog.yaml`, logs should be in `var/log/prod.log` which can be searched after the phrase `[Payum]` or `[Payplug]`:
