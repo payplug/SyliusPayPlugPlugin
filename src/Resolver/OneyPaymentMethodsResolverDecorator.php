@@ -6,7 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
