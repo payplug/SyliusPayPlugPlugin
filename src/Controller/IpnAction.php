@@ -27,6 +27,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
+/** @deprecated  */
 #[AsController]
 class IpnAction
 {
