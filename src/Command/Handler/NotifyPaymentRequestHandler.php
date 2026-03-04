@@ -70,7 +70,7 @@ class NotifyPaymentRequestHandler
     private function updatePaymentState(PaymentInterface $payment): void
     {
         match ($payment->getDetails()['status'] ?? '') {
-            PayPlugApiClientInterface::STATUS_ABORTED, PayPlugApiClientInterface::STATUS_CANCELED => $this->stateMachine
+            PayPlugApiClientInterface::STATUS_ABORTED, PayPlugApiClientInterface::STATUS_CANCELED, PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL),
             PayPlugApiClientInterface::STATUS_AUTHORIZED => $this->stateMachine
                 ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_AUTHORIZE),
