@@ -61,7 +61,10 @@ final class StatusPaymentRequestHandler
         $this->paymentNotificationHandler->treat($payment, $payplugPayment, $details);
 
         $payment->setDetails($details->getArrayCopy());
-        $this->updatePaymentState($payment);
+        if ($payment->getState() !== PaymentInterface::STATE_COMPLETED) {
+            // If is already completed, do not try to update it again (updated by notification)
+            $this->updatePaymentState($payment);
+        }
 
         // Mark the PaymentRequest as completed
         $this->stateMachine->apply(
