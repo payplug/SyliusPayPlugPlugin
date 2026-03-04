@@ -23,7 +23,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * TODO : !!! Check if this controller is still needed
+ * @deprecated - Used by payum
  */
 #[AsController]
 class OneClickAction extends AbstractController implements GatewayAwareInterface, ApiAwareInterface

@@ -42,6 +42,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Webmozart\Assert\Assert;
 
+/** @deprecated */
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [
