@@ -49,7 +49,9 @@ final class NotifyPaymentProvider implements NotifyPaymentProviderInterface
     {
         return \str_contains($paymentMethod->getGatewayConfig()?->getFactoryName() ?? '', 'payplug') &&
             $request->getPayload()->has('id') &&
-            $request->getPayload()->has('metadata');
+            $request->getPayload()->has('metadata') &&
+            $request->getPayload()->has('object') &&
+            $request->getPayload()->get('object') === 'payment';
     }
 
     private function getOrderFromReference(string $orderReference): OrderInterface
