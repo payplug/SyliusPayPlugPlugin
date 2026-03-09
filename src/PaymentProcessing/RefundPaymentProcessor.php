@@ -15,6 +15,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
+use Webmozart\Assert\Assert;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -58,6 +59,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     {
         $this->prepare($payment);
         $details = $payment->getDetails();
+        Assert::string($details['payment_id']);
 
         try {
             $this->payPlugApiClient->refundPayment($details['payment_id']);
@@ -74,6 +76,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     {
         $this->prepare($payment);
         $details = $payment->getDetails();
+        Assert::string($details['payment_id']);
 
         try {
             $refund = $this->payPlugApiClient->refundPaymentWithAmount($details['payment_id'], $amount, $refundId);

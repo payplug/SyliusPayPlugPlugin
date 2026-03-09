@@ -61,6 +61,11 @@ class IpnAction
         }
 
         $payment = $this->paymentRepository->findOneByPayPlugPaymentId($details['id']);
+
+        if (null === $payment) {
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+        }
+
         $paymentMethod = $payment->getMethod();
 
         Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
