@@ -51,9 +51,13 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
 
         /** @var GatewayConfigInterface $paymentGateway */
         $paymentGateway = $paymentMethod->getGatewayConfig();
+        $gatewayName = $paymentGateway->getGatewayName();
+        if (null === $gatewayName) {
+            throw new \InvalidArgumentException('Payment gateway name cannot be null');
+        }
 
         $captureToken = $this->payum->getTokenFactory()->createCaptureToken(
-            $paymentGateway->getGatewayName(),
+            $gatewayName,
             $payment,
             'sylius_shop_order_thank_you',
             [],

@@ -56,17 +56,17 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         if ([] === $units) {
             throw InvalidRefundAmount::withValidationConstraint('sylius_refund.at_least_one_unit_should_be_selected_to_refund');
         }
-        /** @var int $paymentMethodId */
-        $paymentMethodId = $request->request->get('sylius_refund_payment_method');
-        if (null === $paymentMethodId) {
-            return $this->decorated->fromRequest($request);
+
+        $paymentMethodId = $request->request->getInt('sylius_refund_payment_method');
+        if (0 === $paymentMethodId) {
+            return $this->decorated->fromRequest($request); // @phpstan-ignore-line
         }
 
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $this->paymentMethodRepository->find($paymentMethodId);
         $gateway = $paymentMethod->getGatewayConfig();
         if (!\in_array($gateway?->getFactoryName(), self::SUPPORTED_METHODS, true)) {
-            return $this->decorated->fromRequest($request);
+            return $this->decorated->fromRequest($request); // @phpstan-ignore-line
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $gateway->getFactoryName()) {
@@ -85,7 +85,7 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
             throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met'));
         }
 
-        return $this->decorated->fromRequest($request);
+        return $this->decorated->fromRequest($request); // @phpstan-ignore-line
     }
 
     /**
