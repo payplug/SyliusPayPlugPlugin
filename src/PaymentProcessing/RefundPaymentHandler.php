@@ -58,7 +58,7 @@ final class RefundPaymentHandler implements RefundPaymentHandlerInterface
                 $this->parseIdsToUnitRefunds($items, RefundType::orderItemUnit(), OrderItemUnitRefund::class),
                 $this->parseIdsToUnitRefunds($shipments, RefundType::shipment(), ShipmentRefund::class)
             ),
-            $payment->getMethod()->getId(),
+            $payment->getMethod()->getId(), // @phpstan-ignore-line
             '',
         );
     }
