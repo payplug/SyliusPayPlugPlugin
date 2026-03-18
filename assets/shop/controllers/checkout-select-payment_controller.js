@@ -85,8 +85,8 @@ export default class extends Controller {
       return;
     }
 
-    const handlesSubmit = targetContainer.dataset.paymentHandlesSubmit === 'true' ||
-                         targetContainer.querySelector('[data-payment-handles-submit="true"]') !== null;
+    const handlesSubmit = targetContainer.dataset.paymentInlineSubmit === 'true' ||
+                         targetContainer.querySelector('[data-payment-inline-submit="true"]') !== null;
 
     this.toggleNextStepButton(!handlesSubmit);
   }
@@ -98,14 +98,20 @@ export default class extends Controller {
     if (!this.nextStepButton) return;
 
     if (show) {
-      this.nextStepButton.classList.remove('d-none');
+      this.nextStepButton.classList.remove('disabled');
       this.nextStepButton.disabled = false;
-      this.nextStepButton.style.display = '';
     } else {
-      this.nextStepButton.classList.add('d-none');
+      this.nextStepButton.classList.add('disabled');
       this.nextStepButton.disabled = true;
-      this.nextStepButton.style.display = 'none';
     }
+  }
+
+  enableNextStepButton() {
+    this.toggleNextStepButton(true);
+  }
+
+  disableNextStepButton() {
+    this.toggleNextStepButton(false);
   }
 
   handleForm() {
