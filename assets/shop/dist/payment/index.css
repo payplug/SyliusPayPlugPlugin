@@ -4,10 +4,6 @@
     display: flex !important
 }
 
-.oney-payment-choice, .payplug-payment-choice {
-    display: none
-}
-
 .oney-payment-choice__container, .payplug-payment-choice__container {
     margin: 1rem 0;
     display: flex
@@ -103,11 +99,11 @@
     padding: 0 !important
 }
 
-.payment-item .oney-logo[src*=without-fees] {
+.oney-logo[src*=without-fees] {
     max-width: 200px
 }
 
-.payment-item apple-pay-button {
+apple-pay-button {
     --apple-pay-button-width: 222px;
     --apple-pay-button-height: 40px;
     --apple-pay-button-border-radius: 4px;
@@ -115,27 +111,10 @@
     --apple-pay-button-box-sizing: border-box;
     min-width: 140px;
     max-width: 100%;
-    transition: background-color .3s ease-in-out;
-    display: none
 }
 
-.payment-item apple-pay-button.enabled {
-    display: block
-}
-
-.payment-item label {
+label {
     cursor: pointer
-}
-
-.payment-item .bancontact-method label, .payment-item .apple-pay-method label, .payment-item .american-express-method label {
-    position: relative
-}
-
-.payment-item .bancontact-method label img, .payment-item .apple-pay-method label img, .payment-item .american-express-method label img {
-    margin-left: .5em;
-    position: absolute;
-    top: -12px;
-    left: 100%
 }
 
 .payplug-payment-choice__container {
@@ -174,16 +153,17 @@
     content: "";
     background-image: var(--logo);
     display: inline-block;
-    width: 60px;
-    height: 25px;
+    width: 45px;
+    height: 40px;
+    margin-top: -6px;
+    margin-left: 10px;
     background-repeat: no-repeat;
-    background-position: 0 -11px;
-    background-size: 60px 45px;
-    float: right
+    background-position: center;
+    background-size: contain;
+    float: right;
 }
-
-.bancontact-label::after {
-    margin-left: 5px
+.payment-label-with-image.oney-label::after {
+    width: 130px;
 }
 
 @media screen and (max-width: 991px) {
