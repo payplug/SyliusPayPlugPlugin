@@ -22,30 +22,36 @@
     {% set values = values|merge(completeInfoRoute) %}
 {% endif %}
 
+{% set logo_path = 'bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-without-fees.svg' %}
+{% if ((form.parent.parent.oney_payment_choice.vars.choices|last).value|split('oney_')|last) not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
+    {% set logo_path = 'bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg' %}
+{% endif %}
 <div
     class="content"
-    {{ stimulus_controller('@payplug/sylius-payplug-plugin/oney-payment', values) }}
+    {{
+        stimulus_controller('@payplug/sylius-payplug-plugin/oney-payment', values)|
+        stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
+            'inputId': form.vars.id,
+            'logoUrl': asset(logo_path),
+            'className': 'oney-label'
+        })
+    }}
 >
-    <a class="header">
-        {% if factoryName == oneyFactoryName %}
-            <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">
-                {% if ((form.parent.parent.oney_payment_choice.vars.choices|last).value|split('oney_')|last) not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
-                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" class="oney-logo" alt="Oney"/>
-                {% else %}
-                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-without-fees.svg') }}" class="oney-logo" alt="Oney Sans Frais"/>
-                {% endif %}
-            </label>
-        {% endif %}
-    </a>
+{#    <a class="header">#}
+{#        {% if factoryName == oneyFactoryName %}#}
+{#            <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="oney">#}
+{#                {% if ((form.parent.parent.oney_payment_choice.vars.choices|last).value|split('oney_')|last) not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}#}
+{#                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg') }}" class="oney-logo" alt="Oney"/>#}
+{#                {% else %}#}
+{#                    <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-without-fees.svg') }}" class="oney-logo" alt="Oney Sans Frais"/>#}
+{#                {% endif %}#}
+{#            </label>#}
+{#        {% endif %}#}
+{#    </a>#}
 
     {% if showOney %}
-        <div
-            class="payment-method-choice oney-payment-choice"
-            {{ stimulus_target('@payplug/sylius-payplug-plugin/checkout-select-payment', 'trigger') }}
-            data-payment-input-id="{{ form.vars.id }}"
-        >
+        <div class="oney-payment-choice">
             {{ form_row(form.parent.parent.oney_payment_choice) }}
         </div>
     {% endif %}
 </div>
-

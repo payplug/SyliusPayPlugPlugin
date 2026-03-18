@@ -27,11 +27,7 @@
     </a>
 
     {% if hasSavedCards %}
-        <div
-            class="payment-method-choice payplug-payment-choice"
-            {{ stimulus_target('@payplug/sylius-payplug-plugin/checkout-select-payment', 'trigger') }}
-            data-payment-input-id="{{ form.vars.id }}"
-        >
+        <div class="payplug-payment-choice">
             {{ form_row(form.parent.parent.payplug_card_choice) }}
         </div>
     {% endif %}
