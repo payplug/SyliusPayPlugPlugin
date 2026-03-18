@@ -26,6 +26,7 @@
 <div
     class="payplugIntegratedPayment"
     {{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}
+    data-payment-handles-submit="false"
 >
     <div class="sylius-shop-loader d-none">
         <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
