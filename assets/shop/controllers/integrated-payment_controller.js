@@ -3,6 +3,7 @@ import WebFont from 'webfontloader';
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
+  static targets = ['container']
   static values = {
     code: String,
     factoryName: String,
@@ -55,23 +56,32 @@ export default class extends Controller {
 
     // Verify if we have required data
     // TODO: Pass as param
-    if (payplug_integrated_payment_params === undefined) {
+    if (typeof payplug_integrated_payment_params === 'undefined') {
       return;
     }
 
+    this.form = this.element.closest('form');
+
     if (payplug_integrated_payment_params.has_saved_cards) {
-      document.querySelectorAll('.payment-choice__input, .payment-item input[type=radio]:not([name=schemeOptions])').forEach((element) => {
+      const otherCardRadio = this.element.querySelector('#payplug_choice_card_other');
+      const payplugRadio = document.querySelector(`[id*="checkout_select_payment_payments"][value="${payplug_integrated_payment_params.payment_method_code}"]`);
+
+      // Initial check
+      if (
+          (otherCardRadio && otherCardRadio.checked && payplugRadio && payplugRadio.checked) ||
+          (otherCardRadio && otherCardRadio.checked && !payplugRadio && document.querySelector('.payplug-payment-choice__input:checked'))
+      ) {
+        this.openFields();
+      }
+
+      this.element.querySelectorAll('.payment-choice__input, [id*="checkout_select_payment_payments"]').forEach((element) => {
         element.addEventListener('change', (e) => {
-          if (
-            'payplug_choice_card_other' === e.currentTarget.id &&
-            e.currentTarget.checked ||
-            e.target.value === payplug_integrated_payment_params.payment_method_code &&
-            document.querySelector('#payplug_choice_card_other').checked
-          ) {
+          const isOtherCardChecked = this.element.querySelector('#payplug_choice_card_other')?.checked;
+          const isPayplugSelected = document.querySelector(`[id*="checkout_select_payment_payments"][value="${payplug_integrated_payment_params.payment_method_code}"]`)?.checked;
+
+          if (isOtherCardChecked && isPayplugSelected) {
             this.openFields();
-            return;
           }
-          this.closeFields();
         })
       })
       return;
@@ -82,18 +92,37 @@ export default class extends Controller {
       this.openFields();
     }
 
-    const selectPaymentMethodsField= this.getPaymentMethodSelectors();
+    const selectPaymentMethodsField = this.getPaymentMethodSelectors();
     selectPaymentMethodsField.forEach((element) => {
-      // On payment method select, open or close card fields
+      // On payment method select, open fields if payplug selected
       element.addEventListener('change', (e) => {
         if (payplug_integrated_payment_params.payment_method_code === e.currentTarget.value && e.currentTarget.checked) {
           this.openFields();
-          return;
         }
-        this.closeFields();
       })
     });
   }
+
+  handleShow(event) {
+    if (this.hasContainerTarget) {
+      import('jquery').then(({ default: $ }) => {
+        $(this.containerTarget).slideDown();
+      });
+      this.openFields();
+      this.containerTarget.dataset.paymentInlineSubmit = "true";
+    }
+  }
+
+  handleHide(event) {
+    if (this.hasContainerTarget) {
+      import('jquery').then(({ default: $ }) => {
+        $(this.containerTarget).slideUp();
+      });
+      this.closeFields();
+      this.containerTarget.dataset.paymentInlineSubmit = "false";
+    }
+  }
+
   getPaymentMethodSelectors({ methodCode, checked } = {}) {
     const baseSelector = '[id*=checkout_select_payment_payments]';
 
@@ -105,45 +134,47 @@ export default class extends Controller {
     }
     return document.querySelectorAll(baseSelector);
   }
+
   openFields() {
-    document.querySelector('.payplugIntegratedPayment').classList.add('payplugIntegratedPayment--loaded');
-    document.querySelector('button[type=submit]').classList.add('disabled');
+    this.containerTarget.classList.add('payplugIntegratedPayment--loaded');
     if (null === this.options.api) {
       this.load();
     }
   }
-  closeFields() {
-    document.querySelector('.payplugIntegratedPayment').classList.remove('payplugIntegratedPayment--loaded');
-    document.querySelector('button[type=submit]').classList.remove('disabled');
-  }
-  load() {
-    this.options.api = new Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
 
-    this.options.api.setDisplayMode3ds(Payplug.DisplayMode3ds.LIGHTBOX);
+  closeFields() {
+    this.containerTarget.classList.remove('payplugIntegratedPayment--loaded');
+  }
+
+  load() {
+    this.options.api = new window.Payplug.IntegratedPayment(payplug_integrated_payment_params.is_test_mode);
+    this.options.api.setDisplayMode3ds(window.Payplug.DisplayMode3ds.LIGHTBOX);
+
+    const container = this.hasContainerTarget ? this.containerTarget : this.element;
 
     this.options.form.cardHolder = this.options.api.cardHolder(
-      document.querySelector('.cardHolder-input-container'),
+      container.querySelector('.cardHolder-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.cardholder
       }
     );
     this.options.form.pan = this.options.api.cardNumber(
-      document.querySelector('.pan-input-container'),
+      container.querySelector('.pan-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.pan
       }
     );
     this.options.form.cvv = this.options.api.cvv(
-      document.querySelector('.cvv-input-container'),
+      container.querySelector('.cvv-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.cvv
       }
     );
     this.options.form.exp = this.options.api.expiration(
-      document.querySelector('.exp-input-container'),
+      container.querySelector('.exp-input-container'),
       {
         default: this.options.inputStyle.default,
         placeholder: payplug_integrated_payment_params.exp
@@ -154,20 +185,24 @@ export default class extends Controller {
     this.fieldValidation();
   }
   bindEvents() {
-    document.querySelector('#paid').addEventListener('click', (event) => {
-      event.preventDefault();
+    const container = this.hasContainerTarget ? this.containerTarget : this.element;
+    const paidButton = container.querySelector('#paid');
+    if (paidButton) {
+      paidButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        this.options.api.validateForm();
+      });
+    }
 
-      this.options.api.validateForm();
-    });
     this.options.api.onValidateForm(async ({ isFormValid }) => {
       if (isFormValid) {
         this.toggleLoader();
-        const saveCardElement = document.querySelector('#savecard');
+        const saveCardElement = this.element.querySelector('#savecard');
         if (null !== saveCardElement) {
           this.options.save_card = saveCardElement.checked;
         }
-        const chosenScheme = document.querySelector('input.schemeOptions:checked');
-        this.options.scheme = Payplug.Scheme.AUTO;
+        const chosenScheme = this.element.querySelector('input.schemeOptions:checked');
+        this.options.scheme = window.Payplug.Scheme.AUTO;
         if (null !== chosenScheme) {
           this.options.scheme = chosenScheme.value;
         }
@@ -186,28 +221,29 @@ export default class extends Controller {
         return;
       }
       document.querySelector('input[name=payplug_integrated_payment_token]').value = event.token;
-      document.querySelector('form[name*="checkout_select_payment"]').submit();
+      this.form.submit();
     });
   }
   fieldValidation () {
+    const container = this.hasContainerTarget ? this.containerTarget : this.element;
     Object.keys(this.options.form).forEach((key) => {
       const field = this.options.form[key];
       field.onChange((err) => {
         if (err.error) {
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.remove('payplugIntegratedPayment__error--hide');
-          document.querySelector(`.${key}-input-container`).classList.add('payplugIntegratedPayment__container--invalid');
+          container.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.remove('payplugIntegratedPayment__error--hide');
+          container.querySelector(`.${key}-input-container`).classList.add('payplugIntegratedPayment__container--invalid');
           if (err.error.name === "FIELD_EMPTY") {
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.remove('payplugIntegratedPayment__error--hide');
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
+            container.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.remove('payplugIntegratedPayment__error--hide');
+            container.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
           } else {
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.remove('payplugIntegratedPayment__error--hide');
-            document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.add('payplugIntegratedPayment__error--hide');
+            container.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.remove('payplugIntegratedPayment__error--hide');
+            container.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.add('payplugIntegratedPayment__error--hide');
           }
         } else {
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.add('payplugIntegratedPayment__error--hide');
-          document.querySelector(`.${key}-input-container`).classList.remove('payplugIntegratedPayment__container--invalid');
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
-          document.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.add('payplugIntegratedPayment__error--hide');
+          container.querySelector(`.payplugIntegratedPayment__error--${key}`).classList.add('payplugIntegratedPayment__error--hide');
+          container.querySelector(`.${key}-input-container`).classList.remove('payplugIntegratedPayment__container--invalid');
+          container.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".invalidField").classList.add('payplugIntegratedPayment__error--hide');
+          container.querySelector(`.payplugIntegratedPayment__error--${key}`).querySelector(".emptyField").classList.add('payplugIntegratedPayment__error--hide');
           this.options.fieldsValid[key] = true;
           this.options.fieldsEmpty[key] = false;
         }
@@ -215,6 +251,7 @@ export default class extends Controller {
     })
   }
   toggleLoader() {
-    document.querySelector('.payplugIntegratedPayment').querySelector('.sylius-shop-loader').classList.toggle('d-none');
+    const container = this.hasContainerTarget ? this.containerTarget : this.element;
+    container.querySelector('.sylius-shop-loader').classList.toggle('d-none');
   }
 }
