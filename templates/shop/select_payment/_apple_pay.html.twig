@@ -1,48 +1,32 @@
 {% set form = hookable_metadata.context.form %}
 {% set method = hookable_metadata.context.method %}
 {% set order = hookable_metadata.context.order %}
-{% set factoryName = method.gatewayConfig.factoryName %}
-{% set code = method.code %}
 
-{% set applePayFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ApplePayGatewayFactory::FACTORY_NAME') %}
-{% set checkboxClass = 'checkbox-applepay' %}
+{% set applePaySettings = {
+    'countryCode': sylius.channel.defaultLocale.code|length == 2 ? sylius.channel.defaultLocale.code : sylius.channel.defaultLocale.code|slice(3, 2),
+    'currencyCode': sylius.channel.baseCurrency.code,
+    'merchantCapabilities': ['supports3DS'],
+    'supportedNetworks': ['visa', 'mastercard'],
+    'total': {
+        'label': '',
+        'type': 'final',
+        'amount': (order is not null ? order.total / 100 : 0)
+    },
+    'applePayDomain': sylius.channel.hostname
+} %}
 
 <div
-    class="content"
-    {{ stimulus_controller('@payplug/sylius-payplug-plugin/apple-pay') }}
+    {{ stimulus_controller('@payplug/sylius-payplug-plugin/apple-pay', {
+        'paymentInputId': form.vars.id,
+        'settings': applePaySettings
+    })|stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
+        'inputId': form.vars.id,
+        'logoUrl': asset('bundles/payplugsyliuspayplugplugin/assets/apple-pay/logo.svg'),
+        'className': 'apple-pay-label'
+    }) }}
+    data-payment-inline-submit="true"
 >
-    <a class="header">
-        <div class="apple-pay-method">
-            <label for="{{ form.vars.id }}" data-test-payment-method-label="" data-gateway="apple-pay">{{ form.vars.label }}
-                <img src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/apple-pay/logo.svg') }}" class="apple-pay-logo" alt="Apple Pay" height="45" width="60" />
-            </label>
-        </div>
-    </a>
-
-    <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
-    <script>
-      /* <![CDATA[ */
-        const applePaySessionRequestSettings = {
-            "countryCode": "{% if sylius.channel.defaultLocale.code|length == 2 %}{{ sylius.channel.defaultLocale.code }}{% else %}{{ sylius.channel.defaultLocale.code|slice(3, 2) }}{% endif %}",
-            "currencyCode": "{{ sylius.channel.baseCurrency.code }}",
-            "merchantCapabilities": [
-                "supports3DS"
-            ],
-            "supportedNetworks": [
-                "visa",
-                "mastercard"
-            ],
-            "total": {
-                "label": "",
-                "type": "final",
-                "amount": {{ order.total / 100 }}
-            },
-            'applicationData': btoa(JSON.stringify({
-                'apple_pay_domain': "{{ sylius.channel.hostname }}"
-            }))
-        };
-      /* ]] */
-    </script>
+    <script src="https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js"></script>
     <apple-pay-button id="payplug-applepay-btn"
                       buttonstyle="black"
                       type="pay"
@@ -52,4 +36,3 @@
                       data-session-cancel-route="{{ path('payplug_shop_checkout_apple_cancel', {'orderId': order.id}) }}"
     ></apple-pay-button>
 </div>
-
