@@ -22,10 +22,6 @@
 {% endif %}
 
 <div class="content" {{ integratedPayment ? stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment', {'code': method.code}) : '' }}>
-    <a class="header">
-        {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
-    </a>
-
     {% if hasSavedCards %}
         <div class="payplug-payment-choice">
             {{ form_row(form.parent.parent.payplug_card_choice) }}
