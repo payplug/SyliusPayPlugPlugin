@@ -26,6 +26,7 @@ payplug_sylius_payplug_plugin:
         bancontact_gateway_label: Bancontact by Payplug
         apple_pay_gateway_label: Apple Pay by Payplug
         american_express_gateway_label: American Express by Payplug
+        apple_pay_not_available: Apple Pay non è disponibile su questo browser o dispositivo.
         error:
             billing.postcode: Il codice postale %postalCode% inserito per l’indirizzo di fatturazione non è valido
             shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido

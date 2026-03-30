@@ -5,6 +5,7 @@ export default class extends Controller {
   static values = {
     paymentInputId: String,
     settings: Object,
+    notice: String,
   }
 
   connect() {
@@ -29,43 +30,55 @@ export default class extends Controller {
       this.retryCount++;
       setTimeout(() => this.initApplePay(), 100);
     } else {
-      console.warn('Apple Pay SDK not fully initialized or not supported on this platform.');
+      this.disablePaymentMethod();
     }
   }
 
   checkSupport() {
     try {
-      // Version 14 is the minimum for QR Code support on non-Safari browsers
-      const isSupported = window.ApplePaySession.canMakePayments() || window.ApplePaySession.supportsVersion(14);
+      const isSupported = window.ApplePaySession.canMakePayments();
 
       if (isSupported && this.applePayButton) {
         this.applePayButton.classList.add('enabled');
       } else {
-        this.hidePaymentMethod();
+        this.disablePaymentMethod();
       }
     } catch (e) {
-      console.error('Error checking Apple Pay support:', e);
-      this.hidePaymentMethod();
+      this.disablePaymentMethod();
     }
   }
 
-  hidePaymentMethod() {
+  disablePaymentMethod() {
     if (!this.paymentInputIdValue) return;
 
     const input = document.getElementById(this.paymentInputIdValue);
     if (!input) return;
 
-    // Hide the entire payment item (usually a .item, .payment-item or .form-check)
-    const container = input.closest('.item, .payment-item, .form-check, [data-test-payment-item]');
+    const container = input.closest('.card, .item, .form-check, .field');
     if (container) {
-      container.style.display = 'none';
-      
-      // If the hidden input was checked, we should probably uncheck it
+      container.style.opacity = '0.5';
+      container.style.pointerEvents = 'none';
+      container.classList.add('apple-pay-ineligible');
+
+      // Add a small info message if not already present
+      if (!container.querySelector('.apple-pay-notice')) {
+        const notice = document.createElement('div');
+        notice.className = 'apple-pay-notice small text-muted mt-2';
+        notice.style.padding = '0 1rem 1rem';
+        notice.innerText = this.noticeValue || 'Apple Pay is not available on this browser or device.';
+        container.appendChild(notice);
+      }
+
       if (input.checked) {
         input.checked = false;
-        // Trigger change to let other controllers (like checkout-select-payment) know
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
+    }
+
+    input.disabled = true;
+
+    if (this.element) {
+      this.element.style.display = 'none';
     }
   }
 
