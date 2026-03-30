@@ -1,166 +1,184 @@
 import { Controller } from '@hotwired/stimulus';
-import $ from 'jquery';
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
+  static values = {
+    paymentInputId: String,
+    settings: Object,
+  }
+
   connect() {
-    this.applePayHandler();
+    this.applePayButton = this.element.querySelector('apple-pay-button');
+    this.onApplePayButtonClick = this.onApplePayButtonClick.bind(this);
+
+    if (this.applePayButton) {
+      this.applePayButton.addEventListener('click', this.onApplePayButtonClick);
+    }
+
+    this.retryCount = 0;
+    this.initApplePay();
   }
-  showApplePayButton() {
-    const applePayButton = $(document).find("apple-pay-button");
-    if (applePayButton.length) {
-      applePayButton.addClass('enabled');
+
+  initApplePay() {
+    if (typeof window.ApplePaySession !== 'undefined') {
+      this.checkSupport();
+      return;
+    }
+
+    if (this.retryCount < 20) { // Try for 2 seconds
+      this.retryCount++;
+      setTimeout(() => this.initApplePay(), 100);
+    } else {
+      console.warn('Apple Pay SDK not fully initialized or not supported on this platform.');
     }
   }
-  hideApplePayButton() {
-    const applePayButton = $(document).find("apple-pay-button.enabled");
-    if (applePayButton.length) {
-      applePayButton.removeClass('enabled');
-    }
-  }
-  applePayHandler() {
-    const applePayChoice = $(".payment-item .checkbox-applepay input:radio");
-    if (applePayChoice) {
-      if (applePayChoice.is(':checked')) {
-        this.disableNextStepButton();
-        this.showApplePayButton();
+
+  checkSupport() {
+    try {
+      // Version 14 is the minimum for QR Code support on non-Safari browsers
+      const isSupported = window.ApplePaySession.canMakePayments() || window.ApplePaySession.supportsVersion(14);
+
+      if (isSupported && this.applePayButton) {
+        this.applePayButton.classList.add('enabled');
       } else {
-        this.enableNextStepButton();
-        this.hideApplePayButton();
+        this.hidePaymentMethod();
+      }
+    } catch (e) {
+      console.error('Error checking Apple Pay support:', e);
+      this.hidePaymentMethod();
+    }
+  }
+
+  hidePaymentMethod() {
+    if (!this.paymentInputIdValue) return;
+
+    const input = document.getElementById(this.paymentInputIdValue);
+    if (!input) return;
+
+    // Hide the entire payment item (usually a .item, .payment-item or .form-check)
+    const container = input.closest('.item, .payment-item, .form-check, [data-test-payment-item]');
+    if (container) {
+      container.style.display = 'none';
+      
+      // If the hidden input was checked, we should probably uncheck it
+      if (input.checked) {
+        input.checked = false;
+        // Trigger change to let other controllers (like checkout-select-payment) know
+        input.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
-    $(".payment-item .checkbox input:radio").on('change', this.onPaymentMethodChoice);
-    $(document).find("apple-pay-button").on('click', this.onApplePayButtonClick);
   }
-  onPaymentMethodChoice(event) {
-    const isApplePay = $(event.currentTarget).closest('.checkbox-applepay').length;
-    if (isApplePay) {
-      this.showApplePayButton();
-      this.disableNextStepButton();
-    } else {
-      this.hideApplePayButton();
-      this.enableNextStepButton();
-    }
-  }
-  onApplePayButtonClick(event) {
-    const applePayButton = $(event.currentTarget);
 
-    if (applePaySessionRequestSettings === undefined) {
+  async onApplePayButtonClick(event) {
+    const applePayButton = event.currentTarget;
+
+    if (!this.settingsValue) {
       console.error('Invalid Apple Pay settings!');
-      return false;
+      return;
     }
 
-    // Create ApplePaySession
-    const session = new ApplePaySession(3, applePaySessionRequestSettings);
+    if (typeof window.ApplePaySession === 'undefined') {
+      return;
+    }
 
-    session.onvalidatemerchant = async event => {
-      $.ajax({
-        url: applePayButton.data('validate-merchant-route'),
-        method: 'POST',
-        cache: false,
-        data: {},
-        success: (authorization) => {
-          let result = authorization.merchant_session;
-          console.log(result);
+    // Prepare settings
+    const settings = { ...this.settingsValue };
+    if (settings.applePayDomain) {
+      settings.applicationData = btoa(JSON.stringify({
+        'apple_pay_domain': settings.applePayDomain
+      }));
+      delete settings.applePayDomain;
+    }
+
+    try {
+      const version = window.ApplePaySession.supportsVersion(14) ? 14 : 3;
+      const session = new window.ApplePaySession(version, settings);
+
+      session.onvalidatemerchant = async (event) => {
+        try {
+          const response = await fetch(applePayButton.dataset.validateMerchantRoute, {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          });
+          const authorization = await response.json();
 
           if (authorization.success === true) {
-            console.log(authorization.merchant_session);
-            session.completeMerchantValidation(result);
+            session.completeMerchantValidation(authorization.merchant_session);
           } else {
             session.abort();
           }
-        },
-        error: (XHR, status, error) => {
-          console.log(XHR, status, error);
+        } catch (error) {
+          console.error(error);
           session.abort();
           window.location.reload();
-        },
-      });
-    };
+        }
+      };
 
-    session.onpaymentauthorized = event => {
-      $.ajax({
-        url: applePayButton.data('payment-authorized-route'),
-        method: 'POST',
-        cache: false,
-        data: {
-          token: event.payment.token
-        },
-        success: (authorization) => {
-          try {
-            var apple_pay_Session_status = ApplePaySession.STATUS_SUCCESS;
+      session.onpaymentauthorized = async (event) => {
+        try {
+          const formData = this.toFormData({
+            token: event.payment.token
+          });
 
-            console.log(authorization);
-            console.log(authorization.data.responseToApple.status);
-            if (authorization.data.responseToApple.status != 1) {
-              apple_pay_Session_status = ApplePaySession.STATUS_FAILURE;
-            }
+          const response = await fetch(applePayButton.dataset.paymentAuthorizedRoute, {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData,
+          });
+          const authorization = await response.json();
 
-            const result = {
-              "status": apple_pay_Session_status
-            };
+          let applePaySessionStatus = window.ApplePaySession.STATUS_SUCCESS;
 
-            console.log(apple_pay_Session_status);
-            console.log(result);
-
-            session.completePayment(result);
-
-            console.log(authorization.data.returnUrl);
-            window.location.href = authorization.data.returnUrl;
-          } catch (err) {
-            console.error(err);
-            window.location.reload();
+          if (authorization.data.responseToApple.status !== 1) {
+            applePaySessionStatus = window.ApplePaySession.STATUS_FAILURE;
           }
-        },
-        error: (XHR, status, error) => {
-          console.log(XHR, status, error);
-          session.abort();
-          window.location.reload();
-        },
-      });
-    };
 
-    session.oncancel = event => {
-      console.log('Cancelling Apple Pay session!');
-
-      $.ajax({
-        url: applePayButton.data('session-cancel-route'),
-        cache: false,
-        method: 'POST',
-        data: {},
-        success: (authorization) => {
-          console.log('Cancelled!');
-          console.log(authorization.data.returnUrl);
+          session.completePayment({ "status": applePaySessionStatus });
           window.location.href = authorization.data.returnUrl;
-        },
-        error: (XHR, status, error) => {
-          console.log(XHR, status, error);
+        } catch (error) {
+          console.error(error);
           window.location.reload();
-        },
-      });
-    };
+        }
+      };
 
-    session.begin();
+      session.oncancel = async (event) => {
+        try {
+          const response = await fetch(applePayButton.dataset.sessionCancelRoute, {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          });
+          const authorization = await response.json();
+          window.location.href = authorization.data.returnUrl;
+        } catch (error) {
+          console.error(error);
+          window.location.reload();
+        }
+      };
+
+      session.begin();
+    } catch (e) {
+      console.error('Failed to create Apple Pay session:', e);
+    }
   }
-  disableNextStepButton() {
-    const nextStepButton = $('form[name*="checkout_select_payment"] [data-test-next-step]');
-    nextStepButton.replaceWith(
-      $("<span/>", {
-        id: 'next-step',
-        class: 'btn btn-primary btn-icon',
-        html: nextStepButton.html()
-      })
-    );
-  }
-  enableNextStepButton() {
-    const nextStepButton = $('form[name*="checkout_select_payment"] [data-test-next-step]');
-    nextStepButton.replaceWith(
-      $("<button/>", {
-        type: 'submit',
-        id: 'next-step',
-        class: 'btn btn-primary btn-icon',
-        html: nextStepButton.html()
-      })
-    );
+
+  toFormData(obj, formData = new FormData(), prefix = '') {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        const name = prefix ? `${prefix}[${key}]` : key;
+        if (typeof value === 'object' && value !== null && !(value instanceof File) && !(value instanceof Blob)) {
+          this.toFormData(value, formData, name);
+        } else {
+          formData.append(name, value);
+        }
+      }
+    }
+    return formData;
   }
 }
