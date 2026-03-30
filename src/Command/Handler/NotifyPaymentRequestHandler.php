@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
 use Payplug\Resource\Payment;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
+use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -21,7 +23,9 @@ class NotifyPaymentRequestHandler
     public function __construct(
         private PaymentRequestProviderInterface $paymentRequestProvider,
         private StateMachineInterface $stateMachine,
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentNotificationHandler $paymentNotificationHandler,
+        private RefundNotificationHandler $refundNotificationHandler,
     ) {}
 
     public function __invoke(NotifyPaymentRequest $notifyPaymentRequest): void
@@ -29,26 +33,41 @@ class NotifyPaymentRequestHandler
         $paymentRequest = $this->paymentRequestProvider->provide($notifyPaymentRequest);
         /** @var PaymentInterface $payment */
         $payment = $paymentRequest->getPayment();
-        if ($payment->getState() !== PaymentInterface::STATE_COMPLETED) {
-            // If the payment is already completed, we do not need to notify again
-            $this->stateMachine->apply(
-                $paymentRequest,
-                PaymentRequestTransitions::GRAPH,
-                PaymentRequestTransitions::TRANSITION_COMPLETE,
-            );
-
-            return;
-        }
 
         try {
-            // Payload contains what's send by payplug, no need to retrieve it from PayPlug
-            // @phpstan-ignore-next-line - cannot access offset content / http_request on mixed
-            $payplugPayment = Payment::fromAttributes(json_decode($paymentRequest->getPayload()['http_request']['content'] ?? '{}', true, 512, \JSON_THROW_ON_ERROR));
+            $payload = $paymentRequest->getPayload();
+            $content = $payload['http_request']['content'] ?? null; // @phpstan-ignore-line
+            if (!is_string($content) || '' === $content) {
+                throw new \LogicException('Invalid PayPlug notification payload.');
+            }
+
+            $method = $payment->getMethod();
+            if (null === $method) {
+                throw new \LogicException('Payment method is not set for the payment.');
+            }
+
+            $client = $this->apiClientFactory->createForPaymentMethod($method);
+            $resource = $client->treat($content);
+
+            if ($resource instanceof Payment && $payment->getState() === PaymentInterface::STATE_COMPLETED) {
+                // If the payment is already completed, we do not need to update it again
+                $this->stateMachine->apply(
+                    $paymentRequest,
+                    PaymentRequestTransitions::GRAPH,
+                    PaymentRequestTransitions::TRANSITION_COMPLETE,
+                );
+
+                return;
+            }
+
             $details = new \ArrayObject($payment->getDetails());
-            $this->paymentNotificationHandler->treat($payment, $payplugPayment, $details);
+            $this->paymentNotificationHandler->treat($payment, $resource, $details);
+            $this->refundNotificationHandler->treat($payment, $resource, $details);
 
             $payment->setDetails($details->getArrayCopy());
-            $this->updatePaymentState($payment);
+            if ($resource instanceof Payment) {
+                $this->updatePaymentState($payment);
+            }
 
             $this->stateMachine->apply(
                 $paymentRequest,

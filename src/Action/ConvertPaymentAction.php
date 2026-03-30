@@ -18,6 +18,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
+/** @deprecated */
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [

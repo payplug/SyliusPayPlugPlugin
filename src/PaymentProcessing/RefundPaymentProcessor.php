@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Exception;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\AmericanExpressGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
@@ -13,7 +14,8 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
+use Webmozart\Assert\Assert;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -30,7 +32,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Autoconfigure(public: true)]
 final class RefundPaymentProcessor implements PaymentProcessorInterface
 {
-    public $payPlugApiClient;
+    private PayPlugApiClientInterface $payPlugApiClient;
 
     public function __construct(
         private RequestStack $requestStack,
@@ -57,6 +59,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     {
         $this->prepare($payment);
         $details = $payment->getDetails();
+        Assert::string($details['payment_id']);
 
         try {
             $this->payPlugApiClient->refundPayment($details['payment_id']);
@@ -73,6 +76,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
     {
         $this->prepare($payment);
         $details = $payment->getDetails();
+        Assert::string($details['payment_id']);
 
         try {
             $refund = $this->payPlugApiClient->refundPaymentWithAmount($details['payment_id'], $amount, $refundId);

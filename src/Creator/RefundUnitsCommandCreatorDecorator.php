@@ -7,18 +7,15 @@ namespace PayPlug\SyliusPayPlugPlugin\Creator;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use Payum\Core\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Payment\Repository\PaymentMethodRepositoryInterface;
 use Sylius\RefundPlugin\Command\RefundUnits;
-use Sylius\RefundPlugin\Converter\RefundUnitsConverterInterface;
 use Sylius\RefundPlugin\Converter\Request\RequestToRefundUnitsConverterInterface;
 use Sylius\RefundPlugin\Creator\RequestCommandCreatorInterface;
 use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
-use Sylius\RefundPlugin\Model\RefundType;
 use Sylius\RefundPlugin\Model\UnitRefundInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -31,12 +28,16 @@ use Webmozart\Assert\Assert;
 class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterface
 {
     private const MINIMUM_REFUND_AMOUNT = 10;
+    private const SUPPORTED_METHODS = [
+        PayPlugGatewayFactory::FACTORY_NAME,
+        OneyGatewayFactory::FACTORY_NAME
+    ];
 
     public function __construct(
         #[AutowireDecorated]
         private RequestCommandCreatorInterface $decorated,
         #[Autowire('@sylius_refund.converter.request_to_refund_units')]
-        private RequestToRefundUnitsConverterInterface | RefundUnitsConverterInterface $requestToRefundUnitsConverter,
+        private RequestToRefundUnitsConverterInterface $requestToRefundUnitsConverter,
         private PaymentMethodRepositoryInterface $paymentMethodRepository,
         private OrderRepositoryInterface $orderRepository,
         private TranslatorInterface $translator,
@@ -45,52 +46,31 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
     ) {
     }
 
-    public function fromRequest(Request $request): RefundUnits
+    /**
+     * @return RefundUnits
+     */
+    public function fromRequest(Request $request): object
     {
         Assert::true($request->attributes->has('orderNumber'), 'Refunded order number not provided');
-
-        if ($this->requestToRefundUnitsConverter instanceof RefundUnitsConverterInterface) {
-            /** @phpstan-ignore-next-line */
-            $units = $this->requestToRefundUnitsConverter->convert(
-                $request->request->has('sylius_refund_units') ? $request->request->all()['sylius_refund_units'] : [],
-                /* @phpstan-ignore-next-line */
-                RefundType::orderItemUnit(),
-            );
-
-            /** @phpstan-ignore-next-line */
-            $shipments = $this->requestToRefundUnitsConverter->convert(
-                $request->request->has('sylius_refund_shipments') ? $request->request->all()['sylius_refund_shipments'] : [],
-                /* @phpstan-ignore-next-line */
-                RefundType::shipment(),
-            );
-
-            $units = array_merge($units, $shipments);
-        } else {
-            $units = $this->requestToRefundUnitsConverter->convert($request);
-        }
-
+        $units = $this->requestToRefundUnitsConverter->convert($request);
         if ([] === $units) {
             throw InvalidRefundAmount::withValidationConstraint('sylius_refund.at_least_one_unit_should_be_selected_to_refund');
         }
 
-        /** @var int $paymentMethodId */
-        $paymentMethodId = $request->request->get('sylius_refund_payment_method');
+        $paymentMethodId = $request->request->getInt('sylius_refund_payment_method');
+        if (0 === $paymentMethodId) {
+            return $this->decorated->fromRequest($request); // @phpstan-ignore-line
+        }
 
         /** @var PaymentMethodInterface $paymentMethod */
         $paymentMethod = $this->paymentMethodRepository->find($paymentMethodId);
-
-        /** @var GatewayConfigInterface $gateway */
         $gateway = $paymentMethod->getGatewayConfig();
-
-        if (
-            PayPlugGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName() &&
-            OneyGatewayFactory::FACTORY_NAME !== $gateway->getFactoryName()
-        ) {
-            return $this->decorated->fromRequest($request); /** @phpstan-ignore-line */
+        if (!\in_array($gateway?->getFactoryName(), self::SUPPORTED_METHODS, true)) {
+            return $this->decorated->fromRequest($request); // @phpstan-ignore-line
         }
 
         if (OneyGatewayFactory::FACTORY_NAME === $gateway->getFactoryName()) {
-            $orderNumber = $request->get('orderNumber');
+            $orderNumber = $request->attributes->get('orderNumber');
             Assert::string($orderNumber);
 
             /** @var OrderInterface|null $order */
@@ -101,28 +81,25 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
         }
 
         $totalRefundRequest = $this->getTotalRefundAmount($units);
-
         if ($totalRefundRequest < self::MINIMUM_REFUND_AMOUNT) {
             throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('payplug_sylius_payplug_plugin.ui.refund_minimum_amount_requirement_not_met'));
         }
 
-        return $this->decorated->fromRequest($request); /** @phpstan-ignore-line */
+        return $this->decorated->fromRequest($request); // @phpstan-ignore-line
     }
 
+    /**
+     * @param array<UnitRefundInterface> $units
+     */
     private function getTotalRefundAmount(array $units): int
     {
         $total = 0;
 
         foreach ($units as $unit) {
-            $total += $this->getAmount($unit);
+            $total += $unit->total();
         }
 
         return $total;
-    }
-
-    private function getAmount(UnitRefundInterface $unit): int
-    {
-        return $unit->total();
     }
 
     private function canOneyRefundBeMade(OrderInterface $order): void

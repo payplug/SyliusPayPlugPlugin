@@ -10,7 +10,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
-use Payum\Core\Model\GatewayConfigInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Payum\Core\Payum;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -23,7 +23,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * TODO : !!! Check if this controller is still needed
+ * @deprecated - Used by payum
  */
 #[AsController]
 class OneClickAction extends AbstractController implements GatewayAwareInterface, ApiAwareInterface
@@ -51,9 +51,13 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
 
         /** @var GatewayConfigInterface $paymentGateway */
         $paymentGateway = $paymentMethod->getGatewayConfig();
+        $gatewayName = $paymentGateway->getGatewayName();
+        if (null === $gatewayName) {
+            throw new \InvalidArgumentException('Payment gateway name cannot be null');
+        }
 
         $captureToken = $this->payum->getTokenFactory()->createCaptureToken(
-            $paymentGateway->getGatewayName(),
+            $gatewayName,
             $payment,
             'sylius_shop_order_thank_you',
             [],

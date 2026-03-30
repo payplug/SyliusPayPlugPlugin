@@ -28,6 +28,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/** @deprecated  */
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [

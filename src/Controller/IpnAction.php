@@ -17,9 +17,9 @@ use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
-use Payum\Core\Model\GatewayConfigInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +27,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
+/** @deprecated  */
 #[AsController]
 class IpnAction
 {
@@ -60,6 +61,11 @@ class IpnAction
         }
 
         $payment = $this->paymentRepository->findOneByPayPlugPaymentId($details['id']);
+
+        if (null === $payment) {
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+        }
+
         $paymentMethod = $payment->getMethod();
 
         Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
