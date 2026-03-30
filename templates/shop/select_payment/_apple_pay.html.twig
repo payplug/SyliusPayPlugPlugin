@@ -18,7 +18,8 @@
 <div
     {{ stimulus_controller('@payplug/sylius-payplug-plugin/apple-pay', {
         'paymentInputId': form.vars.id,
-        'settings': applePaySettings
+        'settings': applePaySettings,
+        'notice': 'payplug_sylius_payplug_plugin.ui.apple_pay_not_available'|trans
     })|stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
         'inputId': form.vars.id,
         'logoUrl': asset('bundles/payplugsyliuspayplugplugin/assets/apple-pay/logo.svg'),
