@@ -42,7 +42,7 @@ class ApplePayPaymentProvider
         private StateMachineInterface $stateMachine,
         private PaymentMethodRepositoryInterface $paymentMethodRepository,
         private PayPlugPaymentDataCreator $paymentDataCreator,
-        #[Autowire('@sylius_payplug_plugin.api_client.apple_pay')]
+        #[Autowire('@payplug_sylius_payplug_plugin.api_client.apple_pay')]
         private PayPlugApiClientInterface $applePayClient,
         private EntityManagerInterface $entityManager,
         private OrderTokenAssignerInterface $orderTokenAssigner,
