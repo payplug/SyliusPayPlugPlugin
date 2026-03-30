@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
-use PayPlug\SyliusPayPlugPlugin\Checker\ApplePayCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider;
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\Payment;
-use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
@@ -23,7 +20,6 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
         #[AutowireDecorated]
         private PaymentMethodsResolverInterface $decorated,
         private SupportedMethodsProvider $supportedMethodsProvider,
-        private ApplePayCheckerInterface $applePayChecker,
     ) {
     }
 
@@ -31,21 +27,6 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
     {
         Assert::isInstanceOf($subject, Payment::class);
         $supportedMethods = $this->decorated->getSupportedMethods($subject);
-
-        foreach ($supportedMethods as $key => $paymentMethod) {
-            Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
-
-            /** @var GatewayConfigInterface $gatewayConfig */
-            $gatewayConfig = $paymentMethod->getGatewayConfig();
-
-            if (ApplePayGatewayFactory::FACTORY_NAME !== $gatewayConfig->getFactoryName()) {
-                continue;
-            }
-
-            if (!$this->applePayChecker->isDeviceReady()) {
-                unset($supportedMethods[$key]);
-            }
-        }
 
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
