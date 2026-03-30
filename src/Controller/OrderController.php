@@ -32,23 +32,22 @@ use Webmozart\Assert\Assert;
 final class OrderController extends BaseOrderController
 {
     private const APPLE_ERROR_RESPONSE_CODE = 0;
-
     private const APPLE_SUCCESS_RESPONSE_CODE = 1;
 
-    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
-    private StateMachineInterface $stateMachineAbstraction;
+    #[Required]
+    public StateMachineInterface $stateMachineAbstraction;
 
-    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
-    private ApplePayPaymentProvider $applePayPaymentProvider;
+    #[Required]
+    public ApplePayPaymentProvider $applePayPaymentProvider;
 
-    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
-    private LockFactory $lockFactory;
+    #[Required]
+    public LockFactory $lockFactory;
 
-    #[Required] // @phpstan-ignore-next-line - Symfony write this attribute
-    private LoggerInterface $logger;
+    #[Required]
+    public LoggerInterface $logger;
 
     #[Route(
-        path: '/payplug/apple-pay/prepare/{orderId}',
+        path: '/payplug/apple-pay/prepare/{id}',
         name: 'payplug_shop_checkout_apple_prepare',
         options: [
             '_sylius' => [
@@ -157,7 +156,7 @@ final class OrderController extends BaseOrderController
     }
 
     #[Route(
-        path: '/payplug/apple-pay/complete/{orderId}',
+        path: '/payplug/apple-pay/complete/{id}',
         name: 'payplug_shop_checkout_apple_confirm',
         options: [
             '_sylius' => [
@@ -268,7 +267,7 @@ final class OrderController extends BaseOrderController
     }
 
     #[Route(
-        path: '/payplug/apple-pay/cancel/{orderId}',
+        path: '/payplug/apple-pay/cancel/{id}',
         name: 'payplug_shop_checkout_apple_cancel',
         options: [
             '_sylius' => [
@@ -291,7 +290,6 @@ final class OrderController extends BaseOrderController
 
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
-
         $lock = $this->lockFactory->createLock('apple_pay_cancel' . $resource->getId());
         $lock->acquire(true);
 

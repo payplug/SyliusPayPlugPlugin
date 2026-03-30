@@ -20,6 +20,7 @@ services:
 
     PayPlug\SyliusPayPlugPlugin\Controller\OrderController:
         parent: sylius.controller.order
+        autowire: true
 
     PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface:
         class: PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider
