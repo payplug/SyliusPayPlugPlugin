@@ -12,8 +12,7 @@
     max-width: 400px;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin-top: 20px;
-    margin-bottom: 0;
+    margin: 20px auto 0;
     display: flex;
     position: relative
 }
