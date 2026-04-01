@@ -110,6 +110,7 @@ export default class extends Controller {
       });
       this.openFields();
       this.containerTarget.dataset.paymentInlineSubmit = "true";
+      this.element.dispatchEvent(new CustomEvent('payment-method-state-change', { bubbles: true }));
     }
   }
 
@@ -120,6 +121,7 @@ export default class extends Controller {
       });
       this.closeFields();
       this.containerTarget.dataset.paymentInlineSubmit = "false";
+      this.element.dispatchEvent(new CustomEvent('payment-method-state-change', { bubbles: true }));
     }
   }
 
