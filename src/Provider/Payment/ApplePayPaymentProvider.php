@@ -15,6 +15,7 @@ use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\PaymentNotCompletedException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
+use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -47,6 +48,7 @@ class ApplePayPaymentProvider
         private EntityManagerInterface $entityManager,
         private OrderTokenAssignerInterface $orderTokenAssigner,
         private RouterInterface $router,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -59,7 +61,6 @@ class ApplePayPaymentProvider
         }
 
         $state = PaymentInterface::STATE_CART;
-
         /** @phpstan-ignore-next-line */
         if ($order->getPayments()->filter(fn (PaymentInterface $payment): bool => PaymentInterface::STATE_FAILED === $payment->getState() || PaymentInterface::STATE_CANCELLED === $payment->getState())->count() > 0) {
             $state = PaymentInterface::STATE_NEW;
@@ -102,6 +103,7 @@ class ApplePayPaymentProvider
         $this->applyRequiredPaymentTransition($payment, PaymentInterface::STATE_NEW);
         $this->applyRequiredOrderPaymentTransition($order, OrderPaymentStates::STATE_AWAITING_PAYMENT);
         $this->applyRequiredOrderCheckoutTransition($order, OrderCheckoutStates::STATE_COMPLETED);
+        $this->orderTokenAssigner->assignTokenValueIfNotSet($order);
 
         $this->entityManager->flush();
 
@@ -110,9 +112,11 @@ class ApplePayPaymentProvider
 
     public function patch(Request $request, OrderInterface $order): PaymentInterface
     {
+        $this->logger->debug('[Payplug] ApplePay payment patch', ['order' => $order]);
         $lastPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);
 
         if (!$lastPayment instanceof PaymentInterface) {
+            $this->logger->error('[Payplug] No new payment found for order', ['order' => $order]);
             throw new LogicException();
         }
 
@@ -126,17 +130,19 @@ class ApplePayPaymentProvider
         }
 
         $paymentResource = $this->applePayClient->retrieve($lastPayment->getDetails()['payment_id']);
-
+        $this->logger->debug('[Payplug] ApplePay payment resource', ['payment' => (array) $paymentResource]);
         try {
             $applePay = [];
-            $applePay['payment_token'] = $request->get('token');
+            $applePay['payment_token'] = $request->request->all('token');
 
             $data = [
                 ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY => $applePay,
             ];
 
+            $this->logger->debug('[Payplug] ApplePay payment update data', ['data' => $data]);
             /** @var Payment $response */
             $response = $paymentResource->update($data);
+            $this->logger->info('[Payplug] ApplePay payment update response', ['response' => (array) $response]);
             $details = $lastPayment->getDetails();
 
             if (!$response->is_paid) {
@@ -145,13 +151,12 @@ class ApplePayPaymentProvider
                 throw new PaymentNotCompletedException();
             }
 
+            $this->logger->debug('[Payplug] ApplePay payment update response is paid', ['response' => (array) $response]);
             $details['status'] = PaymentInterface::STATE_COMPLETED;
             $details['created_at'] = $response->created_at;
 
             $order = $lastPayment->getOrder();
             Assert::isInstanceOf($order, OrderInterface::class);
-
-            $this->orderTokenAssigner->assignTokenValueIfNotSet($order);
 
             $this->entityManager->flush();
 
@@ -164,9 +169,14 @@ class ApplePayPaymentProvider
             $lastPayment->setDetails($details);
 
             return $lastPayment;
-        } catch (\Exception) {
-            $paymentResource->abort();
+        } catch (\Exception $exception) {
+            $this->logger->error('[Payplug] ApplePay payment update failed', ['exception' => $exception, 'message' => $exception->getMessage()]);
             $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_FAILED);
+            try {
+                $paymentResource->abort();
+            } catch (\Throwable $throwable) {
+                $this->logger->error('[Payplug] ApplePay payment abort failed', ['payment' => $lastPayment, 'exception' => $throwable]);
+            }
 
             throw new PaymentNotCompletedException();
         }

@@ -18,6 +18,7 @@ use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\ResourceActions;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -100,7 +101,6 @@ final class OrderController extends BaseOrderController
             }
 
             $initializeEvent = $this->eventDispatcher->dispatchInitializeEvent(ResourceActions::UPDATE, $configuration, $resource);
-
             $initializeEventResponse = $initializeEvent->getResponse();
 
             if ($initializeEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
@@ -113,6 +113,7 @@ final class OrderController extends BaseOrderController
 
             $payment = $this->applePayPaymentProvider->provide($request, $resource);
 
+            $this->logger->info('[Payplug] ApplePay payment', ['payment' => $payment, 'details' => $payment->getDetails()]);
             $this->manager->flush();
 
             return new JsonResponse([
@@ -142,7 +143,7 @@ final class OrderController extends BaseOrderController
 
             $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
             $dataResponse = [];
-            $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
+            $redirect = $this->getApplePayNextRoute($resource);
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
             $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
 
@@ -174,35 +175,37 @@ final class OrderController extends BaseOrderController
     public function confirmApplePayPaymentAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
-
+        $this->logger->info('[Payplug] Configuration', ['configuration' => $configuration->getParameters() ?? '']);
         $this->isGrantedOr403($configuration, ResourceActions::UPDATE);
 
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
-
+        $this->logger->info('[Payplug] Order', ['order' => $resource]);
         /** @var ResourceControllerEvent $event */
         $event = $this->eventDispatcher->dispatchPreEvent(ResourceActions::UPDATE, $configuration, $resource);
-
+        $this->logger->info('[Payplug] Event', ['event' => $event]);
         if ($event->isStopped() && !$configuration->isHtmlRequest()) {
             throw new HttpException($event->getErrorCode(), $event->getMessage());
         }
-
         if ($event->isStopped()) {
+            $this->logger->info('[Payplug] Event stopped', ['event' => $event]);
             $eventResponse = $event->getResponse();
             if (null !== $eventResponse) {
                 return $eventResponse;
             }
-
+            $this->logger->info('[Payplug] Event response', ['event_response' => $eventResponse]);
             return new JsonResponse([], Response::HTTP_BAD_REQUEST);
         }
 
         try {
+            $this->logger->info('[Payplug] Update resource', ['resource' => $resource]);
             $lastPayment = $this->applePayPaymentProvider->patch($request, $resource);
-
+            $this->logger->info('[Payplug] Last payment', ['last_payment' => $lastPayment]);
             if (PaymentInterface::STATE_COMPLETED !== $lastPayment->getState()) {
                 throw new PaymentNotCompletedException();
             }
         } catch (\Exception | PaymentNotCompletedException $exception) {
+            $this->logger->error('Could not complete ApplePay payment', ['exception' => $exception]);
             try {
                 $this->applePayPaymentProvider->cancel($resource);
             } catch (\Throwable $throwable) {
@@ -215,13 +218,15 @@ final class OrderController extends BaseOrderController
             }
 
             $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
-            $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
+            $redirect = $this->getApplePayNextRoute($resource);
+
             $dataResponse = [];
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
             $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
             $dataResponse['errors'] = 'Payment not created';
             $dataResponse['message'] = $exception->getMessage();
 
+            $this->logger->error('Could not complete ApplePay payment', ['exception' => $exception, 'data_response' => $dataResponse]);
             return new JsonResponse($dataResponse, Response::HTTP_BAD_REQUEST);
         }
 
@@ -347,14 +352,7 @@ final class OrderController extends BaseOrderController
             $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
 
             $dataResponse = [];
-            $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment', ['_locale' => $resource->getLocaleCode()]);
-
-            if (OrderCheckoutStates::STATE_COMPLETED === $resource->getCheckoutState()) {
-                $redirect = $this->redirectToRoute('sylius_shop_order_show', [
-                    'tokenValue' => $resource->getTokenValue(),
-                    '_locale' => $resource->getLocaleCode(),
-                ]);
-            }
+            $redirect = $this->getApplePayNextRoute($resource);
 
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
             $dataResponse['responseToApple'] = ['status' => self::APPLE_SUCCESS_RESPONSE_CODE];
@@ -388,14 +386,7 @@ final class OrderController extends BaseOrderController
 
             $dataResponse = [];
 
-            $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment');
-
-            if (OrderInterface::STATE_NEW === $resource->getState()) {
-                $redirect = $this->redirectToRoute('sylius_shop_order_show', [
-                    'tokenValue' => $resource->getTokenValue(),
-                    '_locale' => $resource->getLocaleCode(),
-                ]);
-            }
+            $redirect = $this->getApplePayNextRoute($resource);
 
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
             $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
@@ -407,5 +398,28 @@ final class OrderController extends BaseOrderController
 
             return new JsonResponse($response, Response::HTTP_OK);
         }
+    }
+
+    private function getApplePayNextRoute(OrderInterface $resource): RedirectResponse
+    {
+        $redirect = $this->redirectToRoute('sylius_shop_checkout_select_payment', ['_locale' => $resource->getLocaleCode()]);
+
+        if (OrderCheckoutStates::STATE_COMPLETED === $resource->getCheckoutState()) {
+            $redirect = $this->redirectToRoute('sylius_shop_order_show', [
+                'tokenValue' => $resource->getTokenValue(),
+                '_locale' => $resource->getLocaleCode(),
+            ]);
+        }
+
+        if (OrderInterface::STATE_NEW === $resource->getState()) {
+            $redirect = $this->redirectToRoute('sylius_shop_order_show', [
+                'tokenValue' => $resource->getTokenValue(),
+                '_locale' => $resource->getLocaleCode(),
+            ]);
+        }
+
+        $this->logger->debug('[Payplug] Redirect', ['redirect' => $redirect, 'targetUrl' => $redirect->getTargetUrl()]);
+
+        return $redirect;
     }
 }
