@@ -227,7 +227,7 @@ final class OrderController extends BaseOrderController
             $dataResponse['message'] = $exception->getMessage();
 
             $this->logger->error('Could not complete ApplePay payment', ['exception' => $exception, 'data_response' => $dataResponse]);
-            return new JsonResponse($dataResponse, Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['data' => $dataResponse], Response::HTTP_BAD_REQUEST);
         }
 
         $this->manager->flush();
