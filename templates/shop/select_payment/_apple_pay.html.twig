@@ -6,9 +6,9 @@
     'countryCode': sylius.channel.defaultLocale.code|length == 2 ? sylius.channel.defaultLocale.code : sylius.channel.defaultLocale.code|slice(3, 2),
     'currencyCode': sylius.channel.baseCurrency.code,
     'merchantCapabilities': ['supports3DS'],
-    'supportedNetworks': ['visa', 'mastercard'],
+    'supportedNetworks': ['cartesBancaires', 'visa', 'masterCard'],
     'total': {
-        'label': '',
+        'label': sylius.channel.name,
         'type': 'final',
         'amount': (order is not null ? order.total / 100 : 0)
     },
