@@ -166,10 +166,10 @@ final class OrderController extends BaseOrderController
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
         $this->isGrantedOr403($configuration, ResourceActions::UPDATE);
 
-        /** @var OrderInterface $resource */
-        $resource = $this->findOr404($configuration);
+        /** @var OrderInterface $order */
+        $order = $this->findOr404($configuration);
         /** @var ResourceControllerEvent $event */
-        $event = $this->eventDispatcher->dispatchPreEvent(ResourceActions::UPDATE, $configuration, $resource);
+        $event = $this->eventDispatcher->dispatchPreEvent(ResourceActions::UPDATE, $configuration, $order);
         if ($event->isStopped() && !$configuration->isHtmlRequest()) {
             throw new HttpException($event->getErrorCode(), $event->getMessage());
         }
@@ -182,13 +182,13 @@ final class OrderController extends BaseOrderController
         }
 
         try {
-            $lastPayment = $this->applePayPaymentProvider->patch($request, $resource);
+            $lastPayment = $this->applePayPaymentProvider->patch($request, $order);
             if (PaymentInterface::STATE_COMPLETED !== $lastPayment->getState()) {
                 throw new PaymentNotCompletedException();
             }
         } catch (\Exception | PaymentNotCompletedException $exception) {
             $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
-            $redirect = $this->getApplePayNextRoute($resource);
+            $redirect = $this->getApplePayNextRoute($order);
 
             $dataResponse = [];
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
@@ -208,24 +208,13 @@ final class OrderController extends BaseOrderController
 
         $this->manager->flush();
 
-        $postEvent = $this->eventDispatcher->dispatchPostEvent(ResourceActions::UPDATE, $configuration, $resource);
+        $postEvent = $this->eventDispatcher->dispatchPostEvent(ResourceActions::UPDATE, $configuration, $order);
 
         $postEventResponse = $postEvent->getResponse();
 
         if ($postEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
             return $postEventResponse;
         }
-
-        $initializeEvent = $this->eventDispatcher->dispatchInitializeEvent(ResourceActions::UPDATE, $configuration, $resource);
-
-        $initializeEventResponse = $initializeEvent->getResponse();
-
-        if ($initializeEventResponse instanceof \Symfony\Component\HttpFoundation\Response) {
-            return $initializeEventResponse;
-        }
-
-        $order = $resource;
-        Assert::isInstanceOf($order, OrderInterface::class);
 
         if ($this->stateMachineAbstraction->can($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE)) {
             $this->stateMachineAbstraction->apply($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE);
