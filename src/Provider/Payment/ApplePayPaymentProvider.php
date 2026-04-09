@@ -126,11 +126,11 @@ class ApplePayPaymentProvider
         try {
             $token = $request->request->all('token');
             if ([] === $token) {
-                $token = json_decode($request->getContent(), true)['token'] ?? null;
+                $token = json_decode($request->getContent(), true)['token'] ?? null; // @phpstan-ignore-line
             }
 
-            if (null == $token) {
-                throw new InvalidRequestException('Missing token in request');
+            if (null === $token) {
+                throw new \InvalidArgumentException('Missing token in request');
             }
 
             $this->logger->notice('[Payplug] ApplePay payment token', ['token' => $token]);
