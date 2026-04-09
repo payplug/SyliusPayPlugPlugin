@@ -32,11 +32,11 @@ final class NotifyPaymentProvider implements NotifyPaymentProviderInterface
         if (null === $orderNumber) {
             throw new \InvalidArgumentException('Order number not found in request payload');
         }
-        $order = $this->getOrderFromReference($orderNumber);
+        $order = $this->getOrderFromReference((string) $orderNumber);
 
         $payId = $request->getPayload()->getString('id');
         $payment = $order->getPayments()->filter(function (PaymentInterface $payment) use ($payId) {
-            return $payment->getDetails()['payment_id'] === $payId;
+            return $payId === ($payment->getDetails()['payment_id'] ?? null);
         })->first();
         if (false === $payment) {
             throw new \InvalidArgumentException(sprintf('Payment with ID "%s" not found in order "%s"', $payId, $orderNumber));
