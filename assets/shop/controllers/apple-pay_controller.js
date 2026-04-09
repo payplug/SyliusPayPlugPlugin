@@ -131,16 +131,15 @@ export default class extends Controller {
 
       session.onpaymentauthorized = async (event) => {
         try {
-          const formData = this.toFormData({
-            token: event.payment.token
-          });
-
           const response = await fetch(applePayButton.dataset.paymentAuthorizedRoute, {
             method: 'POST',
             headers: {
               'X-Requested-With': 'XMLHttpRequest',
+              'Content-Type': 'application/json',
             },
-            body: formData,
+            body: JSON.stringify({
+              token: event.payment.token,
+            }),
           });
           const authorization = await response.json();
 
@@ -178,20 +177,5 @@ export default class extends Controller {
     } catch (e) {
       console.error('Failed to create Apple Pay session:', e);
     }
-  }
-
-  toFormData(obj, formData = new FormData(), prefix = '') {
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const value = obj[key];
-        const name = prefix ? `${prefix}[${key}]` : key;
-        if (typeof value === 'object' && value !== null && !(value instanceof File) && !(value instanceof Blob)) {
-          this.toFormData(value, formData, name);
-        } else {
-          formData.append(name, value);
-        }
-      }
-    }
-    return formData;
   }
 }
