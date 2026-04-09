@@ -27,7 +27,7 @@ final class NotifyPaymentProvider implements NotifyPaymentProviderInterface
 
     public function getPayment(Request $request, PaymentMethodInterface $paymentMethod): PaymentInterface
     {
-        /** @var string|null $orderNumber */
+        /** @var string|int|null $orderNumber */
         $orderNumber = $request->getPayload()->all('metadata')['order_number'] ?? null;
         if (null === $orderNumber) {
             throw new \InvalidArgumentException('Order number not found in request payload');
