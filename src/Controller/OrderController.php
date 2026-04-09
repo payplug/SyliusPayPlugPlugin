@@ -53,12 +53,6 @@ final class OrderController extends BaseOrderController
         options: [
             '_sylius' => [
                 'flash' => false,
-                'repository' => [
-                    'method' => 'find',
-                    'arguments' => [
-                        'expr:service("PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider").getCurrentCart()',
-                    ],
-                ],
             ],
         ],
         methods: ['GET', 'POST'],
@@ -132,6 +126,7 @@ final class OrderController extends BaseOrderController
         } catch (\Exception) {
             try {
                 $this->applePayPaymentProvider->cancel($resource);
+                $this->manager->flush();
             } catch (\Throwable $throwable) {
                 $this->logger->error('Could not cancel ApplePay payment', [
                     'order_id' => $resource->getId(),
@@ -162,12 +157,6 @@ final class OrderController extends BaseOrderController
         options: [
             '_sylius' => [
                 'flash' => false,
-                'repository' => [
-                    'method' => 'find',
-                    'arguments' => [
-                        'expr:service("PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider").getCurrentCart()',
-                    ],
-                ],
             ],
         ],
         methods: ['GET', 'POST'],
@@ -175,59 +164,46 @@ final class OrderController extends BaseOrderController
     public function confirmApplePayPaymentAction(Request $request): Response
     {
         $configuration = $this->requestConfigurationFactory->create($this->metadata, $request);
-        $this->logger->info('[Payplug] Configuration', ['configuration' => $configuration->getParameters() ?? '']);
         $this->isGrantedOr403($configuration, ResourceActions::UPDATE);
 
         /** @var OrderInterface $resource */
         $resource = $this->findOr404($configuration);
-        $this->logger->info('[Payplug] Order', ['order' => $resource]);
         /** @var ResourceControllerEvent $event */
         $event = $this->eventDispatcher->dispatchPreEvent(ResourceActions::UPDATE, $configuration, $resource);
-        $this->logger->info('[Payplug] Event', ['event' => $event]);
         if ($event->isStopped() && !$configuration->isHtmlRequest()) {
             throw new HttpException($event->getErrorCode(), $event->getMessage());
         }
         if ($event->isStopped()) {
-            $this->logger->info('[Payplug] Event stopped', ['event' => $event]);
             $eventResponse = $event->getResponse();
             if (null !== $eventResponse) {
                 return $eventResponse;
             }
-            $this->logger->info('[Payplug] Event response', ['event_response' => $eventResponse]);
             return new JsonResponse([], Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            $this->logger->info('[Payplug] Update resource', ['resource' => $resource]);
             $lastPayment = $this->applePayPaymentProvider->patch($request, $resource);
-            $this->logger->info('[Payplug] Last payment', ['last_payment' => $lastPayment]);
             if (PaymentInterface::STATE_COMPLETED !== $lastPayment->getState()) {
                 throw new PaymentNotCompletedException();
             }
         } catch (\Exception | PaymentNotCompletedException $exception) {
-            $this->logger->error('Could not complete ApplePay payment', ['exception' => $exception]);
-            try {
-                $this->applePayPaymentProvider->cancel($resource);
-            } catch (\Throwable $throwable) {
-                $this->logger->error('Could not cancel ApplePay payment', [
-                    'order_id' => $resource->getId(),
-                    'code' => $throwable->getCode(),
-                    'message' => $throwable->getMessage(),
-                    'trace' => $throwable->getTraceAsString(),
-                ]);
-            }
-
             $request->getSession()->getFlashBag()->add('error', 'sylius.payment.cancelled');
             $redirect = $this->getApplePayNextRoute($resource);
 
             $dataResponse = [];
             $dataResponse['returnUrl'] = $redirect->getTargetUrl();
             $dataResponse['responseToApple'] = ['status' => self::APPLE_ERROR_RESPONSE_CODE];
-            $dataResponse['errors'] = 'Payment not created';
+            $dataResponse['errors'] = 'Payment not completed';
             $dataResponse['message'] = $exception->getMessage();
 
             $this->logger->error('Could not complete ApplePay payment', ['exception' => $exception, 'data_response' => $dataResponse]);
-            return new JsonResponse(['data' => $dataResponse], Response::HTTP_BAD_REQUEST);
+
+            $response = [
+                'success' => false,
+                'data' => $dataResponse,
+            ];
+
+            return new JsonResponse($response, Response::HTTP_BAD_REQUEST);
         }
 
         $this->manager->flush();
@@ -248,7 +224,7 @@ final class OrderController extends BaseOrderController
             return $initializeEventResponse;
         }
 
-        $order = $lastPayment->getOrder();
+        $order = $resource;
         Assert::isInstanceOf($order, OrderInterface::class);
 
         if ($this->stateMachineAbstraction->can($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE)) {
@@ -277,12 +253,6 @@ final class OrderController extends BaseOrderController
         options: [
             '_sylius' => [
                 'flash' => false,
-                'repository' => [
-                    'method' => 'find',
-                    'arguments' => [
-                        'expr:service("PayPlug\\SyliusPayPlugPlugin\\Provider\\ApplePayOrderProvider").getCurrentCart()',
-                    ],
-                ],
             ],
         ],
         methods: ['GET', 'POST'],
@@ -335,6 +305,7 @@ final class OrderController extends BaseOrderController
 
             try {
                 $this->applePayPaymentProvider->cancel($resource);
+                $this->manager->flush();
             } catch (\Throwable $throwable) {
                 $this->logger->error('Could not cancel ApplePay payment', [
                     'order_id' => $resource->getId(),
