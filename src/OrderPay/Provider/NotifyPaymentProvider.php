@@ -27,16 +27,16 @@ final class NotifyPaymentProvider implements NotifyPaymentProviderInterface
 
     public function getPayment(Request $request, PaymentMethodInterface $paymentMethod): PaymentInterface
     {
-        /** @var string|null $orderNumber */
+        /** @var string|int|null $orderNumber */
         $orderNumber = $request->getPayload()->all('metadata')['order_number'] ?? null;
         if (null === $orderNumber) {
             throw new \InvalidArgumentException('Order number not found in request payload');
         }
-        $order = $this->getOrderFromReference($orderNumber);
+        $order = $this->getOrderFromReference((string) $orderNumber);
 
         $payId = $request->getPayload()->getString('id');
         $payment = $order->getPayments()->filter(function (PaymentInterface $payment) use ($payId) {
-            return $payment->getDetails()['payment_id'] === $payId;
+            return $payId === ($payment->getDetails()['payment_id'] ?? null);
         })->first();
         if (false === $payment) {
             throw new \InvalidArgumentException(sprintf('Payment with ID "%s" not found in order "%s"', $payId, $orderNumber));

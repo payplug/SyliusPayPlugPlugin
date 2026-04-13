@@ -25,7 +25,8 @@
 </script>
 <div
     class="payplugIntegratedPayment"
-    {{ stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment') }}
+    {{ stimulus_target('@payplug/sylius-payplug-plugin/integrated-payment', 'container') }}
+    data-payment-inline-submit="{{ hasSavedCards is not same as true ? 'true' : 'false' }}"
 >
     <div class="sylius-shop-loader d-none">
         <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>

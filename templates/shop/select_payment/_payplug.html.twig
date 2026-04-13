@@ -21,17 +21,9 @@
     {% set integratedPayment = true %}
 {% endif %}
 
-<div class="content">
-    <a class="header">
-        {{ form_label(form, null, {'label_attr': {'data-test-payment-method-label': '', 'data-gateway': 'payplug'}}) }}
-    </a>
-
+<div class="content" {{ integratedPayment ? stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment', {'code': method.code}) : '' }}>
     {% if hasSavedCards %}
-        <div
-            class="payment-method-choice payplug-payment-choice"
-            {{ stimulus_target('@payplug/sylius-payplug-plugin/checkout-select-payment', 'trigger') }}
-            data-payment-input-id="{{ form.vars.id }}"
-        >
+        <div class="payplug-payment-choice">
             {{ form_row(form.parent.parent.payplug_card_choice) }}
         </div>
     {% endif %}
@@ -41,6 +33,7 @@
             'paymentMethod': method,
             'payment': order.getLastPayment('cart'),
             'hasSavedCards': hasSavedCards,
+            'paymentInputId': form.vars.id,
         } %}
     {% endif %}
 </div>

@@ -1157,12 +1157,6 @@ parameters:
 			path: ../src/Provider/AbstractSupportedRefundPaymentMethodsProvider.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: ../src/Provider/ApplePayOrderProvider.php
-
-		-
 			message: '#^Cannot access offset ''max_amounts'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
