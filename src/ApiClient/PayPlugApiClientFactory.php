@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
 use Payplug\Authentication;
+use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
@@ -52,7 +53,7 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
             $clientConfig = $config['test_client'];
         }
         if (!\is_array($clientConfig)) {
-            throw new \LogicException('No client config found for ' . $gatewayConfig->getFactoryName() . '. Please renew your credentials in the PayPlug plugin configuration.');
+            throw new GatewayConfigurationException('No client config found for ' . $gatewayConfig->getFactoryName() . '. Please renew your credentials in the PayPlug plugin configuration.');
         }
 
         $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $config['live'] === true ? 'live' : 'test');
@@ -61,12 +62,12 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($clientConfig) {
             $response = Authentication::generateJWT($clientConfig['client_id'] ?? '', $clientConfig['client_secret'] ?? '');
             if ([] === $response || !is_array($response['httpResponse'])) {
-                throw new \LogicException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
+                throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
             }
 
             $accessToken = $response['httpResponse']['access_token'];
             if (!is_string($accessToken)) {
-                throw new \LogicException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
+                throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
             }
             $expiresIn = $response['httpResponse']['expires_in'];
             if (!is_int($expiresIn)) {

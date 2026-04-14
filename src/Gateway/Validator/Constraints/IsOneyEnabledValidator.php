@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker;
+use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -33,6 +34,10 @@ final class IsOneyEnabledValidator extends ConstraintValidator
             return;
         }
 
+        if ($value->isEnabled() === false) {
+            return;
+        }
+
         $paymentMethod = $value;
         $gatewayConfig = $paymentMethod->getGatewayConfig();
         if (!$gatewayConfig instanceof GatewayConfigInterface) {
@@ -53,8 +58,10 @@ final class IsOneyEnabledValidator extends ConstraintValidator
                     ->addViolation();
             }
         } catch (UnauthorizedException) {
-            // do nothing, this should be handle by IsPayPlugSecretKeyValid Constraint
             return;
+        } catch (GatewayConfigurationException $exception) {
+            $this->context->buildViolation($exception->getMessage())
+                ->addViolation();
         }
     }
 }
