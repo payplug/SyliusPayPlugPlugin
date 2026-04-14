@@ -27,6 +27,9 @@ final class PayplugPermissionValidator extends ConstraintValidator
             return;
         }
         $paymentMethod = $value;
+        if ($paymentMethod->isEnabled() === false) {
+            return;
+        }
 
         try {
             $client = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
