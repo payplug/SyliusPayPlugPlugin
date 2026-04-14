@@ -18,6 +18,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 
 /**
  * This controller is used to authenticate the user with PayPlug
@@ -37,6 +38,7 @@ final class UnifiedAuthenticationController extends AbstractController
         private EntityManagerInterface $entityManager,
         private PaymentMethodValidator $paymentMethodValidator,
         private LoggerInterface $logger,
+        private CacheInterface $cache,
     ) {
     }
 
@@ -114,6 +116,11 @@ final class UnifiedAuthenticationController extends AbstractController
             $this->cleanSession($request);
 
             $request->getSession()->getFlashBag()->add('success', 'payplug_sylius_payplug_plugin.admin.oauth_callback_success');
+            // Clean previous cached client config
+            $cacheKeyLive = sprintf('payplug_%s_api_key_live', $gatewayConfig->getFactoryName());
+            $cacheKeyTest = sprintf('payplug_%s_api_key_test', $gatewayConfig->getFactoryName());
+            $this->cache->delete($cacheKeyLive);
+            $this->cache->delete($cacheKeyTest);
 
             // Ensure that the payment method is well configured
             $this->paymentMethodValidator->process($paymentMethod);
