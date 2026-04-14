@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 use Payplug\Exception\UnauthorizedException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSavePayplugPaymentMethodChecker;
+use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -36,6 +37,10 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
             return;
         }
 
+        if ($value->isEnabled() === false) {
+            return;
+        }
+
         $factoryName = $value->getGatewayConfig()?->getFactoryName();
         $channels = $value->getChannels();
 
@@ -45,8 +50,8 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
             return;
         }
 
-        $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->createForPaymentMethod($value));
         try {
+            $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->createForPaymentMethod($value));
             if (!$checker->isLive()) {
                 $this->context->buildViolation(sprintf($constraint->noTestKeyMessage, $factoryName))->addViolation();
 
@@ -58,6 +63,9 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
             }
 
             return;
+        } catch (GatewayConfigurationException $exception) {
+            $this->context->buildViolation($exception->getMessage())
+                ->addViolation();
         } catch (UnauthorizedException | \LogicException) {
             return;
         }
