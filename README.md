@@ -31,136 +31,168 @@ In local environment, the plugin will not work properly because you will not be 
 
 ## Compatibility
 
-| | Version |
-| :--- |:--------|
-| PHP  | ^8.2    |
+|        | Version |
+|:-------|:--------|
+| PHP    | ^8.2    |
 | Sylius | ^2.0    |
 
 ## Installation
 
-1. Require the **payplug/sylius-payplug-plugin** :
+### 1. Require the **payplug/sylius-payplug-plugin** :
 
-    ```bash
-    composer config extra.symfony.allow-contrib true
-    composer require payplug/sylius-payplug-plugin
-    ```
+```bash
+composer config extra.symfony.allow-contrib true
+composer require payplug/sylius-payplug-plugin
+```
 
-2. Apply migrations to your database:
+### 3. Register Sylius resources
 
-    ```shell
-    bin/console doctrine:migrations:migrate
-    ```
+The plugin's extension does not prepend its `resources.yaml`, so the Sylius resource services for the Card and RefundHistory entities are never created. Add them manually in `config/packages/sylius_resource.yaml`:
 
-3. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+```yaml
+sylius_resource:
+    resources:
+        payplug.payplug_card:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\Card
+        payplug.payplug_refund_history:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory
+                repository: PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepository
+```
 
-    ```yaml
-    parameters:
-        locale: fr_FR
-        sylius_refund.supported_gateways:
-            - payplug
-            - payplug_oney
-            - payplug_bancontact
-            - payplug_apple_pay
-            - payplug_american_express
-    ```
+### 4. Fix service autowiring
 
-4. Add Traits for Customer and PaymentMethod entities
+The plugin uses `#[Autoconfigure]` on some actions and relies on named constructor arguments that Symfony cannot resolve automatically. Add the following to `config/services.yaml`:
+
+```yaml
+services:
+    PayPlug\SyliusPayPlugPlugin\Action\CaptureAction:
+        arguments:
+            $payplugCardRepository: '@payplug.repository.payplug_card'
+
+    PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface:
+        alias: payplug.repository.payplug_refund_history
+```
+
+### 5. Apply migrations to your database:
+
+```shell
+bin/console doctrine:migrations:migrate
+  ```
+
+### 6. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+
+```yaml
+parameters:
+    locale: fr_FR
+    sylius_refund.supported_gateways:
+        - payplug
+        - payplug_oney
+        - payplug_bancontact
+        - payplug_apple_pay
+        - payplug_american_express
+```
+
+### 7. Add Traits for Customer and PaymentMethod entities
 
 * App\Entity\Customer\Customer
 
-   ```php
-   <?php
+```php
+<?php
 
-   declare(strict_types=1);
+declare(strict_types=1);
 
-   namespace App\Entity\Customer;
+namespace App\Entity\Customer;
 
-   use Doctrine\ORM\Mapping as ORM;
-   use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
-   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
-   use Sylius\Component\Core\Model\Customer as BaseCustomer;
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
+use Sylius\Component\Core\Model\Customer as BaseCustomer;
 
-   /**
-   * @ORM\Entity
-   * @ORM\Table(name="sylius_customer")
-   */
-   #[ORM\Entity]
-   #[ORM\Table(name: 'sylius_customer')]
-   class Customer extends BaseCustomer implements CardsOwnerInterface
-   {
-      use CustomerTrait;
-   }
-   ``` 
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_customer")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_customer')]
+class Customer extends BaseCustomer implements CardsOwnerInterface
+{
+  use CustomerTrait;
+}
+```
 
 * App\Entity\Payment\PaymentMethod
 
-   ```php
-   <?php
-   
-   declare(strict_types=1);
-   
-   namespace App\Entity\Payment;
-   
-   use Doctrine\ORM\Mapping as ORM;
-   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
-   use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
-   use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
-   
-   /**
-    * @ORM\Entity
-    * @ORM\Table(name="sylius_payment_method")
-    */
-   #[ORM\Entity]
-   #[ORM\Table(name: 'sylius_payment_method')]
-   class PaymentMethod extends BasePaymentMethod
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Payment;
+
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
+use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
+use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_payment_method")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_payment_method')]
+class PaymentMethod extends BasePaymentMethod
+{
+   use PaymentMethodTrait;
+
+   protected function createTranslation(): PaymentMethodTranslationInterface
    {
-       use PaymentMethodTrait;
-   
-       protected function createTranslation(): PaymentMethodTranslationInterface
-       {
-           return new PaymentMethodTranslation();
-       }
+       return new PaymentMethodTranslation();
    }
-   ``` 
+}
+``` 
 
 * App\Entity\Payment\Payment
 
-   ```php
-   <?php
+```php
+<?php
 
-   declare(strict_types=1);
+declare(strict_types=1);
 
-   namespace App\Entity\Payment;
+namespace App\Entity\Payment;
 
-   use Doctrine\Common\Collections\ArrayCollection;
-   use Doctrine\ORM\Mapping as ORM;
-   use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentTrait;
-   use Sylius\Component\Core\Model\Payment as BasePayment;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentTrait;
+use Sylius\Component\Core\Model\Payment as BasePayment;
 
-   /**
-   * @ORM\Entity
-   * @ORM\Table(name="sylius_payment")
-  */
-  #[ORM\Entity]
-  #[ORM\Table(name: 'sylius_payment')]
-  class Payment extends BasePayment
-  {
-      use PaymentTrait;
-  }
-   ``` 
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_payment")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_payment')]
+class Payment extends BasePayment
+{
+  use PaymentTrait;
+}
+``` 
 
-5. Process translations
+### 8. Process translations
 
-    ```bash
-    php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
-    php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
-    ```
+```bash
+php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
+```
 
-6. Clear cache:
+### 9. Clear cache:
 
-     ```shell
-     php bin/console cache:clear
-     ```
+ ```bash
+ bin/console cache:clear
+ ```
 
 🎉 You are now ready to add Payplug Payment method.
 In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
