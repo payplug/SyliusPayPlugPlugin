@@ -17,3 +17,10 @@
 /tests/TestApplication/.env.local
 /tests/TestApplication/.env.*.local
 /var/
+
+
+Audit.md
+CLAUDE.md
+.DS_Store
+.claude
+.review
