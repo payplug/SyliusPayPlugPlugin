@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\Yaml\Parser as YamlParser;
 
 final class PayPlugSyliusPayPlugExtension extends Extension implements PrependExtensionInterface
 {
@@ -33,6 +34,24 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         $this->prependTwigExtension($container);
         $this->prependDoctrineMigrations($container);
         $this->prependMonologExtension($container);
+        $this->prependTwigHooks($container);
+    }
+
+    private function prependTwigHooks(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('sylius_twig_hooks')) {
+            return;
+        }
+
+        $yaml = new YamlParser();
+        $configDir = dirname(__DIR__, 2) . '/config/twig_hooks';
+
+        foreach (['admin.yaml', 'shop.yaml'] as $file) {
+            $config = $yaml->parseFile($configDir . '/' . $file);
+            if (isset($config['sylius_twig_hooks'])) {
+                $container->prependExtensionConfig('sylius_twig_hooks', $config['sylius_twig_hooks']);
+            }
+        }
     }
 
     private function prependTwigExtension(ContainerBuilder $container): void

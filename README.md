@@ -38,52 +38,37 @@ In local environment, the plugin will not work properly because you will not be 
 
 ## Installation
 
-### 1. Require the **payplug/sylius-payplug-plugin** :
+Choose the installation method that matches your setup:
+
+- [With Symfony Flex](#with-symfony-flex-recommended) (recommended)
+- [Without Symfony Flex](#without-symfony-flex-manual)
+
+---
+
+### With Symfony Flex (recommended)
+
+#### 1. Allow contrib recipes and require the plugin
 
 ```bash
 composer config extra.symfony.allow-contrib true
 composer require payplug/sylius-payplug-plugin
 ```
 
-### 3. Register Sylius resources
+#### 2. Install the Flex recipe
 
-The plugin's extension does not prepend its `resources.yaml`, so the Sylius resource services for the Card and RefundHistory entities are never created. Add them manually in `config/packages/sylius_resource.yaml`:
-
-```yaml
-sylius_resource:
-    resources:
-        payplug.payplug_card:
-            driver: doctrine/orm
-            classes:
-                model: PayPlug\SyliusPayPlugPlugin\Entity\Card
-        payplug.payplug_refund_history:
-            driver: doctrine/orm
-            classes:
-                model: PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory
-                repository: PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepository
+```bash
+composer recipes:install payplug/sylius-payplug-plugin --force
 ```
 
-### 4. Fix service autowiring
+This automatically registers the bundle, copies configuration files, and sets up assets (on Sylius 2.1+).
 
-The plugin uses `#[Autoconfigure]` on some actions and relies on named constructor arguments that Symfony cannot resolve automatically. Add the following to `config/services.yaml`:
-
-```yaml
-services:
-    PayPlug\SyliusPayPlugPlugin\Action\CaptureAction:
-        arguments:
-            $payplugCardRepository: '@payplug.repository.payplug_card'
-
-    PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface:
-        alias: payplug.repository.payplug_refund_history
-```
-
-### 5. Apply migrations to your database:
+#### 3. Apply migrations to your database
 
 ```shell
 bin/console doctrine:migrations:migrate
-  ```
+```
 
-### 6. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+#### 4. Add Payplug to refundable payment methods for Sylius Refund Plugin in `config/services.yaml`
 
 ```yaml
 parameters:
@@ -96,7 +81,7 @@ parameters:
         - payplug_american_express
 ```
 
-### 7. Add Traits for Customer and PaymentMethod entities
+#### 5. Add Traits for Customer and PaymentMethod entities
 
 * App\Entity\Customer\Customer
 
@@ -153,7 +138,7 @@ class PaymentMethod extends BasePaymentMethod
        return new PaymentMethodTranslation();
    }
 }
-``` 
+```
 
 * App\Entity\Payment\Payment
 
@@ -179,27 +164,189 @@ class Payment extends BasePayment
 {
   use PaymentTrait;
 }
-``` 
+```
 
-### 8. Process translations
+#### 6. Process translations
 
 ```bash
 php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
 php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
 ```
 
-### 9. Clear cache:
+#### 7. Clear cache
 
- ```bash
- bin/console cache:clear
- ```
+```bash
+bin/console cache:clear
+```
 
 🎉 You are now ready to add Payplug Payment method.
 In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
 
-### Assets installation (only for Sylius 2.0.x)
+---
 
-On sylius 2.0.x, there is no automatic load of assets.
+### Without Symfony Flex (manual)
+
+#### 1. Require the **payplug/sylius-payplug-plugin**
+
+```bash
+composer require payplug/sylius-payplug-plugin
+```
+
+#### 2. Register Sylius resources
+
+The plugin's extension does not prepend its `resources.yaml`, so the Sylius resource services for the Card and RefundHistory entities are never created. Add them manually in `config/packages/sylius_resource.yaml`:
+
+```yaml
+sylius_resource:
+    resources:
+        payplug.payplug_card:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\Card
+        payplug.payplug_refund_history:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory
+                repository: PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepository
+```
+
+#### 3. Fix service autowiring
+
+The plugin uses `#[Autoconfigure]` on some actions and relies on named constructor arguments that Symfony cannot resolve automatically. Add the following to `config/services.yaml`:
+
+```yaml
+services:
+    PayPlug\SyliusPayPlugPlugin\Action\CaptureAction:
+        arguments:
+            $payplugCardRepository: '@payplug.repository.payplug_card'
+
+    PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface:
+        alias: payplug.repository.payplug_refund_history
+```
+
+#### 4. Apply migrations to your database
+
+```shell
+bin/console doctrine:migrations:migrate
+```
+
+#### 5. Add Payplug to refundable payment methods for Sylius Refund Plugin in `config/services.yaml`
+
+```yaml
+parameters:
+    locale: fr_FR
+    sylius_refund.supported_gateways:
+        - payplug
+        - payplug_oney
+        - payplug_bancontact
+        - payplug_apple_pay
+        - payplug_american_express
+```
+
+#### 6. Add Traits for Customer and PaymentMethod entities
+
+* App\Entity\Customer\Customer
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Customer;
+
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
+use Sylius\Component\Core\Model\Customer as BaseCustomer;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_customer")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_customer')]
+class Customer extends BaseCustomer implements CardsOwnerInterface
+{
+  use CustomerTrait;
+}
+```
+
+* App\Entity\Payment\PaymentMethod
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Payment;
+
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
+use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
+use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_payment_method")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_payment_method')]
+class PaymentMethod extends BasePaymentMethod
+{
+   use PaymentMethodTrait;
+
+   protected function createTranslation(): PaymentMethodTranslationInterface
+   {
+       return new PaymentMethodTranslation();
+   }
+}
+```
+
+* App\Entity\Payment\Payment
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Payment;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentTrait;
+use Sylius\Component\Core\Model\Payment as BasePayment;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_payment")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_payment')]
+class Payment extends BasePayment
+{
+  use PaymentTrait;
+}
+```
+
+#### 7. Process translations
+
+```bash
+php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
+```
+
+#### 8. Clear cache
+
+```bash
+bin/console cache:clear
+```
+
+🎉 You are now ready to add Payplug Payment method.
+In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
+
+#### Assets installation (only for Sylius 2.0.x)
+
+On Sylius 2.0.x, there is no automatic load of assets.
 You need to add the following lines in `assets/shop/controllers.json` to allow Sylius to use our assets:
 
 ```json
@@ -247,7 +394,7 @@ You need to add the following lines in `assets/shop/controllers.json` to allow S
 ```
 
 > [!NOTE]
-> On Sylius Standard >= 2.1, assets are automatically loaded when you install the plugin with flex.
+> On Sylius Standard >= 2.1, assets are automatically loaded when you install the plugin with Flex.
 > If you are upgrading from a 2.0.x version, read the [upgrade guide](https://github.com/Sylius/Sylius/blob/2.1/UPGRADE-2.1.md#assets)
 
 
