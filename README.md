@@ -36,54 +36,31 @@ In local environment, the plugin will not work properly because you will not be 
 | PHP    | ^8.2    |
 | Sylius | ^2.0    |
 
-## Installation
 
-### 1. Require the **payplug/sylius-payplug-plugin** :
+### With Symfony Flex
+
+#### 1. Allow contrib recipes and require the plugin
 
 ```bash
 composer config extra.symfony.allow-contrib true
 composer require payplug/sylius-payplug-plugin
 ```
 
-### 3. Register Sylius resources
+#### 2. Install the Flex recipe
 
-The plugin's extension does not prepend its `resources.yaml`, so the Sylius resource services for the Card and RefundHistory entities are never created. Add them manually in `config/packages/sylius_resource.yaml`:
-
-```yaml
-sylius_resource:
-    resources:
-        payplug.payplug_card:
-            driver: doctrine/orm
-            classes:
-                model: PayPlug\SyliusPayPlugPlugin\Entity\Card
-        payplug.payplug_refund_history:
-            driver: doctrine/orm
-            classes:
-                model: PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory
-                repository: PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepository
+```bash
+composer recipes:install payplug/sylius-payplug-plugin --force
 ```
 
-### 4. Fix service autowiring
+This automatically registers the bundle, copies configuration files, and sets up assets (on Sylius 2.1+).
 
-The plugin uses `#[Autoconfigure]` on some actions and relies on named constructor arguments that Symfony cannot resolve automatically. Add the following to `config/services.yaml`:
-
-```yaml
-services:
-    PayPlug\SyliusPayPlugPlugin\Action\CaptureAction:
-        arguments:
-            $payplugCardRepository: '@payplug.repository.payplug_card'
-
-    PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface:
-        alias: payplug.repository.payplug_refund_history
-```
-
-### 5. Apply migrations to your database:
+#### 3. Apply migrations to your database
 
 ```shell
 bin/console doctrine:migrations:migrate
-  ```
+```
 
-### 6. Add Payplug to refundable payment method for Sylius Refund Plugin in `config/services.yaml`
+#### 4. Add Payplug to refundable payment methods for Sylius Refund Plugin in `config/services.yaml`
 
 ```yaml
 parameters:
@@ -96,7 +73,7 @@ parameters:
         - payplug_american_express
 ```
 
-### 7. Add Traits for Customer and PaymentMethod entities
+#### 5. Add Traits for Customer and PaymentMethod entities
 
 * App\Entity\Customer\Customer
 
@@ -153,7 +130,7 @@ class PaymentMethod extends BasePaymentMethod
        return new PaymentMethodTranslation();
    }
 }
-``` 
+```
 
 * App\Entity\Payment\Payment
 
@@ -179,77 +156,23 @@ class Payment extends BasePayment
 {
   use PaymentTrait;
 }
-``` 
+```
 
-### 8. Process translations
+#### 6. Process translations
 
 ```bash
 php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
 php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
 ```
 
-### 9. Clear cache:
+#### 7. Clear cache
 
- ```bash
- bin/console cache:clear
- ```
+```bash
+bin/console cache:clear
+```
 
 🎉 You are now ready to add Payplug Payment method.
 In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
-
-### Assets installation (only for Sylius 2.0.x)
-
-On sylius 2.0.x, there is no automatic load of assets.
-You need to add the following lines in `assets/shop/controllers.json` to allow Sylius to use our assets:
-
-```json
-{
-    "controllers": {
-        "@payplug/sylius-payplug-plugin": {
-            "oney-popin": {
-                "enabled": true,
-                "fetch": "lazy",
-                "autoimport": {
-                    "@payplug/sylius-payplug-plugin/shop/dist/oney_common/index.css": true,
-                    "@payplug/sylius-payplug-plugin/shop/dist/oney_popin/index.css": true
-                }
-            },
-            "integrated-payment": {
-                "enabled": true,
-                "fetch": "lazy",
-                "autoimport": {
-                    "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
-                }
-            },
-            "oney-payment": {
-                "enabled": true,
-                "fetch": "lazy"
-            },
-            "payment-logo": {
-                "enabled": true,
-                "fetch": "lazy"
-            },
-            "checkout-select-payment": {
-                "enabled": true,
-                "fetch": "lazy",
-                "autoimport": {
-                    "@payplug/sylius-payplug-plugin/shop/dist/payment/index.css": true
-                }
-            },
-            "apple-pay": {
-                "enabled": true,
-                "fetch": "lazy"
-            }
-        }
-    },
-    "entrypoints": []
-}
-```
-
-> [!NOTE]
-> On Sylius Standard >= 2.1, assets are automatically loaded when you install the plugin with flex.
-> If you are upgrading from a 2.0.x version, read the [upgrade guide](https://github.com/Sylius/Sylius/blob/2.1/UPGRADE-2.1.md#assets)
-
 
 ## Logs
 
