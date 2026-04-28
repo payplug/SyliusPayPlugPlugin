@@ -27,7 +27,6 @@ final class CapturePaymentRequestHandler
         private PayPlugPaymentDataCreator $paymentDataCreator,
         #[Autowire(service: 'sylius_shop.provider.order_pay.after_pay_url')]
         private UrlProviderInterface $afterPayUrlProvider,
-        private UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function __invoke(CapturePaymentRequest $capturePaymentRequest): void
@@ -66,9 +65,6 @@ final class CapturePaymentRequestHandler
             'return_url' => $returnUrl,
             'cancel_url' => $returnUrl . '?&' . http_build_query(['status' => PayPlugApiClientInterface::STATUS_CANCELED]),
         ];
-
-        $notificationUrl = $this->urlGenerator->generate('sylius_payment_method_notify', ['code' => $payment->getMethod()?->getCode()], UrlGeneratorInterface::ABSOLUTE_URL);
-        $data['notification_url'] = $notificationUrl;
 
         $paymentRequest->setPayload($data);
 
