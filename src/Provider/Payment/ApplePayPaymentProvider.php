@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider\Payment;
 
 use DateTimeImmutable;
-use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
@@ -32,7 +31,6 @@ use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\RouterInterface;
 use Webmozart\Assert\Assert;
 
 class ApplePayPaymentProvider
@@ -45,7 +43,6 @@ class ApplePayPaymentProvider
         #[Autowire('@payplug_sylius_payplug_plugin.api_client.apple_pay')]
         private PayPlugApiClientInterface $applePayClient,
         private OrderTokenAssignerInterface $orderTokenAssigner,
-        private RouterInterface $router,
         private LoggerInterface $logger,
     ) {
     }
@@ -81,7 +78,6 @@ class ApplePayPaymentProvider
         );
 
         $paymentData = $paymentDataObject->getArrayCopy();
-        $paymentData['notification_url'] = $this->router->generate('sylius_payment_method_notify', ['code' => $payment->getMethod()?->getCode()], RouterInterface::ABSOLUTE_URL);
         $this->logger->notice('[Payplug] ApplePay payment data', ['data' => $paymentData]);
 
         $paymentResource = $this->applePayClient->createPayment($paymentData);
