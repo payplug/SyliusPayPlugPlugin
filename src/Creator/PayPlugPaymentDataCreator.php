@@ -27,6 +27,7 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\Shipment;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PayPlugPaymentDataCreator
 {
@@ -41,6 +42,7 @@ class PayPlugPaymentDataCreator
         private RepositoryInterface $payplugCardRepository,
         private RequestStack $requestStack,
         private PayplugFeatureChecker $payplugFeatureChecker,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -82,6 +84,9 @@ class PayPlugPaymentDataCreator
 
         $paymentMethod = $payment->getMethod();
         $gatewayFactoryName = $paymentMethod?->getGatewayConfig()?->getFactoryName();
+
+        $notificationUrl = $this->urlGenerator->generate('sylius_payment_method_notify', ['code' => $payment->getMethod()?->getCode()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $details['notification_url'] = $notificationUrl;
 
         if (
             PayPlugGatewayFactory::FACTORY_NAME === $gatewayFactoryName &&
