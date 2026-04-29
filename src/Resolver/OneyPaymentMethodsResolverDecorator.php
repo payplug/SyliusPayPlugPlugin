@@ -6,11 +6,11 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyCheckerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsDecorator;

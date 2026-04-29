@@ -1,19 +1,76 @@
-name: Sylius
+name: CI
+
 'on':
-    push:
-        branches:
-            - develop
-            - qa
-            - master
-        paths-ignore:
-            - README.md
     pull_request:
+        branches:
+            - test-develop-ci
+            - test-master-ci
         paths-ignore:
             - README.md
+
 jobs:
-    sylius:
+    quality:
+        name: PHP Quality
+        runs-on: ubuntu-latest
+        env:
+            APP_ENV: test
+        steps:
+            -
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
+            -
+                name: 'Setup PHP'
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: '8.2'
+                    ini-values: date.timezone=UTC
+                    extensions: intl
+                    tools: symfony
+                    coverage: none
+            -
+                name: 'Composer - Get Cache Directory'
+                id: composer-cache
+                run: 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT'
+            -
+                name: 'Composer - Set cache'
+                uses: actions/cache@v4
+                with:
+                    path: '${{ steps.composer-cache.outputs.dir }}'
+                    key: 'php-8.2-symfony-6.4-composer-${{ hashFiles(''**/composer.json'') }}'
+                    restore-keys: 'php-8.2-symfony-6.4-composer-'
+            -
+                name: 'Composer - Github Auth'
+                run: 'composer config -g github-oauth.github.com ${{ github.token }}'
+            -
+                name: 'Composer - Remove version field for validation'
+                run: |
+                    jq 'del(.version)' composer.json > composer.json.tmp
+                    mv composer.json.tmp composer.json
+            -
+                name: 'Composer - Validate'
+                run: 'composer validate --strict'
+            -
+                name: 'Composer - Restrict Symfony version'
+                run: 'composer config extra.symfony.require "^6.4"'
+            -
+                name: 'Composer - Install dependencies'
+                run: 'composer install --no-progress'
+                id: end-of-setup
+            -
+                name: 'ECS - Coding Standard'
+                run: 'composer ecs'
+                if: 'always() && steps.end-of-setup.outcome == ''success'''
+            -
+                name: 'PHPStan - Static Analysis'
+                run: 'composer phpstan'
+                if: 'always() && steps.end-of-setup.outcome == ''success'''
+
+    sylius-matrix:
         name: 'PHPUnit-Behat (PHP ${{ matrix.php }} Sylius ${{ matrix.sylius }} Symfony ${{ matrix.symfony }})'
         runs-on: ubuntu-latest
+        needs: [quality]
+        if: github.base_ref == 'test-develop-ci'
         strategy:
             fail-fast: false
             matrix:
@@ -43,11 +100,11 @@ jobs:
                     coverage: none
             -
                 name: 'Setup Node'
-                uses: actions/setup-node@v3
+                uses: actions/setup-node@v4
                 with:
                     node-version: '${{ matrix.node }}'
             -
-                uses: actions/checkout@v3
+                uses: actions/checkout@v4
             -
                 name: 'Composer - Get Cache Directory'
                 id: composer-cache
@@ -83,7 +140,7 @@ jobs:
                 run: 'make install -e SYLIUS_VERSION=${{ matrix.sylius }} SYMFONY_VERSION=${{ matrix.symfony }}'
                 id: end-of-setup-sylius
             -
-                name: 'Doctrine Schema Validate - Run'
+                name: 'Doctrine Schema Validate'
                 run: 'vendor/bin/console doctrine:schema:validate --skip-sync'
             -
                 name: 'Run PHPUnit'
@@ -93,8 +150,8 @@ jobs:
                 uses: actions/upload-artifact@v4
                 if: failure()
                 with:
-                    name: logs
-                    path: ./tests/Application/etc/build
+                    name: 'logs-php${{ matrix.php }}-sylius${{ matrix.sylius }}-sf${{ matrix.symfony }}'
+                    path: ./tests/TestApplication/etc/build
         services:
             mariadb:
                 image: 'mariadb:10.4.11'
@@ -103,3 +160,17 @@ jobs:
                 env:
                     MYSQL_ALLOW_EMPTY_PASSWORD: true
                 options: '--health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3'
+
+    # -----------------------------------------------------------------------
+    # 4. SONARCLOUD — code quality analysis (develop PRs only)
+    # -----------------------------------------------------------------------
+    sonarcloud:
+        if: always() && !failure() && !cancelled() && github.base_ref == 'test-develop-ci'
+        needs: sylius-matrix
+        uses: payplug/template-ci/.github/workflows/sonarcloud.yml@main
+        with:
+            project-name: 'github-payplug-payplug-syliuspayplugplugin'
+            src-folder: 'src/'
+        secrets:
+            sonar-orga: ${{ secrets.SONAR_ORGA }}
+            sonar-token: ${{ secrets.SONAR_TOKEN }}

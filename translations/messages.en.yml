@@ -24,6 +24,7 @@ payplug_sylius_payplug_plugin:
                 confirmation_modal:
                     confirm_card_deletion: Are you sure you want to delete this card?
         bancontact_gateway_label: Bancontact by Payplug
+        scalapay_gateway_label: Scalapay by PayPlug
         apple_pay_gateway_label: Apple Pay by Payplug
         american_express_gateway_label: American Express by Payplug
         apple_pay_not_available: Apple Pay is not available on this browser or device.

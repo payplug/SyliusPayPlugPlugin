@@ -8,8 +8,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
 use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
-use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
 use Sylius\Component\Payment\Model\PaymentMethodTranslation;
+use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'sylius_payment_method')]
