@@ -25,6 +25,14 @@ payplug_sylius_payplug_plugin:
             To activate Bancontact, please fill in
             <a href="https://support.payplug.com/hc/en-gb/requests/new?ticket_form_id=4583813991452" target="_blank">this form</a>
             and activate the LIVE mode.
+    payplug_scalapay:
+        can_not_save_method_with_test_key: |
+            The Scalapay payment method is not available for the TEST mode.
+            Please activate the LIVE mode.
+        can_not_save_method_no_access: |
+            You don't have access to this feature yet.
+            To activate Scalapay, please contact us at support@payplug.com
+            and activate the LIVE mode.
     payplug_apple_pay:
         can_not_save_method_with_test_key: |
             The Apple Pay payment method is not available for the TEST mode.

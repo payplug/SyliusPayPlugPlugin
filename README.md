@@ -1,6 +1,7 @@
 [![License](https://img.shields.io/packagist/l/payplug/sylius-payplug-plugin.svg)](https://github.com/payplug/SyliusPayPlugPlugin/blob/master/LICENSE)
-[![CI - Analysis](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/analysis.yaml/badge.svg?branch=master)](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/analysis.yaml)
-[![CI - Sylius](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/sylius.yaml/badge.svg?branch=master)](https://github.com/payplug/SyliusPayPlugPlugin/actions/workflows/sylius.yaml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=alert_status&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=duplicated_lines_density&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=code_smells&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
 [![Version](https://img.shields.io/packagist/v/payplug/sylius-payplug-plugin.svg)](https://packagist.org/packages/payplug/sylius-payplug-plugin)
 [![Total Downloads](https://poser.pugx.org/payplug/sylius-payplug-plugin/downloads)](https://packagist.org/packages/payplug/sylius-payplug-plugin)
 

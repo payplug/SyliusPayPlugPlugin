@@ -6,8 +6,8 @@ namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 
 class OneySupportedPaymentChoiceProvider
 {

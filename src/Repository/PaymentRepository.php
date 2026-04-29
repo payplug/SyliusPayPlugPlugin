@@ -27,14 +27,16 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
 
     public function findOneByPayPlugPaymentId(string $payplugPaymentId): ?PaymentInterface
     {
-        /** @var PaymentInterface|null */
-        return $this->createQueryBuilder('o')
+        /** @var PaymentInterface|null $result */
+        $result = $this->createQueryBuilder('o')
             ->where('o.details LIKE :payplugPaymentId')
             ->setParameter('payplugPaymentId', '%' . $payplugPaymentId . '%')
             ->getQuery()
             ->setMaxResults(1)
             ->getOneOrNullResult()
         ;
+
+        return $result;
     }
 
     /**
