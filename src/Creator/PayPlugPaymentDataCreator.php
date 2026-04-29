@@ -19,6 +19,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -94,6 +95,10 @@ class PayPlugPaymentDataCreator
 
         if (OneyGatewayFactory::FACTORY_NAME === $gatewayFactoryName) {
             $details = $this->alterOneyDetails($details);
+            $details->offsetSet('payment_context', $this->getCartContext($order));
+        }
+
+        if (ScalapayGatewayFactory::FACTORY_NAME === $gatewayFactoryName) {
             $details->offsetSet('payment_context', $this->getCartContext($order));
         }
 
@@ -344,6 +349,7 @@ class PayPlugPaymentDataCreator
             BancontactGatewayFactory::FACTORY_NAME => BancontactGatewayFactory::PAYMENT_METHOD_BANCONTACT,
             ApplePayGatewayFactory::FACTORY_NAME => ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY,
             AmericanExpressGatewayFactory::FACTORY_NAME => AmericanExpressGatewayFactory::PAYMENT_METHOD_AMERICAN_EXPRESS,
+            ScalapayGatewayFactory::FACTORY_NAME => ScalapayGatewayFactory::PAYMENT_METHOD_SCALAPAY,
         ];
         // match function is only supported by php 8. so can not use it here.
         foreach ($paymentMethods as $name => $method) {

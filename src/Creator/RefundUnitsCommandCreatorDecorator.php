@@ -28,9 +28,10 @@ use Webmozart\Assert\Assert;
 class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterface
 {
     private const MINIMUM_REFUND_AMOUNT = 10;
+
     private const SUPPORTED_METHODS = [
         PayPlugGatewayFactory::FACTORY_NAME,
-        OneyGatewayFactory::FACTORY_NAME
+        OneyGatewayFactory::FACTORY_NAME,
     ];
 
     public function __construct(

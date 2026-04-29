@@ -12,6 +12,7 @@ use Symfony\Component\Validator\Constraint;
 final class IsCanSavePaymentMethod extends Constraint
 {
     public string $noTestKeyMessage = 'payplug_sylius_payplug_plugin.%s.can_not_save_method_with_test_key';
+
     public string $noAccessMessage = 'payplug_sylius_payplug_plugin.%s.can_not_save_method_no_access';
 
     public function validatedBy(): string

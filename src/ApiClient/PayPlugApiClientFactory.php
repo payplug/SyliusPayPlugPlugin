@@ -9,7 +9,6 @@ use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
-use Symfony\Config\SyliusPayment\GatewayConfigConfig;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -48,17 +47,14 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
     private function getTokenForGatewayConfig(GatewayConfigInterface $gatewayConfig): string
     {
         $config = $gatewayConfig->getConfig();
-        $clientConfig = $config['live_client'];
-        if (true !== $config['live']) { // The live mode is not enabled, use client config for test mode
-            $clientConfig = $config['test_client'];
-        }
-        if (!\is_array($clientConfig)) {
+        $rawClientConfig = true !== $config['live'] ? $config['test_client'] : $config['live_client'];
+        if (!\is_array($rawClientConfig)) {
             throw new GatewayConfigurationException('No client config found for ' . $gatewayConfig->getFactoryName() . '. Please renew your credentials in the PayPlug plugin configuration.');
         }
-
+        /** @var array<string, string> $clientConfig */
+        $clientConfig = $rawClientConfig;
         $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $config['live'] === true ? 'live' : 'test');
 
-        /** @var array<string, string> $clientConfig */
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($clientConfig) {
             $response = Authentication::generateJWT($clientConfig['client_id'] ?? '', $clientConfig['client_secret'] ?? '');
             if ([] === $response || !is_array($response['httpResponse'])) {
@@ -75,6 +71,7 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
             }
 
             $item->expiresAfter($expiresIn);
+
             return $accessToken;
         });
     }

@@ -47,5 +47,13 @@
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_american_express"/>
         </service>
+
+        <!-- Gateway Scalapay by PayPlug -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.scalapay"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug_scalapay"/>
+        </service>
     </services>
 </container>

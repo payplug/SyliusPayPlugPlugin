@@ -6,7 +6,6 @@ namespace PayPlug\SyliusPayPlugPlugin\Entity\Traits;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 
 trait CustomerTrait
