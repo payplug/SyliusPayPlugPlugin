@@ -13,7 +13,6 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
-use function Symfony\Component\Translation\t;
 
 #[AsEventListener(event: 'sylius.payment_method.post_create', method: 'onCreate')]
 #[AsEventListener(event: 'sylius.payment_method.post_update', method: 'onUpdate')]
@@ -76,6 +75,7 @@ final class PostSavePaymentMethodEventListener
             // Should never happen
             return;
         }
+
         try {
             $request->getSession()->set('payplug_sylius_oauth_payment_method_id', $paymentMethod->getId());
             $setupRedirection = $this->router->generate('payplug_sylius_admin_auth_setup_redirection', referenceType: RouterInterface::ABSOLUTE_URL);
@@ -83,6 +83,7 @@ final class PostSavePaymentMethodEventListener
 
             /**
              * @var string $payplugRedirectUrl
+             *
              * @phpstan-ignore-next-line -- Error of return type in Payplug SDK
              */
             $payplugRedirectUrl = Authentication::getRegisterUrl($setupRedirection, $oauthCallback);

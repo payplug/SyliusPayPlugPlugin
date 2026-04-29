@@ -44,6 +44,7 @@ class AbortPaymentProcessor
             return;
         }
         $client = $this->payplugApiClientFactory->createForPaymentMethod($method);
+
         try {
             // When a payment is failed on Sylius, also abort it on PayPlug.
             // This should prevent the case that if we are already on PayPlug payment page

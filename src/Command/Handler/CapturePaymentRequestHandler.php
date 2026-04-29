@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\CapturePaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
+use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\CoreBundle\OrderPay\Provider\UrlProviderInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
@@ -27,6 +28,7 @@ final class CapturePaymentRequestHandler
         private PayPlugPaymentDataCreator $paymentDataCreator,
         #[Autowire(service: 'sylius_shop.provider.order_pay.after_pay_url')]
         private UrlProviderInterface $afterPayUrlProvider,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(CapturePaymentRequest $capturePaymentRequest): void
@@ -40,7 +42,10 @@ final class CapturePaymentRequestHandler
             throw new \LogicException('Payment method is not set for the payment.');
         }
 
-        if (PayPlugApiClientInterface::STATUS_CREATED === ($payment->getDetails()['status'] ?? null)) {
+        if (
+            PayPlugApiClientInterface::STATUS_CREATED === ($payment->getDetails()['status'] ?? null) &&
+            ($payment->getDetails()['factory_name'] ?? null) === $method->getGatewayConfig()?->getFactoryName()
+        ) {
             $paymentRequest->setResponseData([
                 'retry' => true,
                 'message' => 'Payment already created',
@@ -72,6 +77,7 @@ final class CapturePaymentRequestHandler
             $payplugPayment = $client->createPayment($data);
         } catch (HttpException $exception) {
             $paymentRequest->setResponseData(\json_decode($exception->getHttpResponse(), true)); // @phpstan-ignore-line
+            $this->logger->error('[PayPlug] Scalapay capture failed', ['response' => $exception->getHttpResponse()]);
             $this->stateMachine->apply(
                 $paymentRequest,
                 PaymentRequestTransitions::GRAPH,
@@ -84,6 +90,7 @@ final class CapturePaymentRequestHandler
         $payment->setDetails([
             ...$payment->getDetails(),
             'status' => PayPlugApiClientInterface::STATUS_CREATED,
+            'factory_name' => $method->getGatewayConfig()?->getFactoryName(),
             'payment_id' => $payplugPayment->__get('id'),
             'payplug_response' => $arrayPayplugPayment,
             'redirect_url' => $payplugPayment->hosted_payment->payment_url, // @phpstan-ignore-line

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;

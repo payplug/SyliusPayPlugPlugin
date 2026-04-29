@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\RefundPlugin\Provider\RefundPaymentMethodsProviderInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;

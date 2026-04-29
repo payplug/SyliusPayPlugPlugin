@@ -44,3 +44,6 @@ sylius_twig_hooks:
         'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_american_express':
             american_express:
                 template: '@PayPlugSyliusPayPlugPlugin/shop/select_payment/_american_express.html.twig'
+        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_scalapay':
+            scalapay:
+                template: '@PayPlugSyliusPayPlugPlugin/shop/select_payment/_scalapay.html.twig'
