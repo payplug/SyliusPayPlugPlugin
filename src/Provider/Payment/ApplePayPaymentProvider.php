@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider\Payment;
 
 use DateTimeImmutable;
-use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
@@ -109,6 +108,7 @@ class ApplePayPaymentProvider
 
         if (!$lastPayment instanceof PaymentInterface) {
             $this->logger->error('[Payplug] No new payment found for order', ['order' => $order]);
+
             throw new LogicException();
         }
 
@@ -123,6 +123,7 @@ class ApplePayPaymentProvider
 
         $paymentResource = $this->applePayClient->retrieve($lastPayment->getDetails()['payment_id']);
         $this->logger->notice('[Payplug] ApplePay payment resource', ['payment' => (array) $paymentResource]);
+
         try {
             $token = $request->request->all('token');
             if ([] === $token) {
@@ -167,6 +168,7 @@ class ApplePayPaymentProvider
         } catch (\Exception $exception) {
             $this->logger->error('[Payplug] ApplePay payment update failed', ['exception' => $exception, 'message' => $exception->getMessage()]);
             $this->applyRequiredPaymentTransition($lastPayment, PaymentInterface::STATE_FAILED);
+
             try {
                 $paymentResource->abort($this->applePayClient->getConfiguration());
             } catch (\Throwable $throwable) {

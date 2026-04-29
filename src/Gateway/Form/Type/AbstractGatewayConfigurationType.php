@@ -24,6 +24,7 @@ class AbstractGatewayConfigurationType extends AbstractType
     public const VALIDATION_GROUPS = ['Default', 'sylius'];
 
     protected string $gatewayFactoryTitle = '';
+
     protected string $gatewayFactoryName = '';
 
     protected string $gatewayBaseCurrencyCode = PayPlugGatewayFactory::BASE_CURRENCY_CODE;

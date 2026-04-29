@@ -45,12 +45,13 @@ final class StatusPaymentRequestHandler
 
         // We don't have a forced status, so we retrieve the payment status from PayPlug
         $client = $this->apiClientFactory->createForPaymentMethod($method);
-        /** @var null|string $payplugPaymentId */
+        /** @var string|null $payplugPaymentId */
         $payplugPaymentId = $payment->getDetails()['payment_id'] ?? null;
         if (null === $payplugPaymentId) {
             $this->logger->warning('No PayPlug payment ID found in payment details.', ['payment_id' => $payment->getId(), 'order_id' => $payment->getOrder()?->getId()]);
             $payment->setDetails(['status' => PayPlugApiClientInterface::FAILED]);
             $this->updatePaymentState($payment);
+
             return;
         }
 

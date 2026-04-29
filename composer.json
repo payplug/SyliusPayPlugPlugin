@@ -1,6 +1,7 @@
 {
     "name": "payplug/sylius-payplug-plugin",
     "type": "sylius-plugin",
+    "version": "2.0.0.",
     "keywords": [
         "sylius",
         "sylius-plugin",
@@ -47,7 +48,7 @@
         "phpstan/phpstan-webmozart-assert": "2.0.0",
         "phpunit/phpunit": "^9.6",
         "rector/rector": "2.0.4",
-        "sylius-labs/coding-standard": "4.4.0",
+        "sylius-labs/coding-standard": "^4.4",
         "sylius/test-application": "^2.1.0@alpha",
         "symfony/apache-pack": "*",
         "symfony/browser-kit": "^6.4|| ^7.2",
@@ -80,10 +81,10 @@
         }
     },
     "scripts": {
-        "ecs": "ecs check -c rulesets/ecs.php --ansi --clear-cache .",
-        "fix-ecs": "@ecs --fix",
-        "phpmd": "phpmd src ansi rulesets/.php_md.xml",
-        "phpstan": "phpstan analyse src -c rulesets/phpstan.neon",
+        "ecs": "ecs check -c ruleset/ecs.php --ansi --clear-cache",
+        "fix-ecs": "@ecs --fix --memory-limit=4G",
+        "phpmd": "phpmd src ansi ruleset/.php_md.xml",
+        "phpstan": "phpstan analyse src -c ruleset/phpstan.neon",
         "phpunit": "phpunit tests/PHPUnit --colors=always",
         "tests": [
             "@ecs",

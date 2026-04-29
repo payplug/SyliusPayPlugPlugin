@@ -48,7 +48,7 @@ class PaymentNotificationHandler
 
         $this->entityManager->refresh($payment);
 
-        if ($details['status'] === PayPlugApiClientInterface::STATUS_ABORTED) {
+        if (($details['status'] ?? null) === PayPlugApiClientInterface::STATUS_ABORTED) {
             $lock->release();
 
             return;
@@ -92,7 +92,7 @@ class PaymentNotificationHandler
             'message' => $paymentResource->failure->message ?? '',
         ];
 
-        if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === $details['status']) {
+        if (PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK === ($details['status'] ?? null)) {
             $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.transaction_failed_1click');
         }
 
