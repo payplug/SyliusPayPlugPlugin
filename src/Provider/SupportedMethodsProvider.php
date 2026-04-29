@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Webmozart\Assert\Assert;
 
 final class SupportedMethodsProvider

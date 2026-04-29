@@ -31,6 +31,10 @@ use Symfony\Component\HttpFoundation\Response;
     'payplug_sylius_payplug_plugin.http_response_provider.payplug_american_express',
     ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.http_response_provider.payplug_scalapay',
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
+)]
 class CaptureHttpResponseProvider implements HttpResponseProviderInterface
 {
     public function supports(RequestConfiguration $requestConfiguration, PaymentRequestInterface $paymentRequest): bool
