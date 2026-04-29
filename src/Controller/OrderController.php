@@ -27,12 +27,12 @@ use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Contracts\Service\Attribute\Required;
-use Webmozart\Assert\Assert;
 
 #[AsController]
 final class OrderController extends BaseOrderController
 {
     private const APPLE_ERROR_RESPONSE_CODE = 0;
+
     private const APPLE_SUCCESS_RESPONSE_CODE = 1;
 
     #[Required]
@@ -178,6 +178,7 @@ final class OrderController extends BaseOrderController
             if (null !== $eventResponse) {
                 return $eventResponse;
             }
+
             return new JsonResponse([], Response::HTTP_BAD_REQUEST);
         }
 

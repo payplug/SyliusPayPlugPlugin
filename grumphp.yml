@@ -3,6 +3,12 @@ grumphp:
         failed: ~
         succeeded: ~
     tasks:
+        git_commit_message:
+            matchers:
+                - '/^(PRE|SYL|SMP)-\d+: .+/'
+        git_branch_name:
+            whitelist:
+                - '/^(feature|fix|hotfix|refactor|release)\/(PRE|SYL|SMP)-\d+/'
         composer:
             no_check_all: true
         jsonlint:
@@ -14,12 +20,17 @@ grumphp:
             level: ~
             configuration: 'ruleset/phpstan.neon'
             use_grumphp_paths: false
+            memory_limit: '-1'
         securitychecker_symfony: ~
         yamllint:
             parse_custom_tags: true
         ecs:
             config: 'ruleset/ecs.php'
+            clear-cache: true
             no-progress-bar: true
+            files_on_pre_commit: false
+            paths: ['src', 'tests/Behat', 'tests/PHPUnit']
+            triggered_by: ['php', 'phtml', 'twig', 'yaml', 'yml', 'xml', 'json', 'neon', 'lock']
         twigcs:
             path: 'src/'
             severity: error

@@ -8,14 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\PaymentTransitions;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final class PaymentStateResolver implements PaymentStateResolverInterface
 {

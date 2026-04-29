@@ -24,6 +24,7 @@ use Symfony\Contracts\Cache\CacheInterface;
  * This controller is used to authenticate the user with PayPlug
  *
  * The OAuth process start when creating a new payment method or updated it.
+ *
  * @see PayPlug\SyliusPayPlugPlugin\EventListener\PostSavePaymentMethodEventListener
  */
 #[Route('/payplug/auth')]
@@ -66,9 +67,11 @@ final class UnifiedAuthenticationController extends AbstractController
                     return new RedirectResponse(substr($header, 9));
                 }
             }
+
             throw new \LogicException('No location header found');
         } catch (\Throwable $e) {
             $this->logger->critical('Error while perform Payplug OAuth Setup redirection', ['message' => $e->getMessage(), 'exception' => $e]);
+
             return $this->handleOAuthError($request);
         }
     }
@@ -128,6 +131,7 @@ final class UnifiedAuthenticationController extends AbstractController
             return new RedirectResponse($this->router->generate('sylius_admin_payment_method_update', ['id' => $paymentMethod->getId()]));
         } catch (\Throwable $e) {
             $this->logger->critical('Error while perform Payplug OAuth callback', ['message' => $e->getMessage(), 'exception' => $e]);
+
             return $this->handleOAuthError($request);
         }
     }
