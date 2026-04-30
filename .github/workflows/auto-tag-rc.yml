@@ -1,0 +1,10 @@
+name: Auto-tag RC0
+
+'on':
+    create:
+
+jobs:
+    create-rc0-tag:
+        if: startsWith(github.ref, 'refs/heads/release/')
+        uses: payplug/template-ci/.github/workflows/auto_tag_rc.yml@main
+        secrets: inherit
