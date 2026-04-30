@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Payplug\Exception\HttpException;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
@@ -16,7 +16,7 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
 class AbortPaymentProcessor
 {
     public function __construct(
-        private PayPlugApiClientFactory $payplugApiClientFactory,
+        private PayPlugApiClientFactoryInterface $payplugApiClientFactory,
     ) {
     }
 

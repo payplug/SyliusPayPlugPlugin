@@ -8,7 +8,7 @@ use libphonenumber\PhoneNumberType;
 use libphonenumber\PhoneNumberUtil;
 use PHPUnit\Framework\TestCase;
 
-final class phoneNumberFormatTest extends TestCase
+final class PhoneNumberFormatTest extends TestCase
 {
     /**
      * @dataProvider landlinePhoneNumbersDataProvider
