@@ -1,0 +1,35 @@
+name: Release — RC
+
+'on':
+    push:
+        tags:
+            - '*-rc*'
+
+jobs:
+    quality:
+        uses: payplug/template-ci/.github/workflows/sylius_quality.yml@main
+
+    phpunit:
+        needs: [quality]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+
+    github-release:
+        name: GitHub Pre-Release
+        needs: phpunit
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            -
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
+            -
+                name: Create GitHub pre-release
+                run: |
+                    gh release create "$GITHUB_REF_NAME" \
+                        --title "$GITHUB_REF_NAME" \
+                        --generate-notes \
+                        --prerelease
+                env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
