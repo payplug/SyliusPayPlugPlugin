@@ -11,11 +11,4 @@ final class ScalapayGatewayFactory extends AbstractGatewayFactory
     public const FACTORY_TITLE = 'Scalapay by PayPlug';
 
     public const PAYMENT_METHOD_SCALAPAY = 'scalapay';
-
-    public const AUTHORIZED_CURRENCIES = [
-        'EUR' => [
-            'min_amount' => 500,
-            'max_amount' => 200000,
-        ],
-    ];
 }
