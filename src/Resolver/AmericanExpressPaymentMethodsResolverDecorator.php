@@ -31,7 +31,6 @@ final class AmericanExpressPaymentMethodsResolverDecorator implements PaymentMet
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
             AmericanExpressGatewayFactory::FACTORY_NAME,
-            AmericanExpressGatewayFactory::AUTHORIZED_CURRENCIES,
             $subject->getAmount() ?? 0,
         );
     }
