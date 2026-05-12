@@ -31,7 +31,6 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
             ApplePayGatewayFactory::FACTORY_NAME,
-            ApplePayGatewayFactory::AUTHORIZED_CURRENCIES,
             $subject->getAmount() ?? 0,
         );
     }
