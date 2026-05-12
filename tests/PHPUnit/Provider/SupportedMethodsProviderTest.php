@@ -47,7 +47,9 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withDifferentFactory_doesNotFilter(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(30, 2000000));
+        // getAccount() must never be called: the PayPlug method never matches the Bancontact factory,
+        // so the loop always hits `continue` before reaching the lazy-loading lines.
+        $this->apiClient->expects(self::never())->method('getAccount');
 
         // PaymentMethod is PayPlug, but we're querying for Bancontact — so it's passed through as-is
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
@@ -204,6 +206,82 @@ final class SupportedMethodsProviderTest extends TestCase
 
         // Bancontact is skipped (different factory), PayPlug stays
         self::assertCount(2, $result); // Bancontact not removed (no filter applied for different factory)
+    }
+
+    // -------------------------------------------------------------------------
+    // provide() — allowed_countries filter
+    // -------------------------------------------------------------------------
+
+    /**
+     * Billing country is in the allowed_countries list → method kept.
+     */
+    public function testProvide_withAllowedCountry_keepsMethod(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $account = [
+            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
+            'payment_methods' => ['scalapay' => ['min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'allowed_countries' => ['FR', 'DE']]],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        $method = $this->buildPaymentMethod('payplug_scalapay');
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, 'FR');
+
+        self::assertCount(1, $result);
+    }
+
+    /**
+     * Billing country is NOT in the allowed_countries list → method removed.
+     */
+    public function testProvide_withDisallowedCountry_removesMethod(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $account = [
+            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
+            'payment_methods' => ['scalapay' => ['min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'allowed_countries' => ['FR', 'DE']]],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        $method = $this->buildPaymentMethod('payplug_scalapay');
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, 'US');
+
+        self::assertEmpty($result);
+    }
+
+    /**
+     * allowed_countries = ["ALL"] → country check skipped, method kept.
+     */
+    public function testProvide_withAllowedCountriesAll_keepsMethod(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $account = [
+            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
+            'payment_methods' => ['bancontact' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000], 'allowed_countries' => ['ALL']]],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        $method = $this->buildPaymentMethod('payplug_bancontact');
+        $result = $this->provider->provide([$method], 'payplug_bancontact', 1000, 'US');
+
+        self::assertCount(1, $result);
+    }
+
+    /**
+     * Billing country is null (no billing address yet) → country check skipped, method kept.
+     */
+    public function testProvide_withNullBillingCountry_keepsMethod(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $account = [
+            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
+            'payment_methods' => ['scalapay' => ['min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'allowed_countries' => ['FR', 'DE']]],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        $method = $this->buildPaymentMethod('payplug_scalapay');
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, null);
+
+        self::assertCount(1, $result);
     }
 
     // -------------------------------------------------------------------------
