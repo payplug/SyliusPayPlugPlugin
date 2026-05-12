@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Sylius\Component\Payment\Resolver\PaymentMethodsResolverInterface;
@@ -28,10 +29,15 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
         Assert::isInstanceOf($subject, Payment::class);
         $supportedMethods = $this->decorated->getSupportedMethods($subject);
 
+        /** @var OrderInterface $order */
+        $order = $subject->getOrder();
+        $billingCountryCode = $order->getBillingAddress()?->getCountryCode();
+
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
             ApplePayGatewayFactory::FACTORY_NAME,
             $subject->getAmount() ?? 0,
+            $billingCountryCode,
         );
     }
 
