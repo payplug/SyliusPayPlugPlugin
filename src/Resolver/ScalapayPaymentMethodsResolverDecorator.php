@@ -31,7 +31,6 @@ final class ScalapayPaymentMethodsResolverDecorator implements PaymentMethodsRes
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
             ScalapayGatewayFactory::FACTORY_NAME,
-            ScalapayGatewayFactory::AUTHORIZED_CURRENCIES,
             $subject->getAmount() ?? 0,
         );
     }

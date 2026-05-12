@@ -31,7 +31,6 @@ final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsReso
         return $this->supportedMethodsProvider->provide(
             $supportedMethods,
             PayPlugGatewayFactory::FACTORY_NAME,
-            PayPlugGatewayFactory::AUTHORIZED_CURRENCIES,
             $subject->getAmount() ?? 0,
         );
     }

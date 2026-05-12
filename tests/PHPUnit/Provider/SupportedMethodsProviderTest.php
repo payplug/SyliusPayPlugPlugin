@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Provider;
 
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider;
@@ -17,12 +19,21 @@ final class SupportedMethodsProviderTest extends TestCase
 {
     private CurrencyContextInterface&MockObject $currencyContext;
 
+    private PayPlugApiClientFactoryInterface&MockObject $clientFactory;
+
+    private PayPlugApiClientInterface&MockObject $apiClient;
+
     private SupportedMethodsProvider $provider;
 
     protected function setUp(): void
     {
         $this->currencyContext = $this->createMock(CurrencyContextInterface::class);
-        $this->provider = new SupportedMethodsProvider($this->currencyContext);
+        $this->clientFactory = $this->createMock(PayPlugApiClientFactoryInterface::class);
+        $this->apiClient = $this->createMock(PayPlugApiClientInterface::class);
+
+        $this->clientFactory->method('create')->willReturn($this->apiClient);
+
+        $this->provider = new SupportedMethodsProvider($this->currencyContext, $this->clientFactory);
     }
 
     // -------------------------------------------------------------------------
@@ -36,12 +47,12 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withDifferentFactory_doesNotFilter(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(30, 2000000));
 
         // PaymentMethod is PayPlug, but we're querying for Bancontact — so it's passed through as-is
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 1000);
+        $result = $this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 1000);
 
         // Method stays in list (it doesn't match the target factory, so the currency/amount check never runs)
         self::assertCount(1, $result);
@@ -52,17 +63,17 @@ final class SupportedMethodsProviderTest extends TestCase
     // -------------------------------------------------------------------------
 
     /**
-     * The current currency is USD but the method only authorises EUR.
+     * The current currency is USD but the method only authorizes EUR.
      * Verifies the method is removed from the result list.
      */
     public function testProvide_withUnauthorizedCurrency_removesMethod(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('USD');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 1000);
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 1000);
 
         self::assertEmpty($result);
     }
@@ -78,11 +89,11 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withAmountBelowMin_removesMethod(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 50);
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 50);
 
         self::assertEmpty($result);
     }
@@ -98,11 +109,11 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withAmountAboveMax_removesMethod(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 2000001);
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 2000001);
 
         self::assertEmpty($result);
     }
@@ -118,11 +129,11 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withValidCurrencyAndAmount_keepsMethod(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 1000);
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 1000);
 
         self::assertCount(1, $result);
         self::assertSame($method, reset($result));
@@ -139,11 +150,11 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withAmountAtMinBoundary_keepsMethod(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 99);
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 99);
 
         self::assertCount(1, $result);
     }
@@ -159,11 +170,11 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withAmountAtMaxBoundary_keepsMethod(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
-        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, $authorizedCurrencies, 2000000);
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 2000000);
 
         self::assertCount(1, $result);
     }
@@ -179,16 +190,15 @@ final class SupportedMethodsProviderTest extends TestCase
     public function testProvide_withMixedList_filtersCorrectly(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
         $payplugMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
         $bancontactMethod = $this->buildPaymentMethod(BancontactGatewayFactory::FACTORY_NAME);
-        $authorizedCurrencies = ['EUR' => ['min_amount' => 99, 'max_amount' => 2000000]];
 
         // We query for PayPlug factory only; amount is valid
         $result = $this->provider->provide(
             [$payplugMethod, $bancontactMethod],
             PayPlugGatewayFactory::FACTORY_NAME,
-            $authorizedCurrencies,
             1000,
         );
 
@@ -197,8 +207,94 @@ final class SupportedMethodsProviderTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // provide() — payment method specific amounts used over configuration defaults
+    // -------------------------------------------------------------------------
+
+    /**
+     * When the account JSON has specific min/max for the payment method,
+     * those values take precedence over the configuration defaults.
+     */
+    public function testProvide_usesPaymentMethodSpecificAmounts(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+
+        // Scalapay has tighter limits (500–200000) vs configuration defaults (30–2000000)
+        $account = [
+            'configuration' => [
+                'min_amounts' => ['EUR' => 30],
+                'max_amounts' => ['EUR' => 2000000],
+            ],
+            'payment_methods' => [
+                'scalapay' => [
+                    'min_amounts' => ['EUR' => 500],
+                    'max_amounts' => ['EUR' => 200000],
+                ],
+            ],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        $method = $this->buildPaymentMethod('payplug_scalapay');
+
+        // Amount 400 is above the configuration default min (30) but below Scalapay's min (500)
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 400);
+        self::assertEmpty($result);
+
+        // Amount 500 is exactly at Scalapay's min — should be kept
+        $result2 = $this->provider->provide([$method], 'payplug_scalapay', 500);
+        self::assertCount(1, $result2);
+    }
+
+    // -------------------------------------------------------------------------
+    // provide() — fallback to configuration when payment method has no amounts
+    // -------------------------------------------------------------------------
+
+    /**
+     * When the payment method entry in the API has no min/max amounts (e.g. Apple Pay),
+     * the configuration defaults are used.
+     */
+    public function testProvide_fallsBackToConfigurationAmounts(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+
+        $account = [
+            'configuration' => [
+                'min_amounts' => ['EUR' => 30],
+                'max_amounts' => ['EUR' => 2000000],
+            ],
+            'payment_methods' => [
+                'apple_pay' => [
+                    'enabled' => true,
+                    // no min_amounts / max_amounts
+                ],
+            ],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        // 30 is at configuration min — should be kept
+        $result = $this->provider->provide([$method], 'payplug_apple_pay', 30);
+        self::assertCount(1, $result);
+
+        // 29 is below configuration min — should be removed
+        $result2 = $this->provider->provide([$method], 'payplug_apple_pay', 29);
+        self::assertEmpty($result2);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private function buildAccount(int $minAmount, int $maxAmount): array
+    {
+        return [
+            'configuration' => [
+                'min_amounts' => ['EUR' => $minAmount],
+                'max_amounts' => ['EUR' => $maxAmount],
+            ],
+            'payment_methods' => [],
+        ];
+    }
 
     private function buildPaymentMethod(string $factoryName): PaymentMethodInterface
     {

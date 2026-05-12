@@ -16,11 +16,4 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
     public const INTEGRATED_PAYMENT = 'integratedPayment';
 
     public const DEFERRED_CAPTURE = 'deferredCapture';
-
-    public const AUTHORIZED_CURRENCIES = [
-        'EUR' => [
-            'min_amount' => 99,
-            'max_amount' => 2000000,
-        ],
-    ];
 }
