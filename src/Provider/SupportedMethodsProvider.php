@@ -22,9 +22,11 @@ final class SupportedMethodsProvider
         array $supportedMethods,
         string $factoryName,
         int $paymentAmount,
+        ?string $billingCountryCode = null,
     ): array {
         $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
         $authorizedCurrencies = null;
+        $allowedCountries = null;
 
         foreach ($supportedMethods as $key => $paymentMethod) {
             Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
@@ -37,6 +39,13 @@ final class SupportedMethodsProvider
             }
 
             $authorizedCurrencies ??= $this->resolveAuthorizedCurrencies($factoryName);
+            $allowedCountries ??= $this->resolveAllowedCountries($factoryName);
+
+            if ($billingCountryCode !== null && $allowedCountries !== [] && !\in_array($billingCountryCode, $allowedCountries, true)) {
+                unset($supportedMethods[$key]);
+
+                continue;
+            }
 
             if (!\array_key_exists($activeCurrencyCode, $authorizedCurrencies)) {
                 unset($supportedMethods[$key]);
@@ -92,5 +101,29 @@ final class SupportedMethodsProvider
         }
 
         return $currencies;
+    }
+
+    private function resolveAllowedCountries(string $factoryName): array
+    {
+        $underscorePos = strpos($factoryName, '_');
+        if ($underscorePos === false) {
+            return [];
+        }
+
+        $account = $this->clientFactory->create($factoryName)->getAccount();
+        $pmKey = substr($factoryName, $underscorePos + 1);
+        $paymentMethods = $account['payment_methods'] ?? [];
+        Assert::isArray($paymentMethods);
+        $pmData = $paymentMethods[$pmKey] ?? [];
+        Assert::isArray($pmData);
+
+        $allowedCountries = $pmData['allowed_countries'] ?? [];
+        Assert::isArray($allowedCountries);
+
+        if (\in_array('ALL', $allowedCountries, true)) {
+            return [];
+        }
+
+        return $allowedCountries;
     }
 }
