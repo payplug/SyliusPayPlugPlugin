@@ -20,6 +20,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -355,6 +356,7 @@ class PayPlugPaymentDataCreator
             ApplePayGatewayFactory::FACTORY_NAME => ApplePayGatewayFactory::PAYMENT_METHOD_APPLE_PAY,
             AmericanExpressGatewayFactory::FACTORY_NAME => AmericanExpressGatewayFactory::PAYMENT_METHOD_AMERICAN_EXPRESS,
             ScalapayGatewayFactory::FACTORY_NAME => ScalapayGatewayFactory::PAYMENT_METHOD_SCALAPAY,
+            WeroGatewayFactory::FACTORY_NAME => WeroGatewayFactory::PAYMENT_METHOD_WERO,
         ];
         // match function is only supported by php 8. so can not use it here.
         foreach ($paymentMethods as $name => $method) {

@@ -34,6 +34,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
     'payplug_sylius_payplug_plugin.command_provider.payplug_scalapay',
     ['action' => PaymentRequestInterface::ACTION_STATUS],
 )]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_wero',
+    ['action' => PaymentRequestInterface::ACTION_STATUS],
+)]
 final class StatusPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function __construct(private RequestStack $requestStack)
