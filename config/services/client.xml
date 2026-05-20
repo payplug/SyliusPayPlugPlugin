@@ -62,5 +62,14 @@
                      method="create"/>
             <argument type="string" key="$factoryName">payplug_scalapay</argument><!-- Gateway factory name -->
         </service>
+
+        <service id="payplug_sylius_payplug_plugin.api_client.wero"
+                 class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient"
+                 public="true"
+                 lazy="true">
+            <factory service="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory"
+                     method="create"/>
+            <argument type="string" key="$factoryName">payplug_wero</argument><!-- Gateway factory name -->
+        </service>
     </services>
 </container>
