@@ -13,6 +13,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -124,6 +125,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
                 BancontactGatewayFactory::FACTORY_NAME,
                 ApplePayGatewayFactory::FACTORY_NAME,
                 AmericanExpressGatewayFactory::FACTORY_NAME,
+                ScalapayGatewayFactory::FACTORY_NAME,
             ], true)
         ) {
             return;

@@ -10,6 +10,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -77,6 +78,24 @@ final class RefundPaymentProcessorTest extends TestCase
         $payment = $this->buildPayment(PayPlugGatewayFactory::FACTORY_NAME, ['payment_id' => 'pay_abc']);
 
         $this->apiClient->expects(self::once())->method('refundPayment')->with('pay_abc');
+
+        $this->processor->process($payment);
+    }
+
+    // -------------------------------------------------------------------------
+    // process() — Scalapay gateway → refund is processed
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calls process() with a Scalapay payment; verifies the API client factory is invoked
+     * and refundPayment() is called, confirming Scalapay is included in the supported gateway list.
+     */
+    public function testProcess_scalapayGateway_callsApiRefund(): void
+    {
+        $payment = $this->buildPayment(ScalapayGatewayFactory::FACTORY_NAME, ['payment_id' => 'pay_scalapay']);
+
+        $this->apiClientFactory->expects(self::once())->method('createForPaymentMethod');
+        $this->apiClient->expects(self::once())->method('refundPayment')->with('pay_scalapay');
 
         $this->processor->process($payment);
     }
