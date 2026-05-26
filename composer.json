@@ -1,7 +1,6 @@
 {
     "name": "payplug/sylius-payplug-plugin",
     "type": "sylius-plugin",
-    "version": "2.0.0.",
     "keywords": [
         "sylius",
         "sylius-plugin",
