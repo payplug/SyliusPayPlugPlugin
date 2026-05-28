@@ -25,6 +25,11 @@ This is PayPlug's official Sylius plugin. PayPlug is a Payment Service Provider 
 - Secrets or credentials committed in code
 - Insecure deserialization, path traversal, SSRF
 - Direct calls to PayPlug PHP SDK classes instead of going through `PayPlugApiClient`
+- Webhook payloads must be verified via `PayPlugApiClient::treat()` before any processing — never act on raw `php://input` directly
+- Card data (PAN, CVV, raw card numbers) must never appear in logs, error messages, or stored fields
+- API secret keys must never appear in logs, exception messages, or HTTP responses
+- Payment amounts must be validated server-side — never trust a client-submitted amount
+- `redirect_url` values must come from the PayPlug API response, never constructed from user input (open redirect risk)
 
 ### Performance
 - N+1 queries (especially in Sylius entity traversal)
@@ -41,6 +46,11 @@ This is PayPlug's official Sylius plugin. PayPlug is a Payment Service Provider 
 - Off-by-one errors, type safety
 - `declare(strict_types=1)` must be present in every PHP file
 - For new payment gateways (PPRO pattern): verify the full implementation checklist is covered (gateway factory, form type, resolver decorator, refund provider, templates, service definitions, translations)
+- Amount unit: Payum works in the smallest currency unit (cents). Any conversion must be explicit — silently mixing units is a payment amount bug
+- EUR-only enforcement must happen before the API call, not after
+- `factory_name` must be stored alongside `redirect_url` in payment details — missing it allows a stale redirect from one gateway to be reused when retrying with a different one
+- Refund amounts must not exceed the remaining refundable amount on the payment
+- State machine transition names must match Sylius/Payum constants exactly; Oney adds a custom `oney_request_payment` transition that is easy to misspell or omit
 
 ### Maintainability
 - Naming clarity, single responsibility, duplication
@@ -48,9 +58,35 @@ This is PayPlug's official Sylius plugin. PayPlug is a Payment Service Provider 
 - Documentation for non-obvious logic only — do not flag missing comments on self-explanatory code
 - PHPStan level max compliance; suppressions must go in `ruleset/phpstan-baseline.neon`
 - ECS coding standard based on `sylius-labs/coding-standard`
+- Translations must be complete in all three locales (`en`, `fr`, `it`) — partial translation is a regression
+- New services must be registered in both `config/services.yaml` (command/response providers) and the relevant `config/services/*.xml` file (Payum factory or API client) — registering only one side causes runtime failures
+
+### Headless Compliance
+
+In a headless Sylius setup the frontend is a decoupled SPA or mobile app — it cannot follow server-side HTTP redirects. Any shop-facing response that performs a redirect instead of returning JSON breaks the headless flow.
+
+- Shop-facing controllers and response providers must return a `JsonResponse` containing a `redirect_url` field rather than a `RedirectResponse`. The client is responsible for performing the redirect.
+- Known existing offenders (do not flag these as new issues, but flag any new code that replicates the same pattern):
+  - `src/OrderPay/Provider/CaptureHttpResponseProvider.php` — returns `RedirectResponse($data['redirect_url'])`
+  - `src/Controller/OneClickAction.php` — returns `RedirectResponse` on all exit paths
+- Admin-facing controllers (`src/Action/Admin/`) are exempt — headless compliance only applies to the shop payment flow.
+- If a new controller or response provider in the shop flow returns `RedirectResponse`, flag it as a headless compliance issue.
 
 ## Output Format
 
-Rate each dimension: **Good** / **Needs Attention** / **Critical**
+Use the following symbols for each severity level:
 
-List findings with file path and line number. Lead with Critical findings. Include positive observations alongside issues.
+- 🟢 or ✅ **Good** — no issues, meets expectations
+- 🟠 or ⚠️ **Needs Attention** — should be fixed but not blocking
+- 🔴 or ❌ **Critical** — must be fixed before merge
+
+Rate each dimension with the appropriate symbol. List findings with file path and line number. Lead with Critical findings. Include positive observations alongside issues.
+
+## Iterative Reviews
+
+When reviewing a new commit on a PR that already has open review threads:
+
+- **Resolve threads** for issues that have been addressed in the new commit — do not leave them open if the fix is present.
+- **Do not re-open or re-comment** on issues that were already resolved in a previous round.
+- Only open new threads for issues that are genuinely new or that remain unresolved.
+- If a previous finding was partially addressed, update the thread with what still needs attention rather than opening a duplicate.
