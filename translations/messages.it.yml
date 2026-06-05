@@ -25,6 +25,7 @@ payplug_sylius_payplug_plugin:
                     confirm_card_deletion: Desideri cancellare questa carta?
         bancontact_gateway_label: Bancontact by Payplug
         scalapay_gateway_label: Scalapay by PayPlug
+        wero_gateway_label: Wero by PayPlug
         apple_pay_gateway_label: Apple Pay by Payplug
         american_express_gateway_label: American Express by Payplug
         apple_pay_not_available: Apple Pay non è disponibile su questo browser o dispositivo.
