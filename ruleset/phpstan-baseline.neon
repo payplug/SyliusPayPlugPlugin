@@ -1367,6 +1367,12 @@ parameters:
 			path: ../src/Resolver/ScalapayPaymentMethodsResolverDecorator.php
 
 		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Resolver\\WeroPaymentMethodsResolverDecorator\:\:getSupportedMethods\(\) should return array\<Sylius\\Component\\Payment\\Model\\PaymentMethodInterface\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Resolver/WeroPaymentMethodsResolverDecorator.php
+
+		-
 			message: '#^Call to method apply\(\) on an unknown class SM\\StateMachine\\StateMachineInterface\.$#'
 			identifier: class.notFound
 			count: 1

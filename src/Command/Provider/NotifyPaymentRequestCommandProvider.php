@@ -33,6 +33,10 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
     'payplug_sylius_payplug_plugin.command_provider.payplug_scalapay',
     ['action' => PaymentRequestInterface::ACTION_NOTIFY],
 )]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_wero',
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
+)]
 final class NotifyPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function supports(PaymentRequestInterface $paymentRequest): bool

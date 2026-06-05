@@ -12,6 +12,7 @@ use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\AddressInterface;
@@ -437,6 +438,23 @@ final class PayPlugPaymentDataCreatorTest extends TestCase
         $details = $this->creator->create($payment);
 
         self::assertSame('bancontact', $details['payment_method']);
+    }
+
+    // -------------------------------------------------------------------------
+    // create() — Wero gateway (PPRO payment_method field)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Uses the Wero gateway factory (a PPRO method routed through PayPlug).
+     * Verifies the payment_method field is set to the literal string 'wero'.
+     */
+    public function testCreate_weroGateway_setsWeroPaymentMethod(): void
+    {
+        $payment = $this->buildMinimalPaymentWithGateway(WeroGatewayFactory::FACTORY_NAME);
+
+        $details = $this->creator->create($payment);
+
+        self::assertSame('wero', $details['payment_method']);
     }
 
     // -------------------------------------------------------------------------

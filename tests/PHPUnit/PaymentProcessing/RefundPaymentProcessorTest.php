@@ -11,6 +11,7 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -96,6 +97,23 @@ final class RefundPaymentProcessorTest extends TestCase
 
         $this->apiClientFactory->expects(self::once())->method('createForPaymentMethod');
         $this->apiClient->expects(self::once())->method('refundPayment')->with('pay_scalapay');
+
+        $this->processor->process($payment);
+    }
+
+    // -------------------------------------------------------------------------
+    // process() — Wero gateway → refund is processed
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calls process() with a Wero payment; verifies refundPayment() is called,
+     * confirming Wero is included in the supported gateway allow-list.
+     */
+    public function testProcess_weroGateway_callsApiRefund(): void
+    {
+        $payment = $this->buildPayment(WeroGatewayFactory::FACTORY_NAME, ['payment_id' => 'pay_wero']);
+
+        $this->apiClient->expects(self::once())->method('refundPayment')->with('pay_wero');
 
         $this->processor->process($payment);
     }
