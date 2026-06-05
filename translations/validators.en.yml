@@ -33,6 +33,14 @@ payplug_sylius_payplug_plugin:
             You don't have access to this feature yet.
             To activate Scalapay, please contact us at support@payplug.com
             and activate the LIVE mode.
+    payplug_wero:
+        can_not_save_method_with_test_key: |
+            The Wero payment method is not available for the TEST mode.
+            Please activate the LIVE mode.
+        can_not_save_method_no_access: |
+            You don't have access to this feature yet.
+            To activate Wero, please contact us at support@payplug.com
+            and activate the LIVE mode.
     payplug_apple_pay:
         can_not_save_method_with_test_key: |
             The Apple Pay payment method is not available for the TEST mode.
