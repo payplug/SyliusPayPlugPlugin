@@ -16,10 +16,12 @@ jobs:
         needs: [quality]
         if: github.base_ref == 'develop'
         uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            symfony-versions: '["7.3"]'
 
     sonarcloud:
         if: always() && !failure() && !cancelled() && github.base_ref == 'develop'
-        needs: sylius-matrix
+        needs: [sylius-matrix]
         uses: payplug/template-ci/.github/workflows/sonarcloud.yml@main
         with:
             project-name: 'github-payplug-payplug-syliuspayplugplugin'
