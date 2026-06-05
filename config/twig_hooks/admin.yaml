@@ -33,6 +33,9 @@ sylius_twig_hooks:
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_scalapay': &scalapayGateway
             live_checkbox: *liveCheckbox
 
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_wero': &weroGateway
+            live_checkbox: *liveCheckbox
+
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug':
             <<: *payplugGateway
             renew_oauth: &renewOAuth
@@ -52,4 +55,7 @@ sylius_twig_hooks:
             renew_oauth: *renewOAuth
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_scalapay':
             <<: *scalapayGateway
+            renew_oauth: *renewOAuth
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_wero':
+            <<: *weroGateway
             renew_oauth: *renewOAuth

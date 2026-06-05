@@ -15,6 +15,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
@@ -48,6 +49,7 @@ final class PaymentMethodValidator
             AmericanExpressGatewayFactory::FACTORY_NAME => $this->processAmex($paymentMethod),
             ApplePayGatewayFactory::FACTORY_NAME => $this->processApplePay($paymentMethod),
             ScalapayGatewayFactory::FACTORY_NAME => $this->processScalapay($paymentMethod),
+            WeroGatewayFactory::FACTORY_NAME => $this->processWero($paymentMethod),
             default => throw new \InvalidArgumentException('Unsupported payment method'),
         };
 
@@ -108,6 +110,13 @@ final class PaymentMethodValidator
     }
 
     private function processScalapay(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
+    {
+        $constraintList = [new IsCanSavePaymentMethod()];
+
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
+    }
+
+    private function processWero(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsCanSavePaymentMethod()];
 

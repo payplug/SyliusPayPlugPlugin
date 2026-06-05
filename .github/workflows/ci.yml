@@ -3,8 +3,8 @@ name: CI
 'on':
     pull_request:
         branches:
-            - test-develop-ci
-            - test-master-ci
+            - develop
+            - master
         paths-ignore:
             - README.md
 
@@ -14,11 +14,11 @@ jobs:
 
     sylius-matrix:
         needs: [quality]
-        if: github.base_ref == 'test-develop-ci'
+        if: github.base_ref == 'develop'
         uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
 
     sonarcloud:
-        if: always() && !failure() && !cancelled() && github.base_ref == 'test-develop-ci'
+        if: always() && !failure() && !cancelled() && github.base_ref == 'develop'
         needs: sylius-matrix
         uses: payplug/template-ci/.github/workflows/sonarcloud.yml@main
         with:
