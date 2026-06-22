@@ -111,8 +111,8 @@ final class UnifiedAuthenticationController extends AbstractController
             $liveClientDataResult = Authentication::createClientIdAndSecret($companyId, $clientName, 'live');
 
             $config = $gatewayConfig->getConfig();
-            $config['live_client'] = $liveClientDataResult['httpResponse'];
-            $config['test_client'] = $testClientDataResult['httpResponse'];
+            $config['live_client'] = $liveClientDataResult['httpResponse'] ?? null;
+            $config['test_client'] = $testClientDataResult['httpResponse'] ?? null;
             $gatewayConfig->setConfig($config);
 
             $this->entityManager->flush();

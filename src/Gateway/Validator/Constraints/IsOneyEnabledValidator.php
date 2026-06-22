@@ -57,10 +57,8 @@ final class IsOneyEnabledValidator extends ConstraintValidator
                 $this->context->buildViolation($constraint->message)
                     ->addViolation();
             }
-        } catch (UnauthorizedException) {
-            return;
-        } catch (GatewayConfigurationException $exception) {
-            $this->context->buildViolation($exception->getMessage())
+        } catch (GatewayConfigurationException | UnauthorizedException) {
+            $this->context->buildViolation($constraint->message)
                 ->addViolation();
         }
     }

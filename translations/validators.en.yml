@@ -59,3 +59,7 @@ payplug_sylius_payplug_plugin:
             To activate American Express, please fill in
             <a href="https://support.payplug.com/hc/en-gb/requests/new?ticket_form_id=6331992459420" target="_blank">this form</a>
             and activate the LIVE mode.
+    payplug:
+        can_not_save_method_no_access: |
+            You do not have access to LIVE mode.
+            To enable it, please complete your onboarding and reconnect.

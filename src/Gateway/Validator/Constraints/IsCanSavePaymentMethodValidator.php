@@ -46,27 +46,27 @@ final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 
         Assert::stringNotEmpty($factoryName);
 
-        if (in_array($factoryName, self::GATEWAYS_SKIP, true)) {
-            return;
-        }
-
         try {
             $checker = new CanSavePayplugPaymentMethodChecker($this->apiClientFactory->createForPaymentMethod($value));
-            if (!$checker->isLive()) {
-                $this->context->buildViolation(sprintf($constraint->noTestKeyMessage, $factoryName))->addViolation();
 
+            if (in_array($factoryName, self::GATEWAYS_SKIP, true)) {
                 return;
             }
 
             if (!$checker->isEnabled($factoryName, $channels)) {
                 $this->context->buildViolation(sprintf($constraint->noAccessMessage, $factoryName))->addViolation();
+
+                return;
             }
 
-            return;
-        } catch (GatewayConfigurationException $exception) {
-            $this->context->buildViolation($exception->getMessage())
-                ->addViolation();
-        } catch (UnauthorizedException | \LogicException) {
+            if (!$checker->isLive()) {
+                $this->context->buildViolation(sprintf($constraint->noTestKeyMessage, $factoryName))->addViolation();
+
+                return;
+            }
+        } catch (GatewayConfigurationException | UnauthorizedException) {
+            $this->context->buildViolation(sprintf($constraint->noAccessMessage, $factoryName))->addViolation();
+        } catch (\LogicException) {
             return;
         }
     }
