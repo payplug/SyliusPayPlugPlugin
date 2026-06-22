@@ -14,6 +14,7 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -91,6 +92,7 @@ final class CompleteInfoController extends AbstractController
 
         $formBuilder = $this->createFormBuilder($completeInfo);
         foreach ($fields as $field => $type) {
+            /** @var class-string<FormTypeInterface> $type */
             $formBuilder->add($field, $type, ['required' => true, 'constraints' => [new NotBlank()]]);
         }
 

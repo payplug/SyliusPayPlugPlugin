@@ -1,0 +1,7 @@
+{% import '@SyliusAdmin/shared/helper/button.html.twig' as button %}
+
+{{ button.default({
+    url: path('sylius_admin_payment_method_index'),
+    text: 'sylius.ui.back'|trans,
+    class: 'btn',
+}) }}

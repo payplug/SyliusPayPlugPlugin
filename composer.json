@@ -110,6 +110,10 @@
         "public-dir": "vendor/sylius/test-application/public",
         "symfony": {
             "require": "^6.4"
+        },
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
         }
     }
 }
