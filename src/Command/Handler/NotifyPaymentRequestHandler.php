@@ -6,15 +6,14 @@ namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentTransitionApplier;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
-use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -26,6 +25,7 @@ class NotifyPaymentRequestHandler
         private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentNotificationHandler $paymentNotificationHandler,
         private RefundNotificationHandler $refundNotificationHandler,
+        private PaymentTransitionApplier $paymentTransitionApplier,
     ) {}
 
     public function __invoke(NotifyPaymentRequest $notifyPaymentRequest): void
@@ -66,7 +66,7 @@ class NotifyPaymentRequestHandler
 
             $payment->setDetails($details->getArrayCopy());
             if ($resource instanceof Payment) {
-                $this->updatePaymentState($payment);
+                $this->paymentTransitionApplier->apply($payment);
             }
 
             $this->stateMachine->apply(
@@ -84,20 +84,5 @@ class NotifyPaymentRequestHandler
                 PaymentRequestTransitions::TRANSITION_FAIL,
             );
         }
-    }
-
-    private function updatePaymentState(PaymentInterface $payment): void
-    {
-        match ($payment->getDetails()['status'] ?? '') {
-            PayPlugApiClientInterface::STATUS_ABORTED, PayPlugApiClientInterface::STATUS_CANCELED, PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL),
-            PayPlugApiClientInterface::STATUS_AUTHORIZED => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_AUTHORIZE),
-            PayPlugApiClientInterface::STATUS_CAPTURED => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE),
-            PayPlugApiClientInterface::FAILED => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_FAIL),
-            default => throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? '')), // @phpstan-ignore-line - getDetails() return mixed
-        };
     }
 }

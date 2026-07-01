@@ -8,13 +8,13 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\StatusPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentTransitionApplier;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
-use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -25,6 +25,7 @@ final class StatusPaymentRequestHandler
         private StateMachineInterface $stateMachine,
         private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentNotificationHandler $paymentNotificationHandler,
+        private PaymentTransitionApplier $paymentTransitionApplier,
         private LoggerInterface $logger,
     ) {}
 
@@ -50,7 +51,7 @@ final class StatusPaymentRequestHandler
         if (null === $payplugPaymentId) {
             $this->logger->warning('No PayPlug payment ID found in payment details.', ['payment_id' => $payment->getId(), 'order_id' => $payment->getOrder()?->getId()]);
             $payment->setDetails(['status' => PayPlugApiClientInterface::FAILED]);
-            $this->updatePaymentState($payment);
+            $this->paymentTransitionApplier->apply($payment);
 
             return;
         }
@@ -64,7 +65,7 @@ final class StatusPaymentRequestHandler
         $payment->setDetails($details->getArrayCopy());
         if ($payment->getState() !== PaymentInterface::STATE_COMPLETED) {
             // If is already completed, do not try to update it again (updated by notification)
-            $this->updatePaymentState($payment);
+            $this->paymentTransitionApplier->apply($payment);
         }
 
         // Mark the PaymentRequest as completed
@@ -80,13 +81,16 @@ final class StatusPaymentRequestHandler
         PaymentRequestInterface $paymentRequest,
     ): void {
         $payment = $paymentRequest->getPayment();
+        $previousDetails = $payment->getDetails();
 
         $payment->setDetails([
-            ...$payment->getDetails(),
+            ...$previousDetails,
             'status' => $statusPaymentRequest->getForcedStatus(),
         ]);
 
-        $this->updatePaymentState($payment);
+        if (!$this->paymentTransitionApplier->apply($payment)) {
+            $payment->setDetails($previousDetails);
+        }
 
         // Mark the PaymentRequest as completed
         $this->stateMachine->apply(
@@ -94,20 +98,5 @@ final class StatusPaymentRequestHandler
             PaymentRequestTransitions::GRAPH,
             PaymentRequestTransitions::TRANSITION_COMPLETE,
         );
-    }
-
-    private function updatePaymentState(PaymentInterface $payment): void
-    {
-        match ($payment->getDetails()['status'] ?? '') {
-            PayPlugApiClientInterface::STATUS_ABORTED, PayPlugApiClientInterface::STATUS_CANCELED, PayPlugApiClientInterface::STATUS_CANCELED_BY_ONEY => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL),
-            PayPlugApiClientInterface::STATUS_AUTHORIZED => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_AUTHORIZE),
-            PayPlugApiClientInterface::STATUS_CAPTURED => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE),
-            PayPlugApiClientInterface::FAILED => $this->stateMachine
-                ->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_FAIL),
-            default => throw new \LogicException(sprintf('Unknown payment status "%s".', $payment->getDetails()['status'] ?? '')), // @phpstan-ignore-line - getDetails() return mixed
-        };
     }
 }
