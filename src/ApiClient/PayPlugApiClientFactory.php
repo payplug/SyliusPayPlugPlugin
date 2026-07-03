@@ -47,13 +47,14 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
     private function getTokenForGatewayConfig(GatewayConfigInterface $gatewayConfig): string
     {
         $config = $gatewayConfig->getConfig();
-        $rawClientConfig = true !== $config['live'] ? $config['test_client'] : $config['live_client'];
+        $isLive = true === ($config['live'] ?? false);
+        $rawClientConfig = $isLive ? ($config['live_client'] ?? null) : ($config['test_client'] ?? null);
         if (!\is_array($rawClientConfig)) {
             throw new GatewayConfigurationException('No client config found for ' . $gatewayConfig->getFactoryName() . '. Please renew your credentials in the PayPlug plugin configuration.');
         }
         /** @var array<string, string> $clientConfig */
         $clientConfig = $rawClientConfig;
-        $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $config['live'] === true ? 'live' : 'test');
+        $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $isLive ? 'live' : 'test');
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($clientConfig) {
             $response = Authentication::generateJWT($clientConfig['client_id'] ?? '', $clientConfig['client_secret'] ?? '');
