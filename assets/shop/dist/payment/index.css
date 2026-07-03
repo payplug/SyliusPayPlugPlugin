@@ -165,6 +165,9 @@ label {
 .payment-label-with-image.oney-label::after {
     width: 130px;
 }
+.payment-label-with-image.scalapay-label::after {
+    width: 80px;
+}
 
 @media screen and (max-width: 991px) {
     .oney-payment-choice__container, .payplug-payment-choice__container {
