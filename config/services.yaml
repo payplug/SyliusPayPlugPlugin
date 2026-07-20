@@ -1,3 +1,11 @@
+parameters:
+    # Overridable via env vars for QA/staging testing; merchants installing the plugin normally
+    # never need to set these — the defaults below are used automatically.
+    payplug.oauth_base_url.default: 'https://api.payplug.com'
+    payplug.oauth_base_url: '%env(default:payplug.oauth_base_url.default:PAYPLUG_OAUTH_BASE_URL)%'
+    payplug.oauth_audience.default: 'https://www.payplug.com'
+    payplug.oauth_audience: '%env(default:payplug.oauth_audience.default:PAYPLUG_OAUTH_AUDIENCE)%'
+
 services:
     _defaults:
         autowire: true
@@ -9,6 +17,8 @@ services:
         exclude: '../src/{ApiClient,DependencyInjection,Entity,Exception,Model,Repository,PayPlugSyliusPayPlugPlugin.php}'
         bind:
             Psr\Log\LoggerInterface: '@monolog.logger.payplug'
+            $payplugOauthBaseUrl: '%payplug.oauth_base_url%'
+            $payplugOauthAudience: '%payplug.oauth_audience%'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository

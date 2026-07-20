@@ -14,6 +14,7 @@
         "ext-json": "*",
         "giggsey/libphonenumber-for-php": "^8.12",
         "payplug/payplug-php": "^4.0",
+        "payplug/unified-plugin-core": "0.0.7",
         "php-http/message-factory": "^1.1",
         "sylius/refund-plugin": "^2.0",
         "sylius/sylius": "^2.0",
