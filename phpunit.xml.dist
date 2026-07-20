@@ -7,12 +7,16 @@
     <testsuites>
         <testsuite name="Test Suite">
             <directory>tests/PHPUnit</directory>
+            <!-- PRE-3469 spike: needs a provisioned DB + fixtures + the payplug_operation table,
+                 none of which a fresh checkout or CI has. Not part of the default run — see its
+                 own docblock for how to run it explicitly. -->
+            <exclude>tests/PHPUnit/Spike/SpikeIntegrationTest.php</exclude>
         </testsuite>
     </testsuites>
 
     <php>
         <ini name="error_reporting" value="-1" />
-        <server name="KERNEL_CLASS_PATH" value="Sylius\TestApplication\Kernel" />
+        <server name="KERNEL_CLASS" value="Sylius\TestApplication\Kernel" />
         <server name="IS_DOCTRINE_ORM_SUPPORTED" value="true" />
 
         <server name="APP_ENV" value="test" force="true" />

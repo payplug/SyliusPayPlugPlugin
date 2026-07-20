@@ -33,6 +33,35 @@ final class PayPlugSyliusPayPlugExtension extends Extension implements PrependEx
         $this->prependTwigExtension($container);
         $this->prependDoctrineMigrations($container);
         $this->prependMonologExtension($container);
+        $this->prependSpikeDoctrineMapping($container);
+    }
+
+    /**
+     * PRE-3469 spike only — registers src/Spike/Entity as a plain (non-Sylius-resource)
+     * Doctrine mapping so the spike's integration test can persist PayplugOperation for real.
+     * Not a `sylius_resource` on purpose: that would pull in grids/forms/routes this throwaway
+     * entity has no use for. Restricted to the `test` environment on purpose too — this is
+     * test-only scaffolding, it must never register Doctrine metadata for a throwaway entity in
+     * prod. Remove this method along with src/Spike/ once the spike is closed.
+     */
+    private function prependSpikeDoctrineMapping(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('doctrine') || 'test' !== $container->getParameter('kernel.environment')) {
+            return;
+        }
+
+        $container->prependExtensionConfig('doctrine', [
+            'orm' => [
+                'mappings' => [
+                    'PayPlugSyliusPayPlugPluginSpike' => [
+                        'type' => 'attribute',
+                        'dir' => dirname(__DIR__) . '/Spike/Entity',
+                        'prefix' => 'PayPlug\SyliusPayPlugPlugin\Spike\Entity',
+                        'is_bundle' => false,
+                    ],
+                ],
+            ],
+        ]);
     }
 
     private function prependTwigExtension(ContainerBuilder $container): void

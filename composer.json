@@ -37,6 +37,7 @@
         "friendsoftwig/twigcs": "6.5.0",
         "lakion/mink-debug-extension": "2.0.0",
         "mockery/mockery": "1.6.12",
+        "payplug/unified-plugin-core": "dev-develop",
         "php-parallel-lint/php-parallel-lint": "1.4.0",
         "phpmd/phpmd": "^2.15.0",
         "phpro/grumphp": "^2.12",
@@ -57,6 +58,12 @@
         "webmozart/assert": "^1.8"
     },
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/payplug/unified-plugin-core.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "PayPlug\\SyliusPayPlugPlugin\\": "src/"
