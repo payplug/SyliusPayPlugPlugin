@@ -130,7 +130,7 @@ class NotifyPaymentRequestHandler
         }
 
         try {
-            $this->orderStateMutator->apply((string) $order->getId(), $outcome);
+            $this->orderStateMutator->apply((string) $order->getId(), $outcome); // @phpstan-ignore-line - ResourceInterface::getId() return mixed
         } catch (\Throwable $e) {
             $this->logger->warning('[PayPlug] PayplugOrderStateMutator additive call failed.', [
                 'sylius_payment_id' => $payment->getId(),
