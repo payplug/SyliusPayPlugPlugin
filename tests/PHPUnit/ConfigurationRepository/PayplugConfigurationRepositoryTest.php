@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Spike;
+namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\ConfigurationRepository;
 
-use PayPlug\SyliusPayPlugPlugin\Spike\SyliusConfigurationRepository;
+use PayPlug\SyliusPayPlugPlugin\ConfigurationRepository\PayplugConfigurationRepository;
 use PayplugUnifiedCore\Exceptions\ApiException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 
-final class SyliusConfigurationRepositoryTest extends TestCase
+final class PayplugConfigurationRepositoryTest extends TestCase
 {
     private GatewayConfigInterface&MockObject $gatewayConfig;
 
@@ -66,9 +66,9 @@ final class SyliusConfigurationRepositoryTest extends TestCase
     }
 
     /**
-     * @dataProvider provideCredentialGetters
+     * @dataProvider provideRequiredCredentialGetters
      */
-    public function testCredentialGetters_present_returnValue(string $method, string $configKey): void
+    public function testRequiredCredentialGetters_present_returnValue(string $method, string $configKey): void
     {
         $this->gatewayConfig->method('getConfig')->willReturn([
             'live' => true,
@@ -79,13 +79,13 @@ final class SyliusConfigurationRepositoryTest extends TestCase
     }
 
     /**
-     * @dataProvider provideCredentialGetters
+     * @dataProvider provideRequiredCredentialGetters
      *
      * The exception message must name the missing key and the factory, never a credential
      * value — there is nothing sensitive to redact here since the value is simply absent, but
      * this locks the message shape so a future edit can't start interpolating $value instead.
      */
-    public function testCredentialGetters_missing_throwsApiExceptionWithoutLeakingSecrets(
+    public function testRequiredCredentialGetters_missing_throwsApiExceptionWithoutLeakingSecrets(
         string $method,
         string $configKey,
     ): void
@@ -104,18 +104,54 @@ final class SyliusConfigurationRepositoryTest extends TestCase
     /**
      * @return array<string, array{0: string, 1: string}>
      */
-    public static function provideCredentialGetters(): array
+    public static function provideRequiredCredentialGetters(): array
     {
         return [
             'clientId' => ['getClientId', 'client_id'],
             'clientSecret' => ['getClientSecret', 'client_secret'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideOptionalCredentialGetters
+     */
+    public function testOptionalCredentialGetters_present_returnValue(string $method, string $configKey): void
+    {
+        $this->gatewayConfig->method('getConfig')->willReturn([
+            'live' => true,
+            'live_client' => [$configKey => 'the-value'],
+        ]);
+
+        self::assertSame('the-value', $this->repository()->{$method}());
+    }
+
+    /**
+     * getPublicKeyId()/getPublicKeyValue() have no production writer yet (Hosted Fields isn't
+     * built) — unlike client_id/client_secret, a missing value must not throw, or the contract
+     * would be unimplementable until a future ticket adds that writer.
+     *
+     * @dataProvider provideOptionalCredentialGetters
+     */
+    public function testOptionalCredentialGetters_missing_returnEmptyString(string $method): void
+    {
+        $this->gatewayConfig->method('getConfig')->willReturn(['live' => true, 'live_client' => []]);
+
+        self::assertSame('', $this->repository()->{$method}());
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
+    public static function provideOptionalCredentialGetters(): array
+    {
+        return [
             'publicKeyId' => ['getPublicKeyId', 'public_key_id'],
             'publicKeyValue' => ['getPublicKeyValue', 'public_key_value'],
         ];
     }
 
-    private function repository(): SyliusConfigurationRepository
+    private function repository(): PayplugConfigurationRepository
     {
-        return new SyliusConfigurationRepository($this->gatewayConfig);
+        return new PayplugConfigurationRepository($this->gatewayConfig);
     }
 }

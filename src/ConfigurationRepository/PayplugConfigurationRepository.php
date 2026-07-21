@@ -2,32 +2,36 @@
 
 declare(strict_types=1);
 
-namespace PayPlug\SyliusPayPlugPlugin\Spike;
+namespace PayPlug\SyliusPayPlugPlugin\ConfigurationRepository;
 
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use PayplugUnifiedCore\Exceptions\ApiException;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 
 /**
- * PRE-3469 spike: proof-of-concept implementation of IConfigurationRepository against Sylius's
- * GatewayConfigInterface — not shipped code.
+ * PRE-3469: real implementation of IConfigurationRepository against Sylius's
+ * GatewayConfigInterface.
  *
- * Friction found: IConfigurationRepository assumes one flat set of credentials, but Sylius
- * scopes gateway config per PaymentMethod *and* per live/test mode (`config['live_client']` vs
+ * IConfigurationRepository assumes one flat set of credentials, but Sylius scopes gateway
+ * config per PaymentMethod *and* per live/test mode (`config['live_client']` vs
  * `config['test_client']`, selected by `config['live']`, exactly as PayPlugApiClientFactory
- * already does). So a single IConfigurationRepository instance has to be constructed per
+ * already does). So a single PayplugConfigurationRepository instance has to be constructed per
  * GatewayConfigInterface (i.e. per PaymentMethod) rather than shared as one repository-wide
  * service — a factory, not a singleton. Not blocking, but worth flagging if the Unified API
  * client this feeds ever assumes one repository == one merchant.
  *
- * Positive finding: Sylius already ships an (experimental) GatewayConfigEncrypter that
- * transparently encrypts the whole `getConfig()` array at rest
- * (Sylius\Component\Payment\Encryption) — if wired up, CLIENT_SECRET benefits from that for
- * free. What this class must still guarantee on its own is that a *decrypted* secret never
- * leaks into a log line or exception message, which is why requireString() below only ever
- * interpolates the config *key name*, never its value.
+ * getPublicKeyId()/getPublicKeyValue() default to an empty string rather than throwing: unlike
+ * client_id/client_secret, no production code writes public_key_id/public_key_value yet
+ * (Hosted Fields isn't built) — requiring them would make the contract unimplementable until a
+ * future ticket adds that writer.
+ *
+ * Sylius already ships an (experimental) GatewayConfigEncrypter that transparently encrypts the
+ * whole `getConfig()` array at rest (Sylius\Component\Payment\Encryption) — if wired up,
+ * CLIENT_SECRET benefits from that for free. What this class must still guarantee on its own is
+ * that a *decrypted* secret never leaks into a log line or exception message, which is why
+ * requireString() below only ever interpolates the config *key name*, never its value.
  */
-final class SyliusConfigurationRepository implements IConfigurationRepository
+final class PayplugConfigurationRepository implements IConfigurationRepository
 {
     public function __construct(private readonly GatewayConfigInterface $gatewayConfig)
     {
@@ -69,12 +73,12 @@ final class SyliusConfigurationRepository implements IConfigurationRepository
 
     public function getPublicKeyId(): string
     {
-        return $this->requireString('public_key_id');
+        return $this->get('public_key_id') ?? '';
     }
 
     public function getPublicKeyValue(): string
     {
-        return $this->requireString('public_key_value');
+        return $this->get('public_key_value') ?? '';
     }
 
     private function requireString(string $key): string

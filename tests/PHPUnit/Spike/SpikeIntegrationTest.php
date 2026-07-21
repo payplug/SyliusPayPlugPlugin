@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Spike;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\Spike\SyliusConfigurationRepository;
+use PayPlug\SyliusPayPlugPlugin\ConfigurationRepository\PayplugConfigurationRepository;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PayplugOrderStateMutator;
 use PayPlug\SyliusPayPlugPlugin\Spike\SyliusPaymentRepository;
 use PayPlug\SyliusPayPlugPlugin\TokenCache\PayplugTokenCache;
@@ -106,13 +106,13 @@ final class SpikeIntegrationTest extends KernelTestCase
 
         /** @var GatewayConfig $reloaded */
         $reloaded = $this->entityManager->find(GatewayConfig::class, $id);
-        (new SyliusConfigurationRepository($reloaded))->set('client_secret', 'spike-secret-value');
+        (new PayplugConfigurationRepository($reloaded))->set('client_secret', 'spike-secret-value');
         $this->entityManager->flush();
         $this->entityManager->clear();
 
         /** @var GatewayConfig $reloadedAgain */
         $reloadedAgain = $this->entityManager->find(GatewayConfig::class, $id);
-        $repository = new SyliusConfigurationRepository($reloadedAgain);
+        $repository = new PayplugConfigurationRepository($reloadedAgain);
 
         self::assertSame('spike-client-id', $repository->getClientId());
         self::assertSame('spike-secret-value', $repository->getClientSecret());
