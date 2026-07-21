@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Spike;
+namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\TokenCache;
 
-use PayPlug\SyliusPayPlugPlugin\Spike\SyliusTokenCache;
+use PayPlug\SyliusPayPlugPlugin\TokenCache\PayplugTokenCache;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
-final class SyliusTokenCacheTest extends TestCase
+final class PayplugTokenCacheTest extends TestCase
 {
     private CacheItemPoolInterface&MockObject $cache;
 
-    private SyliusTokenCache $tokenCache;
+    private PayplugTokenCache $tokenCache;
 
     protected function setUp(): void
     {
         $this->cache = $this->createMock(CacheItemPoolInterface::class);
-        $this->tokenCache = new SyliusTokenCache($this->cache);
+        $this->tokenCache = new PayplugTokenCache($this->cache);
     }
 
     public function testGet_hit_returnsStoredValue(): void

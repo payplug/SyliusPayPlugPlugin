@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Spike\SyliusConfigurationRepository;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PayplugOrderStateMutator;
 use PayPlug\SyliusPayPlugPlugin\Spike\SyliusPaymentRepository;
-use PayPlug\SyliusPayPlugPlugin\Spike\SyliusTokenCache;
+use PayPlug\SyliusPayPlugPlugin\TokenCache\PayplugTokenCache;
 use PayplugUnifiedCore\Models\OperationData;
 use PayplugUnifiedCore\Models\PaymentOutcome;
 use Psr\Cache\CacheItemPoolInterface;
@@ -84,7 +84,7 @@ final class SpikeIntegrationTest extends KernelTestCase
     public function testTokenCache_realCachePool_roundTripsThroughRealAdapter(): void
     {
         $cachePool = self::getContainer()->get(CacheItemPoolInterface::class);
-        $tokenCache = new SyliusTokenCache($cachePool);
+        $tokenCache = new PayplugTokenCache($cachePool);
 
         $tokenCache->set('pre3469-spike-token', 'jwt-value', 300);
         self::assertSame('jwt-value', $tokenCache->get('pre3469-spike-token'));
