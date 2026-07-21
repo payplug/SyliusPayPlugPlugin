@@ -6,10 +6,14 @@ namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
 use Payplug\Resource\Payment;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentTransitionApplier;
+use PayplugUnifiedCore\Contracts\IOrderStateMutator;
+use PayplugUnifiedCore\Models\PaymentOutcome;
+use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -19,6 +23,21 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 class NotifyPaymentRequestHandler
 {
+    /**
+     * PRE-3469: additive translation from the PayPlug status vocabulary (the same one
+     * PaymentTransitionApplier already maps from) to UPC's PaymentOutcome vocabulary, for the
+     * real IOrderStateMutator call below. Statuses with no PaymentOutcome equivalent
+     * (e.g. STATUS_ABORTED/STATUS_CANCELED*, which PaymentTransitionApplier maps to
+     * TRANSITION_CANCEL) are intentionally absent here — they're skipped, never force-mapped.
+     *
+     * @var array<string, string>
+     */
+    private const STATUS_TO_OUTCOME = [
+        PayPlugApiClientInterface::STATUS_CAPTURED => PaymentOutcome::PAID,
+        PayPlugApiClientInterface::STATUS_AUTHORIZED => PaymentOutcome::AUTHORIZED,
+        PayPlugApiClientInterface::FAILED => PaymentOutcome::FAILED,
+    ];
+
     public function __construct(
         private PaymentRequestProviderInterface $paymentRequestProvider,
         private StateMachineInterface $stateMachine,
@@ -26,6 +45,8 @@ class NotifyPaymentRequestHandler
         private PaymentNotificationHandler $paymentNotificationHandler,
         private RefundNotificationHandler $refundNotificationHandler,
         private PaymentTransitionApplier $paymentTransitionApplier,
+        private IOrderStateMutator $orderStateMutator,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(NotifyPaymentRequest $notifyPaymentRequest): void
@@ -67,6 +88,7 @@ class NotifyPaymentRequestHandler
             $payment->setDetails($details->getArrayCopy());
             if ($resource instanceof Payment) {
                 $this->paymentTransitionApplier->apply($payment);
+                $this->applyOrderStateMutator($payment);
             }
 
             $this->stateMachine->apply(
@@ -83,6 +105,38 @@ class NotifyPaymentRequestHandler
                 PaymentRequestTransitions::GRAPH,
                 PaymentRequestTransitions::TRANSITION_FAIL,
             );
+        }
+    }
+
+    /**
+     * PRE-3469: additive real call site for PayplugOrderStateMutator. PaymentTransitionApplier
+     * has already applied the real transition above by the time this runs, so the mutator's own
+     * can()-guard makes this a no-op in the normal case — this exists to prove the contract works
+     * against a live webhook event, not to change behavior. Any failure here is caught and
+     * logged, never allowed to affect the primary notification flow above.
+     */
+    private function applyOrderStateMutator(PaymentInterface $payment): void
+    {
+        $details = $payment->getDetails(); // @phpstan-ignore-line - getDetails() return mixed
+        $status = $details['status'] ?? '';
+        $outcome = self::STATUS_TO_OUTCOME[$status] ?? null;
+        if (null === $outcome) {
+            return;
+        }
+
+        $order = $payment->getOrder();
+        if (null === $order) {
+            return;
+        }
+
+        try {
+            $this->orderStateMutator->apply((string) $order->getId(), $outcome);
+        } catch (\Throwable $e) {
+            $this->logger->warning('[PayPlug] PayplugOrderStateMutator additive call failed.', [
+                'sylius_payment_id' => $payment->getId(),
+                'outcome' => $outcome,
+                'exception' => $e->getMessage(),
+            ]);
         }
     }
 }
