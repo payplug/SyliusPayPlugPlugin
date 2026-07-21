@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PayPlug\SyliusPayPlugPlugin\Spike;
+namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
@@ -13,23 +13,16 @@ use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 
 /**
- * PRE-3469 spike: proof-of-concept implementation of IOrderStateMutator against Sylius's
- * Symfony Workflow-backed payment state machine — not shipped code.
+ * PRE-3469: real implementation of IOrderStateMutator against Sylius's Symfony
+ * Workflow-backed payment state machine. Wired for real (additively, can()-guarded) from
+ * NotifyPaymentRequestHandler — see there for why the call cannot regress the existing
+ * PaymentTransitionApplier-driven transition.
  *
- * Friction found (confirmed by the level-3 integration test, not just by reading): the state
- * machine's `apply()` only mutates the in-memory `state` property (marking_store: method) — it
- * never flushes. Without an explicit EntityManager::flush() the transition is silently lost the
- * moment the request ends. The plugin's existing PaymentStateResolver::resolve() already flushes
- * for the same reason; this skeleton was missing it until the integration test caught it.
- *
- * Second friction found: IOrderStateMutator::apply() is keyed by order ID, but the Symfony
- * Workflow transition actually lives on the order's Payment sub-entity (`sylius_payment` graph),
- * not on the Order itself. This adds one extra hop (Order -> getLastPayment()) that a
- * WooCommerce implementation, whose native order carries the payment status directly, would not
- * need. Not blocking: the interface deliberately stays CMS-agnostic, so this hop belongs in the
- * Sylius adapter, not in the contract.
+ * The state machine's apply() only mutates the in-memory `state` property
+ * (marking_store: method) — it never flushes on its own, exactly like the plugin's existing
+ * PaymentStateResolver::resolve(), hence the explicit flush() below.
  */
-final class SyliusOrderStateMutator implements IOrderStateMutator
+final class PayplugOrderStateMutator implements IOrderStateMutator
 {
     /**
      * THREE_DS_PENDING is deliberately absent: per PRE-3469, the order must stay in its

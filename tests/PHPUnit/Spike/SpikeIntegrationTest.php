@@ -6,7 +6,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Spike;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Spike\SyliusConfigurationRepository;
-use PayPlug\SyliusPayPlugPlugin\Spike\SyliusOrderStateMutator;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PayplugOrderStateMutator;
 use PayPlug\SyliusPayPlugPlugin\Spike\SyliusPaymentRepository;
 use PayPlug\SyliusPayPlugPlugin\Spike\SyliusTokenCache;
 use PayplugUnifiedCore\Models\OperationData;
@@ -51,7 +51,7 @@ final class SpikeIntegrationTest extends KernelTestCase
         self::assertNotNull($payment);
         self::assertSame(PaymentInterface::STATE_NEW, $payment->getState());
 
-        $mutator = new SyliusOrderStateMutator(
+        $mutator = new PayplugOrderStateMutator(
             self::getContainer()->get('sylius.repository.order'),
             self::getContainer()->get(StateMachineInterface::class),
             $this->entityManager,
@@ -69,7 +69,7 @@ final class SpikeIntegrationTest extends KernelTestCase
         $payment = $order->getLastPayment();
         self::assertNotNull($payment);
 
-        $mutator = new SyliusOrderStateMutator(
+        $mutator = new PayplugOrderStateMutator(
             self::getContainer()->get('sylius.repository.order'),
             self::getContainer()->get(StateMachineInterface::class),
             $this->entityManager,

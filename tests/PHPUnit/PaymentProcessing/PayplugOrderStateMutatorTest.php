@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Spike;
+namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\PaymentProcessing;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\Spike\SyliusOrderStateMutator;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PayplugOrderStateMutator;
 use PayplugUnifiedCore\Exceptions\PaymentNotFoundException;
 use PayplugUnifiedCore\Models\PaymentOutcome;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,7 +16,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 
-final class SyliusOrderStateMutatorTest extends TestCase
+final class PayplugOrderStateMutatorTest extends TestCase
 {
     private OrderRepositoryInterface&MockObject $orderRepository;
 
@@ -24,7 +24,7 @@ final class SyliusOrderStateMutatorTest extends TestCase
 
     private EntityManagerInterface&MockObject $entityManager;
 
-    private SyliusOrderStateMutator $mutator;
+    private PayplugOrderStateMutator $mutator;
 
     protected function setUp(): void
     {
@@ -32,7 +32,7 @@ final class SyliusOrderStateMutatorTest extends TestCase
         $this->stateMachine = $this->createMock(StateMachineInterface::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
 
-        $this->mutator = new SyliusOrderStateMutator($this->orderRepository, $this->stateMachine, $this->entityManager);
+        $this->mutator = new PayplugOrderStateMutator($this->orderRepository, $this->stateMachine, $this->entityManager);
     }
 
     /**
