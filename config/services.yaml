@@ -10,6 +10,12 @@ services:
         bind:
             Psr\Log\LoggerInterface: '@monolog.logger.payplug'
 
+    # PRE-3469: explicit alias, matching this file's convention for other interfaces below —
+    # relying on Symfony to auto-resolve a singly-implemented interface does not work for plain
+    # autowiring (confirmed: omitting this alias fails container compilation outright, since
+    # NotifyPaymentRequestHandler's #[AsMessageHandler] service is always instantiated).
+    PayplugUnifiedCore\Contracts\IOrderStateMutator: '@PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PayplugOrderStateMutator'
+
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
         parent: sylius.repository.payment
