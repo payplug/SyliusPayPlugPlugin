@@ -150,17 +150,57 @@ final class NotifyPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new NotifyPaymentRequest('hash'));
     }
 
-    private function prepareNormalFlow(string $status, int $orderId): void
+    /**
+     * Regression test for a multi-payment order: PayplugOrderStateMutator resolves the order's
+     * *last* payment internally (its contract is keyed by order ID, not payment ID). If a
+     * different payment (e.g. an earlier failed attempt) is the order's last payment, the
+     * additive call must be skipped rather than risk transitioning the wrong payment.
+     */
+    public function testInvoke_paymentIsNotOrdersLastPayment_doesNotCallOrderStateMutator(): void
     {
+        $otherPayment = $this->createMock(PaymentInterface::class);
+        $otherPayment->method('getId')->willReturn(999);
+
         $order = $this->createMock(OrderInterface::class);
-        $order->method('getId')->willReturn($orderId);
+        $order->method('getId')->willReturn(42);
+        $order->method('getLastPayment')->willReturn($otherPayment);
 
         $payment = $this->createMock(PaymentInterface::class);
         $payment->method('getState')->willReturn(PaymentInterface::STATE_NEW);
-        $payment->method('getDetails')->willReturn(['status' => $status]);
+        $payment->method('getDetails')->willReturn(['status' => PayPlugApiClientInterface::STATUS_CAPTURED]);
         $payment->method('getOrder')->willReturn($order);
+        $payment->method('getId')->willReturn(1);
         $method = $this->createMock(PaymentMethodInterface::class);
         $payment->method('getMethod')->willReturn($method);
+
+        $paymentRequest = $this->createMock(PaymentRequestInterface::class);
+        $paymentRequest->method('getPayment')->willReturn($payment);
+        $paymentRequest->method('getPayload')->willReturn(['http_request' => ['content' => '{}']]);
+        $this->paymentRequestProvider->method('provide')->willReturn($paymentRequest);
+
+        $client = $this->createMock(PayPlugApiClientInterface::class);
+        $resource = $this->createMock(PayplugResourcePayment::class);
+        $client->method('treat')->willReturn($resource);
+        $this->apiClientFactory->method('createForPaymentMethod')->willReturn($client);
+
+        $this->orderStateMutator->expects(self::never())->method('apply');
+
+        $this->handler->__invoke(new NotifyPaymentRequest('hash'));
+    }
+
+    private function prepareNormalFlow(string $status, int $orderId): void
+    {
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getState')->willReturn(PaymentInterface::STATE_NEW);
+        $payment->method('getDetails')->willReturn(['status' => $status]);
+        $payment->method('getId')->willReturn(1);
+        $method = $this->createMock(PaymentMethodInterface::class);
+        $payment->method('getMethod')->willReturn($method);
+
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getId')->willReturn($orderId);
+        $order->method('getLastPayment')->willReturn($payment);
+        $payment->method('getOrder')->willReturn($order);
 
         $paymentRequest = $this->createMock(PaymentRequestInterface::class);
         $paymentRequest->method('getPayment')->willReturn($payment);

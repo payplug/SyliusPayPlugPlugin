@@ -22,7 +22,9 @@ Couverture de tests, 3 niveaux :
 
 **Verdict global : aucune friction bloquante restante.** Une friction bloquante a été trouvée et
 corrigée pendant ce rework (voir « Friction bloquante corrigée » ci-dessous), plus deux notes non
-bloquantes (aucune ne remet en cause la forme des interfaces).
+bloquantes (aucune ne remet en cause la forme des interfaces). Voir aussi « Validation finale »
+plus bas pour la passe de régression complète (test fonctionnel réel, `SpikeIntegrationTest`,
+constat sur Behat).
 
 ## Friction bloquante corrigée : `payplug/unified-plugin-core` en `require-dev`
 
@@ -35,8 +37,9 @@ chargée, y compris en production — change la donne : un vrai `composer instal
 marchand n'installerait pas `unified-plugin-core`, et charger une classe qui `implements` une
 interface inexistante est une erreur PHP fatale, pas un échec silencieux.
 
-**Fix** : `payplug/unified-plugin-core` est passé en dépendance `require` (toujours pinné sur
-`dev-develop`, même repository VCS). Documenté ici plutôt que traité comme un simple détail de
+**Fix** : `payplug/unified-plugin-core` est passé en dépendance `require` (pinné sur `dev-master`,
+même repository VCS — voir « Câblage » ci-dessous pour le changement de branche). Documenté ici
+plutôt que traité comme un simple détail de
 `composer.json`, parce que ça anticipe une partie de ce que PRE-3563 (la vraie dépendance de
 production pour l'OAuth) devait poser — voir section Câblage plus bas pour ce qui reste à faire
 pour PRE-3563.
@@ -147,23 +150,70 @@ réel utilisé pour le test d'intégration passe donc par un `doctrine.orm.mappi
 PRE-3469-only, restreinte à `kernel.environment === 'test'` (jamais en prod), à retirer avec
 `src/Spike/` si le spike est abandonné.
 
+## Validation finale (2026-07-27) : passe de régression complète
+
+En complément des suites automatisées ci-dessus :
+
+- **Test fonctionnel réel**, environnement `plugin-dockerized-sylius` branché sur la QA PayPlug
+  (`api-qa.payplug.com`) : parcours d'achat complet avec un moyen de paiement carte PayPlug
+  configuré via l'OAuth réel, commande `000000022`. Le webhook IPN réel a été reçu et traité par
+  `NotifyPaymentRequestHandler` (`payment_id: pay_2iZJiB7mxAoc3poeZTTmeP`, `status: captured`),
+  paiement transitionné en `completed`, **aucun warning** de l'appel additif à
+  `PayplugOrderStateMutator` dans les logs, aucune régression sur le flux existant. Seule la
+  branche `STATUS_CAPTURED → PaymentOutcome::PAID` a été exercée en conditions réelles ; les autres
+  branches (`THREE_DS_PENDING`, `AUTHORIZED`, `CAPTURE_REQUIRED`, `REFUNDED`, `FAILED`) et le garde
+  multi-paiements (commit `779530d`) restent couverts uniquement par les tests unitaires.
+- **`SpikeIntegrationTest`** rejoué contre une vraie base MariaDB jetable : `OK (5 tests, 17
+  assertions)`.
+- **Behat** : suite non exécutable en l'état — voir ci-dessous, sans lien avec ce ticket.
+
+### Behat : suite cassée, non liée à ce ticket
+
+`vendor/bin/behat --dry-run` échoue immédiatement :
+
+```
+`Lakion\Behat\MinkDebugExtension` extension file or class could not be located.
+```
+
+En creusant :
+
+- `behat.yml.dist` référence `Tests\PayPlug\SyliusPayPlugPlugin\Application\Kernel` et
+  `tests/Application/config/bootstrap.php` — mais `tests/Application/` **n'existe pas** dans ce
+  repo (seul `tests/TestApplication/` existe, utilisé par PHPUnit).
+- La clé d'extension `Lakion\Behat\MinkDebugExtension` n'est pas le FQCN réel fourni par
+  `lakion/mink-debug-extension` ni par `friends-of-behat/mink-debug-extension` (les deux packages
+  sont installés, mais sous un namespace différent).
+- `git log -- behat.yml.dist` montre que ce fichier n'a pas été modifié depuis le commit initial du
+  repo.
+- Aucun workflow CI de ce repo n'exécute Behat.
+
+**Conclusion** : cette suite est cassée depuis longtemps, indépendamment de PRE-3469, et ne fait
+partie d'aucune porte de qualité active. La remettre en état est un chantier séparé, hors scope de
+ce ticket.
+
 ## Câblage (pour rejouer les tests)
 
 - `composer.json` : `repositories` avec un repository `vcs` vers
   `https://github.com/payplug/unified-plugin-core.git` + `payplug/unified-plugin-core:
-  "dev-develop"` désormais en dépendance `require` (voir « Friction bloquante corrigée »
+  "dev-master"` désormais en dépendance `require` (voir « Friction bloquante corrigée »
   ci-dessus) — fonctionne pour n'importe qui ayant accès au repo GitHub (même accès que pour ce
   repo), et en CI via l'étape `Composer - Github Auth` déjà configurée dans
   `payplug/template-ci`. Une première version utilisait un repository `path` local
   (`../../unified-plugin-core`) : ça ne marche que sur une machine avec les deux repos clonés
-  côte à côte, cassait `composer install` pour tout le monde d'autre — corrigé. Nécessite que le
-  pin exact `symfony/polyfill-mbstring: 1.28.0` d'UPC ait été relâché en `^1.28` (corrigé dans
-  unified-plugin-core suite à ce spike — il bloquait tout `composer install` aux côtés de
-  `sylius/sylius ^2.0`, qui exige `^1.31`). Contrepartie connue : ça ajoute une résolution réseau
-  vers GitHub à chaque install (léger coût CI/dev) — pas d'alternative disponible ici (pas de
-  Packagist privé configuré dans cet org pour `payplug/unified-plugin-core`, et un repository
-  `path` est exclu pour la raison ci-dessus). Ce compromis disparaît quand PRE-3563 posera la
-  vraie dépendance de production définitive (OAuth réel contre UPC).
+  côte à côte, cassait `composer install` pour tout le monde d'autre — corrigé. Nécessitait que
+  le pin exact `symfony/polyfill-mbstring: 1.28.0` d'UPC (en conflit avec le `^1.31` exigé par
+  `sylius/sylius ^2.0`) soit relâché — corrigé côté `unified-plugin-core` (`1.30.0 || ^1.31`) et
+  fusionné sur `master` le 2026-07-21 ; ce repo pointait initialement sur `dev-develop` en
+  attendant la fusion, reposté sur `dev-master` le 2026-07-27 une fois confirmée (`origin/master`
+  == `origin/develop`, commit `e6a6733`) — revalidé par un `composer update
+  payplug/unified-plugin-core --with-all-dependencies` contre le vrai repo VCS (sans override
+  `path`), résolution propre sur `symfony/polyfill-mbstring v1.38.2`, suite complète
+  (`phpunit` 170 tests, `phpstan`) toujours au vert derrière. Contrepartie connue : ça ajoute une
+  résolution réseau vers GitHub à chaque install (léger coût CI/dev) — pas d'alternative
+  disponible ici (pas de Packagist privé configuré dans cet org pour
+  `payplug/unified-plugin-core`, et un repository `path` est exclu pour la raison ci-dessus). Ce
+  compromis disparaît quand PRE-3563 posera la vraie dépendance de production définitive (OAuth
+  réel contre UPC).
 - `phpunit.xml.dist` : `KERNEL_CLASS_PATH` renommé en `KERNEL_CLASS` — la variable que Symfony lit
   réellement pour `KernelTestCase::bootKernel()`. Sans ce fix, aucun test à base de kernel
   (fonctionnel/intégration) n'a jamais pu tourner dans ce repo — un bug de config préexistant,

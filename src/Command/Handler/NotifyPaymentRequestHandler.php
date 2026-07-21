@@ -129,6 +129,14 @@ class NotifyPaymentRequestHandler
             return;
         }
 
+        // PayplugOrderStateMutator resolves the order's *last* payment internally (its contract
+        // is keyed by order ID, not payment ID). On a multi-payment order — e.g. a failed attempt
+        // followed by a retry — that could be a different payment than the one this webhook is
+        // actually about. Skip rather than risk transitioning the wrong payment.
+        if ($order->getLastPayment()?->getId() !== $payment->getId()) {
+            return;
+        }
+
         try {
             $this->orderStateMutator->apply((string) $order->getId(), $outcome); // @phpstan-ignore-line - ResourceInterface::getId() return mixed
         } catch (\Throwable $e) {
