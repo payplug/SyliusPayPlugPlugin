@@ -8,6 +8,12 @@ SYLIUS_VERSION=2.1.0
 SYMFONY_VERSION=6.4
 PLUGIN_NAME=payplug/sylius-payplug-plugin
 
+# Coverage runs inside Docker (PHP 8.2 + PCOV) instead of the host PHP, since the host's default
+# `php`/`composer` may resolve to an unrelated version with no coverage driver installed. Assumes
+# `vendor/` (and the Sylius test-application) is already installed on the host via `make install`.
+IMAGE_DEV := sylius-payplug-plugin-dev
+DOCKER_RUN := docker run --rm -v $(CURDIR):/app -w /app -u "$$(id -u):$$(id -g)" -e COMPOSER_HOME=/tmp/composer $(IMAGE_DEV)
+
 ###
 ### DEVELOPMENT
 ### ¯¯¯¯¯¯¯¯¯¯¯
@@ -22,6 +28,14 @@ reset: ## Remove dependencies
 phpunit: ## Run PHPUnit tests
 	./vendor/bin/phpunit
 .PHONY: phpunit
+
+build-dev: ## Build the Docker image used to run coverage
+	docker build -t $(IMAGE_DEV) .
+.PHONY: build-dev
+
+coverage: build-dev ## Run PHPUnit tests with a Clover coverage report (build/logs/clover.xml), via Docker
+	$(DOCKER_RUN) composer test-coverage
+.PHONY: coverage
 
 ###
 ### OTHER

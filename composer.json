@@ -86,6 +86,7 @@
         "phpmd": "phpmd src ansi ruleset/.php_md.xml",
         "phpstan": "phpstan analyse src -c ruleset/phpstan.neon",
         "phpunit": "phpunit tests/PHPUnit --colors=always",
+        "test-coverage": "phpunit tests/PHPUnit --colors=always --coverage-clover=build/logs/clover.xml",
         "tests": [
             "@ecs",
             "@phpmd",

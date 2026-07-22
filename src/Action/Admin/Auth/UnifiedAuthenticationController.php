@@ -65,19 +65,6 @@ final class UnifiedAuthenticationController extends AbstractController
             $request->getSession()->set('payplug_company_id', $companyId);
 
             $callBackUrl = $this->router->generate('payplug_sylius_admin_auth_oauth_callback', [], RouterInterface::ABSOLUTE_URL);
-
-            // Legacy flow, superseded by PayplugUnifiedCore\Auth\OAuth2Client below.
-            // $challenge = bin2hex(openssl_random_pseudo_bytes(50));
-            // $request->getSession()->set('payplug_oauth_challenge', $challenge);
-            // Authentication::initiateOAuth($clientId, $callBackUrl, $challenge);
-            // $headers = \headers_list();
-            // foreach ($headers as $header) {
-            //     if (str_starts_with($header, 'Location:')) {
-            //         return new RedirectResponse(substr($header, 9));
-            //     }
-            // }
-            // throw new \LogicException('No location header found');
-
             $authorizationRequest = $this->buildOAuth2Client($callBackUrl)->buildAuthorizationUrl($clientId);
             $request->getSession()->set('payplug_oauth_state', $authorizationRequest->state);
             $request->getSession()->set('payplug_oauth_code_verifier', $authorizationRequest->codeVerifier);
@@ -111,13 +98,6 @@ final class UnifiedAuthenticationController extends AbstractController
             }
 
             $callback = $this->generateUrl('payplug_sylius_admin_auth_oauth_callback', [], UrlGeneratorInterface::ABSOLUTE_URL);
-
-            // Legacy flow, superseded by PayplugUnifiedCore\Auth\OAuth2Client below.
-            // $jwt = Authentication::generateJWTOneShot($code, $callback, $clientId, $challenge);
-            // if ([] === $jwt || $jwt['httpStatus'] !== 200 || !\is_array($jwt['httpResponse'])) {
-            //     throw new BadRequestHttpException('Error while generating JWT');
-            // }
-
             $token = $this->buildOAuth2Client($callback)->exchangeAuthorizationCode($clientId, $code, $codeVerifier);
 
             $paymentMethodId = $request->getSession()->get('payplug_sylius_oauth_payment_method_id');
@@ -148,10 +128,6 @@ final class UnifiedAuthenticationController extends AbstractController
             $this->cleanSession($request);
 
             $request->getSession()->getFlashBag()->add('success', 'payplug_sylius_payplug_plugin.admin.oauth_callback_success');
-            // Token cache invalidation is now handled internally by TokenManager, keyed by
-            // client_id — createClientIdAndSecret() above always mints a fresh client_id per
-            // OAuth run, so there is nothing stale to clean up here.
-
             // Ensure that the payment method is well configured
             $this->paymentMethodValidator->process($paymentMethod);
 

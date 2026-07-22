@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
-// use Payplug\Authentication; // superseded by PayplugUnifiedCore\Auth\TokenManager below
 use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayplugUnifiedCore\Auth\TokenManager;
 use PayplugUnifiedCore\Exceptions\ApiException;
@@ -12,8 +11,6 @@ use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-
-// use Symfony\Contracts\Cache\ItemInterface; // superseded, see getTokenForGatewayConfig()
 
 final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
 {
@@ -58,25 +55,6 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
         }
         /** @var array<string, string> $clientConfig */
         $clientConfig = $rawClientConfig;
-
-        // Legacy flow, superseded by PayplugUnifiedCore\Auth\TokenManager below.
-        // $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $isLive ? 'live' : 'test');
-        // return $this->cache->get($cacheKey, function (ItemInterface $item) use ($clientConfig) {
-        //     $response = Authentication::generateJWT($clientConfig['client_id'] ?? '', $clientConfig['client_secret'] ?? '');
-        //     if ([] === $response || !is_array($response['httpResponse'])) {
-        //         throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
-        //     }
-        //     $accessToken = $response['httpResponse']['access_token'];
-        //     if (!is_string($accessToken)) {
-        //         throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
-        //     }
-        //     $expiresIn = $response['httpResponse']['expires_in'];
-        //     if (!is_int($expiresIn)) {
-        //         $expiresIn = 200;
-        //     }
-        //     $item->expiresAfter($expiresIn);
-        //     return $accessToken;
-        // });
 
         $clientId = $clientConfig['client_id'] ?? '';
         $clientSecret = $clientConfig['client_secret'] ?? '';
