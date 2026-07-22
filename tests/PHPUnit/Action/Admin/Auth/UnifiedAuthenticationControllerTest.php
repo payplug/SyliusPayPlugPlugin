@@ -201,6 +201,31 @@ final class UnifiedAuthenticationControllerTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // oauthCallback() — valid state, but no client id in session
+    // -------------------------------------------------------------------------
+
+    /**
+     * A missing/non-string client_id (e.g. session expired, or setupRedirection() was never hit)
+     * must be rejected before exchangeAuthorizationCode() is called, the same way a state mismatch
+     * already is — otherwise it falls through to a TypeError, logged as a noisy "critical" for
+     * what's really just an expired session.
+     */
+    public function testOauthCallback_withMissingClientId_rejectsBeforeExchangingToken(): void
+    {
+        $this->stubRouterGenerate([]);
+        $this->oauthHttpClient->expects(self::never())->method('post');
+
+        $request = $this->buildRequest(['code' => 'auth_code', 'state' => 'matching-state']);
+        $request->getSession()->set('payplug_oauth_state', 'matching-state');
+        $request->getSession()->set('payplug_oauth_code_verifier', 'verifier_123');
+        // Deliberately no 'payplug_client_id' set.
+
+        $response = $this->controller->oauthCallback($request);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+    }
+
+    // -------------------------------------------------------------------------
     // oauthCallback() — valid state, but no code verifier in session
     // -------------------------------------------------------------------------
 

@@ -83,7 +83,6 @@ final class UnifiedAuthenticationController extends AbstractController
         try {
             $code = $request->query->getString('code');
             $state = $request->query->getString('state');
-            /** @var string $clientId */
             $clientId = $request->getSession()->get('payplug_client_id');
             /** @var string $expectedState */
             $expectedState = $request->getSession()->get('payplug_oauth_state');
@@ -91,6 +90,10 @@ final class UnifiedAuthenticationController extends AbstractController
 
             if ('' === $state || $state !== $expectedState) {
                 throw new BadRequestHttpException('OAuth state mismatch');
+            }
+
+            if (!\is_string($clientId) || '' === $clientId) {
+                throw new BadRequestHttpException('OAuth client id missing from session');
             }
 
             if (!\is_string($codeVerifier) || '' === $codeVerifier) {
