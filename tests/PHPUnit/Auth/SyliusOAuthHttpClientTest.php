@@ -7,6 +7,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Auth;
 use PayPlug\SyliusPayPlugPlugin\Auth\SyliusOAuthHttpClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -98,5 +99,30 @@ final class SyliusOAuthHttpClientTest extends TestCase
         ;
 
         $this->adapter->post('https://api-qa.payplug.com/oauth2/token', ['grant_type' => 'client_credentials']);
+    }
+
+    // -------------------------------------------------------------------------
+    // post() — transport-level failure (network error) does not throw
+    // -------------------------------------------------------------------------
+
+    /**
+     * getStatusCode()/getContent() throw TransportExceptionInterface on a genuine network error
+     * (DNS, timeout, connection reset) regardless of the `false` passed to getContent() — that
+     * flag only suppresses HTTP status exceptions, not transport ones. This must be caught here
+     * and turned into a status the caller can react to (0, i.e. never a valid HTTP status),
+     * instead of leaking an uncaught exception into OAuth2Client/TokenManager, which only know
+     * how to translate a malformed HTTP response into ApiException, not a transport failure.
+     */
+    public function testPost_onTransportFailure_returnsZeroStatusInsteadOfThrowing(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willThrowException(new TransportException('Could not resolve host'));
+
+        $this->httpClient->method('request')->willReturn($response);
+
+        $result = $this->adapter->post('https://api-qa.payplug.com/oauth2/token', ['grant_type' => 'client_credentials']);
+
+        self::assertSame(0, $result['status']);
+        self::assertSame('Could not resolve host', $result['body']);
     }
 }

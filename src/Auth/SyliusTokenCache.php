@@ -22,10 +22,9 @@ final class SyliusTokenCache implements ITokenCache
             return null;
         }
 
-        /** @var string $value */
         $value = $item->get();
 
-        return $value;
+        return \is_string($value) ? $value : null;
     }
 
     public function set(string $key, string $value, int $ttlSeconds): void
