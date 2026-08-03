@@ -10,6 +10,7 @@ Feature: Paying with Hosted Fields during checkout
         And there is a user "john@bitbag.pl" identified by "password123"
         And I changed my currency to "EUR"
         And the store has a payment method "PayPlug Hosted Fields" with a code "payplug_hosted_fields" and PayPlug Hosted Fields payment gateway
+        And This secret Key is valid
         And the store ships everywhere for free
         And the store has "DHL" shipping method with "$0.00" fee
         And I am logged in as "john@bitbag.pl"

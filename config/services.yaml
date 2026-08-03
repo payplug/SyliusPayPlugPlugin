@@ -35,8 +35,10 @@ services:
     PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface:
         class: PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider
 
+    # Alias (not a separate definition) so the interface resolves to the service auto-registered by the
+    # `PayPlug\SyliusPayPlugPlugin\:` prototype above, keeping its `@monolog.logger.payplug` binding.
     PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface:
-        class: PayPlug\SyliusPayPlugPlugin\PaymentProcessing\NullHostedFieldsPaymentProcessor
+        alias: PayPlug\SyliusPayPlugPlugin\PaymentProcessing\NullHostedFieldsPaymentProcessor
 
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction

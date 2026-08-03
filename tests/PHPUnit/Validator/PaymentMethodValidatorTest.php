@@ -139,12 +139,13 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — PayPlug factory, no special flags → only IsCanSavePaymentMethod constraint
+    // process() — PayPlug factory, no special flags → base constraints only
     // -------------------------------------------------------------------------
 
     /**
-     * PayPlug gateway with ONE_CLICK, DEFERRED_CAPTURE and INTEGRATED_PAYMENT all false.
-     * Verifies only the base IsCanSavePaymentMethod constraint (1 total) is passed to the validator.
+     * PayPlug gateway with ONE_CLICK, DEFERRED_CAPTURE, INTEGRATED_PAYMENT and HOSTED_FIELDS all false.
+     * Verifies only the two always-present constraints (2 total) are passed to the validator:
+     * IsCanSavePaymentMethod and IsNotCombiningIntegratedPaymentAndHostedFields.
      */
     public function testProcess_payplugFactory_noFlags_validatesWithBaseConstraintOnly(): void
     {
@@ -176,12 +177,16 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — PayPlug factory, all flags enabled → 4 constraints (base + 3 permissions)
+    // process() — PayPlug factory, all permission flags enabled → 5 constraints (2 base + 3 permissions)
     // -------------------------------------------------------------------------
 
     /**
-     * PayPlug gateway with ONE_CLICK, DEFERRED_CAPTURE and INTEGRATED_PAYMENT all true.
-     * Verifies 4 constraints are passed to the validator (base + one per enabled feature flag).
+     * PayPlug gateway with ONE_CLICK, DEFERRED_CAPTURE and INTEGRATED_PAYMENT all true
+     * (HOSTED_FIELDS stays false: it is mutually exclusive with INTEGRATED_PAYMENT and adds no
+     * permission constraint of its own).
+     * Verifies 5 constraints are passed to the validator: the two always-present ones
+     * (IsCanSavePaymentMethod + IsNotCombiningIntegratedPaymentAndHostedFields) plus one per
+     * enabled feature flag.
      */
     public function testProcess_payplugFactory_allFlagsEnabled_validatesWithAllConstraints(): void
     {
