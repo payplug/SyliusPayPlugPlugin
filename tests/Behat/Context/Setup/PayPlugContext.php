@@ -68,6 +68,31 @@ final class PayPlugContext implements Context
     }
 
     /**
+     * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode and PayPlug Hosted Fields payment gateway
+     */
+    public function theStoreHasAPaymentMethodWithACodeAndPayPlugHostedFieldsPaymentGateway(
+        string $paymentMethodName,
+        string $paymentMethodCode,
+    ): void {
+        $paymentMethod = $this->createPaymentMethodPayPlug(
+            $paymentMethodName,
+            $paymentMethodCode,
+            PayPlugGatewayFactory::FACTORY_NAME,
+            'PayPlug',
+        );
+
+        $paymentMethod->getGatewayConfig()->setConfig([
+            'secretKey' => 'test',
+            'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+            PayPlugGatewayFactory::HOSTED_FIELDS_KEY_ID => 'test-key-id',
+            PayPlugGatewayFactory::HOSTED_FIELDS_KEY_VALUE => 'test-key-value',
+        ]);
+
+        $this->paymentMethodManager->flush();
+    }
+
+    /**
      * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode and Oney payment gateway
      */
     public function theStoreHasAPaymentMethodWithACodeAndOneyPaymentGateway(
