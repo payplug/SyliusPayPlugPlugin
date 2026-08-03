@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -25,26 +26,36 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private const TOKEN_FIELD = 'payplug_integrated_payment_token';
 
+    private const HOSTED_FIELDS_TOKEN_FIELD = 'hostedfields_token';
+
+    private const HOSTED_FIELDS_SELECTED_BRAND_FIELD = 'hostedfields_selected_brand';
+
+    private const HOSTED_FIELDS_SAVE_CARD_FIELD = 'hostedfields_save_card';
+
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
         private StateMachineInterface $stateMachine,
+        private HostedFieldsPaymentProcessorInterface $hostedFieldsPaymentProcessor,
     ) {
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            RequestEvent::class => 'alterRequestConfigurationForIntegratedPayment',
+            RequestEvent::class => 'alterRequestConfigurationForInlineCardCapture',
             'sylius.order.post_payment' => 'handle',
             'sylius.order.post_update' => 'handle',
         ];
     }
 
-    public function alterRequestConfigurationForIntegratedPayment(RequestEvent $event): void
+    public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if (!$this->hasToken($request) || self::CHECKOUT_ROUTE !== $request->attributes->get('_route')) {
+        if (
+            (!$this->hasToken($request) && !$this->hasHostedFieldsToken($request))
+            || self::CHECKOUT_ROUTE !== $request->attributes->get('_route')
+        ) {
             return;
         }
         if (!$request->attributes->has('_sylius')) {
@@ -79,6 +90,12 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         $order = $resourceControllerEvent->getSubject();
         $lastPayment = $order->getLastPayment();
         if (null === $lastPayment) {
+            return;
+        }
+
+        if ($this->hasHostedFieldsToken($request)) {
+            $this->handleHostedFieldsToken($request, $lastPayment);
+
             return;
         }
 
@@ -126,6 +143,34 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         Assert::string($token);
 
         return $token;
+    }
+
+    private function hasHostedFieldsToken(Request $request): bool
+    {
+        if (!$request->request->has(self::HOSTED_FIELDS_TOKEN_FIELD)) {
+            return false;
+        }
+
+        return '' !== $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
+    }
+
+    private function handleHostedFieldsToken(Request $request, PaymentInterface $lastPayment): void
+    {
+        $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
+        $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
+        $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
+
+        $this->hostedFieldsPaymentProcessor->process($lastPayment, $hfToken, $selectedBrand, $saveCard);
+
+        $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
+    }
+
+    private function getRequestField(Request $request, string $field): string
+    {
+        $value = $request->request->get($field, '');
+        Assert::string($value);
+
+        return $value;
     }
 
     private function applyToComplete(OrderInterface $order): void
