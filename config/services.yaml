@@ -35,6 +35,9 @@ services:
     PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface:
         class: PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProvider
 
+    PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface:
+        class: PayPlug\SyliusPayPlugPlugin\PaymentProcessing\NullHostedFieldsPaymentProcessor
+
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction
 
