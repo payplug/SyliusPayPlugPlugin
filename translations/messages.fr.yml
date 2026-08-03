@@ -160,6 +160,9 @@ payplug_sylius_payplug_plugin:
             d'autres transactions
 
         integrated_payment_enable: Activer le Paiement Integré
+        hosted_fields_enable: Activer les champs hébergés (Hosted Fields)
+        hosted_fields_key_id: 'Identifiant de clé Hosted Fields'
+        hosted_fields_key_value: 'Valeur de clé Hosted Fields'
         deferred_capture_enable: Activer la capture différée
         deferred_capture_help: |
             Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet

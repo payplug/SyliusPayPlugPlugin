@@ -16,4 +16,10 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
     public const INTEGRATED_PAYMENT = 'integratedPayment';
 
     public const DEFERRED_CAPTURE = 'deferredCapture';
+
+    public const HOSTED_FIELDS = 'hostedFields';
+
+    public const HOSTED_FIELDS_KEY_ID = 'hostedFieldsKeyId';
+
+    public const HOSTED_FIELDS_KEY_VALUE = 'hostedFieldsKeyValue';
 }

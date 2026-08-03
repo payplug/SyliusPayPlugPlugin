@@ -139,6 +139,9 @@ payplug_sylius_payplug_plugin:
             Consenti ai tuoi clienti di salvare i dettagli della loro carta di credito per dopo
 
         integrated_payment_enable: Abilita il pagamento integrato
+        hosted_fields_enable: Abilita i campi hosted (Hosted Fields)
+        hosted_fields_key_id: 'ID chiave Hosted Fields'
+        hosted_fields_key_value: 'Valore chiave Hosted Fields'
         deferred_capture_enable: Abilita la cattura differita
         deferred_capture_help: |
             Assicurarsi che nel codice sorgente del progetto sia stato aggiunto un trigger di acquisizione ritardata
