@@ -26,6 +26,7 @@ payplug_sylius_payplug_plugin:
         bancontact_gateway_label: Bancontact by Payplug
         scalapay_gateway_label: Scalapay by PayPlug
         wero_gateway_label: Wero by PayPlug
+        uhf_gateway_label: Unified Hosted Fields by PayPlug
         apple_pay_gateway_label: Apple Pay by Payplug
         american_express_gateway_label: American Express by Payplug
         apple_pay_not_available: Apple Pay n'est pas disponible sur ce navigateur ou appareil.
@@ -137,6 +138,7 @@ payplug_sylius_payplug_plugin:
         renew_oauth: Forcer la reconnexion OAuth
         renew_oauth_help: |
             Si cette option est cochée, un nouveau flux d’authentification sera lancé lors du clic sur le bouton "<b>Mise à jour</b>".
+        hf_identifier_default_label: 'Identifiant HF'
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
