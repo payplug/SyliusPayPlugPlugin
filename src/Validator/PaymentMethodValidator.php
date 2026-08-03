@@ -14,6 +14,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsNotCombiningIntegratedPaymentAndHostedFields;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
@@ -68,7 +69,7 @@ final class PaymentMethodValidator
     private function processPayplug(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $config = $paymentMethod->getGatewayConfig()?->getConfig() ?? [];
-        $constraintList = [new IsCanSavePaymentMethod()];
+        $constraintList = [new IsCanSavePaymentMethod(), new IsNotCombiningIntegratedPaymentAndHostedFields()];
 
         if (true === $config[PayPlugGatewayFactory::ONE_CLICK]) {
             $constraintList[] = new PayplugPermission(Permission::CAN_SAVE_CARD);

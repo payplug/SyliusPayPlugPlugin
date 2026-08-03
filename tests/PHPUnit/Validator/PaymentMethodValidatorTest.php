@@ -152,6 +152,7 @@ final class PaymentMethodValidatorTest extends TestCase
             PayPlugGatewayFactory::ONE_CLICK => false,
             PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
             PayPlugGatewayFactory::INTEGRATED_PAYMENT => false,
+            PayPlugGatewayFactory::HOSTED_FIELDS => false,
         ];
         $paymentMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, $config);
 
@@ -159,8 +160,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                // Only the base IsCanSavePaymentMethod constraint (no permission constraints)
-                self::assertCount(1, $constraints);
+                // Base IsCanSavePaymentMethod + IsNotCombiningIntegratedPaymentAndHostedFields (no permission constraints)
+                self::assertCount(2, $constraints);
 
                 return new ConstraintViolationList();
             })
@@ -188,6 +189,7 @@ final class PaymentMethodValidatorTest extends TestCase
             PayPlugGatewayFactory::ONE_CLICK => true,
             PayPlugGatewayFactory::DEFERRED_CAPTURE => true,
             PayPlugGatewayFactory::INTEGRATED_PAYMENT => true,
+            PayPlugGatewayFactory::HOSTED_FIELDS => false,
         ];
         $paymentMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, $config);
 
@@ -195,8 +197,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                // Base + CAN_SAVE_CARD + CAN_CREATE_DEFERRED_PAYMENT + CAN_USE_INTEGRATED_PAYMENTS
-                self::assertCount(4, $constraints);
+                // Base + IsNotCombiningIntegratedPaymentAndHostedFields + CAN_SAVE_CARD + CAN_CREATE_DEFERRED_PAYMENT + CAN_USE_INTEGRATED_PAYMENTS
+                self::assertCount(5, $constraints);
 
                 return new ConstraintViolationList();
             })
