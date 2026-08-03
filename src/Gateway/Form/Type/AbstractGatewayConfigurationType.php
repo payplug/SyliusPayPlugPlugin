@@ -94,6 +94,13 @@ class AbstractGatewayConfigurationType extends AbstractType
 
     private function canBeCreated(string $factoryName): bool
     {
+        // The main PayPlug gateway is intentionally exempt from the one-payment-method-per-factory
+        // rule: a merchant must be able to offer Integrated Payment and Hosted Fields side by side,
+        // which requires two PaymentMethod entities on the same `payplug` factory (PRE-3550).
+        if (PayPlugGatewayFactory::FACTORY_NAME === $factoryName) {
+            return true;
+        }
+
         $alreadyExists = $this->gatewayConfigRepository->findOneBy(['factoryName' => $factoryName]);
 
         return !$alreadyExists instanceof GatewayConfigInterface;
