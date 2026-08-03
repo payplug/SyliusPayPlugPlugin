@@ -6,6 +6,7 @@
   var payplug_hosted_fields_params = {
     key_id: '{{ config.hostedFieldsKeyId }}',
     key_value: '{{ config.hostedFieldsKeyValue }}',
+    payment_method_code: '{{ paymentMethod.code }}',
     locale: '{{ app.request.locale|split('_')|first }}',
     error: {
       tokenization_failed: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.tokenization_failed'|trans }}',
@@ -14,7 +15,11 @@
   }
   /* ]] */
 </script>
-<div class="payplugHostedFields">
+<div
+    class="payplugHostedFields"
+    {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'container') }}
+    data-payment-inline-submit="true"
+>
     <div class="sylius-shop-loader d-none">
         <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
     </div>

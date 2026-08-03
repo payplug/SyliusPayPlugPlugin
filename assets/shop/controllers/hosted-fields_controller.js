@@ -4,7 +4,7 @@ const ALLOWED_BRANDS = ['CB', 'VISA', 'MASTERCARD'];
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
-  static targets = ['error', 'submitButton'];
+  static targets = ['container', 'error', 'submitButton'];
 
   connect() {
     if (typeof payplug_hosted_fields_params === 'undefined') {
@@ -12,6 +12,86 @@ export default class extends Controller {
     }
 
     this.form = this.element.closest('form');
+    this.hfields = null;
+
+    if (this.hasSubmitButtonTarget) {
+      this.submitButtonTarget.addEventListener('click', (event) => {
+        event.preventDefault();
+        this.tokenizeAndSubmit();
+      });
+    }
+
+    // Stimulus connects as soon as the markup is in the DOM, even though the payment method
+    // container starts hidden (see shop/select_payment/choice.html.twig). Mounting the
+    // cross-origin Dalenys iframes into a display:none container breaks their rendering, so
+    // load them only once this payment method is actually selected.
+    const isChecked = this.getPaymentMethodSelectors({
+      methodCode: payplug_hosted_fields_params.payment_method_code,
+      checked: true,
+    });
+    if (isChecked.length) {
+      this.openFields();
+    }
+
+    this.getPaymentMethodSelectors().forEach((element) => {
+      element.addEventListener('change', (e) => {
+        if (payplug_hosted_fields_params.payment_method_code === e.currentTarget.value && e.currentTarget.checked) {
+          this.openFields();
+        }
+      });
+    });
+  }
+
+  handleShow(event) {
+    if (this.hasContainerTarget) {
+      import('jquery').then(({ default: $ }) => {
+        $(this.containerTarget).slideDown();
+      });
+      this.openFields();
+      this.containerTarget.dataset.paymentInlineSubmit = "true";
+      this.element.dispatchEvent(new CustomEvent('payment-method-state-change', { bubbles: true }));
+    }
+  }
+
+  handleHide(event) {
+    if (this.hasContainerTarget) {
+      import('jquery').then(({ default: $ }) => {
+        $(this.containerTarget).slideUp();
+      });
+      this.closeFields();
+      this.containerTarget.dataset.paymentInlineSubmit = "false";
+      this.element.dispatchEvent(new CustomEvent('payment-method-state-change', { bubbles: true }));
+    }
+  }
+
+  getPaymentMethodSelectors({ methodCode, checked } = {}) {
+    const baseSelector = '[id*=checkout_select_payment_payments]';
+
+    if (methodCode) {
+      if (checked) {
+        return document.querySelectorAll(`${baseSelector}[value=${methodCode}]:checked`);
+      }
+      return document.querySelectorAll(`${baseSelector}[value=${methodCode}]`);
+    }
+    return document.querySelectorAll(baseSelector);
+  }
+
+  openFields() {
+    if (this.hasContainerTarget) {
+      this.containerTarget.classList.add('payplugHostedFields--loaded');
+    }
+    if (null === this.hfields) {
+      this.load();
+    }
+  }
+
+  closeFields() {
+    if (this.hasContainerTarget) {
+      this.containerTarget.classList.remove('payplugHostedFields--loaded');
+    }
+  }
+
+  load() {
     this.hfields = window.dalenys.hostedFields({
       key: {
         id: payplug_hosted_fields_params.key_id,
@@ -26,16 +106,14 @@ export default class extends Controller {
       location: payplug_hosted_fields_params.locale,
     });
     this.hfields.load();
-
-    if (this.hasSubmitButtonTarget) {
-      this.submitButtonTarget.addEventListener('click', (event) => {
-        event.preventDefault();
-        this.tokenizeAndSubmit();
-      });
-    }
   }
 
   tokenizeAndSubmit() {
+    if (null === this.hfields) {
+      // Fields were never mounted (payment method not selected yet): nothing to tokenize.
+      return;
+    }
+
     this.hideError();
     this.hfields.createToken((result) => {
       if (result.execCode !== '0000') {
