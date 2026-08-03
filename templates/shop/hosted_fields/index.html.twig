@@ -1,0 +1,44 @@
+{% set config = paymentMethod.gatewayConfig.config %}
+
+<script type="text/javascript" src="{{ is_payplug_test_mode_enabled(paymentMethod) ? 'https://js.sandbox.dalenys.com/hosted-fields/v2.2.0/hosted-fields.min.js' : 'https://js.dalenys.com/hosted-fields/v2.2.0/hosted-fields.min.js' }}"></script>
+<script type="text/javascript">
+  /* <![CDATA[ */
+  var payplug_hosted_fields_params = {
+    key_id: '{{ config.hostedFieldsKeyId }}',
+    key_value: '{{ config.hostedFieldsKeyValue }}',
+    locale: '{{ app.request.locale|split('_')|first }}',
+    error: {
+      tokenization_failed: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.tokenization_failed'|trans }}',
+      unsupported_brand: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.unsupported_brand'|trans }}',
+    },
+  }
+  /* ]] */
+</script>
+<div class="payplugHostedFields">
+    <div class="sylius-shop-loader d-none">
+        <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
+    </div>
+    <div class="payplugHostedFields__container payplugHostedFields__container--brand" id="brand-container"></div>
+    <div class="payplugHostedFields__container payplugHostedFields__container--card" id="card-container"></div>
+    <div class="payplugHostedFields__container payplugHostedFields__container--expiry" id="expiry-container"></div>
+    <div class="payplugHostedFields__container payplugHostedFields__container--cvv" id="cvv-container"></div>
+    <div class="payplugHostedFields__error payplugHostedFields__error--hide" {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'error') }}></div>
+    {% if is_save_card_enabled(paymentMethod) %}
+        <div class="payplugHostedFields__container payplugHostedFields__container--saveCard">
+            <input type="checkbox" id="hostedfields_savecard" name="" />{# No name to not trigger LiveComponent #}
+            <label for="hostedfields_savecard">
+                <span></span>
+                {{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.save_card.label'|trans }}
+            </label>
+        </div>
+    {% endif %}
+    <div class="payplugHostedFields__container">
+        <button {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'submitButton') }} class="btn btn-primary" type="button">
+            {{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.place_order.label'|trans }}
+        </button>
+    </div>
+</div>
+
+<input type="hidden" name="hostedfields_token" id="hostedfields_token" />
+<input type="hidden" name="hostedfields_selected_brand" id="hostedfields_selected_brand" />
+<input type="hidden" name="hostedfields_save_card" id="hostedfields_save_card" />
