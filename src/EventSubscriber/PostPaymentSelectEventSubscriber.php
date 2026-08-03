@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
@@ -156,6 +157,12 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private function handleHostedFieldsToken(Request $request, PaymentInterface $lastPayment): void
     {
+        // Guard against a crafted POST completing checkout through this path for a payment
+        // method that does not actually have Hosted Fields enabled.
+        if (!$this->isHostedFieldsEnabled($lastPayment)) {
+            return;
+        }
+
         $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
         $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
         $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
@@ -163,6 +170,13 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         $this->hostedFieldsPaymentProcessor->process($lastPayment, $hfToken, $selectedBrand, $saveCard);
 
         $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
+    }
+
+    private function isHostedFieldsEnabled(PaymentInterface $payment): bool
+    {
+        $config = $payment->getMethod()?->getGatewayConfig()?->getConfig() ?? [];
+
+        return true === ($config[PayPlugGatewayFactory::HOSTED_FIELDS] ?? false);
     }
 
     private function getRequestField(Request $request, string $field): string

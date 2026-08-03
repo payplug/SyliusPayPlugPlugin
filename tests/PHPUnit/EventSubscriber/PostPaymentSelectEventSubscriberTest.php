@@ -6,6 +6,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\EventSubscriber\PostPaymentSelectEventSubscriber;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -13,9 +14,13 @@ use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\OrderCheckoutTransitions;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 final class PostPaymentSelectEventSubscriberTest extends TestCase
 {
@@ -55,6 +60,9 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
 
         $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn(
+            $this->buildPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => true]),
+        );
         $order = $this->createMock(OrderInterface::class);
         $order->method('getLastPayment')->willReturn($payment);
         $payment->method('getOrder')->willReturn($order);
@@ -77,6 +85,60 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->subscriber->handle($event);
     }
 
+    /**
+     * A crafted POST carrying a hosted fields token must not be able to complete checkout
+     * for a payment method that does not have the Hosted Fields flag enabled.
+     */
+    public function testHandle_withHostedFieldsTokenButFlagDisabled_doesNotProcessNorCompleteCheckout(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'hostedfields_token' => 'hf_token_abc',
+            'hostedfields_selected_brand' => 'VISA',
+            'hostedfields_save_card' => 'true',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $this->requestStack->method('getCurrentRequest')->willReturn($request);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn(
+            $this->buildPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => false]),
+        );
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getLastPayment')->willReturn($payment);
+        $payment->method('getOrder')->willReturn($order);
+
+        $event = $this->createMock(ResourceControllerEvent::class);
+        $event->method('getSubject')->willReturn($order);
+
+        $this->hostedFieldsPaymentProcessor->expects(self::never())->method('process');
+        $this->stateMachine->expects(self::never())->method('apply');
+        $this->entityManager->expects(self::never())->method('flush');
+
+        $this->subscriber->handle($event);
+    }
+
+    public function testHandle_withHostedFieldsTokenButNoPaymentMethod_doesNotProcess(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'hostedfields_token' => 'hf_token_abc',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $this->requestStack->method('getCurrentRequest')->willReturn($request);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn(null);
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getLastPayment')->willReturn($payment);
+
+        $event = $this->createMock(ResourceControllerEvent::class);
+        $event->method('getSubject')->willReturn($order);
+
+        $this->hostedFieldsPaymentProcessor->expects(self::never())->method('process');
+        $this->entityManager->expects(self::never())->method('flush');
+
+        $this->subscriber->handle($event);
+    }
+
     public function testHandle_withoutAnyToken_doesNothing(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST');
@@ -94,5 +156,70 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->entityManager->expects(self::never())->method('flush');
 
         $this->subscriber->handle($event);
+    }
+
+    // -------------------------------------------------------------------------
+    // alterRequestConfigurationForInlineCardCapture()
+    // -------------------------------------------------------------------------
+
+    /**
+     * Integrated Payment relays a real PayPlug payment_id, so the redirect override to
+     * `sylius_shop_order_pay` (Payum capture/status) must stay in place.
+     */
+    public function testAlterRequestConfiguration_withIntegratedPaymentToken_overridesRedirect(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'payplug_integrated_payment_token' => 'pay_123',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $request->attributes->set('_sylius', ['redirect' => ['route' => 'sylius_shop_checkout_complete']]);
+
+        $this->subscriber->alterRequestConfigurationForInlineCardCapture($this->buildRequestEvent($request));
+
+        self::assertSame(
+            [
+                'redirect' => [
+                    'route' => 'sylius_shop_order_pay',
+                    'parameters' => ['tokenValue' => 'resource.tokenValue'],
+                ],
+            ],
+            $request->attributes->get('_sylius'),
+        );
+    }
+
+    public function testAlterRequestConfiguration_withoutAnyToken_leavesRedirectUntouched(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST');
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $syliusRequestConfig = ['redirect' => ['route' => 'sylius_shop_checkout_complete']];
+        $request->attributes->set('_sylius', $syliusRequestConfig);
+
+        $this->subscriber->alterRequestConfigurationForInlineCardCapture($this->buildRequestEvent($request));
+
+        self::assertSame($syliusRequestConfig, $request->attributes->get('_sylius'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private function buildRequestEvent(Request $request): RequestEvent
+    {
+        return new RequestEvent(
+            $this->createMock(HttpKernelInterface::class),
+            $request,
+            HttpKernelInterface::MAIN_REQUEST,
+        );
+    }
+
+    private function buildPaymentMethod(array $config): PaymentMethodInterface&MockObject
+    {
+        $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
+        $gatewayConfig->method('getConfig')->willReturn($config);
+
+        $paymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $paymentMethod->method('getGatewayConfig')->willReturn($gatewayConfig);
+
+        return $paymentMethod;
     }
 }
