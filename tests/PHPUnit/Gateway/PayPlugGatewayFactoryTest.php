@@ -12,7 +12,6 @@ final class PayPlugGatewayFactoryTest extends TestCase
     public function testHostedFieldsConfigKeysAreStable(): void
     {
         self::assertSame('hostedFields', PayPlugGatewayFactory::HOSTED_FIELDS);
-        self::assertSame('hostedFieldsKeyId', PayPlugGatewayFactory::HOSTED_FIELDS_KEY_ID);
-        self::assertSame('hostedFieldsKeyValue', PayPlugGatewayFactory::HOSTED_FIELDS_KEY_VALUE);
+        self::assertSame('hostedFieldsCompanyId', PayPlugGatewayFactory::HOSTED_FIELDS_COMPANY_ID);
     }
 }

@@ -19,7 +19,5 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
 
     public const HOSTED_FIELDS = 'hostedFields';
 
-    public const HOSTED_FIELDS_KEY_ID = 'hostedFieldsKeyId';
-
-    public const HOSTED_FIELDS_KEY_VALUE = 'hostedFieldsKeyValue';
+    public const HOSTED_FIELDS_COMPANY_ID = 'hostedFieldsCompanyId';
 }

@@ -2,6 +2,24 @@ import { Controller } from '@hotwired/stimulus';
 
 const ALLOWED_BRANDS = ['CB', 'VISA', 'MASTERCARD'];
 
+// Applied inside each hosted iframe (Dalenys renders these rules into the field's own
+// document). The SDK only accepts a small whitelist of CSS properties here — anything
+// outside it (we tried "height": SDK logged "Css property ... is not supported" and threw,
+// which aborted ALL fields, not just the one it complained about) — so stick to exactly the
+// properties confirmed by PayPlug's own documented example (font-size/color/font-style).
+// Background and sizing/centering of the field's content are NOT controllable this way.
+const FIELD_STYLE = {
+  input: {
+    'font-size': '14px',
+    color: '#2B343D',
+    'background-color': 'transparent',
+  },
+  '::placeholder': {
+    'font-size': '14px',
+    color: '#969a9f',
+  },
+};
+
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
   static targets = ['container', 'error', 'submitButton'];
@@ -93,15 +111,12 @@ export default class extends Controller {
 
   load() {
     this.hfields = window.dalenys.hostedFields({
-      key: {
-        id: payplug_hosted_fields_params.key_id,
-        value: payplug_hosted_fields_params.key_value,
-      },
+      companyId: payplug_hosted_fields_params.companyId,
       fields: {
-        brand: { id: 'brand-container' },
-        card: { id: 'card-container' },
-        expiry: { id: 'expiry-container' },
-        cryptogram: { id: 'cvv-container' },
+        brand: { id: 'brand-container', style: FIELD_STYLE },
+        card: { id: 'card-container', style: FIELD_STYLE },
+        expiry: { id: 'expiry-container', style: FIELD_STYLE },
+        cryptogram: { id: 'cvv-container', style: FIELD_STYLE },
       },
       location: payplug_hosted_fields_params.locale,
     });

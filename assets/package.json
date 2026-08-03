@@ -34,6 +34,15 @@
           "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
         }
       },
+      "hosted-fields": {
+        "main": "shop/controllers/hosted-fields_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true,
+        "autoimport": {
+          "@payplug/sylius-payplug-plugin/shop/dist/payment/hosted-fields.css": true
+        }
+      },
       "oney-payment": {
         "main": "shop/controllers/oney-payment_controller.js",
         "webpackMode": "lazy",

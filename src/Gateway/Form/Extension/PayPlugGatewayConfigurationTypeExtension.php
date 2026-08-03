@@ -50,13 +50,8 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
                 'required' => false,
             ])
-            ->add(PayPlugGatewayFactory::HOSTED_FIELDS_KEY_ID, TextType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.form.hosted_fields_key_id',
-                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
-                'required' => false,
-            ])
-            ->add(PayPlugGatewayFactory::HOSTED_FIELDS_KEY_VALUE, TextType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.form.hosted_fields_key_value',
+            ->add(PayPlugGatewayFactory::HOSTED_FIELDS_COMPANY_ID, TextType::class, [
+                'label' => 'payplug_sylius_payplug_plugin.form.hosted_fields_company_id',
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
                 'required' => false,
             ])

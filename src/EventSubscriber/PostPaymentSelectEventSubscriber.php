@@ -66,6 +66,9 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
      *   would make StatusAction `markNew()`, Payum rebuild the details through Convert and
      *   CaptureAction issue a real createPayment() API call. It is sent to `sylius_shop_order_show`
      *   instead: same token-based, guest-friendly access, but Payum is never invoked.
+     *
+     * The Hosted Fields check comes first, mirroring handle()'s dispatch order: a request carrying
+     * both token fields is processed as Hosted Fields, so it must be routed as Hosted Fields too.
      */
     public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {
@@ -86,7 +89,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         $syliusRequestConfig['redirect'] = [
-            'route' => $this->hasToken($request) ? 'sylius_shop_order_pay' : 'sylius_shop_order_show',
+            'route' => $this->hasHostedFieldsToken($request) ? self::UPDATE_ORDER_PAYMENT_ROUTE : 'sylius_shop_order_pay',
             'parameters' => ['tokenValue' => 'resource.tokenValue'],
         ];
 

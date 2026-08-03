@@ -85,8 +85,7 @@ final class PayPlugContext implements Context
             'secretKey' => 'test',
             'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
             PayPlugGatewayFactory::HOSTED_FIELDS => true,
-            PayPlugGatewayFactory::HOSTED_FIELDS_KEY_ID => 'test-key-id',
-            PayPlugGatewayFactory::HOSTED_FIELDS_KEY_VALUE => 'test-key-value',
+            PayPlugGatewayFactory::HOSTED_FIELDS_COMPANY_ID => 'test-company-id',
         ]);
 
         $this->paymentMethodManager->flush();

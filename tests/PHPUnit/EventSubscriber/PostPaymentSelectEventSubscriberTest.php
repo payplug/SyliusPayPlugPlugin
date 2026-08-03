@@ -117,6 +117,43 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->subscriber->handle($event);
     }
 
+    /**
+     * Pins the dispatch precedence that alterRequestConfigurationForInlineCardCapture() mirrors:
+     * when both token fields are present, handle() treats the request as Hosted Fields (no
+     * payment_id is ever written). Flipping this order without flipping the redirect ternary would
+     * send a payment_id-less order to sylius_shop_order_pay.
+     */
+    public function testHandle_withBothTokens_isProcessedAsHostedFields(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'payplug_integrated_payment_token' => 'pay_123',
+            'hostedfields_token' => 'hf_token_abc',
+            'hostedfields_selected_brand' => 'CB',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $this->requestStack->method('getCurrentRequest')->willReturn($request);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn(
+            $this->buildPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => true]),
+        );
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getLastPayment')->willReturn($payment);
+        $payment->method('getOrder')->willReturn($order);
+
+        $event = $this->createMock(ResourceControllerEvent::class);
+        $event->method('getSubject')->willReturn($order);
+
+        // Hosted Fields path: the processor is used and no payment_id is written to the details.
+        $this->hostedFieldsPaymentProcessor->expects(self::once())
+            ->method('process')
+            ->with($payment, 'hf_token_abc', 'CB', false)
+        ;
+        $payment->expects(self::never())->method('setDetails');
+
+        $this->subscriber->handle($event);
+    }
+
     public function testHandle_withHostedFieldsTokenButNoPaymentMethod_doesNotProcess(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
@@ -216,9 +253,12 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
     }
 
     /**
-     * Belt and braces: the Hosted Fields branch must never resolve to the Payum-invoking route.
+     * A crafted request carrying both token fields is dispatched as Hosted Fields by handle()
+     * (it checks hasHostedFieldsToken() first), so it must be routed as Hosted Fields too —
+     * otherwise no payment_id is ever set and the order still lands on the Payum capture/status
+     * chain this redirect exists to avoid.
      */
-    public function testAlterRequestConfiguration_withBothTokens_prefersIntegratedPaymentRoute(): void
+    public function testAlterRequestConfiguration_withBothTokens_followsHandleAndRedirectsToOrderShow(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
             'payplug_integrated_payment_token' => 'pay_123',
@@ -230,7 +270,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->subscriber->alterRequestConfigurationForInlineCardCapture($this->buildRequestEvent($request));
 
         $syliusRequestConfig = $request->attributes->get('_sylius');
-        self::assertSame('sylius_shop_order_pay', $syliusRequestConfig['redirect']['route']);
+        self::assertSame('sylius_shop_order_show', $syliusRequestConfig['redirect']['route']);
     }
 
     public function testAlterRequestConfiguration_withoutAnyToken_leavesRedirectUntouched(): void

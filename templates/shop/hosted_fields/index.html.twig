@@ -1,11 +1,10 @@
 {% set config = paymentMethod.gatewayConfig.config %}
 
-<script type="text/javascript" src="{{ is_payplug_test_mode_enabled(paymentMethod) ? 'https://js.sandbox.dalenys.com/hosted-fields/v2.2.0/hosted-fields.min.js' : 'https://js.dalenys.com/hosted-fields/v2.2.0/hosted-fields.min.js' }}"></script>
+<script type="text/javascript" src="https://staging-internal-payment.gcp.dlns.io/ui/hosted-fields-lib/hosted-fields/v2.2.0/hosted-fields.min.js"></script>
 <script type="text/javascript">
   /* <![CDATA[ */
   var payplug_hosted_fields_params = {
-    key_id: '{{ config.hostedFieldsKeyId }}',
-    key_value: '{{ config.hostedFieldsKeyValue }}',
+    companyId: '{{ config.hostedFieldsCompanyId }}',
     payment_method_code: '{{ paymentMethod.code }}',
     locale: '{{ app.request.locale|split('_')|first }}',
     error: {
