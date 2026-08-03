@@ -50,6 +50,23 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Both inline card-capture modes force the checkout to TRANSITION_COMPLETE inside
+     * `sylius.order.post_payment` (see handle()), so a `redirect` entry MUST be injected here:
+     * Sylius's CheckoutRedirectListener listens to that same event and bails out only when
+     * `_sylius['redirect']` is set. Without it, it would resolve a route for the `completed`
+     * checkout state, which has no entry in `sylius_shop.checkout_resolver.route_map`
+     * (RouteNotFoundException).
+     *
+     * The target route differs per mode:
+     * - Integrated Payment relays a real PayPlug `payment_id`, so the order goes to
+     *   `sylius_shop_order_pay` (Payum capture/status) to be reconciled;
+     * - Hosted Fields relays a Dalenys `hfToken` and has no `payment_id` yet (see
+     *   NullHostedFieldsPaymentProcessor, pending PRE-3551). Reaching `sylius_shop_order_pay`
+     *   would make StatusAction `markNew()`, Payum rebuild the details through Convert and
+     *   CaptureAction issue a real createPayment() API call. It is sent to `sylius_shop_order_show`
+     *   instead: same token-based, guest-friendly access, but Payum is never invoked.
+     */
     public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {
         $request = $event->getRequest();
@@ -69,7 +86,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         $syliusRequestConfig['redirect'] = [
-            'route' => 'sylius_shop_order_pay',
+            'route' => $this->hasToken($request) ? 'sylius_shop_order_pay' : 'sylius_shop_order_show',
             'parameters' => ['tokenValue' => 'resource.tokenValue'],
         ];
 

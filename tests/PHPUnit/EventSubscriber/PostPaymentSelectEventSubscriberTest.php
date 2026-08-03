@@ -187,6 +187,52 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         );
     }
 
+    /**
+     * Hosted Fields has no PayPlug payment_id yet (PRE-3551): reaching `sylius_shop_order_pay` would
+     * make StatusAction markNew() and end up issuing a real createPayment() API call. A `redirect`
+     * entry is still required (Sylius's CheckoutRedirectListener would otherwise fail to resolve a
+     * route for the `completed` checkout state), so it points at `sylius_shop_order_show` instead.
+     */
+    public function testAlterRequestConfiguration_withOnlyHostedFieldsToken_redirectsToOrderShowNotOrderPay(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'hostedfields_token' => 'hf_token_abc',
+            'hostedfields_selected_brand' => 'VISA',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $request->attributes->set('_sylius', ['redirect' => ['route' => 'sylius_shop_checkout_complete']]);
+
+        $this->subscriber->alterRequestConfigurationForInlineCardCapture($this->buildRequestEvent($request));
+
+        self::assertSame(
+            [
+                'redirect' => [
+                    'route' => 'sylius_shop_order_show',
+                    'parameters' => ['tokenValue' => 'resource.tokenValue'],
+                ],
+            ],
+            $request->attributes->get('_sylius'),
+        );
+    }
+
+    /**
+     * Belt and braces: the Hosted Fields branch must never resolve to the Payum-invoking route.
+     */
+    public function testAlterRequestConfiguration_withBothTokens_prefersIntegratedPaymentRoute(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'payplug_integrated_payment_token' => 'pay_123',
+            'hostedfields_token' => 'hf_token_abc',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $request->attributes->set('_sylius', []);
+
+        $this->subscriber->alterRequestConfigurationForInlineCardCapture($this->buildRequestEvent($request));
+
+        $syliusRequestConfig = $request->attributes->get('_sylius');
+        self::assertSame('sylius_shop_order_pay', $syliusRequestConfig['redirect']['route']);
+    }
+
     public function testAlterRequestConfiguration_withoutAnyToken_leavesRedirectUntouched(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST');
