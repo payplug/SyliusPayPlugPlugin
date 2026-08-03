@@ -1,0 +1,13 @@
+{% set hostedFieldsCheckbox = hookable_metadata.context.form.gatewayConfig.config.hostedFields %}
+{% set hostedFieldsKeyId = hookable_metadata.context.form.gatewayConfig.config.hostedFieldsKeyId %}
+{% set hostedFieldsKeyValue = hookable_metadata.context.form.gatewayConfig.config.hostedFieldsKeyValue %}
+
+<div class="col-12 col-md-6">
+    {{ form_row(hostedFieldsCheckbox) }}
+</div>
+<div class="col-12 col-md-6">
+    {{ form_row(hostedFieldsKeyId) }}
+</div>
+<div class="col-12 col-md-6">
+    {{ form_row(hostedFieldsKeyValue) }}
+</div>
