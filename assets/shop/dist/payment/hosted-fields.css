@@ -1,0 +1,19 @@
+.payplugHostedFields__container {
+    margin-bottom: 12px;
+}
+
+.payplugHostedFields__container--brand,
+.payplugHostedFields__container--card,
+.payplugHostedFields__container--expiry,
+.payplugHostedFields__container--cvv {
+    min-height: 40px;
+}
+
+.payplugHostedFields__error {
+    color: #E91932;
+    margin-bottom: 12px;
+}
+
+.payplugHostedFields__error--hide {
+    display: none;
+}

@@ -16,6 +16,13 @@
                     "@payplug/sylius-payplug-plugin/shop/dist/payment/integrated.css": true
                 }
             },
+            "hosted-fields": {
+                "enabled": true,
+                "fetch": "lazy",
+                "autoimport": {
+                    "@payplug/sylius-payplug-plugin/shop/dist/payment/hosted-fields.css": true
+                }
+            },
             "oney-payment": {
                 "enabled": true,
                 "fetch": "lazy"
