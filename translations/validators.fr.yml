@@ -40,6 +40,14 @@ payplug_sylius_payplug_plugin:
             Vous n'avez pas accès à cette fonctionnalité.
             Pour activer Wero, contactez-nous à support@payplug.com
             et activez le mode LIVE.
+    payplug_uhf:
+        can_not_save_method_with_test_key: |
+            Le paiement par Unified Hosted Fields n'est pas disponible en mode TEST.
+            Veuillez activer le mode LIVE.
+        can_not_save_method_no_access: |
+            Vous n'avez pas accès à cette fonctionnalité.
+            Pour activer Unified Hosted Fields, contactez-nous à support@payplug.com
+            et activez le mode LIVE.
     payplug_apple_pay:
         can_not_save_method_with_test_key: |
             Le paiement par Apple Pay n’est pas disponible en mode TEST.

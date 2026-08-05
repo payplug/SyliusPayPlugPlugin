@@ -44,6 +44,12 @@ sylius_twig_hooks:
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_wero': &weroGateway
             live_checkbox: *liveCheckbox
 
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_uhf': &uhfGateway
+            live_checkbox: *liveCheckbox
+            hf_identifier_default: &hfIdentifierDefault
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_identifier_default.html.twig'
+                priority: -1
+
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug':
             <<: *payplugGateway
             renew_oauth: &renewOAuth
@@ -66,4 +72,7 @@ sylius_twig_hooks:
             renew_oauth: *renewOAuth
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_wero':
             <<: *weroGateway
+            renew_oauth: *renewOAuth
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_uhf':
+            <<: *uhfGateway
             renew_oauth: *renewOAuth
