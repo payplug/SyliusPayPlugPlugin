@@ -12,6 +12,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
@@ -45,11 +46,12 @@ final class PaymentMethodValidator
         $errors = match ($paymentMethod->getGatewayConfig()->getFactoryName()) {
             PayPlugGatewayFactory::FACTORY_NAME => $this->processPayplug($paymentMethod),
             OneyGatewayFactory::FACTORY_NAME => $this->processOney($paymentMethod),
-            BancontactGatewayFactory::FACTORY_NAME => $this->processBancontact($paymentMethod),
-            AmericanExpressGatewayFactory::FACTORY_NAME => $this->processAmex($paymentMethod),
-            ApplePayGatewayFactory::FACTORY_NAME => $this->processApplePay($paymentMethod),
-            ScalapayGatewayFactory::FACTORY_NAME => $this->processScalapay($paymentMethod),
-            WeroGatewayFactory::FACTORY_NAME => $this->processWero($paymentMethod),
+            BancontactGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
+            AmericanExpressGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
+            ApplePayGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
+            ScalapayGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
+            WeroGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
+            UhfGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             default => throw new \InvalidArgumentException('Unsupported payment method'),
         };
 
@@ -88,35 +90,7 @@ final class PaymentMethodValidator
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
-    private function processBancontact(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
-    {
-        $constraintList = [new IsCanSavePaymentMethod()];
-
-        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
-    }
-
-    private function processAmex(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
-    {
-        $constraintList = [new IsCanSavePaymentMethod()];
-
-        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
-    }
-
-    private function processApplePay(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
-    {
-        $constraintList = [new IsCanSavePaymentMethod()];
-
-        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
-    }
-
-    private function processScalapay(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
-    {
-        $constraintList = [new IsCanSavePaymentMethod()];
-
-        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
-    }
-
-    private function processWero(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
+    private function processDefault(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsCanSavePaymentMethod()];
 
