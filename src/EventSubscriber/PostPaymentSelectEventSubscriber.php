@@ -74,8 +74,8 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
         if (
-            (!$this->hasToken($request) && !$this->hasHostedFieldsToken($request))
-            || self::CHECKOUT_ROUTE !== $request->attributes->get('_route')
+            (!$this->hasToken($request) && !$this->hasHostedFieldsToken($request)) ||
+            self::CHECKOUT_ROUTE !== $request->attributes->get('_route')
         ) {
             return;
         }

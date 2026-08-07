@@ -22,3 +22,5 @@ Feature: Paying with Hosted Fields during checkout
         And I chose "DHL" shipping method
         Then I should be on the checkout payment step
         And I should be able to select "PayPlug Hosted Fields" payment method
+        And I select "PayPlug Hosted Fields" payment method
+        And I should see the "#card-container" element on the page
