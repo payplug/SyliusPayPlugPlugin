@@ -9,3 +9,8 @@ sylius_resource:
             driver: doctrine/orm
             classes:
                 model: PayPlug\SyliusPayPlugPlugin\Entity\Card
+        payplug.payplug_operation:
+            driver: doctrine/orm
+            classes:
+                model: PayPlug\SyliusPayPlugPlugin\Entity\PayplugOperation
+                repository: PayPlug\SyliusPayPlugPlugin\Repository\PayplugOperationRepository

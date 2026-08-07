@@ -1313,6 +1313,18 @@ parameters:
 			path: ../src/Repository/PaymentRepository.php
 
 		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\PayplugOperationRepository\:\:findOneByOperationId\(\) should return PayPlug\\SyliusPayPlugPlugin\\Entity\\PayplugOperation\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/PayplugOperationRepository.php
+
+		-
+			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\PayplugOperationRepository\:\:findOneByOrderId\(\) should return PayPlug\\SyliusPayPlugPlugin\\Entity\\PayplugOperation\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: ../src/Repository/PayplugOperationRepository.php
+
+		-
 			message: '#^Method PayPlug\\SyliusPayPlugPlugin\\Repository\\RefundHistoryRepository\:\:findLastProcessedRefundForPayment\(\) should return PayPlug\\SyliusPayPlugPlugin\\Entity\\RefundHistory\|null but returns mixed\.$#'
 			identifier: return.type
 			count: 1

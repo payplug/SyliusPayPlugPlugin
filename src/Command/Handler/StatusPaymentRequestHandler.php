@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\StatusPaymentRequest;
+use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\PaymentTransitionApplier;
 use Psr\Log\LoggerInterface;
@@ -42,6 +43,20 @@ final class StatusPaymentRequestHandler
         $method = $payment->getMethod();
         if (null === $method) {
             throw new \LogicException('Payment method is not set for the payment.');
+        }
+
+        if (UhfGatewayFactory::FACTORY_NAME === $method->getGatewayConfig()?->getFactoryName()) {
+            // The Unified API's webhook (see NotifyPaymentRequestHandler) is the single source of
+            // truth for the final outcome, whether or not a 3DS challenge happened — nothing to
+            // synchronously resolve here. Complete the PaymentRequest so the shopper reaches the
+            // normal "thank you / order in progress" page; the order updates moments later.
+            $this->stateMachine->apply(
+                $paymentRequest,
+                PaymentRequestTransitions::GRAPH,
+                PaymentRequestTransitions::TRANSITION_COMPLETE,
+            );
+
+            return;
         }
 
         // We don't have a forced status, so we retrieve the payment status from PayPlug

@@ -39,6 +39,10 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
     'payplug_sylius_payplug_plugin.command_provider.payplug_wero',
     ['action' => PaymentRequestInterface::ACTION_CAPTURE],
 )]
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_uhf',
+    ['action' => PaymentRequestInterface::ACTION_CAPTURE],
+)]
 final class CapturePaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function supports(PaymentRequestInterface $paymentRequest): bool
