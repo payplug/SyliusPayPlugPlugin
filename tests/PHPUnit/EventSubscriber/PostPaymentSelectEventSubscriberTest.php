@@ -7,6 +7,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\EventSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\EventSubscriber\PostPaymentSelectEventSubscriber;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -61,7 +62,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
         $payment = $this->createMock(PaymentInterface::class);
         $payment->method('getMethod')->willReturn(
-            $this->buildPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => true]),
+            $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME),
         );
         $order = $this->createMock(OrderInterface::class);
         $order->method('getLastPayment')->willReturn($payment);
@@ -87,9 +88,9 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
     /**
      * A crafted POST carrying a hosted fields token must not be able to complete checkout
-     * for a payment method that does not have the Hosted Fields flag enabled.
+     * for a payment method that is not on the payplug_uhf factory.
      */
-    public function testHandle_withHostedFieldsTokenButFlagDisabled_doesNotProcessNorCompleteCheckout(): void
+    public function testHandle_withHostedFieldsTokenButNotUhfFactory_doesNotProcessNorCompleteCheckout(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
             'hostedfields_token' => 'hf_token_abc',
@@ -101,7 +102,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
         $payment = $this->createMock(PaymentInterface::class);
         $payment->method('getMethod')->willReturn(
-            $this->buildPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => false]),
+            $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME),
         );
         $order = $this->createMock(OrderInterface::class);
         $order->method('getLastPayment')->willReturn($payment);
@@ -135,7 +136,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
         $payment = $this->createMock(PaymentInterface::class);
         $payment->method('getMethod')->willReturn(
-            $this->buildPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => true]),
+            $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME),
         );
         $order = $this->createMock(OrderInterface::class);
         $order->method('getLastPayment')->willReturn($payment);
@@ -298,10 +299,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         );
     }
 
-    private function buildPaymentMethod(array $config): PaymentMethodInterface&MockObject
+    private function buildPaymentMethod(string $factoryName): PaymentMethodInterface&MockObject
     {
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
-        $gatewayConfig->method('getConfig')->willReturn($config);
+        $gatewayConfig->method('getFactoryName')->willReturn($factoryName);
 
         $paymentMethod = $this->createMock(PaymentMethodInterface::class);
         $paymentMethod->method('getGatewayConfig')->willReturn($gatewayConfig);
