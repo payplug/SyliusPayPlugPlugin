@@ -8,6 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AbstractGatewayConfigurationTy
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\UhfGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use Symfony\Component\Form\AbstractTypeExtension;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -27,6 +28,14 @@ final class UhfGatewayConfigurationTypeExtension extends AbstractTypeExtension
                 'constraints' => [
                     new NotBlank([]),
                 ],
+            ])
+            ->add(UhfGatewayFactory::ONE_CLICK, CheckboxType::class, [
+                'block_name' => 'payplug_checkbox',
+                'label' => 'payplug_sylius_payplug_plugin.form.one_click_enable',
+                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
+                'help' => 'payplug_sylius_payplug_plugin.form.one_click_help',
+                'help_html' => true,
+                'required' => false,
             ])
         ;
     }
