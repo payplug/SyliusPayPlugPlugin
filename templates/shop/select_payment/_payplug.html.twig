@@ -21,12 +21,7 @@
     {% set integratedPayment = true %}
 {% endif %}
 
-{% set hostedFields = false %}
-{% if method.gatewayConfig.config.hostedFields is defined and method.gatewayConfig.config.hostedFields is same as true %}
-    {% set hostedFields = true %}
-{% endif %}
-
-<div class="content" {{ integratedPayment ? stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment', {'code': method.code}) : (hostedFields ? stimulus_controller('@payplug/sylius-payplug-plugin/hosted-fields', {'code': method.code}) : '') }}>
+<div class="content" {{ integratedPayment ? stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment', {'code': method.code}) : '' }}>
     {% if hasSavedCards %}
         <div class="payplug-payment-choice">
             {{ form_row(form.parent.parent.payplug_card_choice) }}
@@ -39,12 +34,6 @@
             'payment': order.getLastPayment('cart'),
             'hasSavedCards': hasSavedCards,
             'paymentInputId': form.vars.id,
-        } %}
-    {% endif %}
-
-    {% if hostedFields %}
-        {% include '@PayPlugSyliusPayPlugPlugin/shop/hosted_fields/index.html.twig' with {
-            'paymentMethod': method,
         } %}
     {% endif %}
 </div>
