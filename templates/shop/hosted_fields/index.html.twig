@@ -4,12 +4,12 @@
 <script type="text/javascript">
   /* <![CDATA[ */
   var payplug_hosted_fields_params = {
-    companyId: '{{ config.hfIdentifierDefault }}',
-    payment_method_code: '{{ paymentMethod.code }}',
+    companyId: '{{ config.hfIdentifierDefault|e('js') }}',
+    payment_method_code: '{{ paymentMethod.code|e('js') }}',
     locale: '{{ app.request.locale|split('_')|first }}',
     error: {
-      tokenization_failed: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.tokenization_failed'|trans }}',
-      unsupported_brand: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.unsupported_brand'|trans }}',
+      tokenization_failed: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.tokenization_failed'|trans|e('js') }}',
+      unsupported_brand: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.unsupported_brand'|trans|e('js') }}',
     },
   }
   /* ]] */
