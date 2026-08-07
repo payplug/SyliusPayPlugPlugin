@@ -6,7 +6,6 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AbstractGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
@@ -38,18 +37,7 @@ final class AbstractGatewayConfigurationTypeTest extends TestCase
     }
 
     /**
-     * The `payplug` factory is exempt: Integrated Payment and Hosted Fields need two distinct
-     * PaymentMethod entities sharing that factory name (PRE-3550).
-     */
-    public function testCanBeCreated_payplugFactory_alwaysAllowedAndSkipsLookup(): void
-    {
-        $this->gatewayConfigRepository->expects(self::never())->method('findOneBy');
-
-        self::assertTrue($this->canBeCreated(PayPlugGatewayFactory::FACTORY_NAME));
-    }
-
-    /**
-     * Every other PayPlug-family factory keeps the duplicate check.
+     * Every PayPlug-family factory, including `payplug` itself, is limited to one PaymentMethod.
      */
     public function testCanBeCreated_otherFactoryAlreadyConfigured_isRefused(): void
     {
