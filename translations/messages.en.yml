@@ -144,8 +144,6 @@ payplug_sylius_payplug_plugin:
             Allow your customers to save their credit card details for later
 
         integrated_payment_enable: Enable payment integrated
-        hosted_fields_enable: Enable Hosted Fields
-        hosted_fields_company_id: 'Hosted Fields company ID'
 
         deferred_capture_enable: Enable deferred capture
         deferred_capture_help: |

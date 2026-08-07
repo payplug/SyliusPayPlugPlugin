@@ -9,7 +9,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PayPlugGatewayConfigurationTyp
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -42,17 +41,6 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
                 'help' => 'payplug_sylius_payplug_plugin.form.deferred_capture_help',
                 'help_html' => true,
-                'required' => false,
-            ])
-            ->add(PayPlugGatewayFactory::HOSTED_FIELDS, CheckboxType::class, [
-                'block_name' => 'payplug_checkbox',
-                'label' => 'payplug_sylius_payplug_plugin.form.hosted_fields_enable',
-                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
-                'required' => false,
-            ])
-            ->add(PayPlugGatewayFactory::HOSTED_FIELDS_COMPANY_ID, TextType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.form.hosted_fields_company_id',
-                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
                 'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {

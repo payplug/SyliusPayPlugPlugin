@@ -25,9 +25,6 @@ sylius_twig_hooks:
             deferred_capture:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/deferred_capture.html.twig'
                 priority: 0
-            hosted_fields:
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hosted_fields.html.twig'
-                priority: 0
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_oney': &oneyGateway
             live_checkbox: *liveCheckbox
             fees_for:

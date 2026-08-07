@@ -70,4 +70,3 @@ payplug_sylius_payplug_plugin:
         can_not_save_method_no_access: |
             Non hai accesso alla modalità LIVE.
             Per attivarla, completa il tuo onboarding e riconnettiti.
-        integrated_payment_and_hosted_fields_conflict: 'Il pagamento integrato e i campi hosted (Hosted Fields) non possono essere entrambi attivi sullo stesso metodo di pagamento.'
