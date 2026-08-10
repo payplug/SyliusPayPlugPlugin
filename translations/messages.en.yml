@@ -108,6 +108,11 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Place order'
             transaction_secure.label: 'Transaction secured by'
             privacy_policy.label: 'Privacy Policy'
+        hosted_fields:
+            error.tokenization_failed: 'Your card details could not be validated. Please check them and try again.'
+            error.unsupported_brand: 'This card brand is not supported for this payment method. Please use a different card.'
+            save_card.label: 'Save my card'
+            place_order.label: 'Place order'
         deferred_capture:
             process_order_info: |
                 You will be charged when your order is processed.

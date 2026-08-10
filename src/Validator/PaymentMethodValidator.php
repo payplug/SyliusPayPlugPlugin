@@ -51,7 +51,7 @@ final class PaymentMethodValidator
             ApplePayGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             ScalapayGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             WeroGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
-            UhfGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
+            UhfGatewayFactory::FACTORY_NAME => $this->processUhf($paymentMethod),
             default => throw new \InvalidArgumentException('Unsupported payment method'),
         };
 
@@ -78,6 +78,18 @@ final class PaymentMethodValidator
         }
         if (true === $config[PayPlugGatewayFactory::INTEGRATED_PAYMENT]) {
             $constraintList[] = new PayplugPermission(Permission::CAN_USE_INTEGRATED_PAYMENTS);
+        }
+
+        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
+    }
+
+    private function processUhf(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
+    {
+        $config = $paymentMethod->getGatewayConfig()?->getConfig() ?? [];
+        $constraintList = [new IsCanSavePaymentMethod()];
+
+        if (true === ($config[UhfGatewayFactory::ONE_CLICK] ?? false)) {
+            $constraintList[] = new PayplugPermission(Permission::CAN_SAVE_CARD);
         }
 
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);

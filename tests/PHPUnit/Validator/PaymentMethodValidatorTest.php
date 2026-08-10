@@ -10,6 +10,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -139,12 +140,13 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — PayPlug factory, no special flags → only IsCanSavePaymentMethod constraint
+    // process() — PayPlug factory, no special flags → base constraints only
     // -------------------------------------------------------------------------
 
     /**
      * PayPlug gateway with ONE_CLICK, DEFERRED_CAPTURE and INTEGRATED_PAYMENT all false.
-     * Verifies only the base IsCanSavePaymentMethod constraint (1 total) is passed to the validator.
+     * Verifies only the always-present constraint (1 total) is passed to the validator:
+     * IsCanSavePaymentMethod.
      */
     public function testProcess_payplugFactory_noFlags_validatesWithBaseConstraintOnly(): void
     {
@@ -159,7 +161,6 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                // Only the base IsCanSavePaymentMethod constraint (no permission constraints)
                 self::assertCount(1, $constraints);
 
                 return new ConstraintViolationList();
@@ -175,12 +176,13 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — PayPlug factory, all flags enabled → 4 constraints (base + 3 permissions)
+    // process() — PayPlug factory, all permission flags enabled → 4 constraints (1 base + 3 permissions)
     // -------------------------------------------------------------------------
 
     /**
      * PayPlug gateway with ONE_CLICK, DEFERRED_CAPTURE and INTEGRATED_PAYMENT all true.
-     * Verifies 4 constraints are passed to the validator (base + one per enabled feature flag).
+     * Verifies 4 constraints are passed to the validator: the always-present
+     * IsCanSavePaymentMethod plus one per enabled feature flag.
      */
     public function testProcess_payplugFactory_allFlagsEnabled_validatesWithAllConstraints(): void
     {
@@ -211,17 +213,16 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — UHF factory → routed to processDefault(), base constraint only
+    // process() — UHF factory → routed to processUhf()
     // -------------------------------------------------------------------------
 
     /**
-     * UHF gateway. Verifies the match statement routes UhfGatewayFactory::FACTORY_NAME to
-     * processDefault(), which validates with the base IsCanSavePaymentMethod constraint only (1
-     * total), the same as Bancontact/Amex/ApplePay/Scalapay/Wero.
+     * UHF gateway with oneClick absent/false. Verifies processUhf() validates with the base
+     * IsCanSavePaymentMethod constraint only (1 total) — no permission constraint added.
      */
-    public function testProcess_uhfFactory_validatesWithBaseConstraintOnly(): void
+    public function testProcess_uhfFactory_oneClickFalse_validatesWithBaseConstraintOnly(): void
     {
-        $paymentMethod = $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME, []);
+        $paymentMethod = $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME, [UhfGatewayFactory::ONE_CLICK => false]);
 
         $this->validator
             ->expects(self::once())
@@ -229,6 +230,34 @@ final class PaymentMethodValidatorTest extends TestCase
             ->willReturnCallback(function ($subject, array $constraints) {
                 self::assertCount(1, $constraints);
                 self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
+
+                return new ConstraintViolationList();
+            })
+        ;
+
+        $flashBag = $this->createMock(FlashBagInterface::class);
+        $session = $this->createMock(Session::class);
+        $session->method('getFlashBag')->willReturn($flashBag);
+        $this->requestStack->method('getSession')->willReturn($session);
+
+        $this->paymentMethodValidator->process($paymentMethod);
+    }
+
+    /**
+     * UHF gateway with oneClick=true. Verifies processUhf() adds a PayplugPermission
+     * (CAN_SAVE_CARD) constraint alongside the base one (2 total).
+     */
+    public function testProcess_uhfFactory_oneClickTrue_validatesWithPermissionConstraint(): void
+    {
+        $paymentMethod = $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME, [UhfGatewayFactory::ONE_CLICK => true]);
+
+        $this->validator
+            ->expects(self::once())
+            ->method('validate')
+            ->willReturnCallback(function ($subject, array $constraints) {
+                self::assertCount(2, $constraints);
+                self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
+                self::assertInstanceOf(PayplugPermission::class, $constraints[1]);
 
                 return new ConstraintViolationList();
             })
