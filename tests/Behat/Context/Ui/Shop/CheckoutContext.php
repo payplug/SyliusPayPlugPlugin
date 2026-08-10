@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Shop;
 
-use Behat\Behat\Context\Context;
+use Behat\MinkExtension\Context\RawMinkContext;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use Sylius\Behat\Page\Shop\Checkout\CompletePageInterface;
 use Sylius\Behat\Page\Shop\Order\ShowPageInterface;
@@ -13,7 +13,7 @@ use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker;
 use Tests\PayPlug\SyliusPayPlugPlugin\Behat\Page\Shop\Payum\PaymentPageInterface;
 use Webmozart\Assert\Assert;
 
-final class CheckoutContext implements Context
+final class CheckoutContext extends RawMinkContext
 {
     /** @var CompletePageInterface */
     private $summaryPage;
@@ -156,5 +156,16 @@ final class CheckoutContext implements Context
     public function oneyIsDisabled(): void
     {
         $this->payPlugApiMocker->disableOney();
+    }
+
+    /**
+     * @Then I should see the :selector element on the page
+     */
+    public function iShouldSeeTheElementOnThePage(string $selector): void
+    {
+        Assert::notNull(
+            $this->getSession()->getPage()->find('css', $selector),
+            sprintf('Element matching selector "%s" was not found on the page.', $selector),
+        );
     }
 }

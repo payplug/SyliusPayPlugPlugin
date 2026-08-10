@@ -1,0 +1,169 @@
+.payplugHostedFields {
+    justify-self: center;
+    display: none
+}
+
+.payplugHostedFields * {
+    font-family: Poppins, Arial, sans-serif !important
+}
+
+.payplugHostedFields--loaded {
+    width: 100%;
+    max-width: 400px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 20px auto 0;
+    display: flex;
+    position: relative
+}
+
+.payplugHostedFields__container {
+    width: 100%;
+    margin: 0 0 10px;
+    padding: 0;
+    display: flex;
+    position: relative
+}
+
+.payplugHostedFields__container--brand,
+.payplugHostedFields__container--card,
+.payplugHostedFields__container--expiry,
+.payplugHostedFields__container--cvv {
+    height: 40px;
+    cursor: text;
+    border: 1px solid #d5d6d8;
+    border-radius: 2px;
+    line-height: 40px
+}
+
+.payplugHostedFields__container--card,
+.payplugHostedFields__container--expiry,
+.payplugHostedFields__container--cvv {
+    padding: 0 16px 0 50px
+}
+
+.payplugHostedFields__container--card:before,
+.payplugHostedFields__container--expiry:before,
+.payplugHostedFields__container--cvv:before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    background: #95999e 50%/100% no-repeat;
+    position: absolute;
+    top: 20%;
+    left: 16px
+}
+
+.payplugHostedFields__container--card:before {
+    -webkit-mask-image: url(card.0d2bd9bc.svg);
+    mask-image: url(card.0d2bd9bc.svg)
+}
+
+.payplugHostedFields__container--expiry:before {
+    -webkit-mask-image: url(calendar.3c23bb16.svg);
+    mask-image: url(calendar.3c23bb16.svg)
+}
+
+.payplugHostedFields__container--cvv:before {
+    -webkit-mask-image: url(lock.fe8a73cd.svg);
+    mask-image: url(lock.fe8a73cd.svg)
+}
+
+.payplugHostedFields__container--expiry,
+.payplugHostedFields__container--cvv {
+    max-width: calc(50% - 2px);
+    display: inline-block
+}
+
+.payplugHostedFields__container--brand,
+.payplugHostedFields__container--card,
+.payplugHostedFields__container--expiry,
+.payplugHostedFields__container--cvv {
+    overflow: hidden
+}
+
+.payplugHostedFields__container--brand iframe,
+.payplugHostedFields__container--card iframe,
+.payplugHostedFields__container--expiry iframe,
+.payplugHostedFields__container--cvv iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block
+}
+
+.payplugHostedFields__container--saveCard {
+    height: auto;
+    align-items: center;
+    padding: 10px 0 0;
+    display: flex
+}
+
+.payplugHostedFields__container--saveCard input {
+    display: none
+}
+
+.payplugHostedFields__container--saveCard input:checked+label span:before {
+    opacity: 1
+}
+
+.payplugHostedFields__container--saveCard label {
+    cursor: pointer;
+    color: #918f8f;
+    margin: 0 !important;
+    font-size: 12px !important
+}
+
+.payplugHostedFields__container--saveCard label span {
+    cursor: pointer;
+    height: 16px;
+    -o-transition: border .4s;
+    width: 16px;
+    border: 1px solid #d5d6d8;
+    border-radius: 2px;
+    margin: 0 10px -3px 0;
+    transition: border .4s;
+    display: inline-block;
+    position: relative
+}
+
+.payplugHostedFields__container--saveCard label span:before {
+    content: "";
+    height: 5px;
+    opacity: 0;
+    width: 10px;
+    border-top: none;
+    border-bottom: 2.5px solid #2b343d;
+    border-left: 2.5px solid #2b343d;
+    border-right: none;
+    border-radius: 1px;
+    transition: opacity .4s;
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%)rotate(-48deg)
+}
+
+.payplugHostedFields__container--saveCard label:hover {
+    color: #2b343d;
+    transition: all .1s
+}
+
+.payplugHostedFields__container--saveCard label:hover span {
+    border-color: #2b343d;
+    transition: all .1s
+}
+
+.payplugHostedFields__error {
+    color: #e91932;
+    width: 100%;
+    margin: -10px 0 10px;
+    padding-left: 4px;
+    font-size: 12px;
+    line-height: 18px
+}
+
+.payplugHostedFields__error--hide {
+    display: none
+}

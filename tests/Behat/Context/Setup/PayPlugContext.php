@@ -8,6 +8,7 @@ use Behat\Behat\Context\Context;
 use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -62,6 +63,29 @@ final class PayPlugContext implements Context
         $paymentMethod->getGatewayConfig()->setConfig([
             'secretKey' => 'test',
             'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
+        ]);
+
+        $this->paymentMethodManager->flush();
+    }
+
+    /**
+     * @Given the store has a payment method :paymentMethodName with a code :paymentMethodCode and PayPlug Hosted Fields payment gateway
+     */
+    public function theStoreHasAPaymentMethodWithACodeAndPayPlugHostedFieldsPaymentGateway(
+        string $paymentMethodName,
+        string $paymentMethodCode,
+    ): void {
+        $paymentMethod = $this->createPaymentMethodPayPlug(
+            $paymentMethodName,
+            $paymentMethodCode,
+            UhfGatewayFactory::FACTORY_NAME,
+            UhfGatewayFactory::FACTORY_TITLE,
+        );
+
+        $paymentMethod->getGatewayConfig()->setConfig([
+            'secretKey' => 'test',
+            'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.uhf',
+            UhfGatewayFactory::HF_IDENTIFIER_DEFAULT => 'test-company-id',
         ]);
 
         $this->paymentMethodManager->flush();

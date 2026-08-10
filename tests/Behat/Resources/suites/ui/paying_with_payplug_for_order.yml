@@ -30,6 +30,9 @@ default:
                 - sylius.behat.context.setup.user
 
                 - payplug_sylius_payplug_plugin.behat.context.setup.payplug
+                # Provides "This secret Key is valid", which installs the static Payplug\Core\HttpClient
+                # mock for the whole test process (needed by templates calling is_payplug_test_mode_enabled).
+                - payplug_sylius_payplug_plugin.behat.context.ui.admin.managing_payment_method_payplug
 
 #                - sylius.behat.context.ui.paypal
                 - sylius.behat.context.ui.shop.cart

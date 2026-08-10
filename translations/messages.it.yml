@@ -108,6 +108,11 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Ordine'
             transaction_secure.label: 'Transazione protetta da'
             privacy_policy.label: 'Politica di confidenzialità'
+        hosted_fields:
+            error.tokenization_failed: 'Non è stato possibile verificare i dati della tua carta. Controllali e riprova.'
+            error.unsupported_brand: 'Questo marchio di carta non è supportato per questo metodo di pagamento. Utilizza un’altra carta.'
+            save_card.label: 'Salva la mia carta'
+            place_order.label: 'Ordine'
         deferred_capture:
             process_order_info: |
                 L'addebito avverrà al momento dell'elaborazione dell'ordine.

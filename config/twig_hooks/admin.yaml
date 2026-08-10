@@ -46,6 +46,9 @@ sylius_twig_hooks:
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_uhf': &uhfGateway
             live_checkbox: *liveCheckbox
+            one_click:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/one_click.html.twig'
+                priority: 0
             hf_identifier_default: &hfIdentifierDefault
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_identifier_default.html.twig'
                 priority: -1

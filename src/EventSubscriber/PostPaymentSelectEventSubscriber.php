@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -25,26 +27,56 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private const TOKEN_FIELD = 'payplug_integrated_payment_token';
 
+    private const HOSTED_FIELDS_TOKEN_FIELD = 'hostedfields_token';
+
+    private const HOSTED_FIELDS_SELECTED_BRAND_FIELD = 'hostedfields_selected_brand';
+
+    private const HOSTED_FIELDS_SAVE_CARD_FIELD = 'hostedfields_save_card';
+
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
         private StateMachineInterface $stateMachine,
+        private HostedFieldsPaymentProcessorInterface $hostedFieldsPaymentProcessor,
     ) {
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            RequestEvent::class => 'alterRequestConfigurationForIntegratedPayment',
+            RequestEvent::class => 'alterRequestConfigurationForInlineCardCapture',
             'sylius.order.post_payment' => 'handle',
             'sylius.order.post_update' => 'handle',
         ];
     }
 
-    public function alterRequestConfigurationForIntegratedPayment(RequestEvent $event): void
+    /**
+     * Both inline card-capture modes force the checkout to TRANSITION_COMPLETE inside
+     * `sylius.order.post_payment` (see handle()), so a `redirect` entry MUST be injected here:
+     * Sylius's CheckoutRedirectListener listens to that same event and bails out only when
+     * `_sylius['redirect']` is set. Without it, it would resolve a route for the `completed`
+     * checkout state, which has no entry in `sylius_shop.checkout_resolver.route_map`
+     * (RouteNotFoundException).
+     *
+     * The target route differs per mode:
+     * - Integrated Payment relays a real PayPlug `payment_id`, so the order goes to
+     *   `sylius_shop_order_pay` (Payum capture/status) to be reconciled;
+     * - Hosted Fields relays a Dalenys `hfToken` and has no `payment_id` yet (see
+     *   NullHostedFieldsPaymentProcessor, pending PRE-3551). Reaching `sylius_shop_order_pay`
+     *   would make StatusAction `markNew()`, Payum rebuild the details through Convert and
+     *   CaptureAction issue a real createPayment() API call. It is sent to `sylius_shop_order_show`
+     *   instead: same token-based, guest-friendly access, but Payum is never invoked.
+     *
+     * The Hosted Fields check comes first, mirroring handle()'s dispatch order: a request carrying
+     * both token fields is processed as Hosted Fields, so it must be routed as Hosted Fields too.
+     */
+    public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if (!$this->hasToken($request) || self::CHECKOUT_ROUTE !== $request->attributes->get('_route')) {
+        if (
+            (!$this->hasToken($request) && !$this->hasHostedFieldsToken($request)) ||
+            self::CHECKOUT_ROUTE !== $request->attributes->get('_route')
+        ) {
             return;
         }
         if (!$request->attributes->has('_sylius')) {
@@ -57,7 +89,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         $syliusRequestConfig['redirect'] = [
-            'route' => 'sylius_shop_order_pay',
+            'route' => $this->hasHostedFieldsToken($request) ? self::UPDATE_ORDER_PAYMENT_ROUTE : 'sylius_shop_order_pay',
             'parameters' => ['tokenValue' => 'resource.tokenValue'],
         ];
 
@@ -79,6 +111,12 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         $order = $resourceControllerEvent->getSubject();
         $lastPayment = $order->getLastPayment();
         if (null === $lastPayment) {
+            return;
+        }
+
+        if ($this->hasHostedFieldsToken($request)) {
+            $this->handleHostedFieldsToken($request, $lastPayment);
+
             return;
         }
 
@@ -126,6 +164,45 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         Assert::string($token);
 
         return $token;
+    }
+
+    private function hasHostedFieldsToken(Request $request): bool
+    {
+        if (!$request->request->has(self::HOSTED_FIELDS_TOKEN_FIELD)) {
+            return false;
+        }
+
+        return '' !== $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
+    }
+
+    private function handleHostedFieldsToken(Request $request, PaymentInterface $lastPayment): void
+    {
+        // Guard against a crafted POST completing checkout through this path for a payment
+        // method that does not actually have Hosted Fields enabled.
+        if (!$this->isHostedFieldsEnabled($lastPayment)) {
+            return;
+        }
+
+        $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
+        $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
+        $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
+
+        $this->hostedFieldsPaymentProcessor->process($lastPayment, $hfToken, $selectedBrand, $saveCard);
+
+        $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
+    }
+
+    private function isHostedFieldsEnabled(PaymentInterface $payment): bool
+    {
+        return UhfGatewayFactory::FACTORY_NAME === $payment->getMethod()?->getGatewayConfig()?->getFactoryName();
+    }
+
+    private function getRequestField(Request $request, string $field): string
+    {
+        $value = $request->request->get($field, '');
+        Assert::string($value);
+
+        return $value;
     }
 
     private function applyToComplete(OrderInterface $order): void

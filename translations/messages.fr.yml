@@ -127,6 +127,11 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Confirmer le paiement'
             transaction_secure.label: 'Transaction sécurisée par'
             privacy_policy.label: 'Politique de confidentialité'
+        hosted_fields:
+            error.tokenization_failed: 'Les informations de votre carte n’ont pas pu être validées. Veuillez les vérifier et réessayer.'
+            error.unsupported_brand: 'Cette marque de carte n’est pas prise en charge pour ce moyen de paiement. Merci d’utiliser une autre carte.'
+            save_card.label: 'Enregistrer ma carte bancaire'
+            place_order.label: 'Confirmer le paiement'
         deferred_capture:
             process_order_info: |
                 Vous serez prélevé(é) lors du traitement de votre commande.

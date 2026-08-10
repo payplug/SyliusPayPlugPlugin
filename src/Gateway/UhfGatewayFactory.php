@@ -11,4 +11,6 @@ final class UhfGatewayFactory extends AbstractGatewayFactory
     public const FACTORY_TITLE = 'Unified Hosted Fields by PayPlug';
 
     public const HF_IDENTIFIER_DEFAULT = 'hfIdentifierDefault';
+
+    public const ONE_CLICK = 'oneClick';
 }
