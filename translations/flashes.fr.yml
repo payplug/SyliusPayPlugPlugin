@@ -3,6 +3,7 @@ payplug_sylius_payplug_plugin:
         oney_not_enabled: Oney n'est pas ou plus activé sur votre compte.
         api_unknow_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
         transaction_failed_1click: La transaction a échoué, votre carte de paiement ne sera pas débitée.
+        uhf_payment_failed: Votre paiement n'a pas pu être traité. Veuillez réessayer ou choisir un autre moyen de paiement.
     warning:
         payment_success_no_card_saved: Le paiement a été effectué avec succès, mais nous n'avons pas pu enregistrer votre carte bancaire.
     admin:

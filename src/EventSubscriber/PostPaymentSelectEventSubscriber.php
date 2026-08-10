@@ -14,9 +14,11 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Webmozart\Assert\Assert;
 
 final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
@@ -38,6 +40,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         private EntityManagerInterface $entityManager,
         private StateMachineInterface $stateMachine,
         private HostedFieldsPaymentProcessorInterface $hostedFieldsPaymentProcessor,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -115,7 +118,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         if ($this->hasHostedFieldsToken($request)) {
-            $this->handleHostedFieldsToken($request, $lastPayment);
+            $this->handleHostedFieldsToken($request, $lastPayment, $resourceControllerEvent);
 
             return;
         }
@@ -175,8 +178,11 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         return '' !== $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
     }
 
-    private function handleHostedFieldsToken(Request $request, PaymentInterface $lastPayment): void
-    {
+    private function handleHostedFieldsToken(
+        Request $request,
+        PaymentInterface $lastPayment,
+        ResourceControllerEvent $resourceControllerEvent,
+    ): void {
         // Guard against a crafted POST completing checkout through this path for a payment
         // method that does not actually have Hosted Fields enabled.
         if (!$this->isHostedFieldsEnabled($lastPayment)) {
@@ -189,7 +195,23 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
         $this->hostedFieldsPaymentProcessor->process($lastPayment, $hfToken, $selectedBrand, $saveCard);
 
+        $details = $lastPayment->getDetails();
+
+        if (isset($details['error'])) {
+            $this->requestStack->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.error.uhf_payment_failed'); // @phpstan-ignore-line
+            $resourceControllerEvent->setResponse(new RedirectResponse(
+                $this->urlGenerator->generate(self::CHECKOUT_ROUTE),
+            ));
+
+            return;
+        }
+
         $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
+
+        $redirectUrl = $details['redirect_url'] ?? null;
+        if (\is_string($redirectUrl) && '' !== $redirectUrl) {
+            $resourceControllerEvent->setResponse(new RedirectResponse($redirectUrl));
+        }
     }
 
     private function isHostedFieldsEnabled(PaymentInterface $payment): bool

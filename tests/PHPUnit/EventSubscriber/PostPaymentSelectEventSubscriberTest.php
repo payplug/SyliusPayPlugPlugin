@@ -16,12 +16,15 @@ use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
-use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class PostPaymentSelectEventSubscriberTest extends TestCase
 {
@@ -33,6 +36,8 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
     private HostedFieldsPaymentProcessorInterface&MockObject $hostedFieldsPaymentProcessor;
 
+    private UrlGeneratorInterface&MockObject $urlGenerator;
+
     private PostPaymentSelectEventSubscriber $subscriber;
 
     protected function setUp(): void
@@ -41,16 +46,22 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->stateMachine = $this->createMock(StateMachineInterface::class);
         $this->hostedFieldsPaymentProcessor = $this->createMock(HostedFieldsPaymentProcessorInterface::class);
+        $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
         $this->subscriber = new PostPaymentSelectEventSubscriber(
             $this->requestStack,
             $this->entityManager,
             $this->stateMachine,
             $this->hostedFieldsPaymentProcessor,
+            $this->urlGenerator,
         );
     }
 
-    public function testHandle_withHostedFieldsToken_delegatesToProcessorAndCompletesCheckout(): void
+    // -------------------------------------------------------------------------
+    // handle() — Hosted Fields outcomes
+    // -------------------------------------------------------------------------
+
+    public function testHandle_withHostedFieldsTokenAndRedirectUrl_overridesResponseWithThePspRedirect(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
             'hostedfields_token' => 'hf_token_abc',
@@ -61,9 +72,8 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
 
         $payment = $this->createMock(PaymentInterface::class);
-        $payment->method('getMethod')->willReturn(
-            $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME),
-        );
+        $payment->method('getMethod')->willReturn($this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME));
+        $payment->method('getDetails')->willReturn(['redirect_url' => 'https://secure.payplug.com/3ds/pay_1']);
         $order = $this->createMock(OrderInterface::class);
         $order->method('getLastPayment')->willReturn($payment);
         $payment->method('getOrder')->willReturn($order);
@@ -76,12 +86,86 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
             ->with($payment, 'hf_token_abc', 'VISA', true)
         ;
 
-        $this->stateMachine->method('can')
-            ->with($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_COMPLETE)
-            ->willReturn(true)
-        ;
+        $this->stateMachine->method('can')->willReturn(true);
         $this->stateMachine->expects(self::once())->method('apply');
         $this->entityManager->expects(self::once())->method('flush');
+
+        $event->expects(self::once())
+            ->method('setResponse')
+            ->with(self::callback(
+                static fn (RedirectResponse $response): bool => 'https://secure.payplug.com/3ds/pay_1' === $response->getTargetUrl(),
+            ))
+        ;
+
+        $this->subscriber->handle($event);
+    }
+
+    public function testHandle_withHostedFieldsTokenAndNoRedirectUrl_completesCheckoutWithoutOverridingResponse(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'hostedfields_token' => 'hf_token_abc',
+            'hostedfields_selected_brand' => 'VISA',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $this->requestStack->method('getCurrentRequest')->willReturn($request);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn($this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME));
+        $payment->method('getDetails')->willReturn(['payment_id' => 'pay_1']);
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getLastPayment')->willReturn($payment);
+        $payment->method('getOrder')->willReturn($order);
+
+        $event = $this->createMock(ResourceControllerEvent::class);
+        $event->method('getSubject')->willReturn($order);
+
+        $this->hostedFieldsPaymentProcessor->expects(self::once())->method('process');
+        $this->stateMachine->method('can')->willReturn(true);
+        $this->stateMachine->expects(self::once())->method('apply');
+        $this->entityManager->expects(self::once())->method('flush');
+        $event->expects(self::never())->method('setResponse');
+
+        $this->subscriber->handle($event);
+    }
+
+    public function testHandle_withHostedFieldsTokenAndProcessorError_doesNotCompleteCheckoutAndRedirectsBackToPaymentSelection(): void
+    {
+        $request = Request::create('/checkout/select-payment', 'POST', [
+            'hostedfields_token' => 'hf_token_abc',
+            'hostedfields_selected_brand' => 'VISA',
+        ]);
+        $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
+        $this->requestStack->method('getCurrentRequest')->willReturn($request);
+
+        $flashBag = $this->createMock(FlashBagInterface::class);
+        $session = $this->createMock(FlashBagAwareSessionInterface::class);
+        $session->method('getFlashBag')->willReturn($flashBag);
+        $this->requestStack->method('getSession')->willReturn($session);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn($this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME));
+        $payment->method('getDetails')->willReturn(['error' => 'Unified API hosted payment request failed with HTTP status 500.']);
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getLastPayment')->willReturn($payment);
+
+        $event = $this->createMock(ResourceControllerEvent::class);
+        $event->method('getSubject')->willReturn($order);
+
+        $this->hostedFieldsPaymentProcessor->expects(self::once())->method('process');
+        $this->stateMachine->expects(self::never())->method('apply');
+        $this->entityManager->expects(self::never())->method('flush');
+        $flashBag->expects(self::once())->method('add')->with('error', 'payplug_sylius_payplug_plugin.error.uhf_payment_failed');
+
+        $this->urlGenerator->method('generate')
+            ->with('sylius_shop_checkout_select_payment')
+            ->willReturn('https://shop.example.com/checkout/select-payment')
+        ;
+        $event->expects(self::once())
+            ->method('setResponse')
+            ->with(self::callback(
+                static fn (RedirectResponse $response): bool => 'https://shop.example.com/checkout/select-payment' === $response->getTargetUrl(),
+            ))
+        ;
 
         $this->subscriber->handle($event);
     }

@@ -38,7 +38,7 @@ services:
     # Alias (not a separate definition) so the interface resolves to the service auto-registered by the
     # `PayPlug\SyliusPayPlugPlugin\:` prototype above, keeping its `@monolog.logger.payplug` binding.
     PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface:
-        alias: PayPlug\SyliusPayPlugPlugin\PaymentProcessing\NullHostedFieldsPaymentProcessor
+        alias: PayPlug\SyliusPayPlugPlugin\PaymentProcessing\UhfHostedFieldsPaymentProcessor
 
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction
@@ -173,6 +173,21 @@ services:
         tags:
             - name: sylius.payment_request.provider.http_response
               gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory::FACTORY_NAME
+
+    ## Uhf Payplug Gateway ##
+    # Notify only: Hosted Fields checkout never visits sylius_shop_order_pay (see
+    # PostPaymentSelectEventSubscriber), so no capture/status PaymentRequest is ever created for
+    # payplug_uhf, and no http_response.payplug_uhf locator is needed either — the notify action's
+    # response comes from Sylius's generic NotifyResponseProviderInterface, not a per-gateway one.
+    payplug_sylius_payplug_plugin.command_provider.payplug_uhf:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug_uhf
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory::FACTORY_NAME
 
 
     ## Apple Pay Payplug Gateway ##

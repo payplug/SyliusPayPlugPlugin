@@ -16,6 +16,31 @@
         <service id="PayplugUnifiedCore\Contracts\ITokenCache"
                  alias="PayPlug\SyliusPayPlugPlugin\Auth\SyliusTokenCache" />
 
+        <service id="PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient"
+                 alias="PayPlug\SyliusPayPlugPlugin\Auth\SyliusUnifiedApiHttpClient" />
+
+        <service id="PayplugUnifiedCore\Contracts\ILock"
+                 alias="PayPlug\SyliusPayPlugPlugin\Lock\SyliusLock" />
+
+        <service id="PayplugUnifiedCore\Contracts\IOrderStateMutator"
+                 alias="PayPlug\SyliusPayPlugPlugin\PaymentProcessing\SyliusOrderStateMutator" />
+
+        <!-- src/Repository is excluded from the PayPlug\SyliusPayPlugPlugin\ autowire scan in
+             config/services.yaml, so unlike the adapters above, SyliusPaymentRepository is not
+             auto-registered — it needs an explicit <service> definition here. Its
+             PayplugOperationRepositoryInterface dependency is aliased to the Sylius resource
+             repository registered for the payplug_operation resource (config/resources.yaml). -->
+        <service id="PayPlug\SyliusPayPlugPlugin\Repository\PayplugOperationRepositoryInterface"
+                 alias="PayPlug\SyliusPayPlugPlugin\Repository\PayplugOperationRepository" />
+
+        <service id="PayPlug\SyliusPayPlugPlugin\Repository\SyliusPaymentRepository" />
+
+        <service id="PayplugUnifiedCore\Contracts\IPaymentRepository"
+                 alias="PayPlug\SyliusPayPlugPlugin\Repository\SyliusPaymentRepository" />
+
+        <service id="PayplugUnifiedCore\Contracts\IConfigurationRepository"
+                 alias="PayPlug\SyliusPayPlugPlugin\Auth\SyliusConfigurationRepository" />
+
         <service id="PayplugUnifiedCore\Auth\OAuth2Client">
             <!-- Only used for the client-credentials grant (background token refresh);
                  redirectUri/scope are irrelevant to that grant, left empty. -->
@@ -28,6 +53,13 @@
         </service>
 
         <service id="PayplugUnifiedCore\Auth\TokenManager" />
+
+        <!-- src/ApiClient is excluded from the PayPlug\SyliusPayPlugPlugin\ autowire scan in
+             config/services.yaml (same reason as PayPlugApiClientFactory above), so this needs
+             an explicit <service> definition too. -->
+        <service id="PayPlug\SyliusPayPlugPlugin\ApiClient\UnifiedApiHostedPaymentServiceFactory">
+            <argument key="$payplugOauthBaseUrl">%payplug.oauth_base_url%</argument>
+        </service>
 
         <service id="payplug_sylius_payplug_plugin.api_client.payplug"
                  class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient"

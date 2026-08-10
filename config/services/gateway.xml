@@ -63,5 +63,15 @@
             <tag name="payum.gateway_factory_builder"
                  factory="payplug_wero"/>
         </service>
+
+        <!-- Gateway Unified Hosted Fields by PayPlug. Needed for GatewayFactoryExistsValidator to
+             accept payplug_uhf as a valid factory name when the admin saves this payment method —
+             unrelated to Payum's own runtime dispatch, which Hosted Fields checkout never uses. -->
+        <service id="payplug_sylius_payplug_plugin.gateway_factory.uhf"
+                 class="Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder">
+            <argument type="string">PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory</argument>
+            <tag name="payum.gateway_factory_builder"
+                 factory="payplug_uhf"/>
+        </service>
     </services>
 </container>

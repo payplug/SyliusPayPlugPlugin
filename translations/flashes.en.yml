@@ -3,6 +3,7 @@ payplug_sylius_payplug_plugin:
         oney_not_enabled: Oney is not (or is no longer) activated on your account.
         api_unknow_error: An error occurred. Please retry in few seconds.
         transaction_failed_1click: The transaction was not completed and your card was not charged.
+        uhf_payment_failed: Your payment could not be processed. Please try again or choose another payment method.
     warning:
         payment_success_no_card_saved: The payment was successful but we were unable to save your credit card details.
     admin:
