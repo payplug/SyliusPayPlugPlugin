@@ -1,10 +1,8 @@
-{% set config = paymentMethod.gatewayConfig.config %}
-
 <script type="text/javascript" src="https://staging-internal-payment.gcp.dlns.io/ui/hosted-fields-lib/hosted-fields/v2.2.0/hosted-fields.min.js"></script>
 <script type="text/javascript">
   /* <![CDATA[ */
   var payplug_hosted_fields_params = {
-    companyId: '{{ config.hfIdentifierDefault|e('js') }}',
+    companyId: '{{ payplug_hosted_fields_company_id(paymentMethod)|e('js') }}',
     payment_method_code: '{{ paymentMethod.code|e('js') }}',
     locale: '{{ app.request.locale|split('_')|first }}',
     error: {

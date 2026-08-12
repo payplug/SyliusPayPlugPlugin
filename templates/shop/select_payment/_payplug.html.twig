@@ -16,19 +16,22 @@
     {% set hasSavedCards = true %}
 {% endif %}
 
-{% set integratedPayment = false %}
-{% if method.gatewayConfig.config.integratedPayment is defined and method.gatewayConfig.config.integratedPayment is same as true %}
-    {% set integratedPayment = true %}
-{% endif %}
+{% set displayMode = payplug_display_mode(method.gatewayConfig.config) %}
+{% set hostedFields = displayMode == 'hosted_fields' %}
+{% set integratedPayment = displayMode == 'integrated_payment' %}
 
-<div class="content" {{ integratedPayment ? stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment', {'code': method.code}) : '' }}>
+<div class="content" {{ integratedPayment ? stimulus_controller('@payplug/sylius-payplug-plugin/integrated-payment', {'code': method.code}) : '' }}{{ hostedFields ? stimulus_controller('@payplug/sylius-payplug-plugin/hosted-fields', {'code': method.code}) : '' }}>
     {% if hasSavedCards %}
         <div class="payplug-payment-choice">
             {{ form_row(form.parent.parent.payplug_card_choice) }}
         </div>
     {% endif %}
 
-    {% if integratedPayment %}
+    {% if hostedFields %}
+        {% include '@PayPlugSyliusPayPlugPlugin/shop/hosted_fields/index.html.twig' with {
+            'paymentMethod': method,
+        } %}
+    {% elseif integratedPayment %}
         {% include '@PayPlugSyliusPayPlugPlugin/shop/integrated/index.html.twig' with {
             'paymentMethod': method,
             'payment': order.getLastPayment('cart'),

@@ -50,6 +50,3 @@ sylius_twig_hooks:
         'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_wero':
             wero:
                 template: '@PayPlugSyliusPayPlugPlugin/shop/select_payment/_wero.html.twig'
-        'sylius_shop.shared.form.select_payment.payment.choice.details#payplug_uhf':
-            uhf:
-                template: '@PayPlugSyliusPayPlugPlugin/shop/select_payment/_payplug_uhf.html.twig'

@@ -19,12 +19,18 @@ sylius_twig_hooks:
             one_click:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/one_click.html.twig'
                 priority: 0
-            integrated_payment:
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/integrated_payment.html.twig'
+            hosted_fields_mode:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hosted_fields_mode.html.twig'
                 priority: 0
+            hf_identifier:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_identifier.html.twig'
+                priority: -1
+            hf_sub_merchant_id:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_sub_merchant_id.html.twig'
+                priority: -2
             deferred_capture:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/deferred_capture.html.twig'
-                priority: 0
+                priority: -3
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_oney': &oneyGateway
             live_checkbox: *liveCheckbox
             fees_for:
@@ -43,15 +49,6 @@ sylius_twig_hooks:
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_wero': &weroGateway
             live_checkbox: *liveCheckbox
-
-        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_uhf': &uhfGateway
-            live_checkbox: *liveCheckbox
-            one_click:
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/one_click.html.twig'
-                priority: 0
-            hf_identifier_default: &hfIdentifierDefault
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_identifier_default.html.twig'
-                priority: -1
 
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug':
             <<: *payplugGateway
@@ -75,7 +72,4 @@ sylius_twig_hooks:
             renew_oauth: *renewOAuth
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_wero':
             <<: *weroGateway
-            renew_oauth: *renewOAuth
-        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_uhf':
-            <<: *uhfGateway
             renew_oauth: *renewOAuth
