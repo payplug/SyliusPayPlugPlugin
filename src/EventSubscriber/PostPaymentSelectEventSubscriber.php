@@ -23,8 +23,6 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 {
     private const CHECKOUT_ROUTE = 'sylius_shop_checkout_select_payment';
 
-    private const UPDATE_ORDER_PAYMENT_ROUTE = 'sylius_shop_order_show';
-
     private const TOKEN_FIELD = 'payplug_integrated_payment_token';
 
     private const HOSTED_FIELDS_TOKEN_FIELD = 'hostedfields_token';
@@ -58,17 +56,9 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
      * checkout state, which has no entry in `sylius_shop.checkout_resolver.route_map`
      * (RouteNotFoundException).
      *
-     * The target route differs per mode:
-     * - Integrated Payment relays a real PayPlug `payment_id`, so the order goes to
-     *   `sylius_shop_order_pay` (Payum capture/status) to be reconciled;
-     * - Hosted Fields relays a Dalenys `hfToken` and has no `payment_id` yet (see
-     *   NullHostedFieldsPaymentProcessor, pending PRE-3551). Reaching `sylius_shop_order_pay`
-     *   would make StatusAction `markNew()`, Payum rebuild the details through Convert and
-     *   CaptureAction issue a real createPayment() API call. It is sent to `sylius_shop_order_show`
-     *   instead: same token-based, guest-friendly access, but Payum is never invoked.
-     *
-     * The Hosted Fields check comes first, mirroring handle()'s dispatch order: a request carrying
-     * both token fields is processed as Hosted Fields, so it must be routed as Hosted Fields too.
+     * Both Integrated Payment and Hosted Fields target `sylius_shop_order_pay` (Payum
+     * capture/status for Integrated Payment; the payplug_uhf command-provider pipeline, wired in
+     * PRE-3551, for Hosted Fields) so the payment is actually created/confirmed through UPC.
      */
     public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {
@@ -89,7 +79,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         $syliusRequestConfig['redirect'] = [
-            'route' => $this->hasHostedFieldsToken($request) ? self::UPDATE_ORDER_PAYMENT_ROUTE : 'sylius_shop_order_pay',
+            'route' => 'sylius_shop_order_pay',
             'parameters' => ['tokenValue' => 'resource.tokenValue'],
         ];
 
@@ -103,7 +93,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if (!\in_array($request->attributes->get('_route'), [self::CHECKOUT_ROUTE, self::UPDATE_ORDER_PAYMENT_ROUTE], true)) {
+        if (self::CHECKOUT_ROUTE !== $request->attributes->get('_route')) {
             return;
         }
 
