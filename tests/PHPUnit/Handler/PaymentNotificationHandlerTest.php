@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Handler;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Payplug\Resource\Payment as PayplugPayment;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
@@ -39,6 +41,8 @@ final class PaymentNotificationHandlerTest extends TestCase
 
     private RequestStack&MockObject $requestStack;
 
+    private ManagerRegistry&MockObject $managerRegistry;
+
     private PaymentNotificationHandler $handler;
 
     protected function setUp(): void
@@ -50,6 +54,7 @@ final class PaymentNotificationHandlerTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->lockFactory = $this->createMock(LockFactory::class);
         $this->requestStack = $this->createMock(RequestStack::class);
+        $this->managerRegistry = $this->createMock(ManagerRegistry::class);
 
         $this->handler = new PaymentNotificationHandler(
             $this->logger,
@@ -59,6 +64,7 @@ final class PaymentNotificationHandlerTest extends TestCase
             $this->entityManager,
             $this->lockFactory,
             $this->requestStack,
+            $this->managerRegistry,
         );
     }
 
@@ -323,6 +329,61 @@ final class PaymentNotificationHandlerTest extends TestCase
         $this->payplugCardFactory->expects(self::never())->method('createNew');
 
         $details = new \ArrayObject(['status' => PayPlugApiClientInterface::STATUS_CREATED]);
+        $this->handler->treat($payment, $paymentResource, $details);
+
+        self::assertSame(PayPlugApiClientInterface::STATUS_CAPTURED, $details['status']);
+    }
+
+    // -------------------------------------------------------------------------
+    // treat() — card saving: concurrent save for the same alias does not throw
+    // -------------------------------------------------------------------------
+
+    /**
+     * Two payments notified concurrently for the same card alias can both pass the findOneBy()
+     * guard before either commits; the DB-level unique constraint then rejects the second add().
+     * Verifies that race is swallowed rather than propagated as an uncaught exception.
+     */
+    public function testTreat_whenAddLosesARaceAgainstAConcurrentSaveForTheSameAlias_doesNotThrow(): void
+    {
+        $lock = $this->buildLock();
+        $this->lockFactory->method('createLock')->willReturn($lock);
+
+        $customer = $this->createMock(CustomerInterface::class);
+        $this->customerRepository->method('find')->with(9)->willReturn($customer);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getMethod')->willReturn($this->createMock(PaymentMethodInterface::class));
+        $this->entityManager->method('refresh');
+
+        $paymentResource = $this->buildPayment([
+            'id' => 'pay_008',
+            'is_paid' => true,
+            'is_live' => false,
+            'created_at' => time(),
+            'metadata' => ['customer_id' => 9],
+            'card' => ['id' => 'card_external_race', 'brand' => 'Visa', 'country' => 'FR', 'last4' => '4242', 'exp_month' => 12, 'exp_year' => 2030],
+        ]);
+
+        $this->payplugCardRepository->method('findOneBy')->willReturn(null);
+
+        $card = $this->createMock(Card::class);
+        $card->method('setCustomer')->willReturnSelf();
+        $card->method('setPaymentMethod')->willReturnSelf();
+        $card->method('setExternalId')->willReturnSelf();
+        $card->method('setBrand')->willReturnSelf();
+        $card->method('setCountryCode')->willReturnSelf();
+        $card->method('setLast4')->willReturnSelf();
+        $card->method('setExpirationMonth')->willReturnSelf();
+        $card->method('setExpirationYear')->willReturnSelf();
+        $card->method('setIsLive')->willReturnSelf();
+
+        $this->payplugCardFactory->method('createNew')->willReturn($card);
+        $this->payplugCardRepository->method('add')->with($card)
+            ->willThrowException($this->createMock(UniqueConstraintViolationException::class));
+        $this->managerRegistry->expects(self::once())->method('resetManager');
+
+        $details = new \ArrayObject(['status' => PayPlugApiClientInterface::STATUS_CREATED]);
+
         $this->handler->treat($payment, $paymentResource, $details);
 
         self::assertSame(PayPlugApiClientInterface::STATUS_CAPTURED, $details['status']);

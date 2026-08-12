@@ -8,5 +8,5 @@ use Sylius\Component\Core\Model\PaymentInterface;
 
 interface HostedFieldsPaymentProcessorInterface
 {
-    public function process(PaymentInterface $payment, string $hfToken, string $selectedBrand, bool $saveCard): void;
+    public function process(PaymentInterface $payment, HostedFieldsCaptureData $captureData): void;
 }

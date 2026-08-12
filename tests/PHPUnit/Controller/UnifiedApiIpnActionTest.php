@@ -121,4 +121,40 @@ final class UnifiedApiIpnActionTest extends TestCase
 
         self::assertSame(401, $response->getStatusCode());
     }
+
+    /**
+     * PayPlug's webhook can be delivered before CaptureHostedPaymentRequestHandler's own
+     * hosted_fields_payment_id/hosted_fields_operation_id write has committed (Sylius's
+     * doctrine_transaction messenger middleware only commits once that whole handler returns) —
+     * findOneByPayPlugPaymentId() briefly returns null for a payment that does exist.
+     */
+    public function testInvoke_whenPaymentNotYetVisibleOnFirstLookup_retriesAndStillDelegatesToTheWebhookNotificationHandler(): void
+    {
+        $payment = $this->paymentWithGatewayConfig(hostedFields: true);
+        $this->paymentRepository->expects(self::exactly(3))->method('findOneByPayPlugPaymentId')
+            ->with('pay_1')
+            ->willReturnOnConsecutiveCalls(null, null, $payment);
+
+        $request = Request::create('/payplug/v2/ipn', 'POST', content: \json_encode(['id' => 'pay_1', 'execCode' => '0000']));
+
+        $this->hostedFieldsWebhookNotificationHandler->expects(self::once())->method('treat')
+            ->with($payment, $request->getContent(), self::isType('array'));
+
+        $response = $this->action->__invoke($request);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    public function testInvoke_whenPaymentNeverBecomesVisible_stopsRetryingAndReturnsUnauthorized(): void
+    {
+        $this->paymentRepository->expects(self::exactly(4))->method('findOneByPayPlugPaymentId')->with('pay_1')->willReturn(null);
+
+        $request = Request::create('/payplug/v2/ipn', 'POST', content: \json_encode(['id' => 'pay_1']));
+
+        $this->hostedFieldsWebhookNotificationHandler->expects(self::never())->method('treat');
+
+        $response = $this->action->__invoke($request);
+
+        self::assertSame(401, $response->getStatusCode());
+    }
 }

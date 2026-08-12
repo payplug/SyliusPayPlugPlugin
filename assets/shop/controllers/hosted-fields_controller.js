@@ -149,6 +149,18 @@ export default class extends Controller {
       this.form.querySelector('#hostedfields_token').value = result.hfToken;
       this.form.querySelector('#hostedfields_selected_brand').value = selectedBrand;
       this.form.querySelector('#hostedfields_save_card').value = saveCard ? 'true' : 'false';
+      // last4/expirationMonth/expirationYear/country field names are unverified against a real
+      // createToken() response (no vendored SDK docs/types exist in this repo to confirm them) —
+      // if wrong, these silently fall back to '' rather than error. This data is fully
+      // client-controlled and only ever used as a display-only fallback for a saved card's
+      // metadata when PayPlug's own operation-fetch is unavailable — PayplugCardPersister
+      // validates the format of each field (4-digit last4, 1-12 month, a plausible year, a
+      // 2-letter country) before trusting any of it, and discards anything that doesn't match
+      // rather than persisting it as-is.
+      this.form.querySelector('#hostedfields_last4').value = result.last4 || '';
+      this.form.querySelector('#hostedfields_exp_month').value = result.expirationMonth || '';
+      this.form.querySelector('#hostedfields_exp_year').value = result.expirationYear || '';
+      this.form.querySelector('#hostedfields_country').value = result.country || '';
       this.form.submit();
     });
   }

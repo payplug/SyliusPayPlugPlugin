@@ -34,7 +34,10 @@ final class SyliusUnifiedApiHttpClientTest extends TestCase
         $response->method('getContent')->with(false)->willReturn('{"id":"pay_123"}');
 
         $this->httpClient->expects(self::once())->method('request')
-            ->with('GET', 'https://api.payplug.com/payments/pay_123', ['headers' => ['Authorization' => 'Bearer jwt']])
+            ->with('GET', 'https://api.payplug.com/payments/pay_123', [
+                'headers' => ['Authorization' => 'Bearer jwt'],
+                'timeout' => 10,
+            ])
             ->willReturn($response);
 
         $result = $this->adapter->get('https://api.payplug.com/payments/pay_123', ['Authorization' => 'Bearer jwt']);
@@ -52,6 +55,7 @@ final class SyliusUnifiedApiHttpClientTest extends TestCase
             ->with('POST', 'https://api.payplug.com/payments', [
                 'json' => ['amount' => 1000],
                 'headers' => ['Authorization' => 'Bearer jwt'],
+                'timeout' => 10,
             ])
             ->willReturn($response);
 
@@ -97,6 +101,7 @@ final class SyliusUnifiedApiHttpClientTest extends TestCase
                 'headers' => [],
                 'verify_peer' => false,
                 'verify_host' => false,
+                'timeout' => 10,
             ])
             ->willReturn($response);
 
@@ -110,7 +115,7 @@ final class SyliusUnifiedApiHttpClientTest extends TestCase
         $response->method('getContent')->with(false)->willReturn('{}');
 
         $this->httpClient->expects(self::once())->method('request')
-            ->with('GET', 'https://api.payplug.com/payments/pay_123', ['headers' => []])
+            ->with('GET', 'https://api.payplug.com/payments/pay_123', ['headers' => [], 'timeout' => 10])
             ->willReturn($response);
 
         $this->adapter->get('https://api.payplug.com/payments/pay_123');

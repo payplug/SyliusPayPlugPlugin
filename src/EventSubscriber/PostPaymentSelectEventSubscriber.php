@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsCaptureData;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
@@ -30,6 +31,14 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
     private const HOSTED_FIELDS_SELECTED_BRAND_FIELD = 'hostedfields_selected_brand';
 
     private const HOSTED_FIELDS_SAVE_CARD_FIELD = 'hostedfields_save_card';
+
+    private const HOSTED_FIELDS_LAST4_FIELD = 'hostedfields_last4';
+
+    private const HOSTED_FIELDS_EXP_MONTH_FIELD = 'hostedfields_exp_month';
+
+    private const HOSTED_FIELDS_EXP_YEAR_FIELD = 'hostedfields_exp_year';
+
+    private const HOSTED_FIELDS_COUNTRY_FIELD = 'hostedfields_country';
 
     public function __construct(
         private RequestStack $requestStack,
@@ -178,8 +187,15 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
         $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
         $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
+        $last4 = $this->getRequestField($request, self::HOSTED_FIELDS_LAST4_FIELD);
+        $expirationMonth = $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_MONTH_FIELD);
+        $expirationYear = $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_YEAR_FIELD);
+        $countryCode = $this->getRequestField($request, self::HOSTED_FIELDS_COUNTRY_FIELD);
 
-        $this->hostedFieldsPaymentProcessor->process($lastPayment, $hfToken, $selectedBrand, $saveCard);
+        $this->hostedFieldsPaymentProcessor->process(
+            $lastPayment,
+            new HostedFieldsCaptureData($hfToken, $selectedBrand, $saveCard, $last4, $expirationMonth, $expirationYear, $countryCode),
+        );
 
         $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
     }
@@ -195,6 +211,17 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         Assert::string($value);
 
         return $value;
+    }
+
+    /**
+     * Distinguishes a genuinely absent field from a legitimately-fetched 0, unlike a plain
+     * (int) cast on the empty-string default, which would collapse both to the same value.
+     */
+    private function getOptionalIntRequestField(Request $request, string $field): ?int
+    {
+        $value = $this->getRequestField($request, $field);
+
+        return '' === $value ? null : (int) $value;
     }
 
     private function applyToComplete(OrderInterface $order): void
