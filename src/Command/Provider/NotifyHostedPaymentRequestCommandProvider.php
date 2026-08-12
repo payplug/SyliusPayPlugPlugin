@@ -7,12 +7,12 @@ namespace PayPlug\SyliusPayPlugPlugin\Command\Provider;
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyHostedPaymentRequest;
 use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-/**
- * Not tagged for direct DI collection: dispatched to only by
- * NotifyPaymentRequestCommandProvider, when the payment method is `payplug` with Hosted Fields
- * selected (see PayPlugGatewayFactory::isHostedFieldsConfig()).
- */
+#[AutoconfigureTag(
+    'payplug_sylius_payplug_plugin.command_provider.payplug_uhf',
+    ['action' => PaymentRequestInterface::ACTION_NOTIFY],
+)]
 final class NotifyHostedPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function supports(PaymentRequestInterface $paymentRequest): bool

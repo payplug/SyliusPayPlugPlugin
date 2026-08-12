@@ -68,6 +68,8 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
             $this->logger,
             $this->requestStack,
             $this->orderStateMutator,
+            'acct_123',
+            'sub_ext_1',
         );
     }
 

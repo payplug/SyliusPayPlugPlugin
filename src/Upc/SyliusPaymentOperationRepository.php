@@ -76,7 +76,10 @@ final class SyliusPaymentOperationRepository implements IPaymentRepository
      */
     private function findOneBy(array $criteria): ?PayPlugOperation
     {
-        return $this->entityManager->getRepository(PayPlugOperation::class)->findOneBy($criteria);
+        /** @var PayPlugOperation|null $entity */
+        $entity = $this->entityManager->getRepository(PayPlugOperation::class)->findOneBy($criteria);
+
+        return $entity;
     }
 
     private function findOneByOperationId(string $operationId): ?PayPlugOperation

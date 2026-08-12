@@ -57,10 +57,8 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
      * (RouteNotFoundException).
      *
      * Both Integrated Payment and Hosted Fields target `sylius_shop_order_pay` (Payum
-     * capture/status for Integrated Payment; for Hosted Fields, the same `payplug`-tagged
-     * Capture/Notify/StatusPaymentRequestCommandProvider trio delegates to their
-     * Hosted-Fields-specific counterparts — see PayPlugGatewayFactory::isHostedFieldsConfig() —
-     * so the payment is actually created/confirmed through UPC.
+     * capture/status for Integrated Payment; the payplug_uhf command-provider pipeline, wired in
+     * PRE-3551, for Hosted Fields) so the payment is actually created/confirmed through UPC.
      */
     public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {

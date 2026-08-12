@@ -7,6 +7,13 @@ parameters:
     payplug.oauth_audience: '%env(default:payplug.oauth_audience.default:PAYPLUG_OAUTH_AUDIENCE)%'
     payplug.unified_api_base_url.default: 'https://api.payplug.com'
     payplug.unified_api_base_url: '%env(default:payplug.unified_api_base_url.default:PAYPLUG_UNIFIED_API_BASE_URL)%'
+    # TEMPORARY (PRE-3551 QA testing): the Unified API account id is hardcoded here rather than
+    # resolved dynamically. This will be reworked once the real per-merchant account resolution
+    # for UHF is implemented — do not treat this as the final design.
+    payplug.uhf_account_id.default: 'PAYPLUG_PF QA'
+    payplug.uhf_account_id: '%env(default:payplug.uhf_account_id.default:PAYPLUG_UHF_ACCOUNT_ID)%'
+    payplug.uhf_submerchant_external_id.default: '48Su3ZqMlLKmqrg'
+    payplug.uhf_submerchant_external_id: '%env(default:payplug.uhf_submerchant_external_id.default:PAYPLUG_UHF_SUBMERCHANT_EXTERNAL_ID)%'
 
 services:
     _defaults:
@@ -22,6 +29,8 @@ services:
             $payplugOauthBaseUrl: '%payplug.oauth_base_url%'
             $payplugOauthAudience: '%payplug.oauth_audience%'
             $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
+            $uhfAccountId: '%payplug.uhf_account_id%'
+            $uhfSubmerchantExternalId: '%payplug.uhf_submerchant_external_id%'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
@@ -218,3 +227,23 @@ services:
         tags:
             - name: sylius.payment_request.provider.http_response
               gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory::FACTORY_NAME
+
+    ## UHF Payplug Gateway ##
+    payplug_sylius_payplug_plugin.command_provider.payplug_uhf:
+        class: Sylius\Bundle\PaymentBundle\CommandProvider\ActionsCommandProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.command_provider.payplug_uhf
+                index_by: 'action'
+        tags:
+            - name: sylius.payment_request.command_provider
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory::FACTORY_NAME
+    payplug_sylius_payplug_plugin.provider.order_pay.http_response.payplug_uhf:
+        class: Sylius\Bundle\PaymentBundle\Provider\ActionsHttpResponseProvider
+        arguments:
+            - !tagged_locator
+                tag: payplug_sylius_payplug_plugin.http_response_provider.payplug_uhf
+                index_by: action
+        tags:
+            - name: sylius.payment_request.provider.http_response
+              gateway_factory: !php/const PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory::FACTORY_NAME

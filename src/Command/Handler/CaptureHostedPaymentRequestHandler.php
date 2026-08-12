@@ -37,19 +37,26 @@ final class CaptureHostedPaymentRequestHandler
         private PaymentRequestProviderInterface $paymentRequestProvider,
         private StateMachineInterface $stateMachine,
         private HostedPaymentCreatorInterface $hostedPaymentCreator,
+        // Only used by the 3DS-redirect branch below, currently commented out — see the note
+        // there (blocked on unified-plugin-core exposing $successUrl/$cancelUrl).
         #[Autowire(service: 'sylius_shop.provider.order_pay.after_pay_url')] // @phpstan-ignore-line
         private UrlProviderInterface $afterPayUrlProvider,
         private UrlGeneratorInterface $urlGenerator,
         private LoggerInterface $logger,
         private RequestStack $requestStack,
         private IOrderStateMutator $orderStateMutator,
+        // TEMPORARY (PRE-3551 QA testing): hardcoded via env var default rather than resolved
+        // per-merchant. This will be reworked once real UHF account resolution is implemented —
+        // do not treat this as the final design.
+        private string $uhfAccountId,
+        private string $uhfSubmerchantExternalId,
     ) {
     }
 
     public function __invoke(CaptureHostedPaymentRequest $captureHostedPaymentRequest): void
     {
         $paymentRequest = $this->paymentRequestProvider->provide($captureHostedPaymentRequest);
-        /** @var PaymentInterface $payment */
+        /** @var \Sylius\Component\Core\Model\PaymentInterface $payment */
         $payment = $paymentRequest->getPayment();
         $details = $payment->getDetails();
 
@@ -96,12 +103,7 @@ final class CaptureHostedPaymentRequestHandler
             throw new \LogicException('Payment method is not set for the payment.');
         }
 
-        return $method;
-    }
-
-    /** @param mixed[] $details */
-    private function resolveHostedFieldsToken(array $details): string
-    {
+        $details = $payment->getDetails();
         $hfToken = $details['hosted_fields_token'] ?? null;
         if (!\is_string($hfToken) || '' === $hfToken) {
             throw new \LogicException('No hosted fields token found on the payment.');
@@ -119,104 +121,68 @@ final class CaptureHostedPaymentRequestHandler
             throw new \LogicException('Payment amount or currency is not set.');
         }
 
-        return [$amount, $currencyCode];
-    }
+        try {
+            $order = $payment->getOrder();
+            $orderId = $order?->getNumber() ?? self::idToString($payment->getId());
+            $firstItemOrFalse = $order?->getItems()->first();
+            $firstItem = false !== $firstItemOrFalse ? $firstItemOrFalse : null;
 
-    /** @return array{0: string, 1: string} */
-    private function resolveGatewayCredentials(PaymentMethodInterface $method): array
-    {
-        $gatewayConfig = $method->getGatewayConfig()?->getConfig() ?? [];
-        $accountId = $gatewayConfig[PayPlugGatewayFactory::HF_IDENTIFIER] ?? null;
-        $submerchantExternalId = $gatewayConfig[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null;
-        if (!\is_string($accountId) || '' === $accountId || !\is_string($submerchantExternalId) || '' === $submerchantExternalId) {
-            throw new \LogicException('Hosted Fields account id or submerchant id is not configured for this payment method.');
-        }
-
-        return [$accountId, $submerchantExternalId];
-    }
-
-    /**
-     * @param mixed[] $details
-     * @param array{0: int, 1: string} $amountAndCurrency
-     * @param array{0: string, 1: string} $credentials
-     */
-    private function buildHostedFieldDto(
-        PaymentRequestInterface $paymentRequest,
-        PaymentInterface $payment,
-        array $details,
-        string $hfToken,
-        array $amountAndCurrency,
-        array $credentials,
-    ): HostedFieldDto {
-        [$amount, $currencyCode] = $amountAndCurrency;
-        [$accountId, $submerchantExternalId] = $credentials;
-
-        $order = $payment->getOrder();
-        $orderId = $order?->getNumber() ?? self::idToString($payment->getId());
-        $firstItemOrFalse = $order?->getItems()->first();
-        $firstItem = false !== $firstItemOrFalse ? $firstItemOrFalse : null;
-
-        $common = new CommonFieldsDto($accountId, $amount, \strtoupper($currencyCode), $orderId, $submerchantExternalId);
-        $common->description = null !== $firstItem ? $firstItem->getProductName() : null;
-        $common->notificationUrl = $this->urlGenerator->generate(
-            'sylius_payment_request_notify',
-            ['hash' => (string) $paymentRequest->getHash()],
-            UrlGeneratorInterface::ABSOLUTE_URL,
-        );
-        $successUrl = $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
-        $common->successUrl = $successUrl;
-        $common->cancelUrl = $successUrl . '?' . http_build_query(['status' => 'canceled']);
+            $common = new CommonFieldsDto($this->uhfAccountId, $amount, \strtoupper($currencyCode), $orderId, $this->uhfSubmerchantExternalId); // @phpstan-ignore-line
+            $common->description = null !== $firstItem ? $firstItem->getProductName() : null;
+            $common->notificationUrl = $this->urlGenerator->generate(
+                'sylius_payment_request_notify',
+                ['hash' => (string) $paymentRequest->getHash()],
+                UrlGeneratorInterface::ABSOLUTE_URL,
+            );
+            // Blocked on unified-plugin-core exposing $successUrl/$cancelUrl on CommonFieldsDto (see
+            // this plan's "Blocking external prerequisite" section) — uncomment once that lands and
+            // the composer dependency is bumped:
+            // $successUrl = $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
+            // $common->successUrl = $successUrl;
+            // $common->cancelUrl = $successUrl . '?' . http_build_query(['status' => 'canceled']);
 
         $selectedBrand = $details['hosted_fields_selected_brand'] ?? null;
         $paymentMethodDetails = \is_string($selectedBrand) && '' !== $selectedBrand
             ? ['details' => ['selectedBrand' => $selectedBrand]]
             : null;
 
-        return new HostedFieldDto(
-            $common,
-            $hfToken,
-            $this->buildBrowserDto(),
-            $this->buildCustomerDto($order),
-            $paymentMethodDetails,
-        );
-    }
+            $customer = $order?->getCustomer();
+            if (null === $customer || null === $customer->getEmail()) {
+                throw new \LogicException('Customer email is not set for the payment.');
+            }
+            $customerDto = new CustomerDto(self::idToString($customer->getId()), $customer->getEmail());
 
-    private function buildCustomerDto(?OrderInterface $order): CustomerDto
-    {
-        $customer = $order?->getCustomer();
-        if (null === $customer || null === $customer->getEmail()) {
-            throw new \LogicException('Customer email is not set for the payment.');
+            $request = $this->requestStack->getCurrentRequest();
+            $browserDto = null !== $request
+                ? new BrowserDto(
+                    $request->getClientIp() ?? '',
+                    $request->headers->get('referer', '') ?? '',
+                    $request->headers->get('User-Agent', '') ?? '',
+                )
+                : null;
+
+            $dto = new HostedFieldDto($common, $hfToken, $browserDto, $customerDto, $paymentMethodDetails);
+
+            $this->logger->debug('[PayPlug debug] Unified API hosted payment request payload.', [
+                'payload' => $dto->createPayloadBody(),
+            ]);
+
+            $output = $this->hostedPaymentCreator->createHostedPayment($dto);
+        } catch (ApiException | InvalidHostedFieldException | \LogicException $e) {
+            $this->logger->error('[PayPlug][UPC] Hosted payment creation failed.', [
+                'sylius_payment_id' => $payment->getId(),
+                'error' => $e->getMessage(),
+            ]);
+            $paymentRequest->setResponseData(['error' => $e->getMessage()]);
+            $this->stateMachine->apply($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_FAIL);
+
+            return;
         }
 
-        return new CustomerDto(self::idToString($customer->getId()), $customer->getEmail());
-    }
-
-    private function buildBrowserDto(): ?BrowserDto
-    {
-        $request = $this->requestStack->getCurrentRequest();
-        if (null === $request) {
-            return null;
-        }
-
-        return new BrowserDto(
-            $request->getClientIp() ?? '',
-            $request->headers->get('referer', '') ?? '',
-            $request->headers->get('User-Agent', '') ?? '',
-        );
-    }
-
-    private function failPaymentRequest(
-        PaymentRequestInterface $paymentRequest,
-        PaymentInterface $payment,
-        \Throwable $e,
-    ): void {
-        $this->logger->error('[PayPlug][UPC] Hosted payment creation failed.', [
-            'sylius_payment_id' => $payment->getId(),
-            'error' => $e->getMessage(),
+        $payment->setDetails([
+            ...$details,
+            'hosted_fields_created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         ]);
-        $paymentRequest->setResponseData(['error' => $e->getMessage()]);
-        $this->stateMachine->apply($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_FAIL);
-    }
 
     private function applyOutcome(
         PaymentRequestInterface $paymentRequest,
@@ -225,11 +191,8 @@ final class CaptureHostedPaymentRequestHandler
     ): void {
         if (null !== $output->redirectUrl) {
             $paymentRequest->setResponseData(['redirect_url' => $output->redirectUrl]);
-
-            return;
-        }
-
-        $paymentRequest->setResponseData(['status' => $output->status]);
+        } else {
+            $paymentRequest->setResponseData(['status' => $output->status]);
 
         // No 3DS redirect means the outcome is already known synchronously — apply it to the
         // actual Sylius Payment right away instead of waiting on the async webhook, which may
@@ -241,6 +204,9 @@ final class CaptureHostedPaymentRequestHandler
         if (\is_string($execCode)) {
             $this->orderStateMutator->apply(self::idToString($payment->getId()), ExecCodeMapper::toPaymentOutcome($execCode));
         }
+    }
+
+        $this->stateMachine->apply($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
     }
 
     private static function idToString(mixed $id): string
