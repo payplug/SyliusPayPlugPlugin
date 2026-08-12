@@ -10,7 +10,6 @@ use PayPlug\SyliusPayPlugPlugin\Checker\CanSavePayplugPaymentMethodChecker;
 use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -22,9 +21,10 @@ use Webmozart\Assert\Assert;
  */
 final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 {
-    // Unified Hosted Fields processes card payments directly (like `payplug`), it is not an
-    // alternative payment method requiring its own per-account enablement flag from PayPlug.
-    private const GATEWAYS_SKIP = [PayPlugGatewayFactory::FACTORY_NAME, OneyGatewayFactory::FACTORY_NAME, UhfGatewayFactory::FACTORY_NAME];
+    // `payplug` processes card payments directly and `payplug_oney` has its own dedicated
+    // constraint (IsOneyEnabled); neither is an alternative payment method requiring its own
+    // per-account enablement flag from PayPlug.
+    private const GATEWAYS_SKIP = [PayPlugGatewayFactory::FACTORY_NAME, OneyGatewayFactory::FACTORY_NAME];
 
     public function __construct(private PayPlugApiClientFactoryInterface $apiClientFactory)
     {

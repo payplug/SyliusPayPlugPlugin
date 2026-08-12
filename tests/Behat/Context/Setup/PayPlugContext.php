@@ -8,7 +8,6 @@ use Behat\Behat\Context\Context;
 use Doctrine\Persistence\ObjectManager;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -78,14 +77,16 @@ final class PayPlugContext implements Context
         $paymentMethod = $this->createPaymentMethodPayPlug(
             $paymentMethodName,
             $paymentMethodCode,
-            UhfGatewayFactory::FACTORY_NAME,
-            UhfGatewayFactory::FACTORY_TITLE,
+            PayPlugGatewayFactory::FACTORY_NAME,
+            PayPlugGatewayFactory::FACTORY_TITLE,
         );
 
         $paymentMethod->getGatewayConfig()->setConfig([
             'secretKey' => 'test',
-            'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.uhf',
-            UhfGatewayFactory::HF_IDENTIFIER_DEFAULT => 'test-company-id',
+            'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+            PayPlugGatewayFactory::HF_IDENTIFIER => 'test-company-id',
+            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'test-submerchant-id',
         ]);
 
         $this->paymentMethodManager->flush();

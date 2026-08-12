@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
@@ -194,7 +194,10 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private function isHostedFieldsEnabled(PaymentInterface $payment): bool
     {
-        return UhfGatewayFactory::FACTORY_NAME === $payment->getMethod()?->getGatewayConfig()?->getFactoryName();
+        $gatewayConfig = $payment->getMethod()?->getGatewayConfig();
+
+        return PayPlugGatewayFactory::FACTORY_NAME === $gatewayConfig?->getFactoryName() &&
+            true === ($gatewayConfig->getConfig()[PayPlugGatewayFactory::HOSTED_FIELDS] ?? false);
     }
 
     private function getRequestField(Request $request, string $field): string
