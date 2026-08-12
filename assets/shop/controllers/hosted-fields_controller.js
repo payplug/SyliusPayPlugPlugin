@@ -149,6 +149,15 @@ export default class extends Controller {
       this.form.querySelector('#hostedfields_token').value = result.hfToken;
       this.form.querySelector('#hostedfields_selected_brand').value = selectedBrand;
       this.form.querySelector('#hostedfields_save_card').value = saveCard ? 'true' : 'false';
+      // last4/expirationMonth/expirationYear/country field names are unverified against a real
+      // createToken() response (no vendored SDK docs/types exist in this repo to confirm them) —
+      // if wrong, these silently fall back to '' rather than error, so double-check against a
+      // real sandbox response if saved-card metadata (Card::$last4/$expirationMonth/etc.) ever
+      // looks wrong in practice.
+      this.form.querySelector('#hostedfields_last4').value = result.last4 || '';
+      this.form.querySelector('#hostedfields_exp_month').value = result.expirationMonth || '';
+      this.form.querySelector('#hostedfields_exp_year').value = result.expirationYear || '';
+      this.form.querySelector('#hostedfields_country').value = result.country || '';
       this.form.submit();
     });
   }

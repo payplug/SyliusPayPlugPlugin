@@ -11,6 +11,12 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class SyliusUnifiedApiHttpClient implements IUnifiedApiHttpClient
 {
+    // IUnifiedApiHttpClient::get()/postJson() take no per-call timeout, and some Unified API
+    // calls (e.g. CaptureHostedPaymentRequestHandler's best-effort card-metadata enrichment) are
+    // optional enrichment whose result is already discarded on any failure — without a bound, a
+    // slow/hanging response could stall the customer-facing request indefinitely.
+    private const REQUEST_TIMEOUT_SECONDS = 10;
+
     public function __construct(
         private HttpClientInterface $httpClient,
         private LoggerInterface $logger,
@@ -41,6 +47,8 @@ final class SyliusUnifiedApiHttpClient implements IUnifiedApiHttpClient
             $options['verify_peer'] = false;
             $options['verify_host'] = false;
         }
+
+        $options['timeout'] = self::REQUEST_TIMEOUT_SECONDS;
 
         $this->logger->debug('[PayPlug debug] Unified API raw request.', [
             'method' => $method,

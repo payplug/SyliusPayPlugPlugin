@@ -31,6 +31,14 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private const HOSTED_FIELDS_SAVE_CARD_FIELD = 'hostedfields_save_card';
 
+    private const HOSTED_FIELDS_LAST4_FIELD = 'hostedfields_last4';
+
+    private const HOSTED_FIELDS_EXP_MONTH_FIELD = 'hostedfields_exp_month';
+
+    private const HOSTED_FIELDS_EXP_YEAR_FIELD = 'hostedfields_exp_year';
+
+    private const HOSTED_FIELDS_COUNTRY_FIELD = 'hostedfields_country';
+
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
@@ -178,8 +186,21 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
         $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
         $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
+        $last4 = $this->getRequestField($request, self::HOSTED_FIELDS_LAST4_FIELD);
+        $expirationMonth = (int) $this->getRequestField($request, self::HOSTED_FIELDS_EXP_MONTH_FIELD);
+        $expirationYear = (int) $this->getRequestField($request, self::HOSTED_FIELDS_EXP_YEAR_FIELD);
+        $countryCode = $this->getRequestField($request, self::HOSTED_FIELDS_COUNTRY_FIELD);
 
-        $this->hostedFieldsPaymentProcessor->process($lastPayment, $hfToken, $selectedBrand, $saveCard);
+        $this->hostedFieldsPaymentProcessor->process(
+            $lastPayment,
+            $hfToken,
+            $selectedBrand,
+            $saveCard,
+            $last4,
+            $expirationMonth,
+            $expirationYear,
+            $countryCode,
+        );
 
         $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
     }

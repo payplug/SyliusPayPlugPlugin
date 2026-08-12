@@ -55,6 +55,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
             'hostedfields_token' => 'hf_token_abc',
             'hostedfields_selected_brand' => 'VISA',
             'hostedfields_save_card' => 'true',
+            'hostedfields_last4' => '4242',
+            'hostedfields_exp_month' => '12',
+            'hostedfields_exp_year' => '2030',
+            'hostedfields_country' => 'FR',
         ]);
         $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
@@ -72,7 +76,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
         $this->hostedFieldsPaymentProcessor->expects(self::once())
             ->method('process')
-            ->with($payment, 'hf_token_abc', 'VISA', true)
+            ->with($payment, 'hf_token_abc', 'VISA', true, '4242', 12, 2030, 'FR')
         ;
 
         $this->stateMachine->method('can')
@@ -95,6 +99,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
             'hostedfields_token' => 'hf_token_abc',
             'hostedfields_selected_brand' => 'VISA',
             'hostedfields_save_card' => 'true',
+            'hostedfields_last4' => '4242',
+            'hostedfields_exp_month' => '12',
+            'hostedfields_exp_year' => '2030',
+            'hostedfields_country' => 'FR',
         ]);
         $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
@@ -129,6 +137,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
             'hostedfields_token' => 'hf_token_abc',
             'hostedfields_selected_brand' => 'VISA',
             'hostedfields_save_card' => 'true',
+            'hostedfields_last4' => '4242',
+            'hostedfields_exp_month' => '12',
+            'hostedfields_exp_year' => '2030',
+            'hostedfields_country' => 'FR',
         ]);
         $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
@@ -162,6 +174,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
             'hostedfields_token' => 'hf_token_abc',
             'hostedfields_selected_brand' => 'VISA',
             'hostedfields_save_card' => 'true',
+            'hostedfields_last4' => '4242',
+            'hostedfields_exp_month' => '12',
+            'hostedfields_exp_year' => '2030',
+            'hostedfields_country' => 'FR',
         ]);
         $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
@@ -196,6 +212,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
             'payplug_integrated_payment_token' => 'pay_123',
             'hostedfields_token' => 'hf_token_abc',
             'hostedfields_selected_brand' => 'CB',
+            'hostedfields_last4' => '4242',
+            'hostedfields_exp_month' => '12',
+            'hostedfields_exp_year' => '2030',
+            'hostedfields_country' => 'FR',
         ]);
         $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
         $this->requestStack->method('getCurrentRequest')->willReturn($request);
@@ -214,7 +234,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         // Hosted Fields path: the processor is used and no payment_id is written to the details.
         $this->hostedFieldsPaymentProcessor->expects(self::once())
             ->method('process')
-            ->with($payment, 'hf_token_abc', 'CB', false)
+            ->with($payment, 'hf_token_abc', 'CB', false, '4242', 12, 2030, 'FR')
         ;
         $payment->expects(self::never())->method('setDetails');
 
@@ -225,6 +245,10 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
             'hostedfields_token' => 'hf_token_abc',
+            'hostedfields_last4' => '4242',
+            'hostedfields_exp_month' => '12',
+            'hostedfields_exp_year' => '2030',
+            'hostedfields_country' => 'FR',
         ]);
         $request->attributes->set('_route', 'sylius_shop_checkout_select_payment');
         $this->requestStack->method('getCurrentRequest')->willReturn($request);

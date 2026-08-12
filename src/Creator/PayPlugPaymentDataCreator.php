@@ -37,8 +37,6 @@ class PayPlugPaymentDataCreator
 
     private const DELIVERY_TYPE_NEW = 'NEW';
 
-    private const PAYPLUG_CARD_ID_OTHER = 'other';
-
     public function __construct(
         private CanSaveCardCheckerInterface $canSaveCardChecker,
         private RepositoryInterface $payplugCardRepository,
@@ -252,7 +250,7 @@ class PayPlugPaymentDataCreator
         $cardId = $this->requestStack->getSession()->get('payplug_payment_method');
 
         if (
-            (null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
+            (null === $cardId || PayPlugGatewayFactory::CARD_CHOICE_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
                 $paymentMethod,
             )
         ) {
