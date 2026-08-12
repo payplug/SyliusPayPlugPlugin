@@ -26,7 +26,6 @@ payplug_sylius_payplug_plugin:
         bancontact_gateway_label: Bancontact by Payplug
         scalapay_gateway_label: Scalapay by PayPlug
         wero_gateway_label: Wero by PayPlug
-        uhf_gateway_label: Unified Hosted Fields by PayPlug
         apple_pay_gateway_label: Apple Pay by Payplug
         american_express_gateway_label: American Express by Payplug
         apple_pay_not_available: Apple Pay is not available on this browser or device.
@@ -123,7 +122,9 @@ payplug_sylius_payplug_plugin:
         renew_oauth: Force OAuth reconnection
         renew_oauth_help: |
             If this option is checked, a new authentication flow will be started when clicking the "<b>Update</b>" button.
-        hf_identifier_default_label: 'HF Identifier'
+        hf_identifier_label: 'Account ID'
+        hf_sub_merchant_id_label: 'SubMerchant ID'
+        hosted_fields_option: 'Advanced (beta) Hosted Fields'
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
@@ -144,6 +145,10 @@ payplug_sylius_payplug_plugin:
             Allow your customers to save their credit card details for later
 
         integrated_payment_enable: Enable payment integrated
+        redirected_payment_enable: Enable redirected payment
+        account_id_required: 'Advanced features require an Account ID, please contact your Account Manager.'
+        submerchant_id_required: 'Advanced features require a SubMerchant ID, please contact your Account Manager.'
+        integrated_payment_currency_incompatible: 'The selected channel is not compatible with Integrated Payment.'
 
         deferred_capture_enable: Enable deferred capture
         deferred_capture_help: |

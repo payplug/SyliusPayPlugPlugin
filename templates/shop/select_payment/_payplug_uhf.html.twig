@@ -1,7 +1,0 @@
-{% set method = hookable_metadata.context.method %}
-
-<div class="content" {{ stimulus_controller('@payplug/sylius-payplug-plugin/hosted-fields', {'code': method.code}) }}>
-    {% include '@PayPlugSyliusPayPlugPlugin/shop/hosted_fields/index.html.twig' with {
-        'paymentMethod': method,
-    } %}
-</div>

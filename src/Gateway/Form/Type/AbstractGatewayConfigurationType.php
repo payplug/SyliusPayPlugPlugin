@@ -69,6 +69,13 @@ class AbstractGatewayConfigurationType extends AbstractType
                 if (!$dataFormChannels instanceof Collection) {
                     return;
                 }
+
+                $rawData = $event->getData();
+                if (!\is_array($rawData) || !$this->shouldValidateBaseCurrency($rawData)) {
+                    return;
+                }
+
+                $flashedMessages = [];
                 /** @var ChannelInterface $dataFormChannel */
                 foreach ($dataFormChannels as $key => $dataFormChannel) {
                     $baseCurrency = $dataFormChannel->getBaseCurrency();
@@ -77,15 +84,12 @@ class AbstractGatewayConfigurationType extends AbstractType
                     }
                     $baseCurrencyCode = $baseCurrency->getCode();
                     if ($this->gatewayBaseCurrencyCode !== $baseCurrencyCode) {
-                        $message = $this->translator->trans(
-                            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
-                            [
-                                '#channel_code#' => $dataFormChannel->getCode(),
-                                '#payment_method#' => $this->gatewayFactoryTitle,
-                            ],
-                        );
+                        $message = $this->baseCurrencyViolationMessage($dataFormChannel);
                         $formChannels->get((string) $key)->addError(new FormError($message));
-                        $this->requestStack->getSession()->getFlashBag()->add('error', $message);
+                        if (!\in_array($message, $flashedMessages, true)) {
+                            $flashedMessages[] = $message;
+                            $this->requestStack->getSession()->getFlashBag()->add('error', $message);
+                        }
                     }
                 }
             })
@@ -118,5 +122,37 @@ class AbstractGatewayConfigurationType extends AbstractType
         $message = $this->translator->trans('payplug_sylius_payplug_plugin.form.only_one_gateway_allowed', ['%gateway_title%' => $factoryTitle]);
         /* @phpstan-ignore-next-line */
         $form->getParent()->getParent()->get('enabled')->addError(new FormError($message));
+    }
+
+    /**
+     * Hook for subtypes to scope the base-currency-per-channel restriction below.
+     * Default: always enforced, preserving today's behavior for every gateway that doesn't
+     * override this (Bancontact, American Express, Scalapay, Wero, Oney...).
+     *
+     * @see baseCurrencyViolationMessage() Companion hook customizing the message this guards.
+     *
+     * @param array<int|string, mixed> $rawFormData Raw PRE_SUBMIT data of the gateway config form.
+     */
+    protected function shouldValidateBaseCurrency(array $rawFormData): bool
+    {
+        return true;
+    }
+
+    /**
+     * Hook for subtypes to customize the currency-violation message. Default matches today's
+     * generic wording, used by every gateway subtype that doesn't override it (Bancontact,
+     * American Express, Scalapay, Wero, Oney...).
+     *
+     * @see shouldValidateBaseCurrency() Companion hook scoping when this message is used.
+     */
+    protected function baseCurrencyViolationMessage(ChannelInterface $channel): string
+    {
+        return $this->translator->trans(
+            'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
+            [
+                '#channel_code#' => $channel->getCode(),
+                '#payment_method#' => $this->gatewayFactoryTitle,
+            ],
+        );
     }
 }

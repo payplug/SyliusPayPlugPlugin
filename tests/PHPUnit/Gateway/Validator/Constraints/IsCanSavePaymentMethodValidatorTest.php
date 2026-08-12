@@ -10,7 +10,6 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethodValidator;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -19,7 +18,7 @@ use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Symfony\Component\Validator\Test\ConstraintValidatorTestCase;
 
 /**
- * `payplug`, `payplug_oney` and `payplug_uhf` are skip-listed: they process card payments
+ * `payplug` and `payplug_oney` are skip-listed: they process card payments
  * directly (or, for Oney, have their own dedicated constraint) and are not alternative payment
  * methods requiring their own per-account enablement flag from the real PayPlug account. Every
  * other factory goes through the real `getAccount()`-backed enablement/live-mode check.
@@ -61,7 +60,6 @@ final class IsCanSavePaymentMethodValidatorTest extends ConstraintValidatorTestC
     {
         yield 'payplug' => [PayPlugGatewayFactory::FACTORY_NAME];
         yield 'payplug_oney' => [OneyGatewayFactory::FACTORY_NAME];
-        yield 'payplug_uhf' => [UhfGatewayFactory::FACTORY_NAME];
     }
 
     public function testValidate_nonSkipListedFactory_notEnabledOnAccount_raisesNoAccessViolation(): void

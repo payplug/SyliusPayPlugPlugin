@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
@@ -213,16 +212,21 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — UHF factory → routed to processUhf()
+    // process() — PayPlug factory, hostedFields true, oneClick false → base constraint only
     // -------------------------------------------------------------------------
 
     /**
-     * UHF gateway with oneClick absent/false. Verifies processUhf() validates with the base
-     * IsCanSavePaymentMethod constraint only (1 total) — no permission constraint added.
+     * PayPlug gateway in hosted_fields mode with oneClick absent/false. Verifies
+     * processPayplug() validates with the base IsCanSavePaymentMethod constraint only (1 total) —
+     * hosted_fields adds no permission constraint of its own, matching the redirected mode.
      */
-    public function testProcess_uhfFactory_oneClickFalse_validatesWithBaseConstraintOnly(): void
+    public function testProcess_payplugFactory_hostedFieldsTrueOneClickFalse_validatesWithBaseConstraintOnly(): void
     {
-        $paymentMethod = $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME, [UhfGatewayFactory::ONE_CLICK => false]);
+        $config = [
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+            PayPlugGatewayFactory::ONE_CLICK => false,
+        ];
+        $paymentMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, $config);
 
         $this->validator
             ->expects(self::once())
@@ -243,13 +247,22 @@ final class PaymentMethodValidatorTest extends TestCase
         $this->paymentMethodValidator->process($paymentMethod);
     }
 
+    // -------------------------------------------------------------------------
+    // process() — PayPlug factory, hostedFields true, oneClick true → base + CAN_SAVE_CARD
+    // -------------------------------------------------------------------------
+
     /**
-     * UHF gateway with oneClick=true. Verifies processUhf() adds a PayplugPermission
-     * (CAN_SAVE_CARD) constraint alongside the base one (2 total).
+     * PayPlug gateway in hosted_fields mode with oneClick=true. Verifies processPayplug() adds a
+     * PayplugPermission (CAN_SAVE_CARD) constraint alongside the base one (2 total) — the same
+     * behavior as oneClick in redirected/integrated_payment mode.
      */
-    public function testProcess_uhfFactory_oneClickTrue_validatesWithPermissionConstraint(): void
+    public function testProcess_payplugFactory_hostedFieldsTrueOneClickTrue_validatesWithPermissionConstraint(): void
     {
-        $paymentMethod = $this->buildPaymentMethod(UhfGatewayFactory::FACTORY_NAME, [UhfGatewayFactory::ONE_CLICK => true]);
+        $config = [
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+            PayPlugGatewayFactory::ONE_CLICK => true,
+        ];
+        $paymentMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, $config);
 
         $this->validator
             ->expects(self::once())
