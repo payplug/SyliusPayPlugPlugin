@@ -7,13 +7,13 @@ namespace PayPlug\SyliusPayPlugPlugin\Command\Provider;
 use PayPlug\SyliusPayPlugPlugin\Command\StatusHostedPaymentRequest;
 use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-#[AutoconfigureTag(
-    'payplug_sylius_payplug_plugin.command_provider.payplug_uhf',
-    ['action' => PaymentRequestInterface::ACTION_STATUS],
-)]
+/**
+ * Not tagged for direct DI collection: dispatched to only by
+ * StatusPaymentRequestCommandProvider, when the payment method is `payplug` with Hosted Fields
+ * selected (see PayPlugGatewayFactory::isHostedFieldsConfig()).
+ */
 final class StatusHostedPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
     public function __construct(private RequestStack $requestStack)

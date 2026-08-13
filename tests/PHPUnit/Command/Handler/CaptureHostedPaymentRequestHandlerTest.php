@@ -17,6 +17,7 @@ use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\CoreBundle\OrderPay\Provider\UrlProviderInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
+use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -67,8 +68,6 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
             $this->logger,
             $this->requestStack,
             $this->orderStateMutator,
-            'acct_123',
-            'sub_ext_1',
         );
     }
 
@@ -76,9 +75,15 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         array $details,
         int $amount = 1000,
         string $currency = 'EUR',
+        ?array $gatewayConfig = ['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1'],
     ): PaymentRequestInterface&MockObject
     {
         $method = $this->createMock(PaymentMethodInterface::class);
+        if (null !== $gatewayConfig) {
+            $config = $this->createMock(GatewayConfigInterface::class);
+            $config->method('getConfig')->willReturn($gatewayConfig);
+            $method->method('getGatewayConfig')->willReturn($config);
+        }
 
         $customer = $this->createMock(CustomerInterface::class);
         $customer->method('getId')->willReturn(7);
@@ -130,6 +135,15 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
     }
 
+    public function testInvoke_whenGatewayConfigIsMissingAccountOrSubmerchantId_throws(): void
+    {
+        $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc'], gatewayConfig: null);
+
+        $this->expectException(\LogicException::class);
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
     public function testInvoke_onApiException_failsThePaymentRequest(): void
     {
         $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
@@ -145,6 +159,9 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
     public function testInvoke_whenCustomerEmailIsMissing_failsThePaymentRequestInsteadOfCallingHostedPaymentCreator(): void
     {
         $method = $this->createMock(PaymentMethodInterface::class);
+        $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
+        $gatewayConfig->method('getConfig')->willReturn(['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1']);
+        $method->method('getGatewayConfig')->willReturn($gatewayConfig);
         $customer = $this->createMock(CustomerInterface::class);
         $customer->method('getEmail')->willReturn(null);
         $order = $this->createMock(OrderInterface::class);

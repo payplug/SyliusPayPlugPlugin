@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway;
 
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
+
 final class PayPlugGatewayFactory extends AbstractGatewayFactory
 {
     public const FACTORY_NAME = 'payplug';
@@ -87,6 +89,19 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
         }
 
         return $missing;
+    }
+
+    /**
+     * True only for a `payplug`-factory gateway config with Hosted Fields selected. Used to
+     * decide, within the single `payplug`-tagged command providers shared by every gateway
+     * (Capture/Notify/StatusPaymentRequestCommandProvider), whether to delegate to the
+     * Hosted-Fields-specific variant instead of the legacy PayPlug SDK flow — other gateways
+     * (Oney, Bancontact, ...) never satisfy this check, so their behavior is unaffected.
+     */
+    public static function isHostedFieldsConfig(?GatewayConfigInterface $gatewayConfig): bool
+    {
+        return self::FACTORY_NAME === $gatewayConfig?->getFactoryName() &&
+            true === ($gatewayConfig->getConfig()[self::HOSTED_FIELDS] ?? false);
     }
 
     private static function isBlank(mixed $value): bool
