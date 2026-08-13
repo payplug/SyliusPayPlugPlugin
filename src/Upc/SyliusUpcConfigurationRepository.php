@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Upc;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
@@ -48,15 +48,14 @@ final class SyliusUpcConfigurationRepository implements IConfigurationRepository
 
     public function getPublicKeyId(): string
     {
-        $value = $this->findGatewayConfig()->getConfig()['hfIdentifierDefault'] ?? '';
+        $value = $this->findGatewayConfig()->getConfig()[PayPlugGatewayFactory::HF_IDENTIFIER] ?? '';
 
         return \is_string($value) ? $value : '';
     }
 
     /**
-     * Not populated by any current admin field: PRE-3550's checkout template reads
-     * `hfIdentifierDefault` directly and never calls this method. Returns '' until a future
-     * ticket adds a distinct public-key-value config field.
+     * Not populated by any current admin field. Returns '' until a future ticket adds a
+     * distinct public-key-value config field.
      */
     public function getPublicKeyValue(): string
     {
@@ -85,8 +84,8 @@ final class SyliusUpcConfigurationRepository implements IConfigurationRepository
     private function findGatewayConfig(): GatewayConfigInterface
     {
         /** @var GatewayConfigInterface|null $gatewayConfig */
-        $gatewayConfig = $this->gatewayConfigRepository->findOneBy(['factoryName' => UhfGatewayFactory::FACTORY_NAME]);
+        $gatewayConfig = $this->gatewayConfigRepository->findOneBy(['factoryName' => PayPlugGatewayFactory::FACTORY_NAME]);
 
-        return $gatewayConfig ?? throw new \LogicException('No gateway config found for ' . UhfGatewayFactory::FACTORY_NAME . '.');
+        return $gatewayConfig ?? throw new \LogicException('No gateway config found for ' . PayPlugGatewayFactory::FACTORY_NAME . '.');
     }
 }

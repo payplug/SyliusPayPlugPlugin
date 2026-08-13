@@ -57,7 +57,7 @@ final class UnifiedApiHostedPaymentCreatorTest extends TestCase
 
     private function dto(): HostedFieldDto
     {
-        return new HostedFieldDto(new CommonFieldsDto('acct_123', 1000, 'eur', '42'), 'hf_token_abc');
+        return new HostedFieldDto(new CommonFieldsDto('acct_123', 1000, 'eur', '42', 'sub_ext_1'), 'hf_token_abc');
     }
 
     public function testCreateHostedPayment_withValidCredentials_returnsTheOutput(): void

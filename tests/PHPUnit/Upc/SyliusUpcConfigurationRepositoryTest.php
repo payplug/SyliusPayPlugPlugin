@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Upc;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\Gateway\UhfGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcConfigurationRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -32,7 +32,7 @@ final class SyliusUpcConfigurationRepositoryTest extends TestCase
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
         $gatewayConfig->method('getConfig')->willReturn($config);
         $this->gatewayConfigRepository->method('findOneBy')
-            ->with(['factoryName' => UhfGatewayFactory::FACTORY_NAME])
+            ->with(['factoryName' => PayPlugGatewayFactory::FACTORY_NAME])
             ->willReturn($gatewayConfig);
 
         return $gatewayConfig;
@@ -66,9 +66,9 @@ final class SyliusUpcConfigurationRepositoryTest extends TestCase
         self::assertSame('', $this->configurationRepository->getClientId());
     }
 
-    public function testGetPublicKeyId_readsHfIdentifierDefault(): void
+    public function testGetPublicKeyId_readsHfIdentifier(): void
     {
-        $this->gatewayConfigWith(['hfIdentifierDefault' => 'hf_ident_123']);
+        $this->gatewayConfigWith([PayPlugGatewayFactory::HF_IDENTIFIER => 'hf_ident_123']);
 
         self::assertSame('hf_ident_123', $this->configurationRepository->getPublicKeyId());
     }

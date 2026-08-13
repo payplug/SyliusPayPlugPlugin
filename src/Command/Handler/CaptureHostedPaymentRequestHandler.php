@@ -45,11 +45,6 @@ final class CaptureHostedPaymentRequestHandler
         private LoggerInterface $logger,
         private RequestStack $requestStack,
         private IOrderStateMutator $orderStateMutator,
-        // TEMPORARY (PRE-3551 QA testing): hardcoded via env var default rather than resolved
-        // per-merchant. This will be reworked once real UHF account resolution is implemented —
-        // do not treat this as the final design.
-        private string $uhfAccountId,
-        private string $uhfSubmerchantExternalId,
     ) {
     }
 
@@ -121,13 +116,20 @@ final class CaptureHostedPaymentRequestHandler
             throw new \LogicException('Payment amount or currency is not set.');
         }
 
+        $gatewayConfig = $method->getGatewayConfig()?->getConfig() ?? [];
+        $accountId = $gatewayConfig[PayPlugGatewayFactory::HF_IDENTIFIER] ?? null;
+        $submerchantExternalId = $gatewayConfig[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null;
+        if (!\is_string($accountId) || '' === $accountId || !\is_string($submerchantExternalId) || '' === $submerchantExternalId) {
+            throw new \LogicException('Hosted Fields account id or submerchant id is not configured for this payment method.');
+        }
+
         try {
             $order = $payment->getOrder();
             $orderId = $order?->getNumber() ?? self::idToString($payment->getId());
             $firstItemOrFalse = $order?->getItems()->first();
             $firstItem = false !== $firstItemOrFalse ? $firstItemOrFalse : null;
 
-            $common = new CommonFieldsDto($this->uhfAccountId, $amount, \strtoupper($currencyCode), $orderId, $this->uhfSubmerchantExternalId); // @phpstan-ignore-line
+            $common = new CommonFieldsDto($accountId, $amount, \strtoupper($currencyCode), $orderId, $submerchantExternalId);
             $common->description = null !== $firstItem ? $firstItem->getProductName() : null;
             $common->notificationUrl = $this->urlGenerator->generate(
                 'sylius_payment_request_notify',
