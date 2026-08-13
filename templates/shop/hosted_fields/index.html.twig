@@ -20,8 +20,15 @@
     <div class="sylius-shop-loader d-none">
         <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
     </div>
-    <div class="payplugHostedFields__container payplugHostedFields__container--brand" id="brand-container"></div>
-    <div class="payplugHostedFields__container payplugHostedFields__container--card" id="card-container"></div>
+    <div class="payplugHostedFields__schemes">
+        <span class="payplugHostedFields__scheme-badge">VISA</span>
+        <span class="payplugHostedFields__scheme-badge">MC</span>
+        <span class="payplugHostedFields__scheme-badge">CB</span>
+    </div>
+    <div class="payplugHostedFields__cardWrapper">
+        <div class="payplugHostedFields__container payplugHostedFields__container--card" id="card-container"></div>
+        <div class="payplugHostedFields__container payplugHostedFields__container--brand" id="brand-container"></div>
+    </div>
     <div class="payplugHostedFields__container payplugHostedFields__container--expiry" id="expiry-container"></div>
     <div class="payplugHostedFields__container payplugHostedFields__container--cvv" id="cvv-container"></div>
     <div class="payplugHostedFields__error payplugHostedFields__error--hide" {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'error') }}></div>

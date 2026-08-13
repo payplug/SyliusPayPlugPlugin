@@ -25,15 +25,72 @@
     position: relative
 }
 
-.payplugHostedFields__container--brand,
+.payplugHostedFields__schemes {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin: 0 0 10px
+}
+
+.payplugHostedFields__scheme-badge {
+    padding: 2px 6px;
+    border: 1px solid #d5d6d8;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #2b343d;
+    background: #f9fafb
+}
+
+.payplugHostedFields__cardWrapper {
+    width: 100%;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px
+}
+
+.payplugHostedFields__cardWrapper .payplugHostedFields__container--card {
+    flex: 1;
+    min-width: 0;
+    margin: 0
+}
+
+.payplugHostedFields__container--brand {
+    height: 42px;
+    min-height: 0;
+    width: 90px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center
+}
+
 .payplugHostedFields__container--card,
 .payplugHostedFields__container--expiry,
 .payplugHostedFields__container--cvv {
-    height: 40px;
+    height: 42px;
     cursor: text;
-    border: 1px solid #d5d6d8;
-    border-radius: 2px;
-    line-height: 40px
+    background: #fafafa;
+    border: 1.5px solid #d5d6d8;
+    border-radius: 8px;
+    line-height: 42px;
+    transition: border-color .2s, box-shadow .2s, background-color .2s
+}
+
+.payplugHostedFields__container--card:focus-within,
+.payplugHostedFields__container--expiry:focus-within,
+.payplugHostedFields__container--cvv:focus-within {
+    background: #fff;
+    border-color: #2b343d;
+    box-shadow: 0 0 0 3px rgba(43, 52, 61, .1)
+}
+
+.payplugHostedFields__container--card.is-invalid,
+.payplugHostedFields__container--expiry.is-invalid,
+.payplugHostedFields__container--cvv.is-invalid {
+    border-color: #e91932;
+    box-shadow: 0 0 0 3px rgba(233, 25, 50, .1)
 }
 
 .payplugHostedFields__container--card,

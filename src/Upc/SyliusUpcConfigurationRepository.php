@@ -63,7 +63,7 @@ final class SyliusUpcConfigurationRepository implements IConfigurationRepository
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function getClientConfig(): array
     {
@@ -75,10 +75,7 @@ final class SyliusUpcConfigurationRepository implements IConfigurationRepository
             return [];
         }
 
-        /** @var array<string, mixed> $clientConfig */
-        $clientConfig = $rawClientConfig;
-
-        return $clientConfig;
+        return $rawClientConfig;
     }
 
     private function findGatewayConfig(): GatewayConfigInterface
