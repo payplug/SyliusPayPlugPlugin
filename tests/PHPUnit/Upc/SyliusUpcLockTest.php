@@ -8,7 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcLock;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Lock\LockFactory;
-use Symfony\Component\Lock\LockInterface;
+use Symfony\Component\Lock\SharedLockInterface;
 
 final class SyliusUpcLockTest extends TestCase
 {
@@ -24,7 +24,7 @@ final class SyliusUpcLockTest extends TestCase
 
     public function testAcquire_whenLockIsFree_returnsTrue(): void
     {
-        $lockInterface = $this->createMock(LockInterface::class);
+        $lockInterface = $this->createMock(SharedLockInterface::class);
         $lockInterface->method('acquire')->with(false)->willReturn(true);
         $this->lockFactory->method('createLock')->with('key', 30)->willReturn($lockInterface);
 
@@ -33,7 +33,7 @@ final class SyliusUpcLockTest extends TestCase
 
     public function testAcquire_whenLockIsHeld_returnsFalse(): void
     {
-        $lockInterface = $this->createMock(LockInterface::class);
+        $lockInterface = $this->createMock(SharedLockInterface::class);
         $lockInterface->method('acquire')->with(false)->willReturn(false);
         $this->lockFactory->method('createLock')->willReturn($lockInterface);
 
@@ -42,7 +42,7 @@ final class SyliusUpcLockTest extends TestCase
 
     public function testRelease_releasesAPreviouslyAcquiredLock(): void
     {
-        $lockInterface = $this->createMock(LockInterface::class);
+        $lockInterface = $this->createMock(SharedLockInterface::class);
         $lockInterface->method('acquire')->willReturn(true);
         $lockInterface->expects(self::once())->method('release');
         $this->lockFactory->method('createLock')->willReturn($lockInterface);
