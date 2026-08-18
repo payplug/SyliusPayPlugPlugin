@@ -5,6 +5,8 @@ parameters:
     payplug.oauth_base_url: '%env(default:payplug.oauth_base_url.default:PAYPLUG_OAUTH_BASE_URL)%'
     payplug.oauth_audience.default: 'https://www.payplug.com'
     payplug.oauth_audience: '%env(default:payplug.oauth_audience.default:PAYPLUG_OAUTH_AUDIENCE)%'
+    payplug.unified_api_base_url.default: 'https://api.payplug.com'
+    payplug.unified_api_base_url: '%env(default:payplug.unified_api_base_url.default:PAYPLUG_UNIFIED_API_BASE_URL)%'
 
 services:
     _defaults:
@@ -19,6 +21,7 @@ services:
             Psr\Log\LoggerInterface: '@monolog.logger.payplug'
             $payplugOauthBaseUrl: '%payplug.oauth_base_url%'
             $payplugOauthAudience: '%payplug.oauth_audience%'
+            $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
@@ -39,6 +42,27 @@ services:
     # `PayPlug\SyliusPayPlugPlugin\:` prototype above, keeping its `@monolog.logger.payplug` binding.
     PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface:
         alias: PayPlug\SyliusPayPlugPlugin\PaymentProcessing\NullHostedFieldsPaymentProcessor
+
+    PayplugUnifiedCore\Contracts\ILogger:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcLogger
+
+    PayplugUnifiedCore\Contracts\ILock:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcLock
+
+    PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUnifiedApiHttpClient
+
+    PayplugUnifiedCore\Contracts\IConfigurationRepository:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcConfigurationRepository
+
+    PayplugUnifiedCore\Contracts\IPaymentRepository:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusPaymentOperationRepository
+
+    PayplugUnifiedCore\Contracts\IOrderStateMutator:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusOrderStateMutator
+
+    PayPlug\SyliusPayPlugPlugin\Upc\HostedPaymentCreatorInterface:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiHostedPaymentCreator
 
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction

@@ -292,12 +292,13 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
     }
 
     /**
-     * Hosted Fields has no PayPlug payment_id yet (PRE-3551): reaching `sylius_shop_order_pay` would
-     * make StatusAction markNew() and end up issuing a real createPayment() API call. A `redirect`
-     * entry is still required (Sylius's CheckoutRedirectListener would otherwise fail to resolve a
-     * route for the `completed` checkout state), so it points at `sylius_shop_order_show` instead.
+     * Both Integrated Payment and Hosted Fields target `sylius_shop_order_pay` (Payum
+     * capture/status for Integrated Payment; for Hosted Fields, the same `payplug`-tagged
+     * Capture/Notify/StatusPaymentRequestCommandProvider trio delegates to their
+     * Hosted-Fields-specific counterparts — see PayPlugGatewayFactory::isHostedFieldsConfig() —
+     * so the payment is actually created/confirmed through UPC.
      */
-    public function testAlterRequestConfiguration_withOnlyHostedFieldsToken_redirectsToOrderShowNotOrderPay(): void
+    public function testAlterRequestConfigurationForInlineCardCapture_forHostedFieldsToken_redirectsToOrderPay(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
             'hostedfields_token' => 'hf_token_abc',
@@ -311,7 +312,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         self::assertSame(
             [
                 'redirect' => [
-                    'route' => 'sylius_shop_order_show',
+                    'route' => 'sylius_shop_order_pay',
                     'parameters' => ['tokenValue' => 'resource.tokenValue'],
                 ],
             ],
@@ -321,11 +322,11 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
 
     /**
      * A crafted request carrying both token fields is dispatched as Hosted Fields by handle()
-     * (it checks hasHostedFieldsToken() first), so it must be routed as Hosted Fields too —
-     * otherwise no payment_id is ever set and the order still lands on the Payum capture/status
-     * chain this redirect exists to avoid.
+     * (it checks hasHostedFieldsToken() first). Since PRE-3551 both paths redirect to the same
+     * route, so this just pins that the redirect override still applies regardless of which
+     * token(s) are present.
      */
-    public function testAlterRequestConfiguration_withBothTokens_followsHandleAndRedirectsToOrderShow(): void
+    public function testAlterRequestConfiguration_withBothTokens_followsHandleAndRedirectsToOrderPay(): void
     {
         $request = Request::create('/checkout/select-payment', 'POST', [
             'payplug_integrated_payment_token' => 'pay_123',
@@ -337,7 +338,7 @@ final class PostPaymentSelectEventSubscriberTest extends TestCase
         $this->subscriber->alterRequestConfigurationForInlineCardCapture($this->buildRequestEvent($request));
 
         $syliusRequestConfig = $request->attributes->get('_sylius');
-        self::assertSame('sylius_shop_order_show', $syliusRequestConfig['redirect']['route']);
+        self::assertSame('sylius_shop_order_pay', $syliusRequestConfig['redirect']['route']);
     }
 
     public function testAlterRequestConfiguration_withoutAnyToken_leavesRedirectUntouched(): void

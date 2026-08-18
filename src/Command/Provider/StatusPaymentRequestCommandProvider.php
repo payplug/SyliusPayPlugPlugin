@@ -8,6 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Command\StatusPaymentRequest;
 use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 #[AutoconfigureTag(
@@ -40,8 +41,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 )]
 final class StatusPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
-    public function __construct(private RequestStack $requestStack)
-    {
+    use DelegatesToHostedFieldsCommandProviderTrait;
+
+    public function __construct(
+        private RequestStack $requestStack,
+        #[Autowire(service: StatusHostedPaymentRequestCommandProvider::class)]
+        private PaymentRequestCommandProviderInterface $hostedFieldsCommandProvider,
+    ) {
     }
 
     public function supports(PaymentRequestInterface $paymentRequest): bool
@@ -51,6 +57,11 @@ final class StatusPaymentRequestCommandProvider implements PaymentRequestCommand
 
     public function provide(PaymentRequestInterface $paymentRequest): object
     {
+        $hostedFieldsResult = $this->delegateToHostedFieldsCommandProvider($paymentRequest, $this->hostedFieldsCommandProvider);
+        if (null !== $hostedFieldsResult) {
+            return $hostedFieldsResult;
+        }
+
         $request = $this->requestStack->getCurrentRequest();
         if (null === $request) {
             return new StatusPaymentRequest($paymentRequest->getId());
