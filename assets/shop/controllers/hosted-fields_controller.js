@@ -113,12 +113,13 @@ export default class extends Controller {
     this.hfields = window.dalenys.hostedFields({
       companyId: payplug_hosted_fields_params.companyId,
       fields: {
-        brand: { id: 'brand-container', style: FIELD_STYLE },
-        card: { id: 'card-container', style: FIELD_STYLE },
-        expiry: { id: 'expiry-container', style: FIELD_STYLE },
-        cryptogram: { id: 'cvv-container', style: FIELD_STYLE },
+        brand:       { id: "brand-container", version: 2, style: FIELD_STYLE },
+        card:        { id: "card-container", placeholder: "•••• •••• •••• ••••", enableAutospacing: true, style: FIELD_STYLE },
+        expiry:      { id: "expiry-container", placeholder: "MM/AA", style: FIELD_STYLE },
+        cryptogram:  { id: "cvv-container", placeholder: "CVV", style: FIELD_STYLE },
       },
-      location: payplug_hosted_fields_params.locale,
+
+      locale: payplug_hosted_fields_params.locale,
     });
     this.hfields.load();
   }
