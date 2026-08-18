@@ -13,9 +13,11 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ApplePayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Handler\HostedFieldsWebhookNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Handler\RefundNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
+use PayplugUnifiedCore\Exceptions\InvalidNotificationException;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -37,6 +39,7 @@ class IpnAction
         private LoggerInterface $logger,
         private PaymentNotificationHandler $paymentNotificationHandler,
         private RefundNotificationHandler $refundNotificationHandler,
+        private HostedFieldsWebhookNotificationHandler $hostedFieldsWebhookNotificationHandler,
         private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentRepositoryInterface $paymentRepository,
         private EntityManagerInterface $entityManager,
@@ -86,6 +89,21 @@ class IpnAction
             return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
 
+        // Hosted Fields notifications are Unified API webhooks, not legacy SDK ones: a different
+        // signature scheme and payload shape that $this->payPlugApiClient->treat() below cannot
+        // parse. Branching here — rather than letting it fall through and blow up inside treat()
+        // — is what lets this same static, already-deployed IPN URL serve as the account-level
+        // webhook receiver for Hosted Fields too, alongside every other gateway's legacy flow.
+        if (PayPlugGatewayFactory::isHostedFieldsConfig($gateway)) {
+            try {
+                $this->hostedFieldsWebhookNotificationHandler->treat($payment, $input, self::flattenHeaders($request->headers->all()));
+            } catch (InvalidNotificationException $exception) {
+                $this->logger->error('[PayPlug][UPC] Rejected webhook notification.', ['error' => $exception->getMessage()]);
+            }
+
+            return new JsonResponse();
+        }
+
         $this->payPlugApiClient = $this->apiClientFactory->create($factoryName);
 
         try {
@@ -100,5 +118,20 @@ class IpnAction
         }
 
         return new JsonResponse();
+    }
+
+    /**
+     * @param array<string, array<int, string|null>> $rawHeaders
+     *
+     * @return array<string, string>
+     */
+    private static function flattenHeaders(array $rawHeaders): array
+    {
+        $headers = [];
+        foreach ($rawHeaders as $name => $values) {
+            $headers[$name] = $values[0] ?? '';
+        }
+
+        return $headers;
     }
 }

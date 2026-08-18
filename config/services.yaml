@@ -7,6 +7,13 @@ parameters:
     payplug.oauth_audience: '%env(default:payplug.oauth_audience.default:PAYPLUG_OAUTH_AUDIENCE)%'
     payplug.unified_api_base_url.default: 'https://api.payplug.com'
     payplug.unified_api_base_url: '%env(default:payplug.unified_api_base_url.default:PAYPLUG_UNIFIED_API_BASE_URL)%'
+    # Separate from payplug.unified_api_base_url on purpose: on at least one QA/staging setup, the
+    # payment-status GET lives on a different host than the payment-creation POST (an "internal"
+    # Dalenys/GCP host, distinct from the public-facing payment-gateway proxy the create call goes
+    # through). Defaults to the same value as payplug.unified_api_base_url, so environments that
+    # never need the split (production included) are unaffected.
+    payplug.unified_api_payment_status_base_url.default: '%payplug.unified_api_base_url%'
+    payplug.unified_api_payment_status_base_url: '%env(default:payplug.unified_api_payment_status_base_url.default:PAYPLUG_UNIFIED_API_PAYMENT_STATUS_BASE_URL)%'
 
 services:
     _defaults:
@@ -22,6 +29,7 @@ services:
             $payplugOauthBaseUrl: '%payplug.oauth_base_url%'
             $payplugOauthAudience: '%payplug.oauth_audience%'
             $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
+            $unifiedApiPaymentStatusBaseUrl: '%payplug.unified_api_payment_status_base_url%'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
@@ -63,6 +71,9 @@ services:
 
     PayPlug\SyliusPayPlugPlugin\Upc\HostedPaymentCreatorInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiHostedPaymentCreator
+
+    PayPlug\SyliusPayPlugPlugin\Upc\OperationStatusFetcherInterface:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiOperationStatusFetcher
 
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction
