@@ -43,8 +43,13 @@ class CaptureHttpResponseProvider implements HttpResponseProviderInterface
 {
     public function supports(RequestConfiguration $requestConfiguration, PaymentRequestInterface $paymentRequest): bool
     {
-        return $paymentRequest->getAction() === PaymentRequestInterface::ACTION_CAPTURE &&
-            ($paymentRequest->getResponseData()['redirect_url'] ?? null) !== null;
+        if ($paymentRequest->getAction() !== PaymentRequestInterface::ACTION_CAPTURE) {
+            return false;
+        }
+
+        $data = $paymentRequest->getResponseData();
+
+        return null !== ($data['redirect_url'] ?? null) || null !== ($data['redirect_html'] ?? null);
     }
 
     public function getResponse(
@@ -53,6 +58,14 @@ class CaptureHttpResponseProvider implements HttpResponseProviderInterface
     ): Response {
         // This is called after the capture payment request has been handled
         $data = $paymentRequest->getResponseData();
+
+        // The Unified API's "recommended for web" 3DS shape (Hosted Fields only, see
+        // CaptureHostedPaymentRequestHandler): a self-submitting HTML form to render as-is, rather
+        // than a plain redirect target.
+        if (\is_string($data['redirect_html'] ?? null)) {
+            return new Response($data['redirect_html']);
+        }
+
         if (!\is_string($data['redirect_url'] ?? null)) {
             throw new \LogicException('Redirect URL is not set in the payment request response data.');
         }
