@@ -24,7 +24,7 @@ final class SyliusUnifiedApiHttpClientTest extends TestCase
     {
         $this->httpClient = $this->createMock(HttpClientInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->adapter = new SyliusUnifiedApiHttpClient($this->httpClient, $this->logger);
+        $this->adapter = new SyliusUnifiedApiHttpClient($this->httpClient, $this->logger, true);
     }
 
     public function testGet_sendsGetRequestWithHeaders(): void
@@ -82,5 +82,37 @@ final class SyliusUnifiedApiHttpClientTest extends TestCase
 
         self::assertSame(0, $result['status']);
         self::assertSame('Could not resolve host', $result['body']);
+    }
+
+    public function testGet_whenVerifyTlsDisabled_passesVerifyPeerAndVerifyHostFalse(): void
+    {
+        $adapter = new SyliusUnifiedApiHttpClient($this->httpClient, $this->logger, false);
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getContent')->with(false)->willReturn('{}');
+
+        $this->httpClient->expects(self::once())->method('request')
+            ->with('GET', 'https://staging-internal-payment.gcp.dlns.io/processing-operations/operations/op_1', [
+                'headers' => [],
+                'verify_peer' => false,
+                'verify_host' => false,
+            ])
+            ->willReturn($response);
+
+        $adapter->get('https://staging-internal-payment.gcp.dlns.io/processing-operations/operations/op_1');
+    }
+
+    public function testGet_whenVerifyTlsEnabled_neverPassesVerifyPeerOrVerifyHost(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getContent')->with(false)->willReturn('{}');
+
+        $this->httpClient->expects(self::once())->method('request')
+            ->with('GET', 'https://api.payplug.com/payments/pay_123', ['headers' => []])
+            ->willReturn($response);
+
+        $this->adapter->get('https://api.payplug.com/payments/pay_123');
     }
 }

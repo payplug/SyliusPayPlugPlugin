@@ -99,6 +99,26 @@ final class NotifyHostedPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new NotifyHostedPaymentRequest(null));
     }
 
+    public function testInvoke_onPendingThreeDsOutcome_doesNothingAndReleasesTheLock(): void
+    {
+        $body = \json_encode(['id' => 'op_123', 'execCode' => '0001', 'orderId' => '42', 'amount' => 1000]);
+        $this->paymentRequestWithPayload([
+            'content' => $body,
+            'headers' => ['Authorization' => ['Bearer shared-secret']],
+        ]);
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->lock->method('acquire')->willReturn(true);
+
+        $this->paymentRepository->expects(self::never())->method('isTreated');
+        $this->paymentRepository->expects(self::never())->method('save');
+        $this->orderStateMutator->expects(self::never())->method('apply');
+        $this->lock->expects(self::once())->method('release');
+        $this->stateMachine->expects(self::never())->method('apply');
+
+        $this->handler->__invoke(new NotifyHostedPaymentRequest(null));
+    }
+
     public function testInvoke_whenLockIsHeld_releasesNothingAndCompletesWithoutApplying(): void
     {
         $paymentRequest = $this->paymentRequestWithPayload(['content' => '{}', 'headers' => []]);

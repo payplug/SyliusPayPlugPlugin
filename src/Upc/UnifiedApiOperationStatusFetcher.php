@@ -7,7 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Upc;
 use PayplugUnifiedCore\Auth\TokenManager;
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient;
-use PayplugUnifiedCore\Services\UnifiedApiOperationService;
+use PayplugUnifiedCore\Services\UnifiedApiPaymentService;
 
 final class UnifiedApiOperationStatusFetcher implements OperationStatusFetcherInterface
 {
@@ -15,16 +15,16 @@ final class UnifiedApiOperationStatusFetcher implements OperationStatusFetcherIn
         private IUnifiedApiHttpClient $httpClient,
         private TokenManager $tokenManager,
         private IConfigurationRepository $configurationRepository,
-        private string $unifiedApiPaymentStatusBaseUrl,
+        private string $unifiedApiBaseUrl,
     ) {
     }
 
     public function getOperation(string $operationId): array
     {
-        $service = new UnifiedApiOperationService(
+        $service = new UnifiedApiPaymentService(
             $this->httpClient,
             $this->tokenManager,
-            $this->unifiedApiPaymentStatusBaseUrl,
+            $this->unifiedApiBaseUrl,
             $this->configurationRepository->getClientId(),
             $this->configurationRepository->getClientSecret(),
         );

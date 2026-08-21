@@ -39,10 +39,14 @@ final class SyliusOrderStateMutator implements IOrderStateMutator
             PaymentOutcome::AUTHORIZED => PaymentTransitions::TRANSITION_AUTHORIZE,
             PaymentOutcome::REFUNDED => PaymentTransitions::TRANSITION_REFUND,
             PaymentOutcome::FAILED => PaymentTransitions::TRANSITION_FAIL,
-            // THREE_DS_PENDING is never actually applied here: the webhook parser never produces
-            // it (see WebhookNotificationHelper's own docblock), and the plugin does not persist
-            // it as a Sylius payment-state transition — the payment simply stays "processing"
-            // until a real outcome arrives.
+            // THREE_DS_PENDING is not applied as a state transition here: it's not a final
+            // outcome, so there is nothing to transition to yet — the payment simply stays
+            // "processing" until a real outcome arrives. The three async notification call sites
+            // (HostedFieldsWebhookNotificationHandler::treat(), NotifyHostedPaymentRequestHandler,
+            // and StatusHostedPaymentRequestHandler via delegation to treat()) already guard
+            // against THREE_DS_PENDING before ever reaching this mutator; this arm is the
+            // defensive backstop for the one caller that doesn't (CaptureHostedPaymentRequestHandler's
+            // synchronous branch, which passes ExecCodeMapper::toPaymentOutcome() straight through).
             default => null,
         };
 

@@ -82,6 +82,7 @@ final class CaptureHostedPaymentRequestHandler
         $payment->setDetails([
             ...$details,
             'hosted_fields_created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            ...$this->resolveHostedFieldsIds($output->body),
         ]);
 
         $this->applyOutcome($paymentRequest, $payment, $output);
@@ -108,6 +109,30 @@ final class CaptureHostedPaymentRequestHandler
         }
 
         return $hfToken;
+    }
+
+    /**
+     * Extracted from the creation response body rather than HostedPaymentOutput itself (which
+     * carries no such fields) — needed by StatusHostedPaymentRequestHandler's 3DS polling
+     * fallback and consistent with the ids the webhook path resolves against.
+     *
+     * @return array{hosted_fields_payment_id?: string, hosted_fields_operation_id?: string}
+     */
+    private function resolveHostedFieldsIds(string $body): array
+    {
+        $decoded = \json_decode($body, true);
+        $paymentId = \is_array($decoded) ? ($decoded['id'] ?? null) : null;
+        $operationIds = \is_array($decoded) ? ($decoded['operationIds'] ?? null) : null;
+        $operationId = \is_array($operationIds) ? ($operationIds[0] ?? null) : null;
+
+        if (!\is_string($paymentId) || '' === $paymentId || !\is_string($operationId) || '' === $operationId) {
+            return [];
+        }
+
+        return [
+            'hosted_fields_payment_id' => $paymentId,
+            'hosted_fields_operation_id' => $operationId,
+        ];
     }
 
     /** @return array{0: int, 1: string} */
@@ -158,9 +183,14 @@ final class CaptureHostedPaymentRequestHandler
 
         $common = new CommonFieldsDto($accountId, $amount, \strtoupper($currencyCode), $orderId, $submerchantExternalId);
         $common->description = null !== $firstItem ? $firstItem->getProductName() : null;
+        // Fixed, parameter-less URL rather than the per-payment-request hashed route:
+        // UnifiedApiIpnAction already resolves the target Payment generically from the webhook
+        // body's own "id" (via PaymentRepositoryInterface::findOneByPayPlugPaymentId(), matching
+        // hosted_fields_payment_id), so a stable URL is enough — and it's the only shape PayPlug's
+        // Unified API notifier Receiver (configured once in Cockpit) can target at all.
         $common->notificationUrl = $this->urlGenerator->generate(
-            'sylius_payment_request_notify',
-            ['hash' => (string) $paymentRequest->getHash()],
+            'payplug_sylius_unified_api_ipn',
+            [],
             UrlGeneratorInterface::ABSOLUTE_URL,
         );
         $successUrl = $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
@@ -225,6 +255,16 @@ final class CaptureHostedPaymentRequestHandler
     ): void {
         if (null !== $output->redirectUrl) {
             $paymentRequest->setResponseData(['redirect_url' => $output->redirectUrl]);
+
+            return;
+        }
+
+        if (null !== $output->redirectHtml) {
+            // The Unified API's "recommended for web" 3DS shape: a self-submitting HTML form
+            // (rendered as-is by CaptureHttpResponseProvider) rather than a redirect target. Like
+            // the redirect_url branch above, the outcome is still pending the customer completing
+            // the challenge — never apply it synchronously.
+            $paymentRequest->setResponseData(['redirect_html' => $output->redirectHtml]);
 
             return;
         }

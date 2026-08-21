@@ -6,12 +6,10 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Command\Handler;
 
 use PayPlug\SyliusPayPlugPlugin\Command\Handler\StatusHostedPaymentRequestHandler;
 use PayPlug\SyliusPayPlugPlugin\Command\StatusHostedPaymentRequest;
+use PayPlug\SyliusPayPlugPlugin\Handler\HostedFieldsWebhookNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Upc\OperationStatusFetcherInterface;
-use PayplugUnifiedCore\Contracts\IOrderStateMutator;
-use PayplugUnifiedCore\Contracts\IPaymentRepository;
-use PayplugUnifiedCore\DataValues\PaymentOutcome;
 use PayplugUnifiedCore\Exceptions\ApiException;
-use PayplugUnifiedCore\Exceptions\OperationNotFoundException;
+use PayplugUnifiedCore\Exceptions\InvalidNotificationException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -30,9 +28,7 @@ final class StatusHostedPaymentRequestHandlerTest extends TestCase
 
     private OperationStatusFetcherInterface&MockObject $operationStatusFetcher;
 
-    private IPaymentRepository&MockObject $paymentRepository;
-
-    private IOrderStateMutator&MockObject $orderStateMutator;
+    private HostedFieldsWebhookNotificationHandler&MockObject $webhookNotificationHandler;
 
     private LoggerInterface&MockObject $logger;
 
@@ -43,30 +39,25 @@ final class StatusHostedPaymentRequestHandlerTest extends TestCase
         $this->paymentRequestProvider = $this->createMock(PaymentRequestProviderInterface::class);
         $this->stateMachine = $this->createMock(StateMachineInterface::class);
         $this->operationStatusFetcher = $this->createMock(OperationStatusFetcherInterface::class);
-        $this->paymentRepository = $this->createMock(IPaymentRepository::class);
-        $this->orderStateMutator = $this->createMock(IOrderStateMutator::class);
+        $this->webhookNotificationHandler = $this->createMock(HostedFieldsWebhookNotificationHandler::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->handler = new StatusHostedPaymentRequestHandler(
             $this->paymentRequestProvider,
             $this->stateMachine,
             $this->operationStatusFetcher,
-            $this->paymentRepository,
-            $this->orderStateMutator,
+            $this->webhookNotificationHandler,
             $this->logger,
         );
     }
 
+    /** @param mixed[] $details */
     private function paymentRequest(
-        // Sylius's state machine is never driven to STATE_PROCESSING for this flow in practice —
-        // the payment stays STATE_NEW throughout the 3DS-pending window, confirmed against a real
-        // QA payment row. STATE_NEW is therefore the realistic default here, not STATE_PROCESSING.
-        string $state = PaymentInterface::STATE_NEW,
-        array $details = ['hosted_fields_operation_id' => 'op_1', 'hosted_fields_payment_id' => 'pay_1'],
+        string $state = PaymentInterface::STATE_PROCESSING,
+        array $details = [],
     ): PaymentRequestInterface&MockObject
     {
         $payment = $this->createMock(PaymentInterface::class);
-        $payment->method('getId')->willReturn(42);
         $payment->method('getState')->willReturn($state);
         $payment->method('getDetails')->willReturn($details);
 
@@ -77,14 +68,78 @@ final class StatusHostedPaymentRequestHandlerTest extends TestCase
         return $paymentRequest;
     }
 
-    private static function operationBody(string $execCode): string
+    public function testInvoke_withNoForcedStatus_andPaymentAlreadyResolved_skipsPollingAndCompletesRequest(): void
     {
-        return \json_encode(['id' => 'op_1', 'transaction' => ['status' => ['execCode' => $execCode]]]);
+        $paymentRequest = $this->paymentRequest(PaymentInterface::STATE_COMPLETED, ['hosted_fields_operation_id' => 'op_123']);
+
+        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
     }
 
-    public function testInvoke_withNoForcedStatus_completesThePaymentRequest(): void
+    public function testInvoke_withNoForcedStatus_andNoOperationIdStored_skipsPollingAndCompletesRequest(): void
     {
-        $paymentRequest = $this->paymentRequest(state: PaymentInterface::STATE_COMPLETED);
+        $paymentRequest = $this->paymentRequest(PaymentInterface::STATE_PROCESSING, []);
+
+        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_withNoForcedStatus_andFinalExecCode_appliesOutcomeViaWebhookHandler(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentInterface::STATE_PROCESSING, ['hosted_fields_operation_id' => 'op_123']);
+        $payment = $paymentRequest->getPayment();
+        $body = json_encode(['id' => 'op_123', 'execCode' => '0000', 'orderId' => '000000072', 'amount' => 7400]);
+
+        $this->operationStatusFetcher->expects(self::once())->method('getOperation')->with('op_123')
+            ->willReturn(['status' => 200, 'body' => $body]);
+        $this->webhookNotificationHandler->expects(self::once())->method('treat')->with($payment, $body, []);
+
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_withNoForcedStatus_andPendingExecCode_stillDelegatesToWebhookHandler(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentInterface::STATE_PROCESSING, ['hosted_fields_operation_id' => 'op_123']);
+        $payment = $paymentRequest->getPayment();
+        $body = json_encode(['id' => 'op_123', 'execCode' => '0001', 'orderId' => '000000072', 'amount' => 7400]);
+
+        $this->operationStatusFetcher->method('getOperation')->willReturn(['status' => 200, 'body' => $body]);
+        $this->webhookNotificationHandler->expects(self::once())->method('treat')->with($payment, $body, []);
+
+        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_withNoForcedStatus_whenFetcherFails_logsAndStillCompletesRequest(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentInterface::STATE_PROCESSING, ['hosted_fields_operation_id' => 'op_123']);
+
+        $this->operationStatusFetcher->method('getOperation')->willThrowException(new ApiException('boom'));
+        $this->webhookNotificationHandler->expects(self::never())->method('treat');
+        $this->logger->expects(self::once())->method('error');
+
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_withNoForcedStatus_whenWebhookHandlerRejectsThePayload_logsAndStillCompletesRequest(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentInterface::STATE_PROCESSING, ['hosted_fields_operation_id' => 'op_123']);
+        $body = json_encode(['id' => 'op_123', 'execCode' => '0000', 'orderId' => '000000072', 'amount' => 7400]);
+
+        $this->operationStatusFetcher->method('getOperation')->willReturn(['status' => 200, 'body' => $body]);
+        $this->webhookNotificationHandler->method('treat')->willThrowException(new InvalidNotificationException('mismatch'));
+        $this->logger->expects(self::once())->method('error');
 
         $this->stateMachine->expects(self::once())->method('apply')
             ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
@@ -94,10 +149,11 @@ final class StatusHostedPaymentRequestHandlerTest extends TestCase
 
     public function testInvoke_withForcedCanceledStatus_cancelsThePaymentWhenAllowed(): void
     {
-        $paymentRequest = $this->paymentRequest(state: PaymentInterface::STATE_COMPLETED);
+        $paymentRequest = $this->paymentRequest();
         $payment = $paymentRequest->getPayment();
 
         $this->stateMachine->method('can')->with($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_CANCEL)->willReturn(true);
+        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
         $this->stateMachine->expects(self::exactly(2))->method('apply');
 
         $this->handler->__invoke(new StatusHostedPaymentRequest(null, 'canceled'));
@@ -105,139 +161,12 @@ final class StatusHostedPaymentRequestHandlerTest extends TestCase
 
     public function testInvoke_withForcedCanceledStatus_whenTransitionNotAllowed_stillCompletesThePaymentRequest(): void
     {
-        $paymentRequest = $this->paymentRequest(state: PaymentInterface::STATE_COMPLETED);
+        $paymentRequest = $this->paymentRequest();
 
         $this->stateMachine->method('can')->willReturn(false);
         $this->stateMachine->expects(self::once())->method('apply')
             ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
 
         $this->handler->__invoke(new StatusHostedPaymentRequest(null, 'canceled'));
-    }
-
-    public function testInvoke_withForcedCanceledStatus_neverPolls(): void
-    {
-        $this->paymentRequest(state: PaymentInterface::STATE_PROCESSING);
-
-        $this->stateMachine->method('can')->willReturn(false);
-        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null, 'canceled'));
-    }
-
-    public function testInvoke_whenPaymentIsAlreadyResolved_neverPolls(): void
-    {
-        $this->paymentRequest(state: PaymentInterface::STATE_COMPLETED);
-
-        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenPaymentIsStillProcessing_stillPolls(): void
-    {
-        $this->paymentRequest(state: PaymentInterface::STATE_PROCESSING);
-
-        $this->operationStatusFetcher->expects(self::once())->method('getOperation')->with('op_1')
-            ->willReturn(['status' => 200, 'body' => self::operationBody('0001')]);
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenNoHostedFieldsOperationIdStored_neverPolls(): void
-    {
-        $this->paymentRequest(details: ['hosted_fields_payment_id' => 'pay_1']);
-
-        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenNoHostedFieldsPaymentIdStored_neverPolls(): void
-    {
-        $this->paymentRequest(details: ['hosted_fields_operation_id' => 'op_1']);
-
-        $this->operationStatusFetcher->expects(self::never())->method('getOperation');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenPollStillPending_neverAppliesAnOutcome(): void
-    {
-        $this->paymentRequest();
-
-        $this->operationStatusFetcher->method('getOperation')->with('op_1')
-            ->willReturn(['status' => 200, 'body' => self::operationBody('0001')]);
-
-        $this->orderStateMutator->expects(self::never())->method('apply');
-        $this->paymentRepository->expects(self::never())->method('markTreated');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenPollResolvesToSuccess_appliesPaidOutcomeAndMarksTreated(): void
-    {
-        $this->paymentRequest();
-
-        $this->operationStatusFetcher->method('getOperation')->with('op_1')
-            ->willReturn(['status' => 200, 'body' => self::operationBody('0000')]);
-        $this->paymentRepository->method('isTreated')->with('pay_1')->willReturn(false);
-
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-        $this->paymentRepository->expects(self::once())->method('markTreated')->with('pay_1');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenPollResolvesToFailure_appliesFailedOutcome(): void
-    {
-        $this->paymentRequest();
-
-        $this->operationStatusFetcher->method('getOperation')->with('op_1')
-            ->willReturn(['status' => 200, 'body' => self::operationBody('9999')]);
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::FAILED);
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenAlreadyTreatedByTheWebhook_neverAppliesAnOutcomeAgain(): void
-    {
-        $this->paymentRequest();
-
-        $this->operationStatusFetcher->method('getOperation')
-            ->willReturn(['status' => 200, 'body' => self::operationBody('0000')]);
-        $this->paymentRepository->method('isTreated')->with('pay_1')->willReturn(true);
-
-        $this->orderStateMutator->expects(self::never())->method('apply');
-        $this->paymentRepository->expects(self::never())->method('markTreated');
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenPollThrowsApiException_neverAppliesAnOutcomeAndStillCompletes(): void
-    {
-        $paymentRequest = $this->paymentRequest();
-
-        $this->operationStatusFetcher->method('getOperation')->willThrowException(new ApiException('boom'));
-
-        $this->orderStateMutator->expects(self::never())->method('apply');
-        $this->stateMachine->expects(self::once())->method('apply')
-            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
-    }
-
-    public function testInvoke_whenPollThrowsOperationNotFoundException_neverAppliesAnOutcomeAndStillCompletes(): void
-    {
-        $paymentRequest = $this->paymentRequest();
-
-        $this->operationStatusFetcher->method('getOperation')->willThrowException(new OperationNotFoundException('gone'));
-
-        $this->orderStateMutator->expects(self::never())->method('apply');
-        $this->stateMachine->expects(self::once())->method('apply')
-            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
-
-        $this->handler->__invoke(new StatusHostedPaymentRequest(null));
     }
 }

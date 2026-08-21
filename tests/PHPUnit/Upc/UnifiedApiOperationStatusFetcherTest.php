@@ -12,7 +12,6 @@ use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
 use PayplugUnifiedCore\Contracts\ITokenCache;
 use PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient;
 use PayplugUnifiedCore\Exceptions\ApiException;
-use PayplugUnifiedCore\Exceptions\OperationNotFoundException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -57,20 +56,28 @@ final class UnifiedApiOperationStatusFetcherTest extends TestCase
     public function testGetOperation_withValidCredentials_returnsTheRawResponse(): void
     {
         $this->tokenCache->method('get')->willReturn('cached-jwt');
-        $body = '{"id":"op_1","transaction":{"status":{"execCode":"0000"}}}';
-        $this->unifiedApiHttpClient->method('get')->willReturn(['status' => 200, 'body' => $body]);
+        $body = '{"id":"op_1","execCode":"0000","orderId":"000000072","amount":7400}';
+        $this->unifiedApiHttpClient->method('get')
+            ->with('https://api.payplug.com/processing-operations/operations/public/op_1', ['Authorization' => 'Bearer cached-jwt'])
+            ->willReturn(['status' => 200, 'body' => $body]);
 
         $response = $this->fetcher->getOperation('op_1');
 
         self::assertSame(['status' => 200, 'body' => $body], $response);
     }
 
-    public function testGetOperation_onMissingOperation_throwsOperationNotFoundException(): void
+    /**
+     * Unlike the old (deleted) UnifiedApiOperationService, an unknown operation id is not given
+     * its own exception type here — getOperation() folds a 404 into the same generic ApiException
+     * as any other non-2xx status, since no caller currently needs to tell them apart.
+     */
+    public function testGetOperation_onMissingOperation_throwsApiException(): void
     {
         $this->tokenCache->method('get')->willReturn('cached-jwt');
         $this->unifiedApiHttpClient->method('get')->willReturn(['status' => 404, 'body' => '{}']);
 
-        $this->expectException(OperationNotFoundException::class);
+        $this->expectException(ApiException::class);
+        $this->expectExceptionCode(404);
 
         $this->fetcher->getOperation('op_1');
     }

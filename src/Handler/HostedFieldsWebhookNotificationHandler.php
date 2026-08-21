@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Handler;
 
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
+use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\Contracts\IPaymentRepository;
+use PayplugUnifiedCore\DataValues\OperationData;
+use PayplugUnifiedCore\DataValues\PaymentOutcome;
 use PayplugUnifiedCore\Exceptions\InvalidNotificationException;
 use PayplugUnifiedCore\Utilities\Helpers\WebhookNotificationHelper;
+use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 
 /**
@@ -20,22 +24,36 @@ use Sylius\Component\Core\Model\PaymentInterface;
  * The static, per-account IPN receiver counterpart to NotifyHostedPaymentRequestHandler, which
  * instead resolves its target Payment via a per-request PaymentRequest hash. Both share the same
  * verify/parse/idempotency primitives (WebhookNotificationHelper, IPaymentRepository); only the
- * resolution path differs — so unlike that handler, this one applies the outcome against the
- * Payment id already resolved by the caller rather than against OperationData's own orderId
- * field (which carries the order *number* PayPlug was given at creation time, not a Sylius
- * Payment id) — there is nothing left to resolve here.
+ * resolution path differs. No merchant/account of ours has a way to configure a webhook secret
+ * (see WebhookNotificationHelper::verifySignature()), so this handler's orderId/amount
+ * cross-check against the resolved Payment is the only remaining protection against a
+ * notification — genuine or forged — being applied to the wrong payment.
+ *
+ * Also called directly by StatusHostedPaymentRequestHandler's GET polling fallback (same
+ * webhook-shaped payload, fetched instead of received) — the lock below is keyed by operationId
+ * rather than by a caller-specific value so both callers serialize against each other: without
+ * it, a poll and a genuinely concurrent webhook delivery for the same operation could both pass
+ * isTreated() before either reaches markTreated().
  */
 class HostedFieldsWebhookNotificationHandler
 {
-    // Mirrors NotifyHostedPaymentRequestHandler's own documented gap: nothing currently writes
-    // this configuration key, so $expectedHeader always resolves empty and every notification is
-    // rejected by WebhookNotificationHelper::verifySignature() until something does.
+    // No admin field or other mechanism currently writes this key, so $expectedHeader below
+    // always resolves empty and WebhookNotificationHelper::verifySignature() accepts every
+    // notification unverified — see that method's docblock for why that's intentional here, not
+    // a gap. Kept (rather than dropped) so a real secret, if one ever becomes configurable, is
+    // still enforced without further changes on this end.
     private const CONFIG_KEY_WEBHOOK_AUTHORIZATION_HEADER = 'payplug_webhook_authorization_header';
+
+    private const LOCK_KEY_PREFIX = 'payplug_upc_treat_';
+
+    private const LOCK_TTL_SECONDS = 30;
 
     public function __construct(
         private IPaymentRepository $paymentRepository,
         private IOrderStateMutator $orderStateMutator,
         private IConfigurationRepository $configurationRepository,
+        private ILock $lock,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -51,13 +69,66 @@ class HostedFieldsWebhookNotificationHandler
         $expectedHeader = $this->configurationRepository->get(self::CONFIG_KEY_WEBHOOK_AUTHORIZATION_HEADER) ?? '';
         $operationData = WebhookNotificationHelper::parse($headers, $rawBody, $expectedHeader);
 
-        if ($this->paymentRepository->isTreated($operationData->operationId)) {
+        if (!$this->matchesPayment($payment, $operationData)) {
             return;
         }
 
-        $this->paymentRepository->save($operationData);
-        $this->orderStateMutator->apply(self::idToString($payment->getId()), $operationData->outcome);
-        $this->paymentRepository->markTreated($operationData->operationId);
+        $lockKey = self::LOCK_KEY_PREFIX . $operationData->operationId;
+        if (!$this->lock->acquire($lockKey, self::LOCK_TTL_SECONDS)) {
+            // Another delivery/poll for the same operation is already being processed — whichever
+            // holds the lock applies the outcome, nothing more to do here.
+            return;
+        }
+
+        try {
+            if ($this->paymentRepository->isTreated($operationData->operationId)) {
+                return;
+            }
+
+            $this->paymentRepository->save($operationData);
+            $this->orderStateMutator->apply(self::idToString($payment->getId()), $operationData->outcome);
+            $this->paymentRepository->markTreated($operationData->operationId);
+        } finally {
+            $this->lock->release($lockKey);
+        }
+    }
+
+    // Split out of treat() to keep its own return count within SonarCloud's limit (php:S1142) —
+    // both branches here mean "nothing to apply," they just differ in whether that's expected
+    // (still-pending) or a problem worth logging over (mismatch).
+    private function matchesPayment(PaymentInterface $payment, OperationData $operationData): bool
+    {
+        if (PaymentOutcome::THREE_DS_PENDING === $operationData->outcome) {
+            // Not a final outcome — leave the payment as-is and, crucially, do not touch
+            // isTreated()/markTreated(): a later, final notification for this same operation
+            // must still be free to apply once it arrives. The 0001-is-pending knowledge itself
+            // now lives in payplug/unified-plugin-core's ExecCodeMapper (see its docblock for the
+            // full execcode-catalog reasoning), not duplicated here.
+            return false;
+        }
+
+        $expectedOrderId = self::resolveExpectedOrderId($payment);
+        if ($operationData->orderId !== $expectedOrderId || $operationData->amount !== $payment->getAmount()) {
+            $this->logger->error('[PayPlug][UPC] Hosted Fields webhook notification does not match the payment it was resolved against.', [
+                'sylius_payment_id' => $payment->getId(),
+                'expected_order_id' => $expectedOrderId,
+                'received_order_id' => $operationData->orderId,
+                'expected_amount' => $payment->getAmount(),
+                'received_amount' => $operationData->amount,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // Mirrors the fallback CaptureHostedPaymentRequestHandler used when it built the orderId sent
+    // to PayPlug at creation time (order number if the order exists yet, else the payment id) —
+    // this must resolve to the same value the platform was originally given back.
+    private static function resolveExpectedOrderId(PaymentInterface $payment): string
+    {
+        return $payment->getOrder()?->getNumber() ?? self::idToString($payment->getId());
     }
 
     private static function idToString(mixed $id): string
