@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Command\Handler\CaptureHostedPaymentRequestHandl
 use PayPlug\SyliusPayPlugPlugin\Upc\HostedPaymentCreatorInterface;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\DataValues\PaymentOutcome;
+use PayplugUnifiedCore\Dto\HostedFieldDto;
 use PayplugUnifiedCore\Exceptions\ApiException;
 use PayplugUnifiedCore\Output\HostedPaymentOutput;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -222,6 +223,26 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
     }
 
+    public function testInvoke_setsSuccessAndCancelUrlsFromTheAfterPayUrlProvider(): void
+    {
+        $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
+
+        $this->afterPayUrlProvider->method('getUrl')
+            ->with($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL)
+            ->willReturn('https://shop.example.com/pay/abc');
+
+        $this->hostedPaymentCreator->expects(self::once())->method('createHostedPayment')
+            ->with(self::callback(static function (HostedFieldDto $dto): bool {
+                self::assertSame('https://shop.example.com/pay/abc', $dto->common->successUrl);
+                self::assertSame('https://shop.example.com/pay/abc?status=canceled', $dto->common->cancelUrl);
+
+                return true;
+            }))
+            ->willReturn(new HostedPaymentOutput(201, '{"id":"pay_1"}', null));
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
     public function testInvoke_onRedirectOutcome_neverAppliesOrderStateMutator(): void
     {
         $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
@@ -232,6 +253,50 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         $this->orderStateMutator->expects(self::never())->method('apply');
         $paymentRequest->expects(self::once())->method('setResponseData')
             ->with(['redirect_url' => 'https://example.com/3ds']);
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_onPending3ds_storesTheUnifiedApiPaymentAndOperationIdsOnThePaymentDetails(): void
+    {
+        $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
+        $payment = $paymentRequest->getPayment();
+
+        $this->hostedPaymentCreator->method('createHostedPayment')
+            ->willReturn(new HostedPaymentOutput(200, '{"id":"pay_1","execCode":"0001","operationIds":["op_1"]}', 'https://example.com/3ds'));
+
+        $payment->expects(self::once())->method('setDetails')
+            ->with(self::callback(static fn (array $details): bool => 'pay_1' === $details['hosted_fields_payment_id'] &&
+                'op_1' === $details['hosted_fields_operation_id']));
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_whenResponseBodyHasNoId_neverStoresAHostedFieldsPaymentOrOperationId(): void
+    {
+        $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
+        $payment = $paymentRequest->getPayment();
+
+        $this->hostedPaymentCreator->method('createHostedPayment')->willReturn(new HostedPaymentOutput(201, '{}', null));
+
+        $payment->expects(self::once())->method('setDetails')
+            ->with(self::callback(static fn (array $details): bool => !isset($details['hosted_fields_payment_id']) &&
+                !isset($details['hosted_fields_operation_id'])));
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_onRedirectHtmlOutcome_setsResponseDataAndNeverAppliesOrderStateMutator(): void
+    {
+        $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
+
+        $html = '<html><body>3DS challenge form</body></html>';
+        $this->hostedPaymentCreator->method('createHostedPayment')
+            ->willReturn(new HostedPaymentOutput(200, '{"id":"pay_1","execCode":"0001"}', null, $html));
+
+        $this->orderStateMutator->expects(self::never())->method('apply');
+        $paymentRequest->expects(self::once())->method('setResponseData')
+            ->with(['redirect_html' => $html]);
 
         $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
     }

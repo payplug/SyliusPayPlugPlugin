@@ -7,6 +7,12 @@ parameters:
     payplug.oauth_audience: '%env(default:payplug.oauth_audience.default:PAYPLUG_OAUTH_AUDIENCE)%'
     payplug.unified_api_base_url.default: 'https://api.payplug.com'
     payplug.unified_api_base_url: '%env(default:payplug.unified_api_base_url.default:PAYPLUG_UNIFIED_API_BASE_URL)%'
+    # Escape hatch for QA/staging hosts whose TLS certificate is signed by an internal CA the
+    # merchant's PHP install has no way to obtain or trust. MUST default to true (verification on)
+    # and MUST NOT be disabled in production — this only exists so a QA/staging environment can
+    # explicitly opt out for its own known-internal host, not as a general "skip TLS" switch.
+    payplug.unified_api_verify_tls.default: true
+    payplug.unified_api_verify_tls: '%env(bool:default:payplug.unified_api_verify_tls.default:PAYPLUG_UNIFIED_API_VERIFY_TLS)%'
 
 services:
     _defaults:
@@ -22,6 +28,7 @@ services:
             $payplugOauthBaseUrl: '%payplug.oauth_base_url%'
             $payplugOauthAudience: '%payplug.oauth_audience%'
             $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
+            $unifiedApiVerifyTls: '%payplug.unified_api_verify_tls%'
 
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
@@ -63,6 +70,9 @@ services:
 
     PayPlug\SyliusPayPlugPlugin\Upc\HostedPaymentCreatorInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiHostedPaymentCreator
+
+    PayPlug\SyliusPayPlugPlugin\Upc\OperationStatusFetcherInterface:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiOperationStatusFetcher
 
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction

@@ -14,6 +14,7 @@ final class SyliusUnifiedApiHttpClient implements IUnifiedApiHttpClient
     public function __construct(
         private HttpClientInterface $httpClient,
         private LoggerInterface $logger,
+        private bool $unifiedApiVerifyTls,
     ) {
     }
 
@@ -34,6 +35,13 @@ final class SyliusUnifiedApiHttpClient implements IUnifiedApiHttpClient
      */
     private function send(string $method, string $url, array $options): array
     {
+        // Off only when payplug.unified_api_verify_tls is explicitly disabled for a QA/staging
+        // host with an untrusted internal CA (see config/services.yaml) — never in production.
+        if (!$this->unifiedApiVerifyTls) {
+            $options['verify_peer'] = false;
+            $options['verify_host'] = false;
+        }
+
         $this->logger->debug('[PayPlug debug] Unified API raw request.', [
             'method' => $method,
             'url' => $url,
