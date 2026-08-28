@@ -1,0 +1,5 @@
+{% set form = hookable_metadata.context.form.gatewayConfig.config.renew_oauth %}
+
+<div class="col-12 col-md-12">
+    {{ form_row(form, {attr: {name:"renew_oauth"}}) }}
+</div>

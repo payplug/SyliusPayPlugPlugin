@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <defaults public="true" />
+
+        <service id="payplug_sylius_payplug_plugin.behat.context.cli.update_payment_state" class="Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Cli\UpdatePaymentStateContext">
+            <argument type="service" id="kernel" />
+            <argument type="service" id="payplug_sylius_payplug_plugin.behat.payplug_api_mocker" />
+            <argument type="service" id="sylius.factory.payment" />
+            <argument type="service" id="sylius.repository.payment" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <tag name="fob.context_service" />
+        </service>
+    </services>
+</container>

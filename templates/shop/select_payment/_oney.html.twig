@@ -1,0 +1,45 @@
+{% set form = hookable_metadata.context.form %}
+{% set method = hookable_metadata.context.method %}
+{% set order = hookable_metadata.context.order %}
+{% set factoryName = method.gatewayConfig.factoryName %}
+{% set code = method.code %}
+
+{% set oneyFactoryName = constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') %}
+{% set checkboxClass = 'checkbox-oney' %}
+
+{% set showOney = false %}
+{% if form.parent.parent.oney_payment_choice is defined %}
+    {% set showOney = true %}
+{% endif %}
+
+{% set values = {
+    modal: '.oney-complete-info-popin',
+    area: 'body[data-route=sylius_shop_checkout_select_payment]'
+} %}
+
+{% if app.session is not null and app.session.flashbag.get('oney_has_error')|first is same as true %}
+    {% set completeInfoRoute = {route: path('payplug_sylius_oney_complete_info') ~ '?tokenValue=' ~ order.tokenValue} %}
+    {% set values = values|merge(completeInfoRoute) %}
+{% endif %}
+
+{% set logo_path = 'bundles/payplugsyliuspayplugplugin/assets/oney/3x4x-without-fees.svg' %}
+{% if ((form.parent.parent.oney_payment_choice.vars.choices|last).value|split('oney_')|last) not in constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::ONEY_WITHOUT_FEES_CHOICES') %}
+    {% set logo_path = 'bundles/payplugsyliuspayplugplugin/assets/oney/3x4x.svg' %}
+{% endif %}
+<div
+    class="content"
+    {{
+        stimulus_controller('@payplug/sylius-payplug-plugin/oney-payment', values)|
+        stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
+            'inputId': form.vars.id,
+            'logoUrl': asset(logo_path),
+            'className': 'oney-label'
+        })
+    }}
+>
+    {% if showOney %}
+        <div class="oney-payment-choice">
+            {{ form_row(form.parent.parent.oney_payment_choice) }}
+        </div>
+    {% endif %}
+</div>

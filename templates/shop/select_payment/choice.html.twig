@@ -1,0 +1,12 @@
+{% set form = hookable_metadata.context.form %}
+{% set method = hookable_metadata.context.method %}
+{% set order = hookable_metadata.context.order %}
+{% set factoryName = method.gatewayConfig.factoryName %}
+
+<div
+    {{ stimulus_target('@payplug/sylius-payplug-plugin/checkout-select-payment', 'trigger') }}
+    data-payment-input-id="{{ form.vars.id }}"
+    style="display: none"
+>
+    {% hook '#' ~ factoryName %}
+</div>

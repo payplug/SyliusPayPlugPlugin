@@ -1,0 +1,5 @@
+sylius_refund:
+    resource: "@SyliusRefundPlugin/config/routes.yaml"
+
+sylius_payplug:
+    resource: "@PayPlugSyliusPayPlugPlugin/config/routing.yaml"

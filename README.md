@@ -1,0 +1,222 @@
+[![License](https://img.shields.io/packagist/l/payplug/sylius-payplug-plugin.svg)](https://github.com/payplug/SyliusPayPlugPlugin/blob/master/LICENSE)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=alert_status&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=duplicated_lines_density&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=code_smells&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=github-payplug-payplug-syliuspayplugplugin&metric=coverage&token=af29f9f3fbb3a74caff4e4a4d168bddab858f4dc)](https://sonarcloud.io/summary/new_code?id=github-payplug-payplug-syliuspayplugplugin)
+[![Version](https://img.shields.io/packagist/v/payplug/sylius-payplug-plugin.svg)](https://packagist.org/packages/payplug/sylius-payplug-plugin)
+[![Total Downloads](https://poser.pugx.org/payplug/sylius-payplug-plugin/downloads)](https://packagist.org/packages/payplug/sylius-payplug-plugin)
+
+<p align="center">
+    <a href="https://sylius.com" target="_blank">
+        <picture>
+         <source media="(prefers-color-scheme: dark)" srcset="https://media.sylius.com/sylius-logo-800-dark.png">
+         <source media="(prefers-color-scheme: light)" srcset="https://media.sylius.com/sylius-logo-800.png">
+         <img alt="Sylius Logo." src="https://media.sylius.com/sylius-logo-800.png">
+        </picture>
+    </a>
+</p>
+
+<h1 align="center">Payplug payment plugin for Sylius</h1>
+
+<p align="center">This plugin allows you to integrate Payplug payment with Sylius platform app including payment features and refunding orders.</p>
+
+## Requirements
+
+In the channel settings, the base currency must be set to **EUR** because the payment gateway only works in this currency. 
+
+In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
+
+> #### ⚠️ Refunds requirements 
+> You need to make some adjustments in order to make our plugin worked normally due to a dependency to [refund-plugin](https://github.com/Sylius/RefundPlugin). Please follow those requirements:
+> 
+> To generate "Credit memos" when refunding, your server need to have the [**WKHTMLTOPDF**](https://wkhtmltopdf.org/) binary as explain in [refund-pluging documentation # Pre-requirements](https://github.com/Sylius/RefundPlugin/tree/master#pre---requirements)
+
+## Compatibility
+
+|        | Version |
+|:-------|:--------|
+| PHP    | ^8.2    |
+| Sylius | ^2.0    |
+
+
+### With Symfony Flex
+
+#### 1. Allow contrib recipes and require the plugin
+
+```bash
+composer config extra.symfony.allow-contrib true
+composer require payplug/sylius-payplug-plugin
+```
+
+#### 2. Install the Flex recipe
+
+```bash
+composer recipes:install payplug/sylius-payplug-plugin --force
+```
+
+This automatically registers the bundle, copies configuration files, and sets up assets (on Sylius 2.1+).
+
+#### 3. Apply migrations to your database
+
+```shell
+bin/console doctrine:migrations:migrate
+```
+
+#### 4. Add Payplug to refundable payment methods for Sylius Refund Plugin in `config/services.yaml`
+
+```yaml
+parameters:
+    locale: fr_FR
+    sylius_refund.supported_gateways:
+        - payplug
+        - payplug_oney
+        - payplug_bancontact
+        - payplug_apple_pay
+        - payplug_american_express
+```
+
+#### 5. Add Traits for Customer and PaymentMethod entities
+
+* App\Entity\Customer\Customer
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Customer;
+
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\CustomerTrait;
+use Sylius\Component\Core\Model\Customer as BaseCustomer;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_customer")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_customer')]
+class Customer extends BaseCustomer implements CardsOwnerInterface
+{
+  use CustomerTrait;
+}
+```
+
+* App\Entity\Payment\PaymentMethod
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Payment;
+
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentMethodTrait;
+use Sylius\Component\Core\Model\PaymentMethod as BasePaymentMethod;
+use Sylius\Component\Payment\Model\PaymentMethodTranslationInterface;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_payment_method")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_payment_method')]
+class PaymentMethod extends BasePaymentMethod
+{
+   use PaymentMethodTrait;
+
+   protected function createTranslation(): PaymentMethodTranslationInterface
+   {
+       return new PaymentMethodTranslation();
+   }
+}
+```
+
+* App\Entity\Payment\Payment
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity\Payment;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use PayPlug\SyliusPayPlugPlugin\Entity\Traits\PaymentTrait;
+use Sylius\Component\Core\Model\Payment as BasePayment;
+
+/**
+* @ORM\Entity
+* @ORM\Table(name="sylius_payment")
+*/
+#[ORM\Entity]
+#[ORM\Table(name: 'sylius_payment')]
+class Payment extends BasePayment
+{
+  use PaymentTrait;
+}
+```
+
+#### 6. Process translations
+
+```bash
+php bin/console translation:extract en PayPlugSyliusPayPlugPlugin --dump-messages
+php bin/console translation:extract fr PayPlugSyliusPayPlugPlugin --dump-messages
+```
+
+#### 7. Clear cache
+
+```bash
+bin/console cache:clear
+```
+
+🎉 You are now ready to add Payplug Payment method.
+In your back-office, go to `Configuration > Payment methods`, then click on `Create` and choose "**Payplug**".
+
+## Logs
+
+If you want to follow the logs in the production environment, you need to add the configuration in `config/packages/prod/monolog.yaml`, logs should be in `var/log/prod.log` which can be searched after the phrase `[Payum]` or `[Payplug]`:
+
+ ```yaml
+   monolog:
+       handlers:
+          ...
+          
+          payum:
+              level: debug
+              type: stream
+              path: "%kernel.logs_dir%/%kernel.environment%.log"
+```
+ 
+## Customization
+
+### Available services you can [decorate](https://symfony.com/doc/current/service_container/service_decoration.html) and forms you can [extend](http://symfony.com/doc/current/form/create_form_type_extension.html)
+
+Run the below command to see what Symfony services are shared with this plugin:
+ 
+```bash
+$ bin/console debug:container payplug_sylius_payplug_plugin
+```
+
+## Development
+
+See [How to contribute](CONTRIBUTING.md).
+
+## License
+
+This library is under the MIT license.
+
+## Oney Integration
+
+For better Oney integration, you can check the [Oney enhancement documentation](doc/oney_enhancement.md).
+
+## Authorized Payment
+
+Since 1.11.0, the plugin supports the authorized payment feature. You can check the [Authorized Payment documentation](doc/authorized_payment.md).
+
+## Doc
+- [Development](doc/development.md)
+- [Release Process](RELEASE.md)

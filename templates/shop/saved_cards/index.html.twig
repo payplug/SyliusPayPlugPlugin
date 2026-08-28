@@ -1,0 +1,10 @@
+{% extends '@PayPlugSyliusPayPlugPlugin/shop/saved_cards/layout.html.twig' %}
+
+{% import '@SyliusShop/shared/messages.html.twig' as messages %}
+{% import '@SyliusShop/shared/buttons.html.twig' as buttons %}
+
+{% block title %}{{ 'payplug_sylius_payplug_plugin.ui.account.saved_cards.title'|trans }} | {{ parent() }}{% endblock %}
+
+{% block subcontent %}
+    {% hook 'sylius.shop.account.saved_cards.index.subcontent' with { _prefixes: [], savedCards: savedCards } %}
+{% endblock %}

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <imports>
+        <import resource="services/contexts.xml" />
+        <import resource="services/pages.xml" />
+    </imports>
+
+    <parameters>
+        <parameter key="sylius_refund.supported_gateways" type="collection">
+            <parameter>payplug</parameter>
+            <parameter>payplug_oney</parameter>
+            <parameter>cash_on_delivery</parameter>
+        </parameter>
+    </parameters>
+
+    <services>
+        <defaults public="true" />
+
+        <service id="payplug_sylius_payplug_plugin.behat.payplug_api_mocker" class="Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\PayPlugApiMocker">
+<!--            <argument type="service" id="sylius.behat.mocker" />-->
+            <argument type="service" id="service_container" />
+        </service>
+        <service id="PayPlug\SyliusPayPlugPlugin\Provider\OneySimulation\OneySimulationDataProviderInterface" class="Tests\PayPlug\SyliusPayPlugPlugin\Behat\Mocker\StubOneySimulationDataProvider" />
+    </services>
+</container>

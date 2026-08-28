@@ -1,0 +1,5 @@
+{
+    "dependencies": {
+        "@payplug/sylius-payplug-plugin": "file:../../../assets"
+    }
+}

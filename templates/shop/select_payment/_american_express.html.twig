@@ -1,0 +1,7 @@
+{% set form = hookable_metadata.context.form %}
+
+<div {{ stimulus_controller('@payplug/sylius-payplug-plugin/payment-logo', {
+    inputId: form.vars.id,
+    logoUrl: asset('bundles/payplugsyliuspayplugplugin/assets/american-express/logo.svg'),
+    className: 'american-express-label'
+}) }}></div>

@@ -1,0 +1,33 @@
+{% block _sylius_admin_payment_method_gatewayConfig_factoryName_help %}
+    <div class="col-12 mt-3">
+        {% set isOney = constant('\\PayPlug\\SyliusPayPlugPlugin\\Gateway\\OneyGatewayFactory::FACTORY_NAME') in form.vars.value %}
+        {% if isOney %}
+            <div class="alert alert-success" role="alert">
+                <p>{{ ('payplug_sylius_payplug_plugin.ui.oney_gateway_config.info')|trans({'%link%': 'https://support.payplug.com/hc/fr/articles/360015899980-Le-paiement-fractionn%C3%A9-garanti-avec-Oney-sur-Sylius'})|raw }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block _sylius_admin_payment_method_gatewayConfig_config_payplug_checkbox_widget %}
+    <div class="form-switch ms-n5">
+        {{- form_widget(form) -}}
+    </div>
+{% endblock %}
+
+{% block _sylius_admin_payment_method_gatewayConfig_config_fees_for_row %}
+    <div {{ block('widget_container_attributes') }}>
+        {{ form_label(form) }}
+        {%- for child in form %}
+            <div class="form-check form-check-inline">
+                {{- form_widget(child, {'attr': 'client' in child.vars.value ? {'checked': 'checked'} : {}}, sylius_test_form_attribute('option')) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
+            </div>
+        {% endfor -%}
+    </div>
+    {{- form_errors(form) -}}
+{% endblock %}
+
+{% block _sylius_admin_payment_method_gatewayConfig_config_fees_for_label %}
+    <span class="col-form-label d-inline-block">{{ label|trans }}</span>
+{% endblock %}

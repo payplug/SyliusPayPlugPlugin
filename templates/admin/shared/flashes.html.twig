@@ -1,0 +1,30 @@
+{% set session = _context.app.session|default(null) %}
+
+<div class="container-xl" {{ sylius_test_html_attribute('payplug-flashes-container') }}>
+{% for flash in session.flashbag.get('payplug_error') %}
+    <div
+        class="mt-3 sylius alert alert-danger alert-dismissible"
+        role="alert"
+    >
+        <div class="alert-icon">
+            {{ ux_icon('tabler:exclamation-circle') }}
+        </div>
+        <div>
+            <h4 class="alert-heading">
+                {% set header = 'sylius.ui.error' %}
+                {{ header|trans }}
+            </h4>
+            <div class="alert-description">
+                {% if flash is iterable %}
+                    {{ flash.message|trans(flash.parameters, 'flashes')|raw }}
+                {% else %}
+                    {{ flash|trans({}, 'flashes')|raw }}
+                {% endif %}
+            </div>
+        </div>
+        <a class="btn-close" data-bs-dismiss="alert" aria-label="close">
+            {{ ux_icon('tabler:x') }}
+        </a>
+    </div>
+{% endfor %}
+</div>

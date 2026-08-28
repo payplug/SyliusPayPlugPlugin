@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="33px" height="22px" viewBox="0 0 33 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Mastercard dark</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Frise-dark" transform="translate(-37, 0)">
+            <g id="Mastercard-dark" transform="translate(37, 0)">
+                <rect id="Rectangle-Copy" fill="#D5D6D8" style="mix-blend-mode: color;" x="0" y="0" width="33" height="22" rx="2"></rect>
+                <g id="ma_symbol" transform="translate(5.0307, 3.9101)" fill-rule="nonzero">
+                    <g id="Group">
+                        <rect id="Rectangle" fill="#FF5F00" x="8.37159581" y="1.51738655" width="6.2007874" height="11.1417323"></rect>
+                        <path d="M8.7652966,7.08825269 C8.7652966,4.92289836 9.76923361,2.85596923 11.462147,1.51738655 C8.39128085,-0.903873293 3.92277691,-0.37237723 1.50151707,2.71817395 C-0.900057731,5.78904009 -0.368561668,10.237859 2.72198951,12.6591188 C5.30072967,14.6866779 8.90309187,14.6866779 11.481832,12.6591188 C9.76923361,11.3205362 8.7652966,9.25360702 8.7652966,7.08825269 Z" id="Path" fill="#EB001B"></path>
+                        <path d="M22.9385249,7.08825269 C22.9385249,11.0055755 19.7692336,14.1748669 15.8519108,14.1748669 C14.2574226,14.1748669 12.7219895,13.6433708 11.481832,12.6591188 C14.5526982,10.237859 15.0841942,5.78904009 12.6629344,2.69848891 C12.3086037,2.26541805 11.9149029,1.85203222 11.481832,1.51738655 C14.5526982,-0.903873293 19.0212021,-0.37237723 21.4227769,2.71817395 C22.4070289,3.95833143 22.9385249,5.4937645 22.9385249,7.08825269 Z" id="Path" fill="#F79E1B"></path>
+                    </g>
+                </g>
+                <rect id="Rectangle" fill="#D5D6D8" style="mix-blend-mode: color;" x="0" y="5.68434189e-14" width="33" height="22" rx="2"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

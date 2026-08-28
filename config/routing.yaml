@@ -1,0 +1,6 @@
+payplug_sylius_admin:
+    resource: "@PayPlugSyliusPayPlugPlugin/config/routing/admin.yaml"
+    prefix: '/%sylius_admin.path_name%'
+
+payplug_sylius_shop:
+    resource: "@PayPlugSyliusPayPlugPlugin/config/routing/shop.yaml"

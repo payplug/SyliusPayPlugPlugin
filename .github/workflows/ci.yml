@@ -1,0 +1,100 @@
+name: CI
+
+'on':
+    pull_request:
+        branches:
+            - develop
+            - master
+        paths-ignore:
+            - README.md
+
+jobs:
+    quality:
+        uses: payplug/template-ci/.github/workflows/sylius_quality.yml@main
+
+    sylius-matrix:
+        needs: [quality]
+        if: github.base_ref == 'develop'
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            symfony-versions: '["7.3"]'
+
+    # -----------------------------------------------------------------------
+    # COVERAGE — generates a Clover coverage report (PCOV) for SonarCloud to
+    #    ingest. Kept separate from the reusable sylius_phpunit matrix (which
+    #    runs with coverage: none) so coverage generation stays this repo's
+    #    own concern, same as payplug/unified-plugin-core's ci.yml.
+    # -----------------------------------------------------------------------
+    coverage:
+        name: Coverage
+        if: github.base_ref == 'develop'
+        runs-on: ubuntu-latest
+        env:
+            APP_ENV: test
+        services:
+            mariadb:
+                image: 'mariadb:10.4.11'
+                ports:
+                    - '3306:3306'
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: true
+                options: '--health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3'
+        steps:
+            -
+                uses: actions/checkout@v4
+            -
+                name: 'Setup PHP 8.2'
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: '8.2'
+                    ini-values: date.timezone=UTC
+                    extensions: intl
+                    tools: symfony
+                    coverage: pcov
+            -
+                name: 'Setup Node 20.x'
+                uses: actions/setup-node@v4
+                with:
+                    node-version: '20.x'
+            -
+                name: 'Composer - Get Cache Directory'
+                id: composer-cache
+                run: 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT'
+            -
+                name: 'Composer - Set cache'
+                uses: actions/cache@v4
+                with:
+                    path: '${{ steps.composer-cache.outputs.dir }}'
+                    key: 'php-8.2-sylius-2.1.0-symfony-7.3-coverage-composer-${{ hashFiles(''**/composer.json'') }}'
+                    restore-keys: 'php-8.2-sylius-2.1.0-symfony-7.3-coverage-composer-'
+            -
+                name: 'Composer - Github Auth'
+                run: 'composer config -g github-oauth.github.com ${{ github.token }}'
+            -
+                name: 'Install Sylius-Standard and Plugin'
+                run: 'make install -e SYLIUS_VERSION=2.1.0 SYMFONY_VERSION=7.3'
+                id: end-of-setup-sylius
+            -
+                name: 'Run tests with coverage'
+                run: 'composer test-coverage'
+                if: 'always() && steps.end-of-setup-sylius.outcome == ''success'''
+            -
+                name: 'Upload coverage report'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: clover-coverage
+                    path: build/logs/clover.xml
+                    retention-days: 1
+
+    sonarcloud:
+        if: always() && !failure() && !cancelled() && github.base_ref == 'develop'
+        needs: [sylius-matrix, coverage]
+        uses: payplug/template-ci/.github/workflows/sonarcloud-coverage.yml@main
+        with:
+            project-name: 'github-payplug-payplug-syliuspayplugplugin'
+            src-folder: 'src/'
+            coverage-report-artifact: 'clover-coverage'
+            enforce-quality-gate: true
+        secrets:
+            sonar-orga: ${{ secrets.SONAR_ORGA }}
+            sonar-token: ${{ secrets.SONAR_TOKEN }}

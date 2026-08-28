@@ -1,0 +1,5 @@
+controllers:
+    resource:
+        path: '../../src/Action/Admin/'
+        namespace: 'PayPlug\SyliusPayPlugPlugin\Action\Admin'
+    type: attribute
