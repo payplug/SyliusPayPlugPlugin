@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Upc;
 
-use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayplugUnifiedCore\Dto\BrowserDto;
 use PayplugUnifiedCore\Dto\CommonFieldsDto;
 use PayplugUnifiedCore\Dto\CustomerDto;
@@ -41,14 +40,7 @@ final class PaymentCaptureContextBuilder
      */
     public function resolveGatewayCredentials(PaymentMethodInterface $method): array
     {
-        $gatewayConfig = $method->getGatewayConfig()?->getConfig() ?? [];
-        $accountId = $gatewayConfig[PayPlugGatewayFactory::HF_IDENTIFIER] ?? null;
-        $submerchantExternalId = $gatewayConfig[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null;
-        if (!\is_string($accountId) || '' === $accountId || !\is_string($submerchantExternalId) || '' === $submerchantExternalId) {
-            throw new \LogicException('Hosted Fields account id or submerchant id is not configured for this payment method.');
-        }
-
-        return [$accountId, $submerchantExternalId];
+        return GatewayCredentialsResolver::resolve($method);
     }
 
     public function buildCommonFields(

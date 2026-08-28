@@ -74,6 +74,9 @@ services:
     PayPlug\SyliusPayPlugPlugin\Upc\OperationStatusFetcherInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiOperationStatusFetcher
 
+    PayPlug\SyliusPayPlugPlugin\Upc\RefundCreatorInterface:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiRefundCreator
+
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction
 
