@@ -409,4 +409,231 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
 
         $this->handler->treat($payment, $body, ['Authorization' => 'Bearer shared-secret']);
     }
+
+    /**
+     * When the notification's operation id matches one recorded under $details['refunds']
+     * (RefundPaymentProcessor stores it there for both full and partial UHF refunds), this is a
+     * refund confirmation, not the payment's own outcome — ExecCodeMapper's "0000" => PAID mapping
+     * would otherwise misreport a successful refund as the payment being paid. The amount check
+     * must use the refund's own recorded amount (500), not the payment's full amount (1000).
+     */
+    public function testTreat_onNotificationMatchingAKnownRefundId_appliesRefundedInsteadOfThePaymentOutcome(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_1', 'execCode' => '0000', 'orderId' => '42', 'amount' => 500]);
+        $details = ['refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->with('op_refund_1')->willReturn(false);
+
+        $this->paymentRepository->expects(self::once())->method('save');
+        $this->paymentRepository->expects(self::once())->method('markTreated')->with('op_refund_1');
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::REFUNDED);
+
+        $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    /**
+     * A refund confirmation is matched against its OWN recorded amount (500), not the payment's
+     * full amount (1000) — the pre-fix behavior (comparing against the payment's full amount)
+     * would reject every partial-refund confirmation, which is exactly the bug this feature fixes.
+     */
+    public function testTreat_onRefundNotificationAmountMismatch_logsAndSkipsWithoutApplyingTheOutcome(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_1', 'execCode' => '0000', 'orderId' => '42', 'amount' => 400]);
+        $details = ['refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+
+        $this->logger->expects(self::once())->method('error');
+        $this->paymentRepository->expects(self::never())->method('save');
+        $this->orderStateMutator->expects(self::never())->method('apply');
+
+        $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    /**
+     * A full UHF refund records its operation id with internal_id: null (RefundPaymentProcessor::
+     * processHostedFields() has no Sylius $refundId to attach) — still resolvable and REFUNDED.
+     */
+    public function testTreat_onFullRefundNotification_appliesRefundedUsingTheFullRefundAmount(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_full', 'execCode' => '0000', 'orderId' => '42', 'amount' => 1000]);
+        $details = ['refunds' => [['internal_id' => null, 'id' => 'op_refund_full', 'amount' => 1000]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->with('op_refund_full')->willReturn(false);
+
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::REFUNDED);
+
+        $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    /**
+     * RefundPaymentProcessor's createRefund() call can return a 2xx response with no operationIds
+     * (logged as an error there) — the refund entry it records then has id: null, so this
+     * confirmation's own operationId ("op_refund_unresolved") can never match it by id. Falling
+     * back to the unresolved entry's own recorded amount (500) is what still lets this be
+     * classified as REFUNDED instead of being dropped or misapplied as a plain payment
+     * confirmation.
+     */
+    public function testTreat_onNotificationForARefundWithNoCapturedOperationId_fallsBackToTheUnresolvedRefundEntry(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_unresolved', 'execCode' => '0000', 'orderId' => '42', 'amount' => 500]);
+        $details = ['refunds' => [['internal_id' => 77, 'id' => null, 'amount' => 500]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->with('op_refund_unresolved')->willReturn(false);
+
+        $this->paymentRepository->expects(self::once())->method('save');
+        $this->paymentRepository->expects(self::once())->method('markTreated')->with('op_refund_unresolved');
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::REFUNDED);
+
+        $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    /**
+     * The refund's own execCode indicates failure (anything other than "0000") — the outcome
+     * must never be forced to REFUNDED (money never moved), nor passed through as-is to the
+     * Payment's own state machine: PaymentOutcome::FAILED maps to TRANSITION_FAIL (see
+     * SyliusOrderStateMutator), which means "this PAYMENT failed," not "this refund attempt
+     * failed" — the underlying payment already succeeded, only the refund didn't. Only logging +
+     * idempotency tracking happen; orderStateMutator must never be called. The matched refund
+     * entry is also flagged 'failed' => true on the Payment itself — see
+     * RefundPaymentProcessor::sumRecordedRefunds(), which relies on this flag to exclude money
+     * that was accepted synchronously but never actually moved from a later full refund's
+     * remaining-balance calculation.
+     */
+    public function testTreat_onRefundNotificationWithFailureExecCode_neverTouchesThePaymentStateButStillMarksTreated(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_1', 'execCode' => '9999', 'orderId' => '42', 'amount' => 500]);
+        $details = ['refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->with('op_refund_1')->willReturn(false);
+
+        $payment = $this->payment(42, 1000, null, $details);
+        $payment->expects(self::once())->method('setDetails')->with(self::callback(
+            static function (array $details): bool {
+                return [[
+                    'internal_id' => 77,
+                    'id' => 'op_refund_1',
+                    'amount' => 500,
+                    'failed' => true,
+                ]] === $details['refunds'];
+            },
+        ));
+
+        $this->paymentRepository->expects(self::once())->method('save');
+        $this->paymentRepository->expects(self::once())->method('markTreated')->with('op_refund_1');
+        $this->orderStateMutator->expects(self::never())->method('apply');
+        $this->logger->expects(self::once())->method('error');
+
+        $this->handler->treat($payment, $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    /**
+     * The 'failed' flag write goes through RefundDetailsLockKey — the same lock key
+     * RefundPaymentProcessor::processHostedFields()/processHostedFieldsWithAmount() acquire
+     * around their own (network-call-spanning) read-modify-write of this same
+     * $details['refunds'] array — not the per-operation 'payplug_upc_treat_' lock applyLocked()
+     * uses afterwards. Both locks are acquired/released here: the refund-details one first
+     * (guarding the setDetails() write below), the treat one second (guarding
+     * isTreated()/markTreated()/save()).
+     */
+    public function testTreat_onRefundNotificationWithFailureExecCode_acquiresTheSharedRefundDetailsLockKeyBeforeWritingTheFailedFlag(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_1', 'execCode' => '9999', 'orderId' => '42', 'amount' => 500]);
+        $details = ['refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->with('op_refund_1')->willReturn(false);
+
+        $acquiredKeys = [];
+        $this->lock = $this->createMock(ILock::class);
+        $this->lock->method('acquire')->willReturnCallback(static function (string $key, int $ttl) use (&$acquiredKeys): bool {
+            $acquiredKeys[] = [$key, $ttl];
+
+            return true;
+        });
+        $this->handler = new HostedFieldsWebhookNotificationHandler(
+            $this->paymentRepository,
+            $this->orderStateMutator,
+            $this->configurationRepository,
+            $this->lock,
+            $this->logger,
+            new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
+        );
+
+        $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+
+        self::assertSame(
+            [['payplug_upc_refund_details_42', 30], ['payplug_upc_treat_op_refund_1', 30]],
+            $acquiredKeys,
+        );
+    }
+
+    /**
+     * A refund creation (RefundPaymentProcessor::processHostedFields()/
+     * processHostedFieldsWithAmount()) is in progress for this payment right now, holding
+     * RefundDetailsLockKey. The notification must NOT be marked treated in that case — returning
+     * without ever calling applyLocked() leaves isTreated()/markTreated() untouched, so a later
+     * redelivery of the same notification gets a fresh chance to record the 'failed' flag once
+     * that refund creation has released the lock — instead of the flag being silently lost forever
+     * because this delivery was marked treated without ever recording it.
+     */
+    public function testTreat_onRefundNotificationWithFailureExecCode_whenRefundDetailsLockCannotBeAcquired_doesNotMarkTreated(): void
+    {
+        $body = \json_encode(['id' => 'op_refund_1', 'execCode' => '9999', 'orderId' => '42', 'amount' => 500]);
+        $details = ['refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]]];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+
+        $this->lock = $this->createMock(ILock::class);
+        $this->lock->method('acquire')->willReturnCallback(
+            static fn (string $key): bool => 'payplug_upc_refund_details_42' !== $key,
+        );
+        $this->handler = new HostedFieldsWebhookNotificationHandler(
+            $this->paymentRepository,
+            $this->orderStateMutator,
+            $this->configurationRepository,
+            $this->lock,
+            $this->logger,
+            new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
+        );
+
+        $payment = $this->payment(42, 1000, null, $details);
+        $payment->expects(self::never())->method('setDetails');
+        $this->paymentRepository->expects(self::never())->method('isTreated');
+        $this->paymentRepository->expects(self::never())->method('save');
+        $this->paymentRepository->expects(self::never())->method('markTreated');
+        $this->orderStateMutator->expects(self::never())->method('apply');
+        // Once for the "non-success outcome" log, once for the lock-contention log.
+        $this->logger->expects(self::exactly(2))->method('error');
+
+        $this->handler->treat($payment, $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    /**
+     * A delayed/redelivered copy of the ORIGINAL payment-creation notification must never be
+     * misclassified as a refund confirmation just because this payment also has an unresolved
+     * (id: null) refund entry sitting in $details['refunds'] — the known payment-creation
+     * operation id (hosted_fields_operation_id) excludes it from the unresolved-entry fallback.
+     */
+    public function testTreat_onRedeliveredPaymentNotification_isNotMisclassifiedAsTheUnresolvedRefund(): void
+    {
+        $body = \json_encode(['id' => 'op_payment_1', 'execCode' => '0000', 'orderId' => '42', 'amount' => 1000]);
+        $details = [
+            'hosted_fields_operation_id' => 'op_payment_1',
+            'refunds' => [['internal_id' => 77, 'id' => null, 'amount' => 500]],
+        ];
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->with('op_payment_1')->willReturn(false);
+
+        $this->paymentRepository->expects(self::once())->method('save');
+        $this->paymentRepository->expects(self::once())->method('markTreated')->with('op_payment_1');
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
+
+        $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+    }
 }
