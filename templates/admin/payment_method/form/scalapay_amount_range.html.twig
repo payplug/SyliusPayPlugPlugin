@@ -1,0 +1,9 @@
+{% set min_amount_form = hookable_metadata.context.form.gatewayConfig.config.min_amount %}
+{% set max_amount_form = hookable_metadata.context.form.gatewayConfig.config.max_amount %}
+
+<div class="col-12 col-md-6 mt-5">
+    {{ form_row(min_amount_form) }}
+</div>
+<div class="col-12 col-md-6 mt-5">
+    {{ form_row(max_amount_form) }}
+</div>

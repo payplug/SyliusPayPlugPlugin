@@ -93,6 +93,10 @@ payplug_sylius_payplug_plugin:
                 title: 'The fees are:'
                 client: Split between you and your customers
                 merchant: For you
+        scalapay_gateway_config:
+            min_amount: Minimum amount
+            max_amount: Maximum amount
+            amount_help: Leave empty to use the limits authorized by PayPlug.
         integrated_payment:
             card_holder.title: 'Cardholder name'
             card_holder.error: 'Invalid Name and/or Last Name.'
