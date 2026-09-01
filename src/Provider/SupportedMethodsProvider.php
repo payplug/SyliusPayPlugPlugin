@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAmountRangeResolver;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
@@ -15,6 +17,7 @@ final class SupportedMethodsProvider
     public function __construct(
         private CurrencyContextInterface $currencyContext,
         private PayPlugApiClientFactoryInterface $clientFactory,
+        private AccountAmountRangeResolver $amountRangeResolver,
     ) {
     }
 
@@ -53,54 +56,61 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            if (
-                $paymentAmount < $authorizedCurrencies[$activeCurrencyCode]['min_amount'] ||
-                $paymentAmount > $authorizedCurrencies[$activeCurrencyCode]['max_amount']
-            ) {
-                unset($supportedMethods[$key]);
+            [$minAmount, $maxAmount] = $this->resolveAmountBounds(
+                $gatewayConfig,
+                $activeCurrencyCode,
+                $authorizedCurrencies[$activeCurrencyCode],
+            );
 
-                continue;
+            if ($paymentAmount < $minAmount || $paymentAmount > $maxAmount) {
+                unset($supportedMethods[$key]);
             }
         }
 
         return $supportedMethods;
     }
 
+    /**
+     * A gateway's own config extension (e.g. ScalapayGatewayConfigurationTypeExtension) may let the
+     * merchant tighten the API-provided bounds via min_amount/max_amount config keys, entered as
+     * EUR — so the override only applies when checkout is actually in EUR; other currencies keep
+     * the raw API bounds.
+     *
+     * @param array{min_amount: int, max_amount: int} $authorizedRange
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function resolveAmountBounds(
+        GatewayConfigInterface $gatewayConfig,
+        string $activeCurrencyCode,
+        array $authorizedRange,
+    ): array {
+        if ('EUR' !== $activeCurrencyCode) {
+            return [$authorizedRange['min_amount'], $authorizedRange['max_amount']];
+        }
+
+        $config = $gatewayConfig->getConfig();
+        $minAmount = $config[ScalapayGatewayFactory::MIN_AMOUNT] ?? null;
+        $maxAmount = $config[ScalapayGatewayFactory::MAX_AMOUNT] ?? null;
+        Assert::nullOrInteger($minAmount);
+        Assert::nullOrInteger($maxAmount);
+
+        return [
+            $minAmount ?? $authorizedRange['min_amount'],
+            $maxAmount ?? $authorizedRange['max_amount'],
+        ];
+    }
+
+    /**
+     * @return array<string, array{min_amount: int, max_amount: int}>
+     */
     private function resolveAuthorizedCurrencies(string $factoryName): array
     {
         $account = $this->clientFactory->create($factoryName)->getAccount();
-
-        $configuration = $account['configuration'] ?? [];
-        Assert::isArray($configuration);
-        $defaultMin = $configuration['min_amounts'] ?? [];
-        Assert::isArray($defaultMin);
-        $defaultMax = $configuration['max_amounts'] ?? [];
-        Assert::isArray($defaultMax);
-
         $underscorePos = strpos($factoryName, '_');
-        if ($underscorePos !== false) {
-            $pmKey = substr($factoryName, $underscorePos + 1);
-            $paymentMethods = $account['payment_methods'] ?? [];
-            Assert::isArray($paymentMethods);
-            $pmData = $paymentMethods[$pmKey] ?? [];
-            Assert::isArray($pmData);
-            $minAmounts = isset($pmData['min_amounts']) && \is_array($pmData['min_amounts']) ? $pmData['min_amounts'] : $defaultMin;
-            $maxAmounts = isset($pmData['max_amounts']) && \is_array($pmData['max_amounts']) ? $pmData['max_amounts'] : $defaultMax;
-        } else {
-            $minAmounts = $defaultMin;
-            $maxAmounts = $defaultMax;
-        }
+        $paymentMethodKey = false !== $underscorePos ? substr($factoryName, $underscorePos + 1) : null;
 
-        $currencies = [];
-        foreach ($minAmounts as $currency => $min) {
-            Assert::string($currency);
-            Assert::integer($min);
-            if (isset($maxAmounts[$currency]) && \is_int($maxAmounts[$currency])) {
-                $currencies[$currency] = ['min_amount' => $min, 'max_amount' => $maxAmounts[$currency]];
-            }
-        }
-
-        return $currencies;
+        return $this->amountRangeResolver->resolve($account, $paymentMethodKey);
     }
 
     private function resolveAllowedCountries(string $factoryName): array
