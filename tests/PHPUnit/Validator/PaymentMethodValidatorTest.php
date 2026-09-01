@@ -8,7 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsScalapayAmountRangeValid;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -271,6 +273,38 @@ final class PaymentMethodValidatorTest extends TestCase
                 self::assertCount(2, $constraints);
                 self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
                 self::assertInstanceOf(PayplugPermission::class, $constraints[1]);
+
+                return new ConstraintViolationList();
+            })
+        ;
+
+        $flashBag = $this->createMock(FlashBagInterface::class);
+        $session = $this->createMock(Session::class);
+        $session->method('getFlashBag')->willReturn($flashBag);
+        $this->requestStack->method('getSession')->willReturn($session);
+
+        $this->paymentMethodValidator->process($paymentMethod);
+    }
+
+    // -------------------------------------------------------------------------
+    // process() — Scalapay factory → base constraint + amount range constraint
+    // -------------------------------------------------------------------------
+
+    /**
+     * Scalapay gateway config. Verifies both IsCanSavePaymentMethod and
+     * IsScalapayAmountRangeValid are passed to the validator (2 total).
+     */
+    public function testProcess_scalapayFactory_validatesWithBaseAndAmountRangeConstraints(): void
+    {
+        $paymentMethod = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, []);
+
+        $this->validator
+            ->expects(self::once())
+            ->method('validate')
+            ->willReturnCallback(function ($subject, array $constraints) {
+                self::assertCount(2, $constraints);
+                self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
+                self::assertInstanceOf(IsScalapayAmountRangeValid::class, $constraints[1]);
 
                 return new ConstraintViolationList();
             })

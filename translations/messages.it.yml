@@ -93,6 +93,10 @@ payplug_sylius_payplug_plugin:
                 title: 'Le spese sono:'
                 client: Ripartite tra te e i tuoi clienti
                 merchant: A tuo carico
+        scalapay_gateway_config:
+            min_amount: Importo minimo
+            max_amount: Importo massimo
+            amount_help: Lascia vuoto per usare i limiti autorizzati da PayPlug.
         integrated_payment:
             card_holder.title: 'Titolare della carta'
             card_holder.error: 'Nome e/o Cognome non valido(i).'

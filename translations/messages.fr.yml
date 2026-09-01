@@ -111,6 +111,10 @@ payplug_sylius_payplug_plugin:
                 title: 'Les frais sont :'
                 client: Répartis entre vous et vos clients
                 merchant: À votre charge
+        scalapay_gateway_config:
+            min_amount: Montant minimum
+            max_amount: Montant maximum
+            amount_help: Laissez vide pour utiliser les limites autorisées par PayPlug.
         integrated_payment:
             card_holder.title: 'Nom du titulaire de la carte'
             card_holder.error: 'Nom et/ou prénom invalide(s).'
