@@ -8,9 +8,12 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider;
+use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAmountRangeResolver;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
@@ -33,7 +36,7 @@ final class SupportedMethodsProviderTest extends TestCase
 
         $this->clientFactory->method('create')->willReturn($this->apiClient);
 
-        $this->provider = new SupportedMethodsProvider($this->currencyContext, $this->clientFactory);
+        $this->provider = new SupportedMethodsProvider($this->currencyContext, $this->clientFactory, new AccountAmountRangeResolver(), new NullLogger());
     }
 
     // -------------------------------------------------------------------------
@@ -444,6 +447,128 @@ final class SupportedMethodsProviderTest extends TestCase
 
         // 29 is below configuration min — should be removed
         $result2 = $this->provider->provide([$method], 'payplug_apple_pay', 29);
+        self::assertEmpty($result2);
+    }
+
+    // -------------------------------------------------------------------------
+    // provide() — merchant-configured min/max override the API bounds
+    // -------------------------------------------------------------------------
+
+    /**
+     * The gateway config sets a min_amount (1000) tighter than the API min (99).
+     * Verifies amounts below the merchant's min are removed, and the merchant's own min boundary is kept.
+     */
+    public function testProvide_withMerchantConfiguredMinAmount_overridesApiMin(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['min_amount' => 1000]);
+
+        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 500);
+        self::assertEmpty($result);
+
+        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000);
+        self::assertCount(1, $result2);
+    }
+
+    /**
+     * The gateway config sets a max_amount (100000) tighter than the API max (2000000).
+     * Verifies amounts above the merchant's max are removed, and the merchant's own max boundary is kept.
+     */
+    public function testProvide_withMerchantConfiguredMaxAmount_overridesApiMax(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['max_amount' => 100000]);
+
+        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 150000);
+        self::assertEmpty($result);
+
+        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 100000);
+        self::assertCount(1, $result2);
+    }
+
+    /**
+     * No min_amount/max_amount set in the gateway config (merchant left the fields blank).
+     * Verifies the API bounds alone still apply, unchanged from today's behavior.
+     */
+    public function testProvide_withoutMerchantConfiguredAmounts_fallsBackToApiBoundsOnly(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, []);
+
+        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 50);
+        self::assertEmpty($result);
+
+        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 99);
+        self::assertCount(1, $result2);
+    }
+
+    /**
+     * The merchant's min_amount/max_amount override is entered as EUR (MoneyType field), but
+     * checkout is happening in USD. The EUR-denominated override must not be applied to a
+     * USD amount — only the API's own per-currency bounds apply.
+     */
+    public function testProvide_merchantConfiguredAmountsIgnoredForNonEurCurrency(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('USD');
+
+        $account = [
+            'configuration' => [
+                'min_amounts' => ['USD' => 100],
+                'max_amounts' => ['USD' => 200000],
+            ],
+            'payment_methods' => [],
+        ];
+        $this->apiClient->method('getAccount')->willReturn($account);
+
+        // If wrongly applied to USD, this EUR-denominated max_amount would exclude the payment.
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['max_amount' => 300]);
+
+        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 150000);
+        self::assertCount(1, $result);
+    }
+
+    /**
+     * The min_amount/max_amount keys are Scalapay's own: only IsScalapayAmountRangeValidValidator
+     * keeps them inside the API-authorized range at save time, and it is wired for Scalapay only.
+     * Another gateway carrying the same keys must therefore be left on the raw API bounds rather
+     * than granted an unvalidated checkout override.
+     */
+    public function testProvide_merchantConfiguredAmountsIgnoredForNonScalapayGateway(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        // If wrongly honored, this max_amount would exclude the payment below.
+        $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, ['min_amount' => 1000, 'max_amount' => 300]);
+
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 150000);
+        self::assertCount(1, $result);
+    }
+
+    /**
+     * The gateway config is a plain serialized array, so a direct DB edit or an import script can
+     * leave a non-int in it. provide() runs on every checkout page with no surrounding try/catch:
+     * a malformed override must degrade to the API bounds, not throw and break payment-method
+     * resolution for the whole checkout.
+     */
+    public function testProvide_withMalformedMerchantConfiguredAmounts_fallsBackToApiBounds(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['min_amount' => '1000', 'max_amount' => 'nonsense']);
+
+        // API bounds are 99–2000000: an in-range amount is kept, an out-of-range one still removed.
+        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 150000);
+        self::assertCount(1, $result);
+
+        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 50);
         self::assertEmpty($result2);
     }
 
