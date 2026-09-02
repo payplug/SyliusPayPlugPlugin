@@ -59,9 +59,9 @@ class CaptureHttpResponseProvider implements HttpResponseProviderInterface
         // This is called after the capture payment request has been handled
         $data = $paymentRequest->getResponseData();
 
-        // The Unified API's "recommended for web" 3DS shape (Hosted Fields only, see
-        // CaptureHostedPaymentRequestHandler): a self-submitting HTML form to render as-is, rather
-        // than a plain redirect target.
+        // The Unified API's "recommended for web" 3DS-pending shape (see PaymentOutput, returned by
+        // both CaptureHostedPaymentRequestHandler and CaptureAliasPaymentRequestHandler): a
+        // self-submitting HTML form to render as-is, rather than a plain redirect target.
         if (\is_string($data['redirect_html'] ?? null)) {
             return new Response($data['redirect_html']);
         }

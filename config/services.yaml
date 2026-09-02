@@ -68,8 +68,8 @@ services:
     PayplugUnifiedCore\Contracts\IOrderStateMutator:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusOrderStateMutator
 
-    PayPlug\SyliusPayPlugPlugin\Upc\HostedPaymentCreatorInterface:
-        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiHostedPaymentCreator
+    PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiPaymentCreatorInterface:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiPaymentCreator
 
     PayPlug\SyliusPayPlugPlugin\Upc\OperationStatusFetcherInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiOperationStatusFetcher

@@ -7,11 +7,11 @@ namespace PayPlug\SyliusPayPlugPlugin\Upc;
 use PayplugUnifiedCore\Auth\TokenManager;
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient;
-use PayplugUnifiedCore\Dto\HostedFieldDto;
-use PayplugUnifiedCore\Output\HostedPaymentOutput;
-use PayplugUnifiedCore\Services\UnifiedApiHostedPaymentService;
+use PayplugUnifiedCore\Contracts\PaymentRequestPayload;
+use PayplugUnifiedCore\Output\PaymentOutput;
+use PayplugUnifiedCore\Services\UnifiedApiPaymentService;
 
-final class UnifiedApiHostedPaymentCreator implements HostedPaymentCreatorInterface
+final class UnifiedApiPaymentCreator implements UnifiedApiPaymentCreatorInterface
 {
     public function __construct(
         private IUnifiedApiHttpClient $httpClient,
@@ -21,9 +21,9 @@ final class UnifiedApiHostedPaymentCreator implements HostedPaymentCreatorInterf
     ) {
     }
 
-    public function createHostedPayment(HostedFieldDto $dto): HostedPaymentOutput
+    public function createPayment(PaymentRequestPayload $dto): PaymentOutput
     {
-        $service = new UnifiedApiHostedPaymentService(
+        $service = new UnifiedApiPaymentService(
             $this->httpClient,
             $this->tokenManager,
             $this->unifiedApiBaseUrl,
@@ -31,6 +31,6 @@ final class UnifiedApiHostedPaymentCreator implements HostedPaymentCreatorInterf
             $this->configurationRepository->getClientSecret(),
         );
 
-        return $service->createHostedPayment($dto);
+        return $service->createPayment($dto);
     }
 }

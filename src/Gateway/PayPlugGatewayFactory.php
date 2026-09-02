@@ -15,6 +15,11 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
     // Custom gateway configuration keys
     public const ONE_CLICK = 'oneClick';
 
+    // Session-protocol sentinel meaning "the customer chose to pay with a different/new card
+    // rather than one of their saved aliases" — shared by PayPlugPaymentDataCreator (legacy SDK
+    // flow) and CaptureAliasPaymentRequestHandler (Hosted Fields flow).
+    public const CARD_CHOICE_OTHER = 'other';
+
     public const INTEGRATED_PAYMENT = 'integratedPayment';
 
     public const DEFERRED_CAPTURE = 'deferredCapture';

@@ -37,6 +37,18 @@ use Webmozart\Assert\Assert;
 #[AsController]
 class UnifiedApiIpnAction
 {
+    // PayPlug's Unified API webhook can be delivered within tens of milliseconds of the payment-
+    // creation response returning — often before CaptureHostedPaymentRequestHandler's own
+    // hosted_fields_payment_id/hosted_fields_operation_id write has actually committed (Sylius's
+    // doctrine_transaction messenger middleware only commits once that whole handler returns, and
+    // that handler can still be mid-flight fetching card metadata for PayplugCardPersister at that
+    // point). A brief bounded retry closes this window without touching that transaction's
+    // boundaries — the legacy IpnAction/NotifyAction has the same class of problem, mitigated
+    // there with a blocking sleep(10) before processing.
+    private const PAYMENT_RESOLUTION_MAX_ATTEMPTS = 4;
+
+    private const PAYMENT_RESOLUTION_RETRY_DELAY_MICROSECONDS = 200_000;
+
     public function __construct(
         private LoggerInterface $logger,
         private HostedFieldsWebhookNotificationHandler $hostedFieldsWebhookNotificationHandler,
@@ -70,9 +82,12 @@ class UnifiedApiIpnAction
     {
         $content = json_decode($input, true);
         $id = \is_array($content) ? ($content['id'] ?? null) : null;
+        if (!\is_string($id) || '' === $id) {
+            // if we are too fast canceling a payment before we got an answer from PayPlug gateway
+            return null;
+        }
 
-        // if we are too fast canceling a payment before we got an answer from PayPlug gateway
-        $payment = \is_string($id) && '' !== $id ? $this->paymentRepository->findOneByPayPlugPaymentId($id) : null;
+        $payment = $this->findPaymentWithRetry($id);
         if (null === $payment) {
             return null;
         }
@@ -87,6 +102,22 @@ class UnifiedApiIpnAction
         // rejected rather than guessed at. Update this check if/when a second Unified API-backed
         // payment method is added.
         return PayPlugGatewayFactory::isHostedFieldsConfig($gateway) ? $payment : null;
+    }
+
+    private function findPaymentWithRetry(string $id): ?PaymentInterface
+    {
+        for ($attempt = 1; $attempt <= self::PAYMENT_RESOLUTION_MAX_ATTEMPTS; ++$attempt) {
+            $payment = $this->paymentRepository->findOneByPayPlugPaymentId($id);
+            if (null !== $payment) {
+                return $payment;
+            }
+
+            if ($attempt < self::PAYMENT_RESOLUTION_MAX_ATTEMPTS) {
+                usleep(self::PAYMENT_RESOLUTION_RETRY_DELAY_MICROSECONDS);
+            }
+        }
+
+        return null;
     }
 
     /**
