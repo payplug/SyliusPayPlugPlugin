@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Handler;
 
+use PayPlug\SyliusPayPlugPlugin\Upc\CardDataFromPaymentMethodExtractor;
+use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
+use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
+use PayPlug\SyliusPayPlugPlugin\Upc\ResourceIdentifier;
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
@@ -54,6 +58,7 @@ class HostedFieldsWebhookNotificationHandler
         private IConfigurationRepository $configurationRepository,
         private ILock $lock,
         private LoggerInterface $logger,
+        private PayplugCardPersister $cardPersister,
     ) {
     }
 
@@ -86,11 +91,46 @@ class HostedFieldsWebhookNotificationHandler
             }
 
             $this->paymentRepository->save($operationData);
-            $this->orderStateMutator->apply(self::idToString($payment->getId()), $operationData->outcome);
+            $this->orderStateMutator->apply(ResourceIdentifier::toString($payment->getId()), $operationData->outcome);
             $this->paymentRepository->markTreated($operationData->operationId);
+
+            if (PaymentOutcome::PAID === $operationData->outcome) {
+                $this->maybeSaveCard($payment, $rawBody);
+            }
         } finally {
             $this->lock->release($lockKey);
         }
+    }
+
+    // A 3DS-challenge capture never gets an alias back synchronously (CaptureHostedPaymentRequestHandler
+    // only sees one on a direct, frictionless success) — this webhook, fired once the challenge is
+    // validated, is the only place a 3DS payment's card ever gets saved. The alias/card metadata
+    // itself is already in $rawBody: confirmed the same paymentMethod.{id, card, details} shape as
+    // the operation resource CaptureHostedPaymentRequestHandler fetches separately, so no extra API
+    // call is needed here.
+    private function maybeSaveCard(PaymentInterface $payment, string $rawBody): void
+    {
+        $details = $payment->getDetails();
+        if (true !== ($details['hosted_fields_save_card'] ?? false)) {
+            return;
+        }
+
+        $method = $payment->getMethod();
+        if (null === $method) {
+            return;
+        }
+
+        $cardData = CardDataFromPaymentMethodExtractor::extractFromDecoded(\json_decode($rawBody, true));
+        $aliasId = $cardData['aliasId'] ?? null;
+        if (null === $aliasId) {
+            $this->logger->error('[PayPlug][UPC] Save-card was requested but the webhook notification carried no alias id.', [
+                'sylius_payment_id' => $payment->getId(),
+            ]);
+
+            return;
+        }
+
+        $this->cardPersister->persist($aliasId, $payment, $method, $details, $cardData);
     }
 
     // Split out of treat() to keep its own return count within SonarCloud's limit (php:S1142) —
@@ -107,7 +147,7 @@ class HostedFieldsWebhookNotificationHandler
             return false;
         }
 
-        $expectedOrderId = self::resolveExpectedOrderId($payment);
+        $expectedOrderId = PaymentOrderIdResolver::resolve($payment->getOrder(), $payment->getId());
         if ($operationData->orderId !== $expectedOrderId || $operationData->amount !== $payment->getAmount()) {
             $this->logger->error('[PayPlug][UPC] Hosted Fields webhook notification does not match the payment it was resolved against.', [
                 'sylius_payment_id' => $payment->getId(),
@@ -121,22 +161,5 @@ class HostedFieldsWebhookNotificationHandler
         }
 
         return true;
-    }
-
-    // Mirrors the fallback CaptureHostedPaymentRequestHandler used when it built the orderId sent
-    // to PayPlug at creation time (order number if the order exists yet, else the payment id) —
-    // this must resolve to the same value the platform was originally given back.
-    private static function resolveExpectedOrderId(PaymentInterface $payment): string
-    {
-        return $payment->getOrder()?->getNumber() ?? self::idToString($payment->getId());
-    }
-
-    private static function idToString(mixed $id): string
-    {
-        if (!\is_int($id) && !\is_string($id)) {
-            throw new \LogicException('Unexpected non-scalar resource identifier.');
-        }
-
-        return (string) $id;
     }
 }

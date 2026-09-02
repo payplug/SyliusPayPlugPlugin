@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Handler;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Payplug\Resource\IVerifiableAPIResource;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
@@ -31,6 +33,7 @@ class PaymentNotificationHandler
         private EntityManagerInterface $entityManager,
         private LockFactory $lockFactory,
         private RequestStack $requestStack,
+        private ManagerRegistry $managerRegistry,
     ) {
     }
 
@@ -137,6 +140,9 @@ class PaymentNotificationHandler
             return;
         }
 
+        // This check-then-act is not by itself race-proof — two payments notified concurrently
+        // for the same card alias can both pass this guard — so a DB-level unique constraint on
+        // (external_id, is_live) backs it up; see the catch below.
         $card = $this->payplugCardRepository->findOneBy([
             'externalId' => $paymentResource->__get('card')->id,
             'isLive' => $paymentResource->is_live,
@@ -163,7 +169,16 @@ class PaymentNotificationHandler
             ->setIsLive($paymentResource->is_live)
         ;
 
-        $this->payplugCardRepository->add($card);
+        try {
+            $this->payplugCardRepository->add($card);
+        } catch (UniqueConstraintViolationException) {
+            // The findOneBy() guard above lost a race against a concurrent save for the same
+            // alias — that other call already stored the canonical Card row, so there is nothing
+            // left to do here. Doctrine's UnitOfWork closes the EntityManager on ANY flush
+            // failure, catch included — reset the registry so Doctrine work resolved fresh after
+            // this point doesn't inherit the now-closed instance.
+            $this->managerRegistry->resetManager();
+        }
     }
 
     private function isResourceIsAuthorized(IVerifiableAPIResource $paymentResource): bool

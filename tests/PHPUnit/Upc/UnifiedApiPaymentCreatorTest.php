@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Upc;
 
-use PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiHostedPaymentCreator;
+use PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiPaymentCreator;
 use PayplugUnifiedCore\Auth\OAuth2Client;
 use PayplugUnifiedCore\Auth\TokenManager;
 use PayplugUnifiedCore\Contracts\IConfigurationRepository;
@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  * the injected IOAuthHttpClient (OAuth2 token endpoint) and ITokenCache (caching) — same pattern
  * as tests/PHPUnit/ApiClient/PayPlugApiClientFactoryTest.php.
  */
-final class UnifiedApiHostedPaymentCreatorTest extends TestCase
+final class UnifiedApiPaymentCreatorTest extends TestCase
 {
     private IUnifiedApiHttpClient&MockObject $unifiedApiHttpClient;
 
@@ -33,7 +33,7 @@ final class UnifiedApiHostedPaymentCreatorTest extends TestCase
 
     private IConfigurationRepository&MockObject $configurationRepository;
 
-    private UnifiedApiHostedPaymentCreator $creator;
+    private UnifiedApiPaymentCreator $creator;
 
     protected function setUp(): void
     {
@@ -47,7 +47,7 @@ final class UnifiedApiHostedPaymentCreatorTest extends TestCase
         $oauth2Client = new OAuth2Client($this->oauthHttpClient, 'https://api.payplug.com', '', '', 'https://www.payplug.com');
         $tokenManager = new TokenManager($this->tokenCache, $oauth2Client);
 
-        $this->creator = new UnifiedApiHostedPaymentCreator(
+        $this->creator = new UnifiedApiPaymentCreator(
             $this->unifiedApiHttpClient,
             $tokenManager,
             $this->configurationRepository,
@@ -69,7 +69,7 @@ final class UnifiedApiHostedPaymentCreatorTest extends TestCase
         ]);
         $this->unifiedApiHttpClient->method('postJson')->willReturn(['status' => 201, 'body' => '{"id":"pay_1"}']);
 
-        $output = $this->creator->createHostedPayment($this->dto());
+        $output = $this->creator->createPayment($this->dto());
 
         self::assertSame(201, $output->status);
         self::assertNull($output->redirectUrl);
@@ -83,7 +83,7 @@ final class UnifiedApiHostedPaymentCreatorTest extends TestCase
             'body' => json_encode(['id' => 'pay_1', 'redirect' => ['url' => 'https://3ds.payplug.com/challenge']]),
         ]);
 
-        $output = $this->creator->createHostedPayment($this->dto());
+        $output = $this->creator->createPayment($this->dto());
 
         self::assertSame('https://3ds.payplug.com/challenge', $output->redirectUrl);
     }
@@ -95,6 +95,6 @@ final class UnifiedApiHostedPaymentCreatorTest extends TestCase
 
         $this->expectException(ApiException::class);
 
-        $this->creator->createHostedPayment($this->dto());
+        $this->creator->createPayment($this->dto());
     }
 }
