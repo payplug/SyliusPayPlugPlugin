@@ -84,7 +84,7 @@
         "ecs": "ecs check -c ruleset/ecs.php --ansi --clear-cache",
         "fix-ecs": "@ecs --fix --memory-limit=4G",
         "phpmd": "phpmd src ansi ruleset/.php_md.xml",
-        "phpstan": "phpstan analyse src -c ruleset/phpstan.neon",
+        "phpstan": "phpstan analyse src -c ruleset/phpstan.neon --memory-limit=4G",
         "phpunit": "phpunit tests/PHPUnit --colors=always",
         "test-coverage": "phpunit tests/PHPUnit --colors=always --coverage-clover=build/logs/clover.xml",
         "tests": [

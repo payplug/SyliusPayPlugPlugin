@@ -24,11 +24,13 @@ class PaymentTransitionApplier
         $status = $details['status'] ?? '';
 
         // These are known PayPlug statuses that do not map to a Sylius payment transition.
-        if (\in_array($status, [
+        if (
+            \in_array($status, [
             PayPlugApiClientInterface::STATUS_CREATED,
             PayPlugApiClientInterface::REFUNDED,
             PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK,
-        ], true)) {
+            ], true)
+        ) {
             return false;
         }
 

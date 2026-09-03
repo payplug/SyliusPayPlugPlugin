@@ -1253,18 +1253,6 @@ parameters:
 			path: ../src/Provider/PaymentTokenProvider.php
 
 		-
-			message: '#^Cannot access offset ''max_amount'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: ../src/Provider/SupportedMethodsProvider.php
-
-		-
-			message: '#^Cannot access offset ''min_amount'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: ../src/Provider/SupportedMethodsProvider.php
-
-		-
 			message: '#^PHPDoc tag @var with type Payum\\Core\\Model\\GatewayConfigInterface is not subtype of native type Sylius\\Component\\Payment\\Model\\GatewayConfigInterface\|null\.$#'
 			identifier: varTag.nativeType
 			count: 1
