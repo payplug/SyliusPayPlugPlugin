@@ -10,7 +10,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -62,33 +61,6 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 'required' => false,
                 'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
             ])
-            ->add(PayPlugGatewayFactory::HF_SUB_MERCHANT_ID, PasswordType::class, [
-                'label' => 'payplug_sylius_payplug_plugin.ui.hf_sub_merchant_id_label',
-                'required' => false,
-                'validation_groups' => AbstractGatewayConfigurationType::VALIDATION_GROUPS,
-            ])
-            ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
-                $rawData = $event->getData();
-                if (!is_array($rawData)) {
-                    return;
-                }
-
-                $submitted = $rawData[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? '';
-                if (!is_scalar($submitted) || '' !== trim((string) $submitted)) {
-                    return;
-                }
-
-                // PasswordType keeps its default `always_empty` (never echoes the stored secret
-                // back into the rendered `value` attribute), so a blank submission means "left
-                // untouched", not "clear it" - same convention as a change-password form. Restore
-                // the previously persisted value instead of letting a blank field wipe it out.
-                $previousData = $event->getForm()->getData();
-                $previousValue = is_array($previousData) ? ($previousData[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null) : null;
-                if (is_string($previousValue) && '' !== $previousValue) {
-                    $rawData[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] = $previousValue;
-                    $event->setData($rawData);
-                }
-            })
             ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
                 $data = $event->getData();
                 // phpstan check
@@ -119,15 +91,12 @@ final class PayPlugGatewayConfigurationTypeExtension extends AbstractTypeExtensi
                 $submittedData = [
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => $form->get(PayPlugGatewayFactory::DISPLAY_MODE_FIELD)->getData(),
                     PayPlugGatewayFactory::HF_IDENTIFIER => $form->get(PayPlugGatewayFactory::HF_IDENTIFIER)->getData(),
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => $form->get(PayPlugGatewayFactory::HF_SUB_MERCHANT_ID)->getData(),
                 ];
 
                 foreach (PayPlugGatewayFactory::missingHostedFieldsRequirements($submittedData) as $field) {
-                    $messageKey = PayPlugGatewayFactory::HF_IDENTIFIER === $field
-                        ? 'payplug_sylius_payplug_plugin.form.account_id_required'
-                        : 'payplug_sylius_payplug_plugin.form.submerchant_id_required';
-
-                    $form->get($field)->addError(new FormError($this->translator->trans($messageKey)));
+                    $form->get($field)->addError(new FormError(
+                        $this->translator->trans('payplug_sylius_payplug_plugin.form.account_id_required'),
+                    ));
                 }
             })
             ->addEventListener(FormEvents::SUBMIT, function (FormEvent $event): void {

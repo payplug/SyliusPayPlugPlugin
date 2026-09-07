@@ -67,6 +67,9 @@ final class SupportedMethodsProviderTest extends TestCase
     /**
      * The current currency is USD but the method only authorizes EUR.
      * Verifies the method is removed from the result list.
+     *
+     * No $paymentCurrencyCode is passed, so this also covers the documented fallback to
+     * CurrencyContextInterface for a payment carrying no currency of its own.
      */
     public function testProvide_withUnauthorizedCurrency_removesMethod(): void
     {
@@ -76,6 +79,91 @@ final class SupportedMethodsProviderTest extends TestCase
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
 
         $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 1000);
+
+        self::assertEmpty($result);
+    }
+
+    /**
+     * The payment's own currency decides, not the one being displayed. Here the shopper browses in
+     * EUR (authorized) while the order was placed in USD (not authorized) — the amount is USD, so
+     * the method must go. Reading the display currency instead would keep a method whose limits
+     * were never checked against the amount's actual currency.
+     */
+    public function testProvide_withPaymentCurrencyUnauthorized_ignoresDisplayCurrency(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
+
+        $result = $this->provider->provide(
+            [$method],
+            PayPlugGatewayFactory::FACTORY_NAME,
+            1000,
+            paymentCurrencyCode: 'USD',
+        );
+
+        self::assertEmpty($result);
+    }
+
+    /**
+     * The mirror case, and the one that was mis-filtering before: the order is in EUR (authorized,
+     * amount within bounds) while the shopper has switched the display to USD. The method must be
+     * kept — previously the USD display currency was compared against a EUR-only account and hid a
+     * payment method that would have been charged in EUR.
+     */
+    public function testProvide_withPaymentCurrencyAuthorized_keepsMethodDespiteDisplayCurrency(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('USD');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME);
+
+        $result = $this->provider->provide(
+            [$method],
+            PayPlugGatewayFactory::FACTORY_NAME,
+            1000,
+            paymentCurrencyCode: 'EUR',
+        );
+
+        self::assertCount(1, $result);
+    }
+
+    /**
+     * Same unauthorized-currency setup, but the `payplug` method has Hosted Fields selected.
+     * UHF is exempt from the currency gate because the Retail `/account` payload does not know a
+     * UHF account's currencies (see the comment in SupportedMethodsProvider), so the method must
+     * survive — and, having no advertised limits for USD, must not be amount-filtered either
+     * despite 1000 sitting outside the EUR 99..2000000 range that the payload does advertise.
+     */
+    public function testProvide_withUnauthorizedCurrencyAndHostedFields_keepsMethod(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('USD');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, [
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+        ]);
+
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 1000);
+
+        self::assertCount(1, $result);
+    }
+
+    /**
+     * Hosted Fields is exempt from the currency gate, not from the amount limits: when the active
+     * currency *is* advertised, its min/max still apply.
+     */
+    public function testProvide_withAuthorizedCurrencyAndHostedFields_stillAppliesAmountLimits(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+
+        $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, [
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+        ]);
+
+        $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 50);
 
         self::assertEmpty($result);
     }
@@ -225,7 +313,7 @@ final class SupportedMethodsProviderTest extends TestCase
         $this->apiClient->method('getAccount')->willReturn($account);
 
         $method = $this->buildPaymentMethod('payplug_scalapay');
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, 'FR');
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, billingCountryCode: 'FR');
 
         self::assertCount(1, $result);
     }
@@ -243,7 +331,7 @@ final class SupportedMethodsProviderTest extends TestCase
         $this->apiClient->method('getAccount')->willReturn($account);
 
         $method = $this->buildPaymentMethod('payplug_scalapay');
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, 'US');
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, billingCountryCode: 'US');
 
         self::assertEmpty($result);
     }
@@ -261,7 +349,7 @@ final class SupportedMethodsProviderTest extends TestCase
         $this->apiClient->method('getAccount')->willReturn($account);
 
         $method = $this->buildPaymentMethod('payplug_bancontact');
-        $result = $this->provider->provide([$method], 'payplug_bancontact', 1000, 'US');
+        $result = $this->provider->provide([$method], 'payplug_bancontact', 1000, billingCountryCode: 'US');
 
         self::assertCount(1, $result);
     }
@@ -279,7 +367,7 @@ final class SupportedMethodsProviderTest extends TestCase
         $this->apiClient->method('getAccount')->willReturn($account);
 
         $method = $this->buildPaymentMethod('payplug_scalapay');
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, null);
+        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, billingCountryCode: null);
 
         self::assertCount(1, $result);
     }
@@ -374,10 +462,15 @@ final class SupportedMethodsProviderTest extends TestCase
         ];
     }
 
-    private function buildPaymentMethod(string $factoryName): PaymentMethodInterface
+    /**
+     * @param array<string, mixed> $config Persisted gateway config; defaults to empty, which is
+     *                                     neither integrated_payment nor hosted_fields.
+     */
+    private function buildPaymentMethod(string $factoryName, array $config = []): PaymentMethodInterface
     {
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
         $gatewayConfig->method('getFactoryName')->willReturn($factoryName);
+        $gatewayConfig->method('getConfig')->willReturn($config);
 
         $method = $this->createMock(PaymentMethodInterface::class);
         $method->method('getGatewayConfig')->willReturn($gatewayConfig);

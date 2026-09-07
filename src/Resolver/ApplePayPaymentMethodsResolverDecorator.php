@@ -37,7 +37,8 @@ final class ApplePayPaymentMethodsResolverDecorator implements PaymentMethodsRes
             $supportedMethods,
             ApplePayGatewayFactory::FACTORY_NAME,
             $subject->getAmount() ?? 0,
-            $billingCountryCode,
+            paymentCurrencyCode: $subject->getCurrencyCode(),
+            billingCountryCode: $billingCountryCode,
         );
     }
 

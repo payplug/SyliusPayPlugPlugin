@@ -37,7 +37,8 @@ final class BancontactPaymentMethodsResolverDecorator implements PaymentMethodsR
             $supportedMethods,
             BancontactGatewayFactory::FACTORY_NAME,
             $subject->getAmount() ?? 0,
-            $billingCountryCode,
+            paymentCurrencyCode: $subject->getCurrencyCode(),
+            billingCountryCode: $billingCountryCode,
         );
     }
 

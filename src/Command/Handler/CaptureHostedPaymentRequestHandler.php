@@ -49,7 +49,7 @@ final class CaptureHostedPaymentRequestHandler
             $method = $this->contextBuilder->resolvePaymentMethod($payment);
             $hfToken = $this->resolveHostedFieldsToken($details);
             $amountAndCurrency = $this->contextBuilder->resolveAmountAndCurrency($payment);
-            $credentials = $this->contextBuilder->resolveGatewayCredentials($method);
+            $accountId = $this->contextBuilder->resolveGatewayCredentials($method);
 
             $dto = $this->buildHostedFieldDto(
                 $paymentRequest,
@@ -57,7 +57,7 @@ final class CaptureHostedPaymentRequestHandler
                 $details,
                 $hfToken,
                 $amountAndCurrency,
-                $credentials,
+                $accountId,
             );
 
             $this->logger->debug('[PayPlug debug] Unified API hosted payment request payload.', [
@@ -104,7 +104,6 @@ final class CaptureHostedPaymentRequestHandler
     /**
      * @param mixed[] $details
      * @param array{0: int, 1: string} $amountAndCurrency
-     * @param array{0: string, 1: string} $credentials
      */
     private function buildHostedFieldDto(
         PaymentRequestInterface $paymentRequest,
@@ -112,14 +111,13 @@ final class CaptureHostedPaymentRequestHandler
         array $details,
         string $hfToken,
         array $amountAndCurrency,
-        array $credentials,
+        string $accountId,
     ): HostedFieldDto {
         [$amount, $currencyCode] = $amountAndCurrency;
-        [$accountId, $submerchantExternalId] = $credentials;
 
         $order = $payment->getOrder();
 
-        $common = $this->contextBuilder->buildCommonFields($accountId, $amount, $currencyCode, $submerchantExternalId, $paymentRequest, $order);
+        $common = $this->contextBuilder->buildCommonFields($accountId, $amount, $currencyCode, $paymentRequest, $order);
 
         $selectedBrand = $details['hosted_fields_selected_brand'] ?? null;
         $hasSelectedBrand = \is_string($selectedBrand) && '' !== $selectedBrand;

@@ -37,7 +37,8 @@ final class AmericanExpressPaymentMethodsResolverDecorator implements PaymentMet
             $supportedMethods,
             AmericanExpressGatewayFactory::FACTORY_NAME,
             $subject->getAmount() ?? 0,
-            $billingCountryCode,
+            paymentCurrencyCode: $subject->getCurrencyCode(),
+            billingCountryCode: $billingCountryCode,
         );
     }
 

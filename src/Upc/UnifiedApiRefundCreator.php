@@ -25,8 +25,9 @@ final class UnifiedApiRefundCreator implements RefundCreatorInterface
         string $operationId,
         string $orderId,
         ?int $amount = null,
+        ?string $currency = null,
     ): array {
-        [$accountId, $subMerchantExternalId] = GatewayCredentialsResolver::resolve($method);
+        $accountId = GatewayCredentialsResolver::resolve($method);
 
         $service = new UnifiedApiPaymentService(
             $this->httpClient,
@@ -41,8 +42,9 @@ final class UnifiedApiRefundCreator implements RefundCreatorInterface
             $accountId,
             $orderId,
             \sprintf('Refund for order %s', $orderId),
-            $subMerchantExternalId,
+            null,
             $amount,
+            $currency,
         );
     }
 }

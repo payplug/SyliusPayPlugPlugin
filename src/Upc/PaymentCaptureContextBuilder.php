@@ -35,10 +35,7 @@ final class PaymentCaptureContextBuilder
     ) {
     }
 
-    /**
-     * @return array{0: string, 1: string} accountId, submerchantExternalId
-     */
-    public function resolveGatewayCredentials(PaymentMethodInterface $method): array
+    public function resolveGatewayCredentials(PaymentMethodInterface $method): string
     {
         return GatewayCredentialsResolver::resolve($method);
     }
@@ -47,12 +44,13 @@ final class PaymentCaptureContextBuilder
         string $accountId,
         int $amount,
         string $currencyCode,
-        string $submerchantExternalId,
         PaymentRequestInterface $paymentRequest,
         ?OrderInterface $order,
     ): CommonFieldsDto {
         $orderId = PaymentOrderIdResolver::resolve($order, $paymentRequest->getPayment()->getId());
-        $common = new CommonFieldsDto($accountId, $amount, \strtoupper($currencyCode), $orderId, $submerchantExternalId);
+        // No submerchantExternalId: only the EUR MID configurations carry one, and Hosted Fields
+        // here targets the multi-currency ones. UPC omits the key entirely rather than sending null.
+        $common = new CommonFieldsDto($accountId, $amount, \strtoupper($currencyCode), $orderId);
         $common->description = $this->resolveDescription($order);
         // Confirmed with PayPlug: this field has no effect on their side regardless of value for
         // Hosted Fields/UPC — the only working notification path is the static Cockpit-configured

@@ -55,10 +55,10 @@ final class CaptureAliasPaymentRequestHandler
                 throw new \LogicException('No saved card alias selected for the payment.');
             }
             [$amount, $currencyCode] = $this->contextBuilder->resolveAmountAndCurrency($payment);
-            [$accountId, $submerchantExternalId] = $this->contextBuilder->resolveGatewayCredentials($method);
+            $accountId = $this->contextBuilder->resolveGatewayCredentials($method);
 
             $order = $this->assertCardBelongsToOrder($card, $payment->getOrder(), $method);
-            $common = $this->contextBuilder->buildCommonFields($accountId, $amount, $currencyCode, $submerchantExternalId, $paymentRequest, $order);
+            $common = $this->contextBuilder->buildCommonFields($accountId, $amount, $currencyCode, $paymentRequest, $order);
             $dto = $this->buildPaymentDto($common, $card, $order);
 
             $output = $this->unifiedApiPaymentCreator->createPayment($dto);

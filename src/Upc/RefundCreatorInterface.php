@@ -12,9 +12,12 @@ use Sylius\Component\Payment\Model\PaymentMethodInterface;
 interface RefundCreatorInterface
 {
     /**
-     * $method identifies which Hosted Fields account/submerchant to refund against — the same
-     * payment method the refunded payment was originally captured with, not merely "any"
-     * Hosted-Fields-configured payment method, since a merchant may configure more than one.
+     * $method identifies which Hosted Fields account to refund against — the same payment method
+     * the refunded payment was originally captured with, not merely "any" Hosted-Fields-configured
+     * payment method, since a merchant may configure more than one.
+     *
+     * $currency states what $amount's minor units are. The Unified API infers them from the account
+     * when the key is absent, which is only unambiguous for a single-currency merchant.
      *
      * @return array{status: int, body: string}
      *
@@ -27,5 +30,6 @@ interface RefundCreatorInterface
         string $operationId,
         string $orderId,
         ?int $amount = null,
+        ?string $currency = null,
     ): array;
 }

@@ -123,7 +123,6 @@ payplug_sylius_payplug_plugin:
         renew_oauth_help: |
             Se questa opzione è selezionata, un nuovo flusso di autenticazione verrà avviato quando si fa clic sul pulsante "<b>Aggiorna</b>".
         hf_identifier_label: 'ID Account'
-        hf_sub_merchant_id_label: 'ID SubMerchant'
         hosted_fields_option: 'Hosted Fields avanzato (beta)'
     form:
         oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
@@ -147,7 +146,6 @@ payplug_sylius_payplug_plugin:
         integrated_payment_enable: Abilita il pagamento integrato
         redirected_payment_enable: Abilita il pagamento reindirizzato
         account_id_required: 'Le funzionalità avanzate richiedono un Account ID, si prega di contattare il vostro Account Manager.'
-        submerchant_id_required: 'Le funzionalità avanzate richiedono un SubMerchant ID, si prega di contattare il vostro Account Manager.'
         integrated_payment_currency_incompatible: 'Il canale selezionato non è compatibile con il Pagamento integrato.'
         deferred_capture_enable: Abilita la cattura differita
         deferred_capture_help: |

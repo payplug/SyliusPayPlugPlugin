@@ -184,6 +184,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
                 $details['hosted_fields_payment_id'],
                 PaymentOrderIdResolver::resolve($payment->getOrder(), $payment->getId()),
                 null,
+                $payment->getCurrencyCode(),
                 ['sylius_payment_id' => $payment->getId()],
             );
 
@@ -253,6 +254,11 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
      * genuinely identical between the two callers, $amount aside (null here means a full refund;
      * a given value means a partial one).
      *
+     * $currency is required rather than defaulted, so that a future caller cannot silently omit it
+     * and fall back to letting the platform infer $amount's minor units from the account — which is
+     * only unambiguous for a single-currency merchant. Pass $payment->getCurrencyCode(); it is
+     * nullable at the Sylius contract level, and null legitimately reaches UPC as "not supplied".
+     *
      * @param mixed[] $logContext
      */
     private function createRefundOperation(
@@ -260,9 +266,10 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         string $hostedFieldsPaymentId,
         string $orderId,
         ?int $amount,
+        ?string $currency,
         array $logContext,
     ): ?string {
-        $response = $this->refundCreator->createRefund($method, $hostedFieldsPaymentId, $orderId, $amount);
+        $response = $this->refundCreator->createRefund($method, $hostedFieldsPaymentId, $orderId, $amount, $currency);
 
         $externalId = self::extractFirstOperationId($response['body']);
         $this->logIfOperationIdMissing($externalId, $response['body'], $logContext);
@@ -383,6 +390,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
                     $details['hosted_fields_payment_id'],
                     PaymentOrderIdResolver::resolve($payment->getOrder(), $payment->getId()),
                     $amount,
+                    $payment->getCurrencyCode(),
                     ['refund_id' => $refundId],
                 );
 

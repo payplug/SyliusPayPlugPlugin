@@ -100,34 +100,32 @@ final class PayPlugGatewayFactoryTest extends TestCase
         ]));
     }
 
-    public function testMissingHostedFieldsRequirements_hostedFieldsSelectedBothFieldsMissing_returnsBoth(): void
+    public function testMissingHostedFieldsRequirements_hostedFieldsSelectedIdentifierMissing_returnsIdentifier(): void
     {
         self::assertSame(
-            [PayPlugGatewayFactory::HF_IDENTIFIER, PayPlugGatewayFactory::HF_SUB_MERCHANT_ID],
+            [PayPlugGatewayFactory::HF_IDENTIFIER],
             PayPlugGatewayFactory::missingHostedFieldsRequirements([
                 PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
             ]),
         );
     }
 
-    public function testMissingHostedFieldsRequirements_hostedFieldsSelectedOnlyIdentifierBlank_returnsIdentifierOnly(): void
+    public function testMissingHostedFieldsRequirements_hostedFieldsSelectedIdentifierBlank_returnsIdentifier(): void
     {
         self::assertSame(
             [PayPlugGatewayFactory::HF_IDENTIFIER],
             PayPlugGatewayFactory::missingHostedFieldsRequirements([
                 PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
                 PayPlugGatewayFactory::HF_IDENTIFIER => '   ',
-                PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sm_123',
             ]),
         );
     }
 
-    public function testMissingHostedFieldsRequirements_hostedFieldsSelectedBothFieldsFilled_returnsEmpty(): void
+    public function testMissingHostedFieldsRequirements_hostedFieldsSelectedIdentifierFilled_returnsEmpty(): void
     {
         self::assertSame([], PayPlugGatewayFactory::missingHostedFieldsRequirements([
             PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
             PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sm_123',
         ]));
     }
 }

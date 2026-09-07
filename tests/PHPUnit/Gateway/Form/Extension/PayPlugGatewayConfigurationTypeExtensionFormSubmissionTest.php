@@ -24,7 +24,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Regression coverage for the "conditional-required errors are silently discarded" bug: the
- * old PRE_SUBMIT listener added FormErrors to the hfIdentifier/hfSubMerchantId children, but
+ * old PRE_SUBMIT listener added FormErrors to the hfIdentifier child, but
  * Form::submit() resets every form's $errors to [] at the very start of ITS OWN submission, and
  * children submit immediately after the parent's PRE_SUBMIT fires - wiping out any error added
  * to a child during the parent's PRE_SUBMIT before submission finishes.
@@ -40,8 +40,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
     use ValidatorExtensionTrait;
 
     private const ACCOUNT_ID_ERROR = 'payplug_sylius_payplug_plugin.form.account_id_required';
-
-    private const SUBMERCHANT_ID_ERROR = 'payplug_sylius_payplug_plugin.form.submerchant_id_required';
 
     protected function getTypes(): array
     {
@@ -71,7 +69,7 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
         ];
     }
 
-    public function testSubmit_hostedFieldsModeWithBothFieldsBlank_isInvalidWithBothErrors(): void
+    public function testSubmit_hostedFieldsModeWithBlankIdentifier_isInvalidWithAccountIdError(): void
     {
         $form = $this->createRootForm();
 
@@ -82,26 +80,25 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
                     PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
                     PayPlugGatewayFactory::HF_IDENTIFIER => '',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => '',
                 ],
             ],
         ]);
 
         self::assertTrue($form->isSubmitted());
-        self::assertFalse($form->isValid(), 'Form must be invalid when hosted_fields is selected but both fields are blank.');
+        self::assertFalse($form->isValid(), 'Form must be invalid when hosted_fields is selected but the account id is blank.');
 
         $configForm = $form->get('gatewayConfig')->get('config');
 
         $identifierErrors = $configForm->get(PayPlugGatewayFactory::HF_IDENTIFIER)->getErrors();
         self::assertCount(1, $identifierErrors);
         self::assertSame(self::ACCOUNT_ID_ERROR, $identifierErrors[0]->getMessage());
-
-        $subMerchantErrors = $configForm->get(PayPlugGatewayFactory::HF_SUB_MERCHANT_ID)->getErrors();
-        self::assertCount(1, $subMerchantErrors);
-        self::assertSame(self::SUBMERCHANT_ID_ERROR, $subMerchantErrors[0]->getMessage());
     }
 
-    public function testSubmit_hostedFieldsModeWithBothFieldsFilled_isValid(): void
+    /**
+     * The account id is now the only hosted-fields requirement — the SubMerchant ID field it used
+     * to be paired with is gone, so filling this one alone must be enough to save the form.
+     */
+    public function testSubmit_hostedFieldsModeWithIdentifierFilled_isValid(): void
     {
         $form = $this->createRootForm();
 
@@ -112,7 +109,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
                     PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
                     PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sub_456',
                 ],
             ],
         ]);
@@ -158,7 +154,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
             PayPlugGatewayFactory::INTEGRATED_PAYMENT => false,
             PayPlugGatewayFactory::HOSTED_FIELDS => true,
             PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sub_456',
         ]);
 
         self::assertSame(
@@ -185,7 +180,7 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
     public function testSubmit_integratedPaymentMode_withBlankFields_isValid(): void
     {
         // The conditional requirement only applies to hosted_fields; other modes must not be
-        // affected by blank identifier/sub-merchant fields.
+        // affected by a blank identifier field.
         $form = $this->createRootForm();
 
         $form->submit([
@@ -195,7 +190,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
                     PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT,
                     PayPlugGatewayFactory::HF_IDENTIFIER => '',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => '',
                 ],
             ],
         ]);
@@ -204,14 +198,11 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
     }
 
     /**
-     * `hfSubMerchantId` is a `PasswordType` field kept at Symfony's default `always_empty` (never
-     * echoes the stored secret back into the rendered `value` attribute, unlike the earlier
-     * `always_empty => false` this replaces). Leaving it blank on an already-configured payment
-     * method must be read as "unchanged", not "clear it" - the same convention as a
-     * change-password form - otherwise every edit that doesn't retype the SubMerchant ID would
-     * silently wipe it.
+     * A payment method configured before the SubMerchant ID field was removed still carries
+     * `hfSubMerchantId` in its stored config. Re-saving it must not fail on the now-unknown key,
+     * and the leftover value is simply ignored — GatewayCredentialsResolver no longer reads it.
      */
-    public function testSubmit_hostedFieldsModeWithBlankSubMerchantIdAndPreviousValueExists_preservesPreviousValue(): void
+    public function testSubmit_hostedFieldsModeWithALeftoverSubMerchantIdInStoredConfig_isValid(): void
     {
         $form = $this->createRootForm();
         $configForm = $form->get('gatewayConfig')->get('config');
@@ -220,7 +211,7 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
             PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
             PayPlugGatewayFactory::HOSTED_FIELDS => true,
             PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sub_456',
+            'hfSubMerchantId' => 'sub_456',
         ]);
 
         $form->submit([
@@ -230,51 +221,11 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
                     PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
                     PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => '',
-                ],
-            ],
-        ]);
-
-        self::assertTrue($form->isValid(), 'Leaving SubMerchant ID blank on an already-configured payment method must not be treated as missing.');
-        self::assertSame(
-            'sub_456',
-            $configForm->getData()[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null,
-        );
-    }
-
-    /**
-     * The blank-preserves-previous-value convention above must not prevent an admin from actually
-     * changing the SubMerchant ID - only a blank submission falls back to the previous value.
-     */
-    public function testSubmit_hostedFieldsModeWithNewSubMerchantIdValue_overwritesPreviousValue(): void
-    {
-        $form = $this->createRootForm();
-        $configForm = $form->get('gatewayConfig')->get('config');
-        $configForm->setData([
-            PayPlugGatewayFactory::ONE_CLICK => false,
-            PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
-            PayPlugGatewayFactory::HOSTED_FIELDS => true,
-            PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sub_456',
-        ]);
-
-        $form->submit([
-            'gatewayConfig' => [
-                'config' => [
-                    PayPlugGatewayFactory::ONE_CLICK => false,
-                    PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
-                    PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
-                    PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sub_789_new',
                 ],
             ],
         ]);
 
         self::assertTrue($form->isValid());
-        self::assertSame(
-            'sub_789_new',
-            $configForm->getData()[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null,
-        );
     }
 
     /**
@@ -298,7 +249,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
                     PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT,
                     PayPlugGatewayFactory::HF_IDENTIFIER => '',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => '',
                 ],
             ],
         ], false);
@@ -331,7 +281,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
                     PayPlugGatewayFactory::DEFERRED_CAPTURE => false,
                     PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
                     PayPlugGatewayFactory::HF_IDENTIFIER => 'acct_123',
-                    PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'sub_456',
                 ],
             ],
         ], false);

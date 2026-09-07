@@ -100,7 +100,7 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         array $details,
         int $amount = 1000,
         string $currency = 'EUR',
-        ?array $gatewayConfig = ['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1'],
+        ?array $gatewayConfig = ['hfIdentifier' => 'acct_123'],
         ?AddressInterface $billingAddress = null,
     ): PaymentRequestInterface&MockObject
     {
@@ -195,7 +195,7 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
     {
         $method = $this->createMock(PaymentMethodInterface::class);
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
-        $gatewayConfig->method('getConfig')->willReturn(['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1']);
+        $gatewayConfig->method('getConfig')->willReturn(['hfIdentifier' => 'acct_123']);
         $method->method('getGatewayConfig')->willReturn($gatewayConfig);
         $customer = $this->createMock(CustomerInterface::class);
         $customer->method('getEmail')->willReturn(null);
@@ -590,7 +590,7 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         // card entirely rather than flushing one with that mandatory field left unset.
         $method = $this->createMock(BasePaymentMethodInterface::class);
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
-        $gatewayConfig->method('getConfig')->willReturn(['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1']);
+        $gatewayConfig->method('getConfig')->willReturn(['hfIdentifier' => 'acct_123']);
         $method->method('getGatewayConfig')->willReturn($gatewayConfig);
         $customer = $this->createMock(CustomerInterface::class);
         $customer->method('getId')->willReturn(7);

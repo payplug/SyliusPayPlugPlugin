@@ -86,7 +86,6 @@ final class PayPlugContext implements Context
             'payum.http_client' => '@payplug_sylius_payplug_plugin.api_client.payplug',
             PayPlugGatewayFactory::HOSTED_FIELDS => true,
             PayPlugGatewayFactory::HF_IDENTIFIER => 'test-company-id',
-            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => 'test-submerchant-id',
         ]);
 
         $this->paymentMethodManager->flush();
