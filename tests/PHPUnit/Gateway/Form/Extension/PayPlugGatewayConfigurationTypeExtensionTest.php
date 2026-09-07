@@ -10,7 +10,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -76,15 +75,17 @@ final class PayPlugGatewayConfigurationTypeExtensionTest extends TestCase
         self::assertFalse($options['required']);
     }
 
-    public function testBuildForm_addsHfSubMerchantIdPasswordField(): void
+    /**
+     * The SubMerchant ID field was removed once UPC made `submerchantExternalId` optional: only the
+     * EUR MID configurations carry a submerchant, and Hosted Fields here targets the multi-currency
+     * ones, so the key is omitted from every payload rather than sent empty. HF_IDENTIFIER is the
+     * last field added.
+     */
+    public function testBuildForm_addsNoFieldAfterHfIdentifier(): void
     {
         [, $addCalls] = $this->buildFormAndCollectAddCalls();
 
-        [$name, $type, $options] = $addCalls[4];
-        self::assertSame(PayPlugGatewayFactory::HF_SUB_MERCHANT_ID, $name);
-        self::assertSame(PasswordType::class, $type);
-        self::assertSame('payplug_sylius_payplug_plugin.ui.hf_sub_merchant_id_label', $options['label']);
-        self::assertFalse($options['required']);
+        self::assertArrayNotHasKey(4, $addCalls);
     }
 
     public function testGetExtendedTypes_returnsPayPlugGatewayConfigurationType(): void

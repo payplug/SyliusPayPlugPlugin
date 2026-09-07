@@ -31,17 +31,20 @@ final class GatewayCredentialsResolver
      * Hosted-Fields-configured payment method must have each payment/refund routed to the account
      * it actually belongs to, never "whichever Hosted Fields config happens to match first."
      *
-     * @return array{0: string, 1: string} accountId, submerchantExternalId
+     * Returns the account id alone. A submerchantExternalId belongs to the UDV/MID configuration
+     * for the payment's currency — the EUR ones carry one, the other-currency ones do not — and
+     * this plugin's Hosted Fields flow targets the multi-currency configurations (EUR is served by
+     * Integrated Payment instead). So there is never one to contribute here, and UPC omits that key
+     * entirely when none is supplied.
      */
-    public static function resolve(PaymentMethodInterface $method): array
+    public static function resolve(PaymentMethodInterface $method): string
     {
         $gatewayConfig = $method->getGatewayConfig()?->getConfig() ?? [];
         $accountId = $gatewayConfig[PayPlugGatewayFactory::HF_IDENTIFIER] ?? null;
-        $submerchantExternalId = $gatewayConfig[PayPlugGatewayFactory::HF_SUB_MERCHANT_ID] ?? null;
-        if (!\is_string($accountId) || '' === $accountId || !\is_string($submerchantExternalId) || '' === $submerchantExternalId) {
-            throw new \LogicException('Hosted Fields account id or submerchant id is not configured for this payment method.');
+        if (!\is_string($accountId) || '' === $accountId) {
+            throw new \LogicException('Hosted Fields account id is not configured for this payment method.');
         }
 
-        return [$accountId, $submerchantExternalId];
+        return $accountId;
     }
 }

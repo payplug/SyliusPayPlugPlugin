@@ -113,7 +113,7 @@ final class CaptureAliasPaymentRequestHandlerTest extends TestCase
      */
     private function paymentRequestWithSelectedCard(
         ?Card $card,
-        ?array $gatewayConfig = ['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1'],
+        ?array $gatewayConfig = ['hfIdentifier' => 'acct_123'],
         ?CustomerInterface $cardCustomer = null,
         ?AddressInterface $billingAddress = null,
         ?PaymentMethodInterface $cardPaymentMethod = null,
