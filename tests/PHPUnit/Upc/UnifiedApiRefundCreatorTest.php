@@ -61,7 +61,7 @@ final class UnifiedApiRefundCreatorTest extends TestCase
 
     public function testCreateRefund_withoutAmount_sendsAFullRefundUsingTheMethodsOwnAccountId(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('acct_123', 'submerchant_123');
+        $method = $this->buildHostedFieldsPaymentMethod('acct_123');
 
         $this->unifiedApiHttpClient->expects(self::once())
             ->method('postJson')
@@ -71,7 +71,6 @@ final class UnifiedApiRefundCreatorTest extends TestCase
                     'account' => ['id' => 'acct_123'],
                     'orderId' => 'order_1',
                     'description' => 'Refund for order order_1',
-                    'submerchantExternalId' => 'submerchant_123',
                 ],
                 ['Authorization' => 'Bearer cached-jwt', 'Content-Type' => 'application/json'],
             )
@@ -84,7 +83,7 @@ final class UnifiedApiRefundCreatorTest extends TestCase
 
     public function testCreateRefund_withAmount_sendsAPartialRefund(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('acct_123', 'submerchant_123');
+        $method = $this->buildHostedFieldsPaymentMethod('acct_123');
 
         $this->unifiedApiHttpClient->expects(self::once())
             ->method('postJson')
@@ -94,7 +93,6 @@ final class UnifiedApiRefundCreatorTest extends TestCase
                     'account' => ['id' => 'acct_123'],
                     'orderId' => 'order_1',
                     'description' => 'Refund for order order_1',
-                    'submerchantExternalId' => 'submerchant_123',
                     'amount' => 500,
                 ],
                 ['Authorization' => 'Bearer cached-jwt', 'Content-Type' => 'application/json'],
@@ -106,7 +104,7 @@ final class UnifiedApiRefundCreatorTest extends TestCase
 
     public function testCreateRefund_onA404Response_throwsPaymentNotFoundException(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('acct_123', 'submerchant_123');
+        $method = $this->buildHostedFieldsPaymentMethod('acct_123');
         $this->unifiedApiHttpClient->method('postJson')->willReturn(['status' => 404, 'body' => '{}']);
 
         $this->expectException(PaymentNotFoundException::class);
@@ -116,7 +114,7 @@ final class UnifiedApiRefundCreatorTest extends TestCase
 
     public function testCreateRefund_onNon2xxResponse_throwsApiException(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('acct_123', 'submerchant_123');
+        $method = $this->buildHostedFieldsPaymentMethod('acct_123');
         $this->unifiedApiHttpClient->method('postJson')->willReturn(['status' => 500, 'body' => '{}']);
 
         $this->expectException(ApiException::class);
@@ -126,7 +124,7 @@ final class UnifiedApiRefundCreatorTest extends TestCase
 
     public function testCreateRefund_withANonPositiveAmount_throwsRefundAmountExceptionBeforeAnyNetworkCall(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('acct_123', 'submerchant_123');
+        $method = $this->buildHostedFieldsPaymentMethod('acct_123');
         $this->unifiedApiHttpClient->expects(self::never())->method('postJson');
 
         $this->expectException(RefundAmountException::class);
@@ -135,51 +133,58 @@ final class UnifiedApiRefundCreatorTest extends TestCase
     }
 
     /**
-     * Same guard CaptureHostedPaymentRequestHandler::resolveGatewayCredentials() already applies
-     * at payment-creation time — a blank submerchant id must fail fast and locally rather than
-     * round-tripping to the Unified API for a 400 ("subMerchantExternalId is missing") that's
-     * indistinguishable from any other malformed-request cause once wrapped in ApiException.
+     * The refund body must state what $amount's minor units are: without it the Unified API infers
+     * the currency from the account, which silently means the wrong thing for a multi-currency
+     * merchant.
      */
-    public function testCreateRefund_withNoConfiguredSubmerchantId_throwsLogicExceptionBeforeAnyNetworkCall(): void
+    public function testCreateRefund_withCurrency_sendsItAlongsideTheAmount(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('acct_123', '');
+        $method = $this->buildHostedFieldsPaymentMethod('acct_123');
 
-        $this->unifiedApiHttpClient->expects(self::never())->method('postJson');
+        $this->unifiedApiHttpClient->expects(self::once())
+            ->method('postJson')
+            ->with(
+                'https://api.payplug.com/api/payment-gateway/payments/pay_123/refund',
+                [
+                    'account' => ['id' => 'acct_123'],
+                    'orderId' => 'order_1',
+                    'description' => 'Refund for order order_1',
+                    'amount' => 6800,
+                    'currency' => 'USD',
+                ],
+                ['Authorization' => 'Bearer cached-jwt', 'Content-Type' => 'application/json'],
+            )
+            ->willReturn(['status' => 200, 'body' => '{}']);
 
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('Hosted Fields account id or submerchant id is not configured for this payment method.');
-
-        $this->creator->createRefund($method, 'pay_123', 'order_1');
+        $this->creator->createRefund($method, 'pay_123', 'order_1', 6800, 'USD');
     }
 
     /**
      * Credentials must come from $method's own gateway config, not from whichever
      * Hosted-Fields-configured payment method IConfigurationRepository's backing store happens to
      * resolve first — otherwise a merchant with more than one such payment method could have a
-     * refund routed to the wrong account/submerchant.
+     * refund routed to the wrong account.
      */
     public function testCreateRefund_withNoConfiguredAccountId_throwsLogicExceptionBeforeAnyNetworkCall(): void
     {
-        $method = $this->buildHostedFieldsPaymentMethod('', 'submerchant_123');
+        $method = $this->buildHostedFieldsPaymentMethod('');
 
         $this->unifiedApiHttpClient->expects(self::never())->method('postJson');
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('Hosted Fields account id or submerchant id is not configured for this payment method.');
+        $this->expectExceptionMessage('Hosted Fields account id is not configured for this payment method.');
 
         $this->creator->createRefund($method, 'pay_123', 'order_1');
     }
 
     private function buildHostedFieldsPaymentMethod(
         string $accountId,
-        string $submerchantExternalId,
     ): PaymentMethodInterface&MockObject
     {
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
         $gatewayConfig->method('getConfig')->willReturn([
             PayPlugGatewayFactory::HOSTED_FIELDS => true,
             PayPlugGatewayFactory::HF_IDENTIFIER => $accountId,
-            PayPlugGatewayFactory::HF_SUB_MERCHANT_ID => $submerchantExternalId,
         ]);
 
         $method = $this->createMock(PaymentMethodInterface::class);

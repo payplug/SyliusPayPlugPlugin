@@ -25,9 +25,6 @@ sylius_twig_hooks:
             hf_identifier:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_identifier.html.twig'
                 priority: -1
-            hf_sub_merchant_id:
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_sub_merchant_id.html.twig'
-                priority: -2
             deferred_capture:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/deferred_capture.html.twig'
                 priority: -3

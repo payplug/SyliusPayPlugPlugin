@@ -60,11 +60,11 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         return $method;
     }
 
-    public function testResolveGatewayCredentials_withCompleteConfig_returnsAccountIdAndSubmerchantId(): void
+    public function testResolveGatewayCredentials_withCompleteConfig_returnsAccountId(): void
     {
-        $method = $this->methodWithGatewayConfig(['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => 'sub_ext_1']);
+        $method = $this->methodWithGatewayConfig(['hfIdentifier' => 'acct_123']);
 
-        self::assertSame(['acct_123', 'sub_ext_1'], $this->builder->resolveGatewayCredentials($method));
+        self::assertSame('acct_123', $this->builder->resolveGatewayCredentials($method));
     }
 
     public function testResolveGatewayCredentials_withNoGatewayConfig_throws(): void
@@ -74,11 +74,11 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         $this->builder->resolveGatewayCredentials($this->methodWithGatewayConfig(null));
     }
 
-    public function testResolveGatewayCredentials_withBlankSubmerchantId_throws(): void
+    public function testResolveGatewayCredentials_withBlankAccountId_throws(): void
     {
         $this->expectException(\LogicException::class);
 
-        $this->builder->resolveGatewayCredentials($this->methodWithGatewayConfig(['hfIdentifier' => 'acct_123', 'hfSubMerchantId' => '']));
+        $this->builder->resolveGatewayCredentials($this->methodWithGatewayConfig(['hfIdentifier' => '']));
     }
 
     public function testResolvePaymentMethod_withNoMethodOnThePayment_throws(): void
@@ -190,13 +190,13 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         $paymentRequest->method('getPayment')->willReturn($payment);
         $paymentRequest->method('getHash')->willReturn(Uuid::v4());
 
-        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', 'sub_ext_1', $paymentRequest, $order);
+        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, $order);
 
         self::assertSame('acct_123', $common->accountId);
         self::assertSame(1000, $common->amount);
         self::assertSame('EUR', $common->currency);
         self::assertSame('00000042', $common->orderId);
-        self::assertSame('sub_ext_1', $common->submerchantExternalId);
+        self::assertNull($common->submerchantExternalId);
         self::assertSame('https://shop.test/payplug/notify/abc', $common->notificationUrl);
         self::assertSame('https://shop.test/order/00000042/pay', $common->successUrl);
         self::assertSame('https://shop.test/order/00000042/pay?status=canceled', $common->cancelUrl);
@@ -213,7 +213,7 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         $paymentRequest->method('getPayment')->willReturn($payment);
         $paymentRequest->method('getHash')->willReturn(Uuid::v4());
 
-        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', 'sub_ext_1', $paymentRequest, null);
+        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, null);
 
         self::assertSame('42', $common->orderId);
         self::assertNull($common->billing);
@@ -238,7 +238,7 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         $paymentRequest->method('getPayment')->willReturn($payment);
         $paymentRequest->method('getHash')->willReturn(Uuid::v4());
 
-        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', 'sub_ext_1', $paymentRequest, $order);
+        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, $order);
 
         self::assertSame('Blue T-Shirt', $common->description);
     }
@@ -258,7 +258,7 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         $paymentRequest->method('getPayment')->willReturn($payment);
         $paymentRequest->method('getHash')->willReturn(Uuid::v4());
 
-        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', 'sub_ext_1', $paymentRequest, $order);
+        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, $order);
 
         self::assertNotNull($common->description);
         self::assertNotSame('Blue T-Shirt', $common->description);

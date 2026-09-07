@@ -28,8 +28,6 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
 
     public const HF_IDENTIFIER = 'hfIdentifier';
 
-    public const HF_SUB_MERCHANT_ID = 'hfSubMerchantId';
-
     // Unmapped admin form field driving INTEGRATED_PAYMENT/HOSTED_FIELDS below
     public const DISPLAY_MODE_FIELD = 'hostedFieldsMode';
 
@@ -40,7 +38,7 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
     /**
      * Derives the admin form radio's initial selection from persisted config.
      * Hosted Fields wins if both flags are somehow true, since only it carries the
-     * mandatory Account ID / SubMerchant ID fields the merchant would otherwise lose sight of.
+     * mandatory Account ID field the merchant would otherwise lose sight of.
      */
     public static function resolveDisplayMode(array $config): ?string
     {
@@ -70,14 +68,13 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
     }
 
     /**
-     * @param array<string, mixed> $rawFormData Display-mode/HF-identifier/HF-sub-merchant-id
-     *                                          values as submitted (assembled from the config
-     *                                          form's already-submitted child forms at
-     *                                          POST_SUBMIT, not PRE_SUBMIT's raw payload).
+     * @param array<string, mixed> $rawFormData Display-mode/HF-identifier values as submitted
+     *                                          (assembled from the config form's already-submitted
+     *                                          child forms at POST_SUBMIT, not PRE_SUBMIT's raw
+     *                                          payload).
      *
-     * @return list<string> Config keys (HF_IDENTIFIER / HF_SUB_MERCHANT_ID) that are blank
-     *                       while hosted_fields is selected; empty if hosted_fields isn't selected
-     *                       or both fields are filled.
+     * @return list<string> Config keys (HF_IDENTIFIER) that are blank while hosted_fields is
+     *                       selected; empty if hosted_fields isn't selected or the field is filled.
      */
     public static function missingHostedFieldsRequirements(array $rawFormData): array
     {
@@ -88,9 +85,6 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
         $missing = [];
         if (self::isBlank($rawFormData[self::HF_IDENTIFIER] ?? '')) {
             $missing[] = self::HF_IDENTIFIER;
-        }
-        if (self::isBlank($rawFormData[self::HF_SUB_MERCHANT_ID] ?? '')) {
-            $missing[] = self::HF_SUB_MERCHANT_ID;
         }
 
         return $missing;
