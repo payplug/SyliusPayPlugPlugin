@@ -4,6 +4,10 @@
   var payplug_hosted_fields_params = {
     companyId: '{{ payplug_hosted_fields_company_id(paymentMethod)|e('js') }}',
     payment_method_code: '{{ paymentMethod.code|e('js') }}',
+    {# Emitted as a real JS boolean, unlike integrated/index.html.twig's quoted interpolation of
+       the same flag — that one only happens to work because Twig renders false as an empty
+       string, and would hand JS a truthy "false" the moment it stopped doing so. #}
+    has_saved_cards: {{ hasSavedCards|default(false) ? 'true' : 'false' }},
     locale: '{{ app.request.locale|split('_')|first }}',
     error: {
       tokenization_failed: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.tokenization_failed'|trans|e('js') }}',
@@ -15,7 +19,12 @@
 <div
     class="payplugHostedFields"
     {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'container') }}
-    data-payment-inline-submit="true"
+    {# Must start "false" when a saved card is pre-selected: checkout-select-payment_controller
+       reads this on connect() and disables the checkout's own next-step button whenever a
+       payment method claims to submit inline — which Hosted Fields only does once the customer
+       has actually picked "pay with another card". handleShow()/handleHide() keep it in sync
+       from then on. #}
+    data-payment-inline-submit="{{ hasSavedCards|default(false) is not same as true ? 'true' : 'false' }}"
 >
     <div class="sylius-shop-loader d-none">
         <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
