@@ -90,7 +90,7 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
             $this->unifiedApiPaymentCreator,
             $this->operationStatusFetcher,
             new PaymentCaptureContextBuilder($this->urlGenerator, $this->afterPayUrlProvider, new OrderAddressDtoCreator(), $this->requestStack),
-            new PaymentCaptureOutcomeApplier($this->logger, $this->stateMachine, $this->orderStateMutator),
+            new PaymentCaptureOutcomeApplier($this->logger, $this->stateMachine, $this->orderStateMutator, $this->requestStack),
             new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
             $this->logger,
         );

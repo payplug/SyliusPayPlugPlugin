@@ -95,7 +95,7 @@ final class CaptureAliasPaymentRequestHandlerTest extends TestCase
             $this->unifiedApiPaymentCreator,
             new SelectedCardResolver($this->requestStack, $this->payplugCardRepository),
             new PaymentCaptureContextBuilder($this->urlGenerator, $this->afterPayUrlProvider, new OrderAddressDtoCreator(), $this->requestStack),
-            new PaymentCaptureOutcomeApplier($this->logger, $this->stateMachine, $this->orderStateMutator),
+            new PaymentCaptureOutcomeApplier($this->logger, $this->stateMachine, $this->orderStateMutator, $this->requestStack),
         );
     }
 

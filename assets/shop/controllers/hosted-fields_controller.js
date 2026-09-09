@@ -39,6 +39,19 @@ export default class extends Controller {
       });
     }
 
+    // With saved cards on offer, selecting the payment method is no longer enough to mean "show
+    // the card form": the customer must also have chosen "pay with another card". Nothing else
+    // establishes that initial state — handleShow()/handleHide() are only ever reached from the
+    // change actions wired onto the choice radios in
+    // templates/form/sylius_checkout_select_payment_row.html.twig, and no change event fires on
+    // page load — so without this branch a pre-selected saved card still renders the fields open
+    // (the --loaded class alone drives their visibility). Mirrors integrated-payment_controller.
+    if (payplug_hosted_fields_params.has_saved_cards) {
+      this.watchCardChoice();
+
+      return;
+    }
+
     // Stimulus connects as soon as the markup is in the DOM, even though the payment method
     // container starts hidden (see shop/select_payment/choice.html.twig). Mounting the
     // cross-origin Dalenys iframes into a display:none container breaks their rendering, so
@@ -58,6 +71,43 @@ export default class extends Controller {
         }
       });
     });
+  }
+
+  // Opens the fields only while BOTH "pay with another card" and this payment method are
+  // selected — on load and on every subsequent change to either set of radios. Closing is left
+  // to handleHide(), which the choice radios already trigger and which also resets
+  // data-payment-inline-submit.
+  watchCardChoice() {
+    if (this.isOtherCardChosen()) {
+      this.openFields();
+    }
+
+    this.element
+      .querySelectorAll('.payment-choice__input, [id*="checkout_select_payment_payments"]')
+      .forEach((element) => {
+        element.addEventListener('change', () => {
+          if (this.isOtherCardChosen()) {
+            this.openFields();
+          }
+        });
+      });
+  }
+
+  isOtherCardChosen() {
+    if (true !== this.element.querySelector('#payplug_choice_card_other')?.checked) {
+      return false;
+    }
+
+    // The payment method radio is absent when the shop offers only one method — Sylius renders
+    // no choice at all in that case, so a checked card choice is on its own enough to mean this
+    // method is the one being paid with.
+    const methodRadio = document.querySelector(
+      `[id*="checkout_select_payment_payments"][value="${payplug_hosted_fields_params.payment_method_code}"]`,
+    );
+
+    return null === methodRadio
+      ? null !== document.querySelector('.payplug-payment-choice__input:checked')
+      : methodRadio.checked;
   }
 
   handleShow(event) {
