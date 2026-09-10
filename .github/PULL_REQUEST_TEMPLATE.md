@@ -28,6 +28,7 @@
 
 ### Testing
 - [ ] Unit tests added / updated
+- [ ] New/changed code is covered by tests — SonarCloud Quality Gate (coverage on new code) passes on the `sonarcloud` CI job
 
 ### Security & Ops
 - [ ] No sensitive data or secrets introduced

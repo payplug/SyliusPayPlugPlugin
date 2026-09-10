@@ -21,7 +21,10 @@ grumphp:
             configuration: 'ruleset/phpstan.neon'
             use_grumphp_paths: false
             memory_limit: '-1'
-        securitychecker_symfony: ~
+        securitychecker_composeraudit:
+            # Abandoned packages are reported, not fatal: the offenders are transitive
+            # Sylius/Behat deps this plugin cannot replace. Advisories still fail the task.
+            abandoned: report
         yamllint:
             parse_custom_tags: true
         ecs:

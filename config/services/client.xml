@@ -10,6 +10,25 @@
         <service id="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface"
                  class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory" />
 
+        <service id="PayplugUnifiedCore\Contracts\IOAuthHttpClient"
+                 alias="PayPlug\SyliusPayPlugPlugin\Auth\SyliusOAuthHttpClient" />
+
+        <service id="PayplugUnifiedCore\Contracts\ITokenCache"
+                 alias="PayPlug\SyliusPayPlugPlugin\Auth\SyliusTokenCache" />
+
+        <service id="PayplugUnifiedCore\Auth\OAuth2Client">
+            <!-- Only used for the client-credentials grant (background token refresh);
+                 redirectUri/scope are irrelevant to that grant, left empty. -->
+            <!-- Must match the base URL UnifiedAuthenticationController uses — client_id/secret
+                 minted by the interactive login are only valid against the same environment. -->
+            <argument key="$baseUrl">%payplug.oauth_base_url%</argument>
+            <argument key="$redirectUri" />
+            <argument key="$scope" />
+            <argument key="$audience">%payplug.oauth_audience%</argument>
+        </service>
+
+        <service id="PayplugUnifiedCore\Auth\TokenManager" />
+
         <service id="payplug_sylius_payplug_plugin.api_client.payplug"
                  class="PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClient"
                  public="true"

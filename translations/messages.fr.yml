@@ -111,6 +111,10 @@ payplug_sylius_payplug_plugin:
                 title: 'Les frais sont :'
                 client: Répartis entre vous et vos clients
                 merchant: À votre charge
+        scalapay_gateway_config:
+            min_amount: Montant minimum
+            max_amount: Montant maximum
+            amount_help: Laissez vide pour utiliser les limites autorisées par PayPlug.
         integrated_payment:
             card_holder.title: 'Nom du titulaire de la carte'
             card_holder.error: 'Nom et/ou prénom invalide(s).'
@@ -126,6 +130,11 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Confirmer le paiement'
             transaction_secure.label: 'Transaction sécurisée par'
             privacy_policy.label: 'Politique de confidentialité'
+        hosted_fields:
+            error.tokenization_failed: 'Les informations de votre carte n’ont pas pu être validées. Veuillez les vérifier et réessayer.'
+            error.unsupported_brand: 'Cette marque de carte n’est pas prise en charge pour ce moyen de paiement. Merci d’utiliser une autre carte.'
+            save_card.label: 'Enregistrer ma carte bancaire'
+            place_order.label: 'Confirmer le paiement'
         deferred_capture:
             process_order_info: |
                 Vous serez prélevé(é) lors du traitement de votre commande.
@@ -137,6 +146,8 @@ payplug_sylius_payplug_plugin:
         renew_oauth: Forcer la reconnexion OAuth
         renew_oauth_help: |
             Si cette option est cochée, un nouveau flux d’authentification sera lancé lors du clic sur le bouton "<b>Mise à jour</b>".
+        hf_identifier_label: 'Identifiant de compte'
+        hosted_fields_option: 'Hosted Fields avancé (beta)'
     form:
         oney_error: Il y a des informations manquantes pour pouvoir payer en utilisant Oney by Payplug
         complete_info:
@@ -158,6 +169,9 @@ payplug_sylius_payplug_plugin:
             d'autres transactions
 
         integrated_payment_enable: Activer le Paiement Integré
+        redirected_payment_enable: Activer le Paiement redirigé
+        account_id_required: 'Les fonctionnalités avancées nécessitent un Account ID, veuillez contacter votre Account Manager.'
+        integrated_payment_currency_incompatible: 'Le canal sélectionné n''est pas compatible avec le Paiement intégré'
         deferred_capture_enable: Activer la capture différée
         deferred_capture_help: |
             Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet

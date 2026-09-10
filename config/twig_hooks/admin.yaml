@@ -19,12 +19,15 @@ sylius_twig_hooks:
             one_click:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/one_click.html.twig'
                 priority: 0
-            integrated_payment:
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/integrated_payment.html.twig'
+            hosted_fields_mode:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hosted_fields_mode.html.twig'
                 priority: 0
+            hf_identifier:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/hf_identifier.html.twig'
+                priority: -1
             deferred_capture:
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/deferred_capture.html.twig'
-                priority: 0
+                priority: -3
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_oney': &oneyGateway
             live_checkbox: *liveCheckbox
             fees_for:
@@ -40,6 +43,9 @@ sylius_twig_hooks:
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_scalapay': &scalapayGateway
             live_checkbox: *liveCheckbox
+            amount_range:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/scalapay_amount_range.html.twig'
+                priority: 0
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_wero': &weroGateway
             live_checkbox: *liveCheckbox

@@ -93,6 +93,10 @@ payplug_sylius_payplug_plugin:
                 title: 'The fees are:'
                 client: Split between you and your customers
                 merchant: For you
+        scalapay_gateway_config:
+            min_amount: Minimum amount
+            max_amount: Maximum amount
+            amount_help: Leave empty to use the limits authorized by PayPlug.
         integrated_payment:
             card_holder.title: 'Cardholder name'
             card_holder.error: 'Invalid Name and/or Last Name.'
@@ -107,6 +111,11 @@ payplug_sylius_payplug_plugin:
             place_order.label: 'Place order'
             transaction_secure.label: 'Transaction secured by'
             privacy_policy.label: 'Privacy Policy'
+        hosted_fields:
+            error.tokenization_failed: 'Your card details could not be validated. Please check them and try again.'
+            error.unsupported_brand: 'This card brand is not supported for this payment method. Please use a different card.'
+            save_card.label: 'Save my card'
+            place_order.label: 'Place order'
         deferred_capture:
             process_order_info: |
                 You will be charged when your order is processed.
@@ -117,6 +126,8 @@ payplug_sylius_payplug_plugin:
         renew_oauth: Force OAuth reconnection
         renew_oauth_help: |
             If this option is checked, a new authentication flow will be started when clicking the "<b>Update</b>" button.
+        hf_identifier_label: 'Account ID'
+        hosted_fields_option: 'Advanced (beta) Hosted Fields'
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:
@@ -137,6 +148,9 @@ payplug_sylius_payplug_plugin:
             Allow your customers to save their credit card details for later
 
         integrated_payment_enable: Enable payment integrated
+        redirected_payment_enable: Enable redirected payment
+        account_id_required: 'Advanced features require an Account ID, please contact your Account Manager.'
+        integrated_payment_currency_incompatible: 'The selected channel is not compatible with Integrated Payment.'
 
         deferred_capture_enable: Enable deferred capture
         deferred_capture_help: |

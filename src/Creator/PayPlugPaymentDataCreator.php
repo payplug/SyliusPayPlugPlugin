@@ -21,6 +21,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Upc\CustomerTitleResolver;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -36,8 +37,6 @@ class PayPlugPaymentDataCreator
     private const DELIVERY_TYPE_BILLING = 'BILLING';
 
     private const DELIVERY_TYPE_NEW = 'NEW';
-
-    private const PAYPLUG_CARD_ID_OTHER = 'other';
 
     public function __construct(
         private CanSaveCardCheckerInterface $canSaveCardChecker,
@@ -142,9 +141,9 @@ class PayPlugPaymentDataCreator
 
     private function formatTitle(CustomerInterface $customer): ?string
     {
-        $gender = $customer->getGender();
+        $title = CustomerTitleResolver::resolve($customer->getGender());
 
-        return 'm' === $gender ? 'mr' : ('f' === $gender ? 'mrs' : null);
+        return null !== $title ? strtolower($title) : null;
     }
 
     private function formatLanguageCode(?string $languageCode): ?string
@@ -252,7 +251,7 @@ class PayPlugPaymentDataCreator
         $cardId = $this->requestStack->getSession()->get('payplug_payment_method');
 
         if (
-            (null === $cardId || self::PAYPLUG_CARD_ID_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
+            (null === $cardId || PayPlugGatewayFactory::CARD_CHOICE_OTHER === $cardId) && $this->canSaveCardChecker->isAllowed(
                 $paymentMethod,
             )
         ) {
