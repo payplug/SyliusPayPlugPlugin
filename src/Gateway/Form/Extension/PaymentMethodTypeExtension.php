@@ -45,9 +45,10 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
     {
         $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
             $form = $event->getForm();
-            $paymentMethod = $this->resolvePayPlugPaymentMethod($form, $event->getData());
+            $configurationType = $this->resolveConfigurationType($form);
+            $paymentMethod = $this->resolvePayPlugPaymentMethod($event->getData());
 
-            if (null === $paymentMethod) {
+            if (null === $configurationType || null === $paymentMethod) {
                 return;
             }
 
@@ -55,7 +56,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
             $gatewayConfig = $paymentMethod->getGatewayConfig();
 
             $this->addChannelConflictErrors($form, $paymentMethod, (string) $gatewayConfig->getFactoryName());
-            $this->addBaseCurrencyErrors($form, $paymentMethod, $gatewayConfig);
+            $this->addBaseCurrencyErrors($form, $paymentMethod, $gatewayConfig, $configurationType);
         });
     }
 
@@ -65,14 +66,11 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
     }
 
     /**
-     * Returns the submitted payment method only when it is one of ours.
-     *
-     * "One of ours" is decided by the gateway configuration form's own type rather than by a
-     * hardcoded factory-name list: every PayPlug gateway configuration type extends
-     * `AbstractGatewayConfigurationType` and nothing else does, so the test stays exact when an
-     * eighth gateway is added.
+     * Returns the submitted payment method only when it carries a gateway config with a factory
+     * name; the listener pairs this with `resolveConfigurationType()` to decide whether the
+     * payment method is one of ours.
      */
-    private function resolvePayPlugPaymentMethod(FormInterface $form, mixed $data): ?PaymentMethodInterface
+    private function resolvePayPlugPaymentMethod(mixed $data): ?PaymentMethodInterface
     {
         if (!$data instanceof PaymentMethodInterface) {
             return null;
@@ -81,13 +79,17 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
         $gatewayConfig = $data->getGatewayConfig();
 
         $isPayPlugPaymentMethod = $gatewayConfig instanceof GatewayConfigInterface &&
-            null !== $gatewayConfig->getFactoryName() &&
-            null !== $this->resolveConfigurationType($form);
+            null !== $gatewayConfig->getFactoryName();
 
         return $isPayPlugPaymentMethod ? $data : null;
     }
 
     /**
+     * Resolving to non-null is what makes a submitted payment method "one of ours": the decision
+     * rests on the gateway configuration form's own type rather than on a hardcoded factory-name
+     * list, since every PayPlug gateway configuration type extends `AbstractGatewayConfigurationType`
+     * and nothing else does, so the test stays exact when an eighth gateway is added.
+     *
      * `GatewayConfigType` only adds the `config` child when the factory has a registered
      * configuration type, hence the `has()` guards.
      *
@@ -139,12 +141,10 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
         FormInterface $form,
         PaymentMethodInterface $paymentMethod,
         GatewayConfigInterface $gatewayConfig,
+        AbstractGatewayConfigurationType $configurationType,
     ): void {
-        $configurationType = $this->resolveConfigurationType($form);
-
         if (
             !$form->has('channels') ||
-            null === $configurationType ||
             !$configurationType->shouldValidateBaseCurrency($gatewayConfig->getConfig())
         ) {
             return;
