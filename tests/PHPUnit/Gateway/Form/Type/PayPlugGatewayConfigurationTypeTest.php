@@ -9,7 +9,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PayPlugGatewayConfigurationTypeTest extends TestCase
@@ -25,7 +24,6 @@ final class PayPlugGatewayConfigurationTypeTest extends TestCase
 
         $this->type = new PayPlugGatewayConfigurationType(
             $this->translator,
-            $this->createMock(RequestStack::class),
         );
     }
 

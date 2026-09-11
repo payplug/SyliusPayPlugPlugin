@@ -665,12 +665,6 @@ parameters:
 			path: ../src/Gateway/AbstractGatewayFactory.php
 
 		-
-			message: '#^Cannot call method add\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: ../src/Gateway/Form/Type/AbstractGatewayConfigurationType.php
-
-		-
 			message: '#^Cannot access offset ''secretKey'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1

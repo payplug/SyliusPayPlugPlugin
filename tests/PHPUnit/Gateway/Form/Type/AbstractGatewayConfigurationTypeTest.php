@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Gateway\Form\Type;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AbstractGatewayConfigurationType;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PayPlugGatewayConfigurationType;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -30,7 +31,6 @@ final class AbstractGatewayConfigurationTypeTest extends TestCase
 
         $this->type = new AbstractGatewayConfigurationType(
             $this->translator,
-            $this->createMock(RequestStack::class),
         );
     }
 
@@ -40,19 +40,8 @@ final class AbstractGatewayConfigurationTypeTest extends TestCase
      */
     public function testShouldValidateBaseCurrency_defaultImplementation_alwaysReturnsTrue(): void
     {
-        self::assertTrue($this->shouldValidateBaseCurrency([]));
-        self::assertTrue($this->shouldValidateBaseCurrency(['anything' => 'irrelevant']));
-    }
-
-    private function shouldValidateBaseCurrency(array $data): bool
-    {
-        $method = new \ReflectionMethod(AbstractGatewayConfigurationType::class, 'shouldValidateBaseCurrency');
-        $method->setAccessible(true);
-
-        /** @var bool $result */
-        $result = $method->invoke($this->type, $data);
-
-        return $result;
+        self::assertTrue($this->type->shouldValidateBaseCurrency([]));
+        self::assertTrue($this->type->shouldValidateBaseCurrency(['anything' => 'irrelevant']));
     }
 
     /**
@@ -67,18 +56,31 @@ final class AbstractGatewayConfigurationTypeTest extends TestCase
 
         self::assertSame(
             'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
-            $this->baseCurrencyViolationMessage($channel),
+            $this->type->baseCurrencyViolationMessage($channel),
         );
     }
 
-    private function baseCurrencyViolationMessage(ChannelInterface $channel): string
+    public function testGetBaseCurrencyCode_defaultImplementation_isEuro(): void
     {
-        $method = new \ReflectionMethod(AbstractGatewayConfigurationType::class, 'baseCurrencyViolationMessage');
-        $method->setAccessible(true);
+        self::assertSame('EUR', $this->type->getBaseCurrencyCode());
+    }
 
-        /** @var string $result */
-        $result = $method->invoke($this->type, $channel);
+    /**
+     * The only subtype that narrows the hook: Integrated Payment is the only display mode that
+     * requires every associated channel to be EUR.
+     */
+    public function testShouldValidateBaseCurrency_payPlugType_onlyAppliesToIntegratedPayment(): void
+    {
+        $type = new PayPlugGatewayConfigurationType(
+            $this->translator,
+        );
 
-        return $result;
+        self::assertTrue($type->shouldValidateBaseCurrency([
+            PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT,
+        ]));
+        self::assertFalse($type->shouldValidateBaseCurrency([
+            PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
+        ]));
+        self::assertFalse($type->shouldValidateBaseCurrency([]));
     }
 }
