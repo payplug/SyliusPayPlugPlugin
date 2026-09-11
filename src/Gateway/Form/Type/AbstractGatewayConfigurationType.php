@@ -6,16 +6,13 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
 use Doctrine\Common\Collections\Collection;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -31,7 +28,6 @@ class AbstractGatewayConfigurationType extends AbstractType
 
     public function __construct(
         protected TranslatorInterface $translator,
-        private RepositoryInterface $gatewayConfigRepository,
         protected RequestStack $requestStack,
     ) {
     }
@@ -57,12 +53,6 @@ class AbstractGatewayConfigurationType extends AbstractType
                 'required' => false,
             ])
             ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
-                $this->checkCreationRequirements(
-                    $this->gatewayFactoryTitle,
-                    $this->gatewayFactoryName,
-                    $event->getForm(),
-                );
-
                 /** @phpstan-ignore-next-line */
                 $formChannels = $event->getForm()->getParent()->getParent()->get('channels');
                 $dataFormChannels = $formChannels->getData();
@@ -94,34 +84,6 @@ class AbstractGatewayConfigurationType extends AbstractType
                 }
             })
         ;
-    }
-
-    private function canBeCreated(string $factoryName): bool
-    {
-        $alreadyExists = $this->gatewayConfigRepository->findOneBy(['factoryName' => $factoryName]);
-
-        return !$alreadyExists instanceof GatewayConfigInterface;
-    }
-
-    private function checkCreationRequirements(
-        string $factoryTitle,
-        string $factoryName,
-        FormInterface $form,
-    ): void {
-        /** @phpstan-ignore-next-line */
-        $paymentMethod = $form->getParent()->getParent()->getData();
-
-        if (null !== $paymentMethod->getId()) {
-            return;
-        }
-
-        if ($this->canBeCreated($factoryName)) {
-            return;
-        }
-
-        $message = $this->translator->trans('payplug_sylius_payplug_plugin.form.only_one_gateway_allowed', ['%gateway_title%' => $factoryTitle]);
-        /* @phpstan-ignore-next-line */
-        $form->getParent()->getParent()->get('enabled')->addError(new FormError($message));
     }
 
     /**

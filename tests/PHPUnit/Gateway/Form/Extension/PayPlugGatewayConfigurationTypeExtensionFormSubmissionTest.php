@@ -11,7 +11,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Test\Traits\ValidatorExtensionTrait;
@@ -46,16 +45,13 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(static fn (string $id) => $id);
 
-        $gatewayConfigRepository = $this->createMock(RepositoryInterface::class);
-        $gatewayConfigRepository->method('findOneBy')->willReturn(null);
-
         $request = new Request();
         $request->setSession(new Session(new MockArraySessionStorage()));
         $requestStack = new RequestStack();
         $requestStack->push($request);
 
         return [
-            new PayPlugGatewayConfigurationType($translator, $gatewayConfigRepository, $requestStack),
+            new PayPlugGatewayConfigurationType($translator, $requestStack),
         ];
     }
 
@@ -330,8 +326,6 @@ final class PayPlugGatewayConfigurationTypeExtensionFormSubmissionTest extends T
         $paymentMethod = new class() {
             public function getId(): ?int
             {
-                // Non-null so AbstractGatewayConfigurationType::checkCreationRequirements()
-                // short-circuits without needing a configured gatewayConfigRepository.
                 return 1;
             }
         };
