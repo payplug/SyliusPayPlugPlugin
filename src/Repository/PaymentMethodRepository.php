@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Repository;
 
 use Sylius\Bundle\CoreBundle\Doctrine\ORM\PaymentMethodRepository as BasePaymentMethodRepository;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Webmozart\Assert\Assert;
 
 final class PaymentMethodRepository extends BasePaymentMethodRepository implements PaymentMethodRepositoryInterface
 {
@@ -23,7 +24,6 @@ final class PaymentMethodRepository extends BasePaymentMethodRepository implemen
 
     public function findEnabledByGatewayName(string $gatewayFactoryName): array
     {
-        /** @var array<PaymentMethodInterface> $paymentMethods */
         $paymentMethods = $this->createQueryBuilder('o')
             ->innerJoin('o.gatewayConfig', 'gatewayConfig')
             ->leftJoin('o.channels', 'channel')
@@ -34,6 +34,9 @@ final class PaymentMethodRepository extends BasePaymentMethodRepository implemen
             ->getQuery()
             ->getResult()
         ;
+
+        Assert::isList($paymentMethods);
+        Assert::allIsInstanceOf($paymentMethods, PaymentMethodInterface::class);
 
         return $paymentMethods;
     }

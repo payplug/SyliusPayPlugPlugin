@@ -17,8 +17,6 @@ class AbstractGatewayConfigurationType extends AbstractType
 
     protected string $gatewayFactoryTitle = '';
 
-    protected string $gatewayFactoryName = '';
-
     protected string $gatewayBaseCurrencyCode = PayPlugGatewayFactory::BASE_CURRENCY_CODE;
 
     public function __construct(
@@ -58,6 +56,8 @@ class AbstractGatewayConfigurationType extends AbstractType
      * @see baseCurrencyViolationMessage() Companion hook customizing the message this guards.
      *
      * @param array<array-key, mixed> $gatewayConfig Mapped gateway configuration, as stored on GatewayConfig.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function shouldValidateBaseCurrency(array $gatewayConfig): bool
     {

@@ -18,6 +18,7 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -150,7 +151,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
             return;
         }
 
-        $flashedMessages = [];
+        $seenMessages = [];
         foreach ($paymentMethod->getChannels() as $channel) {
             if (!$channel instanceof ChannelInterface) {
                 continue;
@@ -163,20 +164,36 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
             }
 
             $message = $configurationType->baseCurrencyViolationMessage($channel);
-            $form->get('channels')->addError(new FormError($message));
 
-            if (!\in_array($message, $flashedMessages, true)) {
-                $flashedMessages[] = $message;
-                $this->flash($message);
+            if (\in_array($message, $seenMessages, true)) {
+                continue;
             }
+
+            $seenMessages[] = $message;
+            $form->get('channels')->addError(new FormError($message));
+            $this->flash($message);
         }
     }
 
     private function flash(string $message): void
     {
-        $session = $this->requestStack->getSession();
-        if ($session instanceof FlashBagAwareSessionInterface) {
-            $session->getFlashBag()->add('error', $message);
+        $session = $this->resolveSession();
+
+        if (!$session instanceof FlashBagAwareSessionInterface) {
+            return;
         }
+
+        $session->getFlashBag()->add('error', $message);
+    }
+
+    private function resolveSession(): ?SessionInterface
+    {
+        $request = $this->requestStack->getCurrentRequest();
+
+        if (null === $request || !$request->hasSession()) {
+            return null;
+        }
+
+        return $request->getSession();
     }
 }
