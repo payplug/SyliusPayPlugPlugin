@@ -28,11 +28,17 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
      * Only `integrated_payment` requires every associated channel to be EUR; the redirected
      * and `hosted_fields` display modes both work in any currency.
      *
-     * @param array<int|string, mixed> $gatewayConfig
+     * The mode is read back through `resolveDisplayMode()` rather than off a display-mode key:
+     * `DISPLAY_MODE_FIELD` is an unmapped admin form field and never reaches the persisted config,
+     * which instead carries the two `INTEGRATED_PAYMENT`/`HOSTED_FIELDS` booleans written by
+     * `resolveDisplayModeFlags()`. Going through the canonical reader also inherits its
+     * hosted-fields-wins tie-break when both flags are somehow true.
+     *
+     * @param array<int|string, mixed> $gatewayConfig Mapped gateway configuration, as stored on GatewayConfig.
      */
     public function shouldValidateBaseCurrency(array $gatewayConfig): bool
     {
-        return PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT === ($gatewayConfig[PayPlugGatewayFactory::DISPLAY_MODE_FIELD] ?? null);
+        return PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT === PayPlugGatewayFactory::resolveDisplayMode($gatewayConfig);
     }
 
     /**

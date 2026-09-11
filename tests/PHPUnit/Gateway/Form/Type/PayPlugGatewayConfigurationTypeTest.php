@@ -27,17 +27,23 @@ final class PayPlugGatewayConfigurationTypeTest extends TestCase
         );
     }
 
+    /**
+     * The arrays below are keyed by the persisted `integratedPayment`/`hostedFields` booleans
+     * written by `PayPlugGatewayFactory::resolveDisplayModeFlags()`, i.e. the shape the production
+     * caller hands the hook (`GatewayConfigInterface::getConfig()`). The `hostedFieldsMode` form
+     * field is unmapped and never reaches the persisted config.
+     */
     public function testShouldValidateBaseCurrency_integratedPaymentSelected_returnsTrue(): void
     {
         self::assertTrue($this->shouldValidateBaseCurrency([
-            PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT,
+            PayPlugGatewayFactory::INTEGRATED_PAYMENT => true,
         ]));
     }
 
     public function testShouldValidateBaseCurrency_hostedFieldsSelected_returnsFalse(): void
     {
         self::assertFalse($this->shouldValidateBaseCurrency([
-            PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
         ]));
     }
 

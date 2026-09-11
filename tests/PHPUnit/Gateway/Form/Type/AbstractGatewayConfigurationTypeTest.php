@@ -68,6 +68,10 @@ final class AbstractGatewayConfigurationTypeTest extends TestCase
     /**
      * The only subtype that narrows the hook: Integrated Payment is the only display mode that
      * requires every associated channel to be EUR.
+     *
+     * Keyed by the persisted `integratedPayment`/`hostedFields` booleans, which is what the caller
+     * passes (`GatewayConfigInterface::getConfig()`); the `hostedFieldsMode` form field is unmapped
+     * and never appears in that array.
      */
     public function testShouldValidateBaseCurrency_payPlugType_onlyAppliesToIntegratedPayment(): void
     {
@@ -76,10 +80,10 @@ final class AbstractGatewayConfigurationTypeTest extends TestCase
         );
 
         self::assertTrue($type->shouldValidateBaseCurrency([
-            PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT,
+            PayPlugGatewayFactory::INTEGRATED_PAYMENT => true,
         ]));
         self::assertFalse($type->shouldValidateBaseCurrency([
-            PayPlugGatewayFactory::DISPLAY_MODE_FIELD => PayPlugGatewayFactory::DISPLAY_MODE_HOSTED_FIELDS,
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
         ]));
         self::assertFalse($type->shouldValidateBaseCurrency([]));
     }
