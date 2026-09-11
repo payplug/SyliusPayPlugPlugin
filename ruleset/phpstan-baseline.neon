@@ -665,14 +665,8 @@ parameters:
 			path: ../src/Gateway/AbstractGatewayFactory.php
 
 		-
-			message: '#^Cannot call method add\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: ../src/Gateway/Form/Type/AbstractGatewayConfigurationType.php
-
-		-
-			message: '#^Cannot call method getId\(\) on mixed\.$#'
-			identifier: method.nonObject
+			message: '#^PHPDoc tag @SuppressWarnings has invalid value \(\(PHPMD\.UnusedFormalParameter\)\)\: Unexpected token "\.UnusedFormalParameter\)", expected ''\)'' at offset 554 on line 11$#'
+			identifier: phpDoc.parseError
 			count: 1
 			path: ../src/Gateway/Form/Type/AbstractGatewayConfigurationType.php
 

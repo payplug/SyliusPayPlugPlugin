@@ -19,7 +19,5 @@ final class ScalapayGatewayConfigurationType extends AbstractGatewayConfiguratio
 {
     protected string $gatewayFactoryTitle = ScalapayGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = ScalapayGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = ScalapayGatewayFactory::BASE_CURRENCY_CODE;
 }

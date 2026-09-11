@@ -19,7 +19,5 @@ final class ApplePayGatewayConfigurationType extends AbstractGatewayConfiguratio
 {
     protected string $gatewayFactoryTitle = ApplePayGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = ApplePayGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = ApplePayGatewayFactory::BASE_CURRENCY_CODE;
 }
