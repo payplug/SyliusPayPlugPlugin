@@ -20,19 +20,23 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
 {
     protected string $gatewayFactoryTitle = PayPlugGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = PayPlugGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = PayPlugGatewayFactory::BASE_CURRENCY_CODE;
 
     /**
      * Only `integrated_payment` requires every associated channel to be EUR; the redirected
      * and `hosted_fields` display modes both work in any currency.
      *
-     * @param array<int|string, mixed> $rawFormData
+     * The mode is read back through `resolveDisplayMode()` rather than off a display-mode key:
+     * `DISPLAY_MODE_FIELD` is an unmapped admin form field and never reaches the persisted config,
+     * which instead carries the two `INTEGRATED_PAYMENT`/`HOSTED_FIELDS` booleans written by
+     * `resolveDisplayModeFlags()`. Going through the canonical reader also inherits its
+     * hosted-fields-wins tie-break when both flags are somehow true.
+     *
+     * @param array<int|string, mixed> $gatewayConfig Mapped gateway configuration, as stored on GatewayConfig.
      */
-    protected function shouldValidateBaseCurrency(array $rawFormData): bool
+    public function shouldValidateBaseCurrency(array $gatewayConfig): bool
     {
-        return PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT === ($rawFormData[PayPlugGatewayFactory::DISPLAY_MODE_FIELD] ?? null);
+        return PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT === PayPlugGatewayFactory::resolveDisplayMode($gatewayConfig);
     }
 
     /**
@@ -40,7 +44,7 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
      * (redirected/hosted_fields both return false there), so this message can be specific to
      * that mode rather than the generic per-gateway wording.
      */
-    protected function baseCurrencyViolationMessage(ChannelInterface $channel): string
+    public function baseCurrencyViolationMessage(ChannelInterface $channel): string
     {
         return $this->translator->trans('payplug_sylius_payplug_plugin.form.integrated_payment_currency_incompatible');
     }
