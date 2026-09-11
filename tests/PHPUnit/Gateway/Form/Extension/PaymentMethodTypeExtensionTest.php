@@ -12,6 +12,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sylius\Bundle\PaymentBundle\Form\Type\PaymentMethodType;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
@@ -78,6 +79,15 @@ final class PaymentMethodTypeExtensionTest extends TestCase
             [],
             $this->submitPayPlugPaymentMethod([PayPlugGatewayFactory::HOSTED_FIELDS => true], 'USD'),
         );
+    }
+
+    /**
+     * This extension must target the base `PaymentMethodType`, not the AdminBundle subtype, so that
+     * the AdminBundle form (which extends the base type) inherits the listener too.
+     */
+    public function testGetExtendedTypes_returnsPaymentMethodType(): void
+    {
+        self::assertSame([PaymentMethodType::class], PaymentMethodTypeExtension::getExtendedTypes());
     }
 
     /**

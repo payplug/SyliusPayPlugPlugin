@@ -20,8 +20,6 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
 {
     protected string $gatewayFactoryTitle = PayPlugGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = PayPlugGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = PayPlugGatewayFactory::BASE_CURRENCY_CODE;
 
     /**

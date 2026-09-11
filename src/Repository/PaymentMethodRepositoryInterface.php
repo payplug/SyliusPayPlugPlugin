@@ -12,7 +12,7 @@ interface PaymentMethodRepositoryInterface extends BasePaymentMethodRepositoryIn
     public function findOneByGatewayName(string $gatewayFactoryName): ?PaymentMethodInterface;
 
     /**
-     * @return array<PaymentMethodInterface>
+     * @return list<PaymentMethodInterface>
      */
     public function findEnabledByGatewayName(string $gatewayFactoryName): array;
 }
