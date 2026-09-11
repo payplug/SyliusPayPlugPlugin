@@ -20,4 +20,21 @@ final class PaymentMethodRepository extends BasePaymentMethodRepository implemen
             ->getSingleResult()
         ;
     }
+
+    public function findEnabledByGatewayName(string $gatewayFactoryName): array
+    {
+        /** @var array<PaymentMethodInterface> $paymentMethods */
+        $paymentMethods = $this->createQueryBuilder('o')
+            ->innerJoin('o.gatewayConfig', 'gatewayConfig')
+            ->leftJoin('o.channels', 'channel')
+            ->addSelect('channel')
+            ->andWhere('gatewayConfig.factoryName = :gatewayFactoryName')
+            ->andWhere('o.enabled = true')
+            ->setParameter('gatewayFactoryName', $gatewayFactoryName)
+            ->getQuery()
+            ->getResult()
+        ;
+
+        return $paymentMethods;
+    }
 }
