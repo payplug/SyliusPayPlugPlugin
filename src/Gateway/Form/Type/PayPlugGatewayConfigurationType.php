@@ -28,11 +28,11 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
      * Only `integrated_payment` requires every associated channel to be EUR; the redirected
      * and `hosted_fields` display modes both work in any currency.
      *
-     * @param array<int|string, mixed> $rawFormData
+     * @param array<int|string, mixed> $gatewayConfig
      */
-    protected function shouldValidateBaseCurrency(array $rawFormData): bool
+    public function shouldValidateBaseCurrency(array $gatewayConfig): bool
     {
-        return PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT === ($rawFormData[PayPlugGatewayFactory::DISPLAY_MODE_FIELD] ?? null);
+        return PayPlugGatewayFactory::DISPLAY_MODE_INTEGRATED_PAYMENT === ($gatewayConfig[PayPlugGatewayFactory::DISPLAY_MODE_FIELD] ?? null);
     }
 
     /**
@@ -40,7 +40,7 @@ final class PayPlugGatewayConfigurationType extends AbstractGatewayConfiguration
      * (redirected/hosted_fields both return false there), so this message can be specific to
      * that mode rather than the generic per-gateway wording.
      */
-    protected function baseCurrencyViolationMessage(ChannelInterface $channel): string
+    public function baseCurrencyViolationMessage(ChannelInterface $channel): string
     {
         return $this->translator->trans('payplug_sylius_payplug_plugin.form.integrated_payment_currency_incompatible');
     }

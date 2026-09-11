@@ -4,16 +4,11 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type;
 
-use Doctrine\Common\Collections\Collection;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormError;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class AbstractGatewayConfigurationType extends AbstractType
@@ -28,7 +23,6 @@ class AbstractGatewayConfigurationType extends AbstractType
 
     public function __construct(
         protected TranslatorInterface $translator,
-        protected RequestStack $requestStack,
     ) {
     }
 
@@ -52,50 +46,20 @@ class AbstractGatewayConfigurationType extends AbstractType
                 'mapped' => false,
                 'required' => false,
             ])
-            ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
-                /** @phpstan-ignore-next-line */
-                $formChannels = $event->getForm()->getParent()->getParent()->get('channels');
-                $dataFormChannels = $formChannels->getData();
-                if (!$dataFormChannels instanceof Collection) {
-                    return;
-                }
-
-                $rawData = $event->getData();
-                if (!\is_array($rawData) || !$this->shouldValidateBaseCurrency($rawData)) {
-                    return;
-                }
-
-                $flashedMessages = [];
-                /** @var ChannelInterface $dataFormChannel */
-                foreach ($dataFormChannels as $key => $dataFormChannel) {
-                    $baseCurrency = $dataFormChannel->getBaseCurrency();
-                    if (null === $baseCurrency) {
-                        continue;
-                    }
-                    $baseCurrencyCode = $baseCurrency->getCode();
-                    if ($this->gatewayBaseCurrencyCode !== $baseCurrencyCode) {
-                        $message = $this->baseCurrencyViolationMessage($dataFormChannel);
-                        $formChannels->get((string) $key)->addError(new FormError($message));
-                        if (!\in_array($message, $flashedMessages, true)) {
-                            $flashedMessages[] = $message;
-                            $this->requestStack->getSession()->getFlashBag()->add('error', $message);
-                        }
-                    }
-                }
-            })
         ;
     }
 
     /**
-     * Hook for subtypes to scope the base-currency-per-channel restriction below.
+     * Hook for subtypes to scope the base-currency-per-channel restriction enforced by
+     * PaymentMethodTypeExtension.
      * Default: always enforced, preserving today's behavior for every gateway that doesn't
      * override this (Bancontact, American Express, Scalapay, Wero, Oney...).
      *
      * @see baseCurrencyViolationMessage() Companion hook customizing the message this guards.
      *
-     * @param array<int|string, mixed> $rawFormData Raw PRE_SUBMIT data of the gateway config form.
+     * @param array<array-key, mixed> $gatewayConfig Mapped gateway configuration, as stored on GatewayConfig.
      */
-    protected function shouldValidateBaseCurrency(array $rawFormData): bool
+    public function shouldValidateBaseCurrency(array $gatewayConfig): bool
     {
         return true;
     }
@@ -107,7 +71,7 @@ class AbstractGatewayConfigurationType extends AbstractType
      *
      * @see shouldValidateBaseCurrency() Companion hook scoping when this message is used.
      */
-    protected function baseCurrencyViolationMessage(ChannelInterface $channel): string
+    public function baseCurrencyViolationMessage(ChannelInterface $channel): string
     {
         return $this->translator->trans(
             'payplug_sylius_payplug_plugin.form.base_currency_not_euro',
@@ -116,5 +80,10 @@ class AbstractGatewayConfigurationType extends AbstractType
                 '#payment_method#' => $this->gatewayFactoryTitle,
             ],
         );
+    }
+
+    public function getBaseCurrencyCode(): string
+    {
+        return $this->gatewayBaseCurrencyCode;
     }
 }

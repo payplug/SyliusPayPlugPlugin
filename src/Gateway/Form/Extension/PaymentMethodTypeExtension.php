@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension;
 use PayPlug\SyliusPayPlugPlugin\Checker\GatewayChannelConflictChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AbstractGatewayConfigurationType;
 use Sylius\Bundle\PaymentBundle\Form\Type\PaymentMethodType;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
@@ -54,6 +55,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
             $gatewayConfig = $paymentMethod->getGatewayConfig();
 
             $this->addChannelConflictErrors($form, $paymentMethod, (string) $gatewayConfig->getFactoryName());
+            $this->addBaseCurrencyErrors($form, $paymentMethod, $gatewayConfig);
         });
     }
 
@@ -80,7 +82,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
 
         $isPayPlugPaymentMethod = $gatewayConfig instanceof GatewayConfigInterface &&
             null !== $gatewayConfig->getFactoryName() &&
-            $this->hasPayPlugConfigurationType($form);
+            null !== $this->resolveConfigurationType($form);
 
         return $isPayPlugPaymentMethod ? $data : null;
     }
@@ -88,16 +90,21 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
     /**
      * `GatewayConfigType` only adds the `config` child when the factory has a registered
      * configuration type, hence the `has()` guards.
+     *
+     * The per-gateway currency policy is read back off the configuration type instance rather than
+     * duplicated into a registry here: it already lives one-class-per-gateway, and only the CB type
+     * narrows it (to Integrated Payment). Form types are stateless services, so calling their
+     * public hooks is safe.
      */
-    private function hasPayPlugConfigurationType(FormInterface $form): bool
+    private function resolveConfigurationType(FormInterface $form): ?AbstractGatewayConfigurationType
     {
         if (!$form->has('gatewayConfig') || !$form->get('gatewayConfig')->has('config')) {
-            return false;
+            return null;
         }
 
         $configurationType = $form->get('gatewayConfig')->get('config')->getConfig()->getType()->getInnerType();
 
-        return $configurationType instanceof AbstractGatewayConfigurationType;
+        return $configurationType instanceof AbstractGatewayConfigurationType ? $configurationType : null;
     }
 
     private function addChannelConflictErrors(
@@ -119,6 +126,43 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
                 ],
             );
 
+            $form->get('channels')->addError(new FormError($message));
+
+            if (!\in_array($message, $flashedMessages, true)) {
+                $flashedMessages[] = $message;
+                $this->flash($message);
+            }
+        }
+    }
+
+    private function addBaseCurrencyErrors(
+        FormInterface $form,
+        PaymentMethodInterface $paymentMethod,
+        GatewayConfigInterface $gatewayConfig,
+    ): void {
+        $configurationType = $this->resolveConfigurationType($form);
+
+        if (
+            !$form->has('channels') ||
+            null === $configurationType ||
+            !$configurationType->shouldValidateBaseCurrency($gatewayConfig->getConfig())
+        ) {
+            return;
+        }
+
+        $flashedMessages = [];
+        foreach ($paymentMethod->getChannels() as $channel) {
+            if (!$channel instanceof ChannelInterface) {
+                continue;
+            }
+
+            $baseCurrency = $channel->getBaseCurrency();
+
+            if (null === $baseCurrency || $configurationType->getBaseCurrencyCode() === $baseCurrency->getCode()) {
+                continue;
+            }
+
+            $message = $configurationType->baseCurrencyViolationMessage($channel);
             $form->get('channels')->addError(new FormError($message));
 
             if (!\in_array($message, $flashedMessages, true)) {
