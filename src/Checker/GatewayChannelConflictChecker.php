@@ -33,23 +33,71 @@ final class GatewayChannelConflictChecker
             return [];
         }
 
-        $conflicts = [];
+        return \array_values(\array_filter(
+            $this->claims($paymentMethod, $factoryName),
+            static fn (string $channelCode): bool => \in_array($channelCode, $channelCodes, true),
+            \ARRAY_FILTER_USE_KEY,
+        ));
+    }
+
+    /**
+     * The channels the gateway channel picker must render as unselectable, keyed by channel code.
+     *
+     * Deliberately unconditional where `findConflicts()` returns early on the subject's `enabled`
+     * flag: the picker is rendered before the admin has decided anything. Building both answers
+     * from the same `claims()` lookup is what keeps the disabled options and the submit-time rule
+     * in step.
+     *
+     * The subject's own channels are excluded, however. A browser does not submit a disabled
+     * checkbox, so disabling one that is *checked* would silently drop that channel the next time
+     * the admin saves — the very removal this picker exists to prevent. An overlap that already
+     * exists in the data therefore stays selectable and is reported by `findConflicts()` on submit
+     * instead. `claims()` alone cannot cover this: it excludes the subject by id, which says
+     * nothing about a *different* enabled payment method holding a channel the subject also holds.
+     *
+     * @return array<string, PaymentMethodInterface>
+     */
+    public function findClaimedChannels(PaymentMethodInterface $paymentMethod, string $factoryName): array
+    {
+        return \array_diff_key(
+            \array_map(
+                static fn (array $claim): PaymentMethodInterface => $claim['paymentMethod'],
+                $this->claims($paymentMethod, $factoryName),
+            ),
+            \array_flip($this->channelCodes($paymentMethod)),
+        );
+    }
+
+    /**
+     * Channels held by *other* enabled payment methods of the same factory.
+     *
+     * Keying by channel code collapses the (post-PRE-3628 unreachable) case of two enabled rivals
+     * holding the same channel down to a single claim, so neither caller reports it twice.
+     *
+     * @return array<string, array{channel: ChannelInterface, paymentMethod: PaymentMethodInterface}>
+     */
+    private function claims(PaymentMethodInterface $paymentMethod, string $factoryName): array
+    {
+        $claims = [];
         foreach ($this->paymentMethodRepository->findEnabledByGatewayName($factoryName) as $rival) {
             if ($this->isSamePaymentMethod($paymentMethod, $rival) || !$rival->isEnabled()) {
                 continue;
             }
 
             foreach ($rival->getChannels() as $rivalChannel) {
-                if (
-                    $rivalChannel instanceof ChannelInterface &&
-                    \in_array($rivalChannel->getCode(), $channelCodes, true)
-                ) {
-                    $conflicts[] = ['channel' => $rivalChannel, 'paymentMethod' => $rival];
+                if (!$rivalChannel instanceof ChannelInterface) {
+                    continue;
+                }
+
+                $channelCode = $rivalChannel->getCode();
+
+                if (null !== $channelCode) {
+                    $claims[$channelCode] = ['channel' => $rivalChannel, 'paymentMethod' => $rival];
                 }
             }
         }
 
-        return $conflicts;
+        return $claims;
     }
 
     /**

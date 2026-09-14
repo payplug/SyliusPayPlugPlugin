@@ -148,6 +148,120 @@ final class GatewayChannelConflictCheckerTest extends TestCase
         self::assertSame([], $this->checker->findConflicts($subject, OneyGatewayFactory::FACTORY_NAME));
     }
 
+    public function testFindClaimedChannels_enabledRivalChannels_areClaimed(): void
+    {
+        $subject = $this->paymentMethod(null, true, []);
+        $rival = $this->paymentMethod(7, true, ['WEB_FR', 'WEB_BE'], 'CB 1');
+
+        $this->paymentMethodRepository
+            ->expects(self::once())
+            ->method('findEnabledByGatewayName')
+            ->with(PayPlugGatewayFactory::FACTORY_NAME)
+            ->willReturn([$rival])
+        ;
+
+        $claimed = $this->checker->findClaimedChannels($subject, PayPlugGatewayFactory::FACTORY_NAME);
+
+        self::assertSame(['WEB_FR', 'WEB_BE'], array_keys($claimed));
+        self::assertSame('CB 1', $claimed['WEB_FR']->getName());
+        self::assertSame('CB 1', $claimed['WEB_BE']->getName());
+    }
+
+    public function testFindClaimedChannels_severalRivals_areAllReported(): void
+    {
+        $subject = $this->paymentMethod(null, true, []);
+        $firstRival = $this->paymentMethod(7, true, ['WEB_FR'], 'CB 1');
+        $secondRival = $this->paymentMethod(8, true, ['WEB_IT'], 'CB 2');
+
+        $this->paymentMethodRepository
+            ->method('findEnabledByGatewayName')
+            ->willReturn([$firstRival, $secondRival])
+        ;
+
+        $claimed = $this->checker->findClaimedChannels($subject, PayPlugGatewayFactory::FACTORY_NAME);
+
+        self::assertSame('CB 1', $claimed['WEB_FR']->getName());
+        self::assertSame('CB 2', $claimed['WEB_IT']->getName());
+    }
+
+    /**
+     * The channels the edited gateway already holds must stay selectable: a disabled checkbox is
+     * not submitted by the browser, so disabling a *checked* one would silently drop the channel
+     * on save. Leaving it selectable lets the POST_SUBMIT rule report the conflict instead.
+     */
+    public function testFindClaimedChannels_rivalIsTheSubjectItself_isNotClaimed(): void
+    {
+        $subject = $this->paymentMethod(7, true, ['WEB_FR']);
+        $itself = $this->paymentMethod(7, true, ['WEB_FR'], 'CB 1');
+
+        $this->paymentMethodRepository->method('findEnabledByGatewayName')->willReturn([$itself]);
+
+        self::assertSame([], $this->checker->findClaimedChannels($subject, PayPlugGatewayFactory::FACTORY_NAME));
+    }
+
+    /**
+     * Same guarantee as above, for the case the id comparison cannot catch: a *different* enabled
+     * payment method already holds a channel the subject also holds. Reachable through the admin
+     * alone — create A disabled on a channel (a disabled subject is exempt from `findConflicts()`),
+     * then create B enabled on it (A, being disabled, is neither a claim nor a conflict). Editing A
+     * afterwards must not disable its own checked box, or saving A silently drops the channel.
+     *
+     * The rival's other channels stay claimed.
+     */
+    public function testFindClaimedChannels_channelTheSubjectAlreadyHolds_isNotClaimed(): void
+    {
+        $subject = $this->paymentMethod(5, true, ['WEB_FR']);
+        $rival = $this->paymentMethod(6, true, ['WEB_FR', 'WEB_BE'], 'CB 1');
+
+        $this->paymentMethodRepository->method('findEnabledByGatewayName')->willReturn([$rival]);
+
+        $claimed = $this->checker->findClaimedChannels($subject, PayPlugGatewayFactory::FACTORY_NAME);
+
+        self::assertSame(['WEB_BE'], array_keys($claimed));
+        self::assertSame('CB 1', $claimed['WEB_BE']->getName());
+    }
+
+    public function testFindClaimedChannels_rivalIsDisabled_isNotClaimed(): void
+    {
+        $subject = $this->paymentMethod(null, true, []);
+        $rival = $this->paymentMethod(7, false, ['WEB_FR'], 'CB 1');
+
+        $this->paymentMethodRepository->method('findEnabledByGatewayName')->willReturn([$rival]);
+
+        self::assertSame([], $this->checker->findClaimedChannels($subject, PayPlugGatewayFactory::FACTORY_NAME));
+    }
+
+    /**
+     * Unlike `findConflicts()`, the picker is rendered before the admin has decided anything: the
+     * claimed set must not depend on the subject's own `enabled` flag or channel selection.
+     */
+    public function testFindClaimedChannels_subjectIsDisabled_stillReportsClaims(): void
+    {
+        $subject = $this->paymentMethod(null, false, []);
+        $rival = $this->paymentMethod(7, true, ['WEB_FR'], 'CB 1');
+
+        $this->paymentMethodRepository->method('findEnabledByGatewayName')->willReturn([$rival]);
+
+        self::assertSame(
+            ['WEB_FR'],
+            array_keys($this->checker->findClaimedChannels($subject, PayPlugGatewayFactory::FACTORY_NAME)),
+        );
+    }
+
+    public function testFindClaimedChannels_queriesOnlyTheGivenFactory(): void
+    {
+        $subject = $this->paymentMethod(null, true, ['WEB_FR']);
+
+        $this->paymentMethodRepository
+            ->expects(self::once())
+            ->method('findEnabledByGatewayName')
+            ->with(OneyGatewayFactory::FACTORY_NAME)
+            ->willReturn([])
+        ;
+
+        self::assertSame([], $this->checker->findClaimedChannels($subject, OneyGatewayFactory::FACTORY_NAME));
+    }
+
     /**
      * @param list<string> $channelCodes
      *
