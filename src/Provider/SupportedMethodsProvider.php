@@ -46,8 +46,9 @@ final class SupportedMethodsProvider
         ?string $billingCountryCode = null,
     ): array {
         $activeCurrencyCode = $paymentCurrencyCode ?? $this->currencyContext->getCurrencyCode();
-        $authorizedCurrencies = null;
-        $allowedCountries = null;
+
+        /** @var array<string, array<array-key, mixed>> $accounts */
+        $accounts = [];
 
         foreach ($supportedMethods as $key => $paymentMethod) {
             Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
@@ -59,8 +60,11 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            $authorizedCurrencies ??= $this->resolveAuthorizedCurrencies($factoryName);
-            $allowedCountries ??= $this->resolveAllowedCountries($factoryName);
+            $memoKey = $this->accountMemoKey($gatewayConfig);
+            $account = $accounts[$memoKey] ??= $this->clientFactory->createForPaymentMethod($paymentMethod)->getAccount();
+
+            $authorizedCurrencies = $this->resolveAuthorizedCurrencies($account, $factoryName);
+            $allowedCountries = $this->resolveAllowedCountries($account, $factoryName);
 
             if ($billingCountryCode !== null && $allowedCountries !== [] && !\in_array($billingCountryCode, $allowedCountries, true)) {
                 unset($supportedMethods[$key]);
@@ -167,25 +171,46 @@ final class SupportedMethodsProvider
     }
 
     /**
+     * Two payment methods of the same factory can be configured on different PayPlug accounts, so
+     * the `/account` payload is memoized per gateway config rather than once per call — sharing one
+     * lookup across the loop let the first method's account govern every later one. The persisted
+     * id is the key; object identity covers a config that has not been flushed yet, whose null id
+     * would otherwise collide with every other unsaved one.
+     */
+    private function accountMemoKey(GatewayConfigInterface $gatewayConfig): string
+    {
+        $id = $gatewayConfig->getId();
+
+        if (\is_int($id) || (\is_string($id) && '' !== $id)) {
+            return 'config:' . $id;
+        }
+
+        return 'object:' . spl_object_id($gatewayConfig);
+    }
+
+    /**
+     * @param array<array-key, mixed> $account
+     *
      * @return array<string, array{min_amount: int, max_amount: int}>
      */
-    private function resolveAuthorizedCurrencies(string $factoryName): array
+    private function resolveAuthorizedCurrencies(array $account, string $factoryName): array
     {
-        $account = $this->clientFactory->create($factoryName)->getAccount();
         $underscorePos = strpos($factoryName, '_');
         $paymentMethodKey = false !== $underscorePos ? substr($factoryName, $underscorePos + 1) : null;
 
         return $this->amountRangeResolver->resolve($account, $paymentMethodKey);
     }
 
-    private function resolveAllowedCountries(string $factoryName): array
+    /**
+     * @param array<array-key, mixed> $account
+     */
+    private function resolveAllowedCountries(array $account, string $factoryName): array
     {
         $underscorePos = strpos($factoryName, '_');
         if ($underscorePos === false) {
             return [];
         }
 
-        $account = $this->clientFactory->create($factoryName)->getAccount();
         $pmKey = substr($factoryName, $underscorePos + 1);
         $paymentMethods = $account['payment_methods'] ?? [];
         Assert::isArray($paymentMethods);
