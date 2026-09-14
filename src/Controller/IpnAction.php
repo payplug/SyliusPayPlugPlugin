@@ -90,7 +90,7 @@ class IpnAction
 
         if (
             !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            !\in_array($factoryName = $paymentMethod->getGatewayConfig()->getFactoryName(), [
+            !\in_array($paymentMethod->getGatewayConfig()->getFactoryName(), [
                 PayPlugGatewayFactory::FACTORY_NAME,
                 OneyGatewayFactory::FACTORY_NAME,
                 BancontactGatewayFactory::FACTORY_NAME,
@@ -100,7 +100,7 @@ class IpnAction
             return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
 
-        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName);
+        $this->payPlugApiClient = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
 
         try {
             $resource = $this->payPlugApiClient->treat($input);

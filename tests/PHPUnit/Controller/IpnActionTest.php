@@ -69,14 +69,21 @@ final class IpnActionTest extends TestCase
         return $payment;
     }
 
-    public function testInvoke_forALegacyPayment_goesThroughTheSdk(): void
+    /**
+     * The webhook must sign its `treat()` call with the credentials of the account the payment was
+     * actually created on. Resolving the client by factory name instead would pick an arbitrary one
+     * of the several gateway configs that may now share it — one per channel since PRE-3628.
+     */
+    public function testInvoke_forALegacyPayment_buildsTheApiClientFromThePaymentsOwnMethod(): void
     {
         $payment = $this->paymentWithGatewayConfig();
         $this->paymentRepository->method('findOneByPayPlugPaymentId')->willReturn($payment);
 
         $request = Request::create('/payplug/ipn', 'POST', content: \json_encode(['id' => 'pay_1']));
 
-        $this->apiClientFactory->expects(self::once())->method('create')->with(PayPlugGatewayFactory::FACTORY_NAME)
+        $this->apiClientFactory->expects(self::once())
+            ->method('createForPaymentMethod')
+            ->with(self::identicalTo($payment->getMethod()))
             ->willReturn($this->createMock(PayPlugApiClientInterface::class));
 
         $response = $this->action->__invoke($request);

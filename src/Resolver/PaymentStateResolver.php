@@ -7,7 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Resolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Resource\Payment;
 use Payplug\Resource\PaymentAuthorization;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -19,7 +19,7 @@ final class PaymentStateResolver implements PaymentStateResolverInterface
 {
     public function __construct(
         private StateMachineInterface $stateMachine,
-        private PayPlugApiClientFactory $payPlugApiClientFactory,
+        private PayPlugApiClientFactoryInterface $payPlugApiClientFactory,
         private EntityManagerInterface $paymentEntityManager,
     ) {
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
 use PayPlug\SyliusPayPlugPlugin\Action\Api\ApiAwareTrait;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use Payum\Core\ApiAwareInterface;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
@@ -33,7 +33,7 @@ class OneClickAction extends AbstractController implements GatewayAwareInterface
     public function __construct(
         private PaymentRepositoryInterface $paymentRepository,
         private Payum $payum,
-        private PayPlugApiClientFactory $payPlugApiClientFactory,
+        private PayPlugApiClientFactoryInterface $payPlugApiClientFactory,
     ) {
     }
 

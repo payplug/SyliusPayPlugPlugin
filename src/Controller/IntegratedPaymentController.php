@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
@@ -35,7 +35,7 @@ final class IntegratedPaymentController extends AbstractController
         private RepositoryInterface $paymentMethodRepository,
         private OrderRepositoryInterface $orderRepository,
         private PayPlugPaymentDataCreator $paymentDataCreator,
-        private PayPlugApiClientFactory $apiClientFactory,
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
         private EntityManagerInterface $entityManager,
         private LoggerInterface $logger,
     ) {
@@ -74,8 +74,7 @@ final class IntegratedPaymentController extends AbstractController
         }
 
         $payment->setMethod($paymentMethod);
-        $factoryName = $paymentMethod->getGatewayConfig()?->getFactoryName();
-        if (PayPlugGatewayFactory::FACTORY_NAME !== $factoryName) {
+        if (PayPlugGatewayFactory::FACTORY_NAME !== $paymentMethod->getGatewayConfig()?->getFactoryName()) {
             throw new BadRequestHttpException('Unsupported payment method of Integrated Payment');
         }
 
@@ -84,7 +83,7 @@ final class IntegratedPaymentController extends AbstractController
         $paymentData['integration'] = PayPlugApiClientInterface::INTEGRATED_PAYMENT_INTEGRATION;
         $this->logger->debug('Payplug Payment data for creation', $paymentData->getArrayCopy());
 
-        $apiClient = $this->apiClientFactory->create($factoryName);
+        $apiClient = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
         $payplugPayment = $apiClient->createPayment($paymentData->getArrayCopy());
         $this->logger->debug('PayPlug payment created', (array) $payplugPayment);
 

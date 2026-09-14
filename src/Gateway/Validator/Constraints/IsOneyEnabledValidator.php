@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 
 use Payplug\Exception\UnauthorizedException;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Checker\OneyChecker;
 use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -18,7 +18,7 @@ use Webmozart\Assert\Assert;
 
 final class IsOneyEnabledValidator extends ConstraintValidator
 {
-    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactoryInterface $apiClientFactory)
     {
     }
 
