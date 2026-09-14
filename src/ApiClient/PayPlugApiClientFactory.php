@@ -21,6 +21,18 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
     ) {
     }
 
+    /**
+     * Channel-ambiguous: since PRE-3628 several enabled gateway configs may share a factory name —
+     * one per channel — and findOneBy() then returns an arbitrary one of them, so the client this
+     * returns may carry another channel's account credentials.
+     *
+     * @internal Kept off {@see PayPlugApiClientFactoryInterface} so no application class can reach
+     *           it; the sole remaining callers are the `payplug_sylius_payplug_plugin.api_client.*`
+     *           service-factory definitions in config/services/client.xml, which are #[Autowire]d
+     *           into seven services that have no payment method in scope. Use
+     *           {@see self::createForPaymentMethod()} everywhere else. Removed once those
+     *           singletons are made channel-aware — the open half of PRE-3682.
+     */
     public function create(string $factoryName): PayPlugApiClientInterface
     {
         /** @var GatewayConfigInterface|null $gatewayConfig */
