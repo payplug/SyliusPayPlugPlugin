@@ -28,13 +28,23 @@ final class SupportedMethodsProviderTest extends TestCase
 
     private SupportedMethodsProvider $provider;
 
+    /** @var \SplObjectStorage<object, PayPlugApiClientInterface> */
+    private \SplObjectStorage $clientsByPaymentMethod;
+
     protected function setUp(): void
     {
         $this->currencyContext = $this->createMock(CurrencyContextInterface::class);
         $this->clientFactory = $this->createMock(PayPlugApiClientFactoryInterface::class);
         $this->apiClient = $this->createMock(PayPlugApiClientInterface::class);
 
-        $this->clientFactory->method('create')->willReturn($this->apiClient);
+        // Every payment method resolves to the shared client unless a test gives it one of its own
+        // through assignAccount(), which is how a second PayPlug account is modelled.
+        $this->clientsByPaymentMethod = new \SplObjectStorage();
+        $this->clientFactory->method('createForPaymentMethod')->willReturnCallback(
+            fn (object $paymentMethod): PayPlugApiClientInterface => $this->clientsByPaymentMethod->contains($paymentMethod)
+                ? $this->clientsByPaymentMethod[$paymentMethod]
+                : $this->apiClient,
+        );
 
         $this->provider = new SupportedMethodsProvider($this->currencyContext, $this->clientFactory, new AccountAmountRangeResolver(), new NullLogger());
     }
@@ -573,6 +583,77 @@ final class SupportedMethodsProviderTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // provide() — one account per gateway config, not one per call
+    // -------------------------------------------------------------------------
+
+    /**
+     * Two enabled methods of the same factory sitting on different PayPlug accounts: the account
+     * resolved for the first must not decide the fate of the second. Here the first authorizes EUR
+     * and the second only USD, so an EUR checkout keeps the first and drops the second — sharing
+     * one lookup across the loop kept both.
+     */
+    public function testProvide_withMethodsOnDifferentAccounts_filtersEachAgainstItsOwnCurrencies(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+
+        $eurMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, configId: 1);
+        $usdMethod = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, configId: 2);
+
+        $this->assignAccount($eurMethod, $this->buildAccount(99, 2000000));
+        $this->assignAccount($usdMethod, [
+            'configuration' => ['min_amounts' => ['USD' => 99], 'max_amounts' => ['USD' => 2000000]],
+            'payment_methods' => [],
+        ]);
+
+        $result = $this->provider->provide([$eurMethod, $usdMethod], PayPlugGatewayFactory::FACTORY_NAME, 1000);
+
+        self::assertCount(1, $result);
+        self::assertSame($eurMethod, reset($result));
+    }
+
+    /**
+     * Same split, for the billing-country gate: each method is checked against its own account's
+     * allowed_countries.
+     */
+    public function testProvide_withMethodsOnDifferentAccounts_filtersEachAgainstItsOwnAllowedCountries(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+
+        $frMethod = $this->buildPaymentMethod('payplug_scalapay', configId: 1);
+        $deMethod = $this->buildPaymentMethod('payplug_scalapay', configId: 2);
+
+        $this->assignAccount($frMethod, $this->buildScalapayAccount(['FR']));
+        $this->assignAccount($deMethod, $this->buildScalapayAccount(['DE']));
+
+        $result = $this->provider->provide([$frMethod, $deMethod], 'payplug_scalapay', 1000, billingCountryCode: 'FR');
+
+        self::assertCount(1, $result);
+        self::assertSame($frMethod, reset($result));
+    }
+
+    /**
+     * The per-account lookup must stay memoized: two methods sharing one gateway config hit the
+     * `/account` endpoint once between them, not once each.
+     */
+    public function testProvide_withMethodsSharingOneGatewayConfig_readsThatAccountOnce(): void
+    {
+        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+
+        $gatewayConfig = $this->buildGatewayConfig(PayPlugGatewayFactory::FACTORY_NAME, [], 1);
+        $first = $this->buildPaymentMethodFor($gatewayConfig);
+        $second = $this->buildPaymentMethodFor($gatewayConfig);
+
+        $client = $this->createMock(PayPlugApiClientInterface::class);
+        $client->expects(self::once())->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
+        $this->clientsByPaymentMethod[$first] = $client;
+        $this->clientsByPaymentMethod[$second] = $client;
+
+        $result = $this->provider->provide([$first, $second], PayPlugGatewayFactory::FACTORY_NAME, 1000);
+
+        self::assertCount(2, $result);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -588,18 +669,68 @@ final class SupportedMethodsProviderTest extends TestCase
     }
 
     /**
+     * @param list<string> $allowedCountries
+     */
+    private function buildScalapayAccount(array $allowedCountries): array
+    {
+        return [
+            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
+            'payment_methods' => ['scalapay' => [
+                'min_amounts' => ['EUR' => 500],
+                'max_amounts' => ['EUR' => 200000],
+                'allowed_countries' => $allowedCountries,
+            ]],
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $config Persisted gateway config; defaults to empty, which is
      *                                     neither integrated_payment nor hosted_fields.
      */
-    private function buildPaymentMethod(string $factoryName, array $config = []): PaymentMethodInterface
+    private function buildPaymentMethod(
+        string $factoryName,
+        array $config = [],
+        int|string|null $configId = null,
+    ): PaymentMethodInterface
+    {
+        return $this->buildPaymentMethodFor($this->buildGatewayConfig($factoryName, $config, $configId));
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function buildGatewayConfig(
+        string $factoryName,
+        array $config = [],
+        int|string|null $configId = null,
+    ): GatewayConfigInterface
     {
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
         $gatewayConfig->method('getFactoryName')->willReturn($factoryName);
         $gatewayConfig->method('getConfig')->willReturn($config);
+        $gatewayConfig->method('getId')->willReturn($configId);
 
+        return $gatewayConfig;
+    }
+
+    private function buildPaymentMethodFor(GatewayConfigInterface $gatewayConfig): PaymentMethodInterface
+    {
         $method = $this->createMock(PaymentMethodInterface::class);
         $method->method('getGatewayConfig')->willReturn($gatewayConfig);
 
         return $method;
+    }
+
+    /**
+     * Puts $paymentMethod on a PayPlug account of its own, as a second configured gateway would be.
+     *
+     * @param array<string, mixed> $account
+     */
+    private function assignAccount(PaymentMethodInterface $paymentMethod, array $account): void
+    {
+        $client = $this->createMock(PayPlugApiClientInterface::class);
+        $client->method('getAccount')->willReturn($account);
+
+        $this->clientsByPaymentMethod[$paymentMethod] = $client;
     }
 }
