@@ -9,6 +9,7 @@ use PayplugUnifiedCore\Exceptions\ApiException;
 use PayplugUnifiedCore\Exceptions\InvalidHostedFieldException;
 use PayplugUnifiedCore\Exceptions\InvalidPaymentException;
 use PayplugUnifiedCore\Output\PaymentOutput;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 
 interface UnifiedApiPaymentCreatorInterface
 {
@@ -17,5 +18,5 @@ interface UnifiedApiPaymentCreatorInterface
      * @throws InvalidPaymentException if $dto is a PaymentDto that fails validation
      * @throws ApiException
      */
-    public function createPayment(PaymentRequestPayload $dto): PaymentOutput;
+    public function createPayment(PaymentRequestPayload $dto, PaymentMethodInterface $method): PaymentOutput;
 }
