@@ -1,0 +1,15 @@
+{# Read-only: the email is written by the OAuth callback, never edited here, so this is plain text
+   rather than a form field. Sourced from `form.vars.data` — the same path the surrounding Sylius
+   section template uses to read `gatewayConfig.factoryName` — since `account_email` is stored on
+   the gateway config without a form child of its own. #}
+{% set gateway_config = hookable_metadata.context.form.vars.data.gatewayConfig %}
+{% set account_email = gateway_config ? gateway_config.config['account_email']|default(null) : null %}
+
+<div class="col-12 col-md-6 mt-5">
+    <div class="form-label">{{ 'payplug_sylius_payplug_plugin.ui.connected_account'|trans }}</div>
+    {% if account_email %}
+        <div class="fw-bold">{{ account_email }}</div>
+    {% else %}
+        <div class="text-muted">{{ 'payplug_sylius_payplug_plugin.ui.connected_account_unknown'|trans }}</div>
+    {% endif %}
+</div>

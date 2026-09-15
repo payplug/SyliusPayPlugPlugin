@@ -55,21 +55,30 @@ sylius_twig_hooks:
             renew_oauth: &renewOAuth
                 template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/renew_oauth.html.twig'
                 priority: -5
+            connected_account: &connectedAccount
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/connected_account.html.twig'
+                priority: -4
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_oney':
             <<: *oneyGateway
             renew_oauth: *renewOAuth
+            connected_account: *connectedAccount
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_bancontact':
             <<: *bancontactGateway
             renew_oauth: *renewOAuth
+            connected_account: *connectedAccount
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_apple_pay':
             <<: *applePayGateway
             renew_oauth: *renewOAuth
+            connected_account: *connectedAccount
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_american_express':
             <<: *amexGateway
             renew_oauth: *renewOAuth
+            connected_account: *connectedAccount
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_scalapay':
             <<: *scalapayGateway
             renew_oauth: *renewOAuth
+            connected_account: *connectedAccount
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug_wero':
             <<: *weroGateway
             renew_oauth: *renewOAuth
+            connected_account: *connectedAccount

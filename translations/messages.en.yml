@@ -128,6 +128,8 @@ payplug_sylius_payplug_plugin:
             If this option is checked, a new authentication flow will be started when clicking the "<b>Update</b>" button.
         hf_identifier_label: 'Account ID'
         hosted_fields_option: 'Advanced (beta) Hosted Fields'
+        connected_account: Connected PayPlug account
+        connected_account_unknown: Re-authenticate to display the connected account
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:

@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Action\Admin\Auth;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Payplug\Core\HttpClient;
 use PayPlug\SyliusPayPlugPlugin\Action\Admin\Auth\UnifiedAuthenticationController;
+use PayPlug\SyliusPayPlugPlugin\Auth\IdTokenEmailExtractor;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -19,16 +24,18 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Support\FakePayplugHttpRequest;
 
 /**
- * PaymentMethodValidator is `final` and only reached after the legacy
- * Authentication::createClientIdAndSecret() static calls in oauthCallback() — calls that cannot
- * be intercepted by PHPUnit (static methods on a vendor SDK class, not mockable). Coverage here
- * therefore stops at that boundary: everything up to and including the token exchange and the
- * "no payment method id in session" guard is covered; the createClientIdAndSecret()-and-beyond
- * happy path is not unit-testable without refactoring that legacy call behind an abstraction,
- * which is out of scope for this migration.
+ * PaymentMethodValidator is `final`, and the happy path beyond the token exchange runs through the
+ * legacy Authentication::createClientIdAndSecret() static calls, which PHPUnit cannot intercept.
+ * The payplug-php SDK does expose one seam for exactly this — the public static
+ * HttpClient::$REQUEST_HANDLER, an IHttpRequest the SDK uses in place of cURL when set — so the
+ * happy path is reached here by installing a FakePayplugHttpRequest rather than by refactoring
+ * those static calls. tearDown() clears the handler again: it is process-global state, and leaving
+ * it installed would silently reroute any other test that touches the SDK.
  */
 final class UnifiedAuthenticationControllerTest extends TestCase
 {
@@ -44,6 +51,8 @@ final class UnifiedAuthenticationControllerTest extends TestCase
 
     private IOAuthHttpClient&MockObject $oauthHttpClient;
 
+    private ValidatorInterface&MockObject $validator;
+
     private UnifiedAuthenticationController $controller;
 
     protected function setUp(): void
@@ -51,12 +60,13 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         $this->router = $this->createMock(RouterInterface::class);
         $this->paymentMethodRepository = $this->createMock(RepositoryInterface::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        // final class — cannot be mocked by PHPUnit. Its process() method is never reached by
-        // the scenarios covered here (they all stop before that point), so a real instance
-        // wired with mocked collaborators is built purely to satisfy the constructor type-hint.
+        $this->validator = $this->createMock(ValidatorInterface::class);
+        // final class — cannot be mocked by PHPUnit, so a real instance wired with mocked
+        // collaborators is built instead. Most scenarios here stop before process() is reached;
+        // the happy-path ones do reach it, hence the stubbed validator returning no violations.
         $this->paymentMethodValidator = new PaymentMethodValidator(
             $this->createMock(RequestStack::class),
-            $this->createMock(ValidatorInterface::class),
+            $this->validator,
             $this->entityManager,
         );
         $this->logger = $this->createMock(LoggerInterface::class);
@@ -69,6 +79,7 @@ final class UnifiedAuthenticationControllerTest extends TestCase
             $this->paymentMethodValidator,
             $this->logger,
             $this->oauthHttpClient,
+            new IdTokenEmailExtractor(),
             'https://api-qa.payplug.com',
             'https://www.payplug.com',
         );
@@ -76,6 +87,11 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         $this->controller->setContainer(new ServiceLocator([
             'router' => fn () => $this->router,
         ]));
+    }
+
+    protected function tearDown(): void
+    {
+        HttpClient::$REQUEST_HANDLER = null;
     }
 
     private function buildRequest(array $query = []): Request
@@ -275,5 +291,135 @@ final class UnifiedAuthenticationControllerTest extends TestCase
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame('payplug_sylius_payplug_plugin.admin.oauth_setup_error', $request->getSession()->getFlashBag()->peek('error')[0] ?? null);
+    }
+
+    // -------------------------------------------------------------------------
+    // oauthCallback() — the connected account's email (PRE-3631)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Builds a JWT-shaped id token carrying the given claims. The signature segment is a
+     * placeholder — the controller reads the payload for display and never verifies it.
+     *
+     * @param array<string, mixed> $claims
+     */
+    private function idTokenWithClaims(array $claims): string
+    {
+        $encode = static fn (string $raw): string => rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
+
+        return $encode('{"alg":"RS256"}') . '.' . $encode((string) json_encode($claims)) . '.c2ln';
+    }
+
+    /**
+     * Drives oauthCallback() all the way through a successful login and returns the gateway config
+     * as it stands afterwards. $tokenResponse is the identity provider's token-endpoint payload.
+     *
+     * @param array<string, mixed> $tokenResponse
+     * @param array<array-key, mixed> $initialConfig gateway config as it stands before the login
+     *
+     * @return array<array-key, mixed>
+     */
+    private function runSuccessfulCallback(array $tokenResponse, array $initialConfig = []): array
+    {
+        $this->stubRouterGenerate([
+            'payplug_sylius_admin_auth_oauth_callback' => 'https://shop.example.com/payplug/auth/oauth-callback',
+            'sylius_admin_payment_method_update' => '/admin/payment-methods/1/edit',
+        ]);
+
+        $this->oauthHttpClient->method('post')->willReturn([
+            'status' => 200,
+            'body' => json_encode($tokenResponse),
+        ]);
+
+        // Answers both createClientIdAndSecret() calls (test then live) without touching the network.
+        HttpClient::$REQUEST_HANDLER = new FakePayplugHttpRequest([
+            json_encode(['client_id' => 'generated_client', 'client_secret' => 'generated_secret']),
+        ]);
+
+        $storedConfig = $initialConfig;
+        $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
+        $gatewayConfig->method('getFactoryName')->willReturn(PayPlugGatewayFactory::FACTORY_NAME);
+        $gatewayConfig->method('getConfig')->willReturnCallback(static fn (): array => $storedConfig);
+        $gatewayConfig->method('setConfig')->willReturnCallback(
+            static function (array $config) use (&$storedConfig): void {
+                $storedConfig = $config;
+            },
+        );
+
+        $paymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $paymentMethod->method('getGatewayConfig')->willReturn($gatewayConfig);
+        $paymentMethod->method('getName')->willReturn('Carte bancaire');
+        $paymentMethod->method('getId')->willReturn(1);
+
+        $this->paymentMethodRepository->method('find')->willReturn($paymentMethod);
+        $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+
+        $request = $this->buildRequest(['code' => 'auth_code', 'state' => 'matching-state']);
+        $session = $request->getSession();
+        $session->set('payplug_client_id', 'client_abc');
+        $session->set('payplug_company_id', 'company_xyz');
+        $session->set('payplug_oauth_state', 'matching-state');
+        $session->set('payplug_oauth_code_verifier', 'verifier_123');
+        $session->set('payplug_sylius_oauth_payment_method_id', 1);
+
+        $this->logger->expects(self::never())->method('critical');
+
+        $this->controller->oauthCallback($request);
+
+        return $storedConfig;
+    }
+
+    /**
+     * The `/account` endpoint carries no email — the id_token from this exchange is the only place
+     * the connected merchant's address appears, and it is gone once the callback returns, so it has
+     * to be persisted here for the admin screen to have anything to show.
+     */
+    public function testOauthCallback_storesTheEmailFromTheIdTokenOnTheGatewayConfig(): void
+    {
+        $config = $this->runSuccessfulCallback([
+            'access_token' => 'jwt',
+            'expires_in' => 3600,
+            'token_type' => 'Bearer',
+            'id_token' => $this->idTokenWithClaims(['email' => 'merchant@example.com']),
+        ]);
+
+        self::assertSame('merchant@example.com', $config['account_email'] ?? null);
+    }
+
+    /**
+     * The credentials are what the login exists to produce; the email is a display nicety captured
+     * alongside them. An identity provider that returns no id_token must therefore still yield a
+     * fully configured gateway.
+     */
+    public function testOauthCallback_withoutAnIdToken_stillStoresTheClientCredentials(): void
+    {
+        $config = $this->runSuccessfulCallback([
+            'access_token' => 'jwt',
+            'expires_in' => 3600,
+            'token_type' => 'Bearer',
+        ]);
+
+        self::assertNull($config['account_email'] ?? null);
+        self::assertSame('generated_client', $config['live_client']['client_id'] ?? null);
+        self::assertSame('generated_client', $config['test_client']['client_id'] ?? null);
+    }
+
+    /**
+     * Re-authenticating against a different PayPlug account must not leave the previous account's
+     * address on screen — a stale email here would misreport which account takes the money.
+     */
+    public function testOauthCallback_overwritesAPreviouslyStoredEmail(): void
+    {
+        $config = $this->runSuccessfulCallback(
+            [
+                'access_token' => 'jwt',
+                'expires_in' => 3600,
+                'token_type' => 'Bearer',
+                'id_token' => $this->idTokenWithClaims(['email' => 'new-owner@example.com']),
+            ],
+            ['account_email' => 'previous-owner@example.com'],
+        );
+
+        self::assertSame('new-owner@example.com', $config['account_email'] ?? null);
     }
 }
