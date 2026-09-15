@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Action\Admin\Auth;
 use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Authentication;
 use Payplug\Payplug;
+use PayPlug\SyliusPayPlugPlugin\Auth\IdTokenEmailExtractor;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PayplugUnifiedCore\Auth\OAuth2Client;
 use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
@@ -44,6 +45,7 @@ final class UnifiedAuthenticationController extends AbstractController
         private PaymentMethodValidator $paymentMethodValidator,
         private LoggerInterface $logger,
         private IOAuthHttpClient $oauthHttpClient,
+        private IdTokenEmailExtractor $idTokenEmailExtractor,
         private string $payplugOauthBaseUrl,
         private string $payplugOauthAudience,
     ) {
@@ -125,6 +127,13 @@ final class UnifiedAuthenticationController extends AbstractController
             $config = $gatewayConfig->getConfig();
             $config['live_client'] = $liveClientDataResult['httpResponse'] ?? null;
             $config['test_client'] = $testClientDataResult['httpResponse'] ?? null;
+            // Who just authorized, for the admin screen to show. The id_token is the only carrier
+            // of that identity — /account has no email field and the client-credentials token used
+            // for every later API call names no user — and it is discarded with $token when this
+            // method returns, so it is captured here or not at all. Overwritten unconditionally,
+            // including with null: after a re-auth against a different PayPlug account, keeping the
+            // previous address would misreport which account is taking the money.
+            $config['account_email'] = $this->idTokenEmailExtractor->extract($token->idToken);
             $gatewayConfig->setConfig($config);
 
             $this->entityManager->flush();
