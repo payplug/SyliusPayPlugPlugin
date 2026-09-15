@@ -19,6 +19,7 @@ use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -64,7 +65,7 @@ final class CaptureHostedPaymentRequestHandler
                 'payload' => $dto->createPayloadBody(),
             ]);
 
-            $output = $this->unifiedApiPaymentCreator->createPayment($dto);
+            $output = $this->unifiedApiPaymentCreator->createPayment($dto, $method);
         } catch (ApiException | InvalidHostedFieldException | \LogicException $e) {
             $this->outcomeApplier->failPaymentRequest($paymentRequest, $payment, $e, PaymentCaptureFlow::Hosted);
 
@@ -83,7 +84,7 @@ final class CaptureHostedPaymentRequestHandler
         $saveCard = true === ($details['hosted_fields_save_card'] ?? false);
         if ($saveCard && null !== $output->aliasId) {
             $unifiedApiOperationId = $hostedFieldsIds['hosted_fields_operation_id'] ?? null;
-            $fetchedCardData = null !== $unifiedApiOperationId ? $this->fetchCardDataFromUnifiedApi($unifiedApiOperationId) : [];
+            $fetchedCardData = null !== $unifiedApiOperationId ? $this->fetchCardDataFromUnifiedApi($unifiedApiOperationId, $method) : [];
             $this->cardPersister->persist($output->aliasId, $payment, $method, $details, $fetchedCardData);
         }
 
@@ -171,10 +172,10 @@ final class CaptureHostedPaymentRequestHandler
      *
      * @return array{aliasId?: string, brand?: string, last4?: string, expirationMonth?: int, expirationYear?: int}
      */
-    private function fetchCardDataFromUnifiedApi(string $operationId): array
+    private function fetchCardDataFromUnifiedApi(string $operationId, PaymentMethodInterface $method): array
     {
         try {
-            $response = $this->operationStatusFetcher->getOperation($operationId);
+            $response = $this->operationStatusFetcher->getOperation($operationId, $method);
         } catch (ApiException $e) {
             $this->logger->error('[PayPlug][UPC] Failed to fetch operation for card metadata.', [
                 'unified_api_operation_id' => $operationId,

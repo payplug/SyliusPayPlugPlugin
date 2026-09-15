@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Upc;
 
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiRefundCreator;
 use PayplugUnifiedCore\Auth\OAuth2Client;
 use PayplugUnifiedCore\Auth\TokenManager;
-use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
 use PayplugUnifiedCore\Contracts\ITokenCache;
 use PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient;
@@ -33,7 +33,12 @@ final class UnifiedApiRefundCreatorTest extends TestCase
 
     private ITokenCache&MockObject $tokenCache;
 
-    private IConfigurationRepository&MockObject $configurationRepository;
+    private ScopedConfigurationRepositoryInterface&MockObject $configurationRepository;
+
+    /** What forPaymentMethod() hands back; a test wanting different credentials reassigns it. */
+    private ScopedConfigurationRepositoryInterface&MockObject $scopedConfiguration;
+
+    private ?string $cachedToken = 'cached-jwt';
 
     private UnifiedApiRefundCreator $creator;
 
@@ -42,9 +47,11 @@ final class UnifiedApiRefundCreatorTest extends TestCase
         $this->unifiedApiHttpClient = $this->createMock(IUnifiedApiHttpClient::class);
         $this->oauthHttpClient = $this->createMock(IOAuthHttpClient::class);
         $this->tokenCache = $this->createMock(ITokenCache::class);
-        $this->configurationRepository = $this->createMock(IConfigurationRepository::class);
-        $this->configurationRepository->method('getClientId')->willReturn('client_abc');
-        $this->configurationRepository->method('getClientSecret')->willReturn('secret_xyz');
+
+        $this->scopedConfiguration = $this->scopedConfigurationWith('client_abc', 'secret_xyz');
+        $this->configurationRepository = $this->createMock(ScopedConfigurationRepositoryInterface::class);
+        $this->configurationRepository->method('forPaymentMethod')
+            ->willReturnCallback(fn (): ScopedConfigurationRepositoryInterface => $this->scopedConfiguration);
 
         $oauth2Client = new OAuth2Client($this->oauthHttpClient, 'https://api.payplug.com', '', '', 'https://www.payplug.com');
         $tokenManager = new TokenManager($this->tokenCache, $oauth2Client);
@@ -56,7 +63,56 @@ final class UnifiedApiRefundCreatorTest extends TestCase
             'https://api.payplug.com',
         );
 
-        $this->tokenCache->method('get')->willReturn('cached-jwt');
+        // Swappable so a test that needs to observe the token request itself can force a cache miss.
+        $this->tokenCache->method('get')->willReturnCallback(fn (): ?string => $this->cachedToken);
+    }
+
+    private function scopedConfigurationWith(
+        string $clientId,
+        string $clientSecret,
+    ): ScopedConfigurationRepositoryInterface&MockObject
+    {
+        $scoped = $this->createMock(ScopedConfigurationRepositoryInterface::class);
+        $scoped->method('getClientId')->willReturn($clientId);
+        $scoped->method('getClientSecret')->willReturn($clientSecret);
+
+        return $scoped;
+    }
+
+    /**
+     * createRefund() already routes the *account id* per payment method; the OAuth credentials it
+     * signs with have to follow the same method, or a refund on channel B is authenticated as
+     * channel A and rejected — or worse, accepted against the wrong merchant.
+     */
+    public function testCreateRefund_signsWithTheCredentialsOfThePaymentMethodsOwnAccount(): void
+    {
+        $method = $this->buildHostedFieldsPaymentMethod('acct_de');
+        $this->scopedConfiguration = $this->scopedConfigurationWith('de_id', 'de_secret');
+        $this->cachedToken = null; // force a real token request, so its credentials are observable
+
+        $scopedFor = null;
+        $this->configurationRepository->expects(self::once())
+            ->method('forPaymentMethod')
+            ->willReturnCallback(function (PaymentMethodInterface $m) use (&$scopedFor): ScopedConfigurationRepositoryInterface {
+                $scopedFor = $m;
+
+                return $this->scopedConfiguration;
+            });
+
+        $sentCredentials = null;
+        $this->oauthHttpClient->method('post')->willReturnCallback(
+            function (string $url, array $formParams, array $headers = []) use (&$sentCredentials): array {
+                $sentCredentials = $headers['Authorization'];
+
+                return ['status' => 200, 'body' => json_encode(['access_token' => 'jwt', 'expires_in' => 300, 'token_type' => 'Bearer'])];
+            },
+        );
+        $this->unifiedApiHttpClient->method('postJson')->willReturn(['status' => 200, 'body' => '{}']);
+
+        $this->creator->createRefund($method, 'pay_123', 'order_1');
+
+        self::assertSame($method, $scopedFor);
+        self::assertSame('Basic ' . base64_encode('de_id:de_secret'), $sentCredentials);
     }
 
     public function testCreateRefund_withoutAmount_sendsAFullRefundUsingTheMethodsOwnAccountId(): void

@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
@@ -60,6 +61,8 @@ final class StatusHostedPaymentRequestHandlerTest extends TestCase
         $payment = $this->createMock(PaymentInterface::class);
         $payment->method('getState')->willReturn($state);
         $payment->method('getDetails')->willReturn($details);
+        // The poll authenticates against the payment's own method's account.
+        $payment->method('getMethod')->willReturn($this->createMock(PaymentMethodInterface::class));
 
         $paymentRequest = $this->createMock(PaymentRequestInterface::class);
         $paymentRequest->method('getPayment')->willReturn($payment);
