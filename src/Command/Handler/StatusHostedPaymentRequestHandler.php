@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -86,8 +87,13 @@ final class StatusHostedPaymentRequestHandler
             return;
         }
 
+        $method = $payment->getMethod();
+        if (!$method instanceof PaymentMethodInterface) {
+            return;
+        }
+
         try {
-            $response = $this->operationStatusFetcher->getOperation($operationId);
+            $response = $this->operationStatusFetcher->getOperation($operationId, $method);
         } catch (ApiException $e) {
             $this->logger->error('[PayPlug][UPC] Hosted payment status poll failed.', [
                 'sylius_payment_id' => $payment->getId(),

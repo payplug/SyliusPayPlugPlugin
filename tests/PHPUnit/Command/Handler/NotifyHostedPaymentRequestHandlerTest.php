@@ -6,7 +6,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Command\Handler;
 
 use PayPlug\SyliusPayPlugPlugin\Command\Handler\NotifyHostedPaymentRequestHandler;
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyHostedPaymentRequest;
-use PayplugUnifiedCore\Contracts\IConfigurationRepository;
+use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\Contracts\IPaymentRepository;
@@ -17,6 +17,7 @@ use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Payment\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 
@@ -32,7 +33,7 @@ final class NotifyHostedPaymentRequestHandlerTest extends TestCase
 
     private IOrderStateMutator&MockObject $orderStateMutator;
 
-    private IConfigurationRepository&MockObject $configurationRepository;
+    private ScopedConfigurationRepositoryInterface&MockObject $configurationRepository;
 
     private LoggerInterface&MockObject $logger;
 
@@ -45,7 +46,9 @@ final class NotifyHostedPaymentRequestHandlerTest extends TestCase
         $this->lock = $this->createMock(ILock::class);
         $this->paymentRepository = $this->createMock(IPaymentRepository::class);
         $this->orderStateMutator = $this->createMock(IOrderStateMutator::class);
-        $this->configurationRepository = $this->createMock(IConfigurationRepository::class);
+        $this->configurationRepository = $this->createMock(ScopedConfigurationRepositoryInterface::class);
+        // The handler scopes before reading; these tests stub one account, so it scopes to itself.
+        $this->configurationRepository->method('forPaymentMethod')->willReturnSelf();
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->handler = new NotifyHostedPaymentRequestHandler(
@@ -68,6 +71,8 @@ final class NotifyHostedPaymentRequestHandlerTest extends TestCase
         $payment = $this->createMock(PaymentInterface::class);
         $payment->method('getId')->willReturn($paymentId);
         $payment->method('getAmount')->willReturn($paymentAmount);
+        // The handler resolves the webhook secret from the payment's own method's gateway config.
+        $payment->method('getMethod')->willReturn($this->createMock(PaymentMethodInterface::class));
 
         $paymentRequest = $this->createMock(PaymentRequestInterface::class);
         $paymentRequest->method('getPayload')->willReturn(['http_request' => $httpRequest]);

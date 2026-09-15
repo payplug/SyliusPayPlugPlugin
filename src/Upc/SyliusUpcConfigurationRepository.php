@@ -6,16 +6,32 @@ namespace PayPlug\SyliusPayPlugPlugin\Upc;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayplugUnifiedCore\Contracts\IConfigurationRepository;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
-use Sylius\Component\Resource\Repository\RepositoryInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 
-final class SyliusUpcConfigurationRepository implements IConfigurationRepository
+final class SyliusUpcConfigurationRepository implements ScopedConfigurationRepositoryInterface
 {
+    private ?GatewayConfigInterface $gatewayConfig = null;
+
     public function __construct(
-        private RepositoryInterface $gatewayConfigRepository,
         private EntityManagerInterface $entityManager,
     ) {
+    }
+
+    public function withGatewayConfig(GatewayConfigInterface $gatewayConfig): ScopedConfigurationRepositoryInterface
+    {
+        $scoped = clone $this;
+        $scoped->gatewayConfig = $gatewayConfig;
+
+        return $scoped;
+    }
+
+    public function forPaymentMethod(PaymentMethodInterface $paymentMethod): ScopedConfigurationRepositoryInterface
+    {
+        return $this->withGatewayConfig(
+            $paymentMethod->getGatewayConfig()
+                ?? throw new \LogicException('The payment method has no gateway config, so no PayPlug account can be resolved for it.'),
+        );
     }
 
     public function get(string $key): ?string
@@ -78,11 +94,18 @@ final class SyliusUpcConfigurationRepository implements IConfigurationRepository
         return $rawClientConfig;
     }
 
+    /**
+     * Deliberately no fallback to findOneBy(['factoryName' => …]). That lookup was correct only
+     * while exactly one CB gateway config could exist; since PRE-3628 it returns an arbitrary one
+     * of several, which would sign a channel's payment with another channel's account. An
+     * unscoped call is a bug at the call site, so it fails loudly here rather than silently
+     * resolving the wrong merchant.
+     */
     private function findGatewayConfig(): GatewayConfigInterface
     {
-        /** @var GatewayConfigInterface|null $gatewayConfig */
-        $gatewayConfig = $this->gatewayConfigRepository->findOneBy(['factoryName' => PayPlugGatewayFactory::FACTORY_NAME]);
-
-        return $gatewayConfig ?? throw new \LogicException('No gateway config found for ' . PayPlugGatewayFactory::FACTORY_NAME . '.');
+        return $this->gatewayConfig ?? throw new \LogicException(
+            'The UPC configuration repository has not been scoped to a gateway config. ' .
+            'Call withGatewayConfig() with the gateway config of the payment method being handled.',
+        );
     }
 }

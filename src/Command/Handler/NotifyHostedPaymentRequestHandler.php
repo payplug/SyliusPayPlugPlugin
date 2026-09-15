@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyHostedPaymentRequest;
-use PayplugUnifiedCore\Contracts\IConfigurationRepository;
+use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\Contracts\IPaymentRepository;
@@ -16,6 +16,7 @@ use PayplugUnifiedCore\Utilities\Helpers\WebhookNotificationHelper;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -37,7 +38,7 @@ final class NotifyHostedPaymentRequestHandler
         private ILock $lock,
         private IPaymentRepository $paymentRepository,
         private IOrderStateMutator $orderStateMutator,
-        private IConfigurationRepository $configurationRepository,
+        private ScopedConfigurationRepositoryInterface $configurationRepository,
         private LoggerInterface $logger,
     ) {
     }
@@ -63,7 +64,13 @@ final class NotifyHostedPaymentRequestHandler
         }
 
         try {
-            $expectedHeader = $this->configurationRepository->get(self::CONFIG_KEY_WEBHOOK_AUTHORIZATION_HEADER) ?? '';
+            // Per-gateway-config shared secret: verify against the account this payment belongs to.
+            $method = $paymentRequest->getPayment()->getMethod();
+            if (!$method instanceof PaymentMethodInterface) {
+                throw new \LogicException('The payment has no payment method, so no webhook secret can be resolved for it.');
+            }
+
+            $expectedHeader = $this->configurationRepository->forPaymentMethod($method)->get(self::CONFIG_KEY_WEBHOOK_AUTHORIZATION_HEADER) ?? '';
             $operationData = WebhookNotificationHelper::parse($headers, $rawBody, $expectedHeader);
 
             if (!$this->matchesPaymentRequest($paymentRequest, $operationData)) {

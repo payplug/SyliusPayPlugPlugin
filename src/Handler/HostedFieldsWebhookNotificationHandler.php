@@ -9,7 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
 use PayPlug\SyliusPayPlugPlugin\Upc\RefundDetailsLockKey;
 use PayPlug\SyliusPayPlugPlugin\Upc\ResourceIdentifier;
-use PayplugUnifiedCore\Contracts\IConfigurationRepository;
+use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\Contracts\IPaymentRepository;
@@ -19,6 +19,7 @@ use PayplugUnifiedCore\Exceptions\InvalidNotificationException;
 use PayplugUnifiedCore\Utilities\Helpers\WebhookNotificationHelper;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 
 /**
  * Verifies and applies a Unified API (Hosted Fields) webhook notification against a Payment
@@ -56,7 +57,7 @@ class HostedFieldsWebhookNotificationHandler
     public function __construct(
         private IPaymentRepository $paymentRepository,
         private IOrderStateMutator $orderStateMutator,
-        private IConfigurationRepository $configurationRepository,
+        private ScopedConfigurationRepositoryInterface $configurationRepository,
         private ILock $lock,
         private LoggerInterface $logger,
         private PayplugCardPersister $cardPersister,
@@ -72,7 +73,15 @@ class HostedFieldsWebhookNotificationHandler
      */
     public function treat(PaymentInterface $payment, string $rawBody, array $headers): void
     {
-        $expectedHeader = $this->configurationRepository->get(self::CONFIG_KEY_WEBHOOK_AUTHORIZATION_HEADER) ?? '';
+        // The shared secret the notification is verified against is stored per gateway config, so
+        // it has to be read from the account this payment was created on — another channel's
+        // header would reject a legitimate webhook (or, worse, accept a foreign one).
+        $method = $payment->getMethod();
+        if (!$method instanceof PaymentMethodInterface) {
+            throw new \LogicException('The payment has no payment method, so no webhook secret can be resolved for it.');
+        }
+
+        $expectedHeader = $this->configurationRepository->forPaymentMethod($method)->get(self::CONFIG_KEY_WEBHOOK_AUTHORIZATION_HEADER) ?? '';
         $operationData = WebhookNotificationHelper::parse($headers, $rawBody, $expectedHeader);
 
         if (PaymentOutcome::THREE_DS_PENDING === $operationData->outcome) {

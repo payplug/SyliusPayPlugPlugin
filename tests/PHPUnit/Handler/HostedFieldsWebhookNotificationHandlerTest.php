@@ -8,7 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Handler\HostedFieldsWebhookNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
-use PayplugUnifiedCore\Contracts\IConfigurationRepository;
+use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\Contracts\IPaymentRepository;
@@ -30,7 +30,7 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
 
     private IOrderStateMutator&MockObject $orderStateMutator;
 
-    private IConfigurationRepository&MockObject $configurationRepository;
+    private ScopedConfigurationRepositoryInterface&MockObject $configurationRepository;
 
     private ILock&MockObject $lock;
 
@@ -48,7 +48,9 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
     {
         $this->paymentRepository = $this->createMock(IPaymentRepository::class);
         $this->orderStateMutator = $this->createMock(IOrderStateMutator::class);
-        $this->configurationRepository = $this->createMock(IConfigurationRepository::class);
+        $this->configurationRepository = $this->createMock(ScopedConfigurationRepositoryInterface::class);
+        // The handler scopes before reading; these tests stub one account, so it scopes to itself.
+        $this->configurationRepository->method('forPaymentMethod')->willReturnSelf();
         $this->lock = $this->createMock(ILock::class);
         $this->lock->method('acquire')->willReturn(true);
         $this->logger = $this->createMock(LoggerInterface::class);
@@ -81,7 +83,9 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
         $payment->method('getId')->willReturn($id);
         $payment->method('getAmount')->willReturn($amount);
         $payment->method('getDetails')->willReturn($details);
-        $payment->method('getMethod')->willReturn($method);
+        // A UHF payment always has a method — treat() resolves the webhook secret from its gateway
+        // config — so the tests that don't care which one still get one.
+        $payment->method('getMethod')->willReturn($method ?? $this->createMock(PaymentMethodInterface::class));
 
         if (null !== $orderNumber || null !== $customer) {
             $order = $this->createMock(OrderInterface::class);
