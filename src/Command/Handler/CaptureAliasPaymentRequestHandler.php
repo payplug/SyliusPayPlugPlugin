@@ -61,7 +61,7 @@ final class CaptureAliasPaymentRequestHandler
             $common = $this->contextBuilder->buildCommonFields($accountId, $amount, $currencyCode, $paymentRequest, $order);
             $dto = $this->buildPaymentDto($common, $card, $order);
 
-            $output = $this->unifiedApiPaymentCreator->createPayment($dto);
+            $output = $this->unifiedApiPaymentCreator->createPayment($dto, $method);
         } catch (ApiException | InvalidPaymentException | \LogicException $e) {
             $this->outcomeApplier->failPaymentRequest($paymentRequest, $payment, $e, PaymentCaptureFlow::Alias);
 
