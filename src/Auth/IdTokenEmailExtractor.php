@@ -51,17 +51,7 @@ final class IdTokenEmailExtractor
      */
     private function decodeClaims(?string $idToken): array
     {
-        if (null === $idToken || '' === $idToken) {
-            return [];
-        }
-
-        $segments = explode('.', $idToken);
-
-        if (self::SEGMENT_COUNT !== \count($segments)) {
-            return [];
-        }
-
-        $payload = $this->base64UrlDecode($segments[self::PAYLOAD_SEGMENT]);
+        $payload = $this->decodePayloadSegment($idToken);
 
         if (null === $payload) {
             return [];
@@ -70,6 +60,25 @@ final class IdTokenEmailExtractor
         $claims = json_decode($payload, true);
 
         return \is_array($claims) ? $claims : [];
+    }
+
+    /**
+     * @return string|null The decoded payload segment, or null when the token is absent, empty or
+     *                     not the three dot-separated segments a JWT is made of
+     */
+    private function decodePayloadSegment(?string $idToken): ?string
+    {
+        if (null === $idToken || '' === $idToken) {
+            return null;
+        }
+
+        $segments = explode('.', $idToken);
+
+        if (self::SEGMENT_COUNT !== \count($segments)) {
+            return null;
+        }
+
+        return $this->base64UrlDecode($segments[self::PAYLOAD_SEGMENT]);
     }
 
     /**

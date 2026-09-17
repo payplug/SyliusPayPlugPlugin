@@ -78,22 +78,48 @@ final class StatusHostedPaymentRequestHandler
      */
     private function pollForOutcomeIfStillPending(PaymentInterface $payment): void
     {
-        if (\in_array($payment->getState(), self::RESOLVED_STATES, true)) {
-            return;
-        }
-
         $operationId = self::resolveOperationId($payment->getDetails());
-        if (null === $operationId) {
+        $method = $payment->getMethod();
+
+        // One guard rather than three: there is nothing to poll unless the payment is still
+        // pending, carries an operation id and names the method whose account owns it.
+        if (
+            \in_array($payment->getState(), self::RESOLVED_STATES, true) ||
+            null === $operationId ||
+            !$method instanceof PaymentMethodInterface
+        ) {
             return;
         }
 
-        $method = $payment->getMethod();
-        if (!$method instanceof PaymentMethodInterface) {
+        $body = $this->fetchOperationBody($payment, $operationId, $method);
+
+        if (null === $body) {
             return;
         }
 
         try {
-            $response = $this->operationStatusFetcher->getOperation($operationId, $method);
+            $this->webhookNotificationHandler->treat($payment, $body, []);
+        } catch (InvalidNotificationException $e) {
+            $this->logger->error('[PayPlug][UPC] Hosted payment status poll returned a payload that could not be applied.', [
+                'sylius_payment_id' => $payment->getId(),
+                'hosted_fields_operation_id' => $operationId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * A failed poll is logged and swallowed rather than raised: it is a fallback for a webhook that
+     * has not arrived *yet*, so leaving the payment where it is lets the webhook — or the
+     * UpdatePaymentStateCommand — resolve it later.
+     */
+    private function fetchOperationBody(
+        PaymentInterface $payment,
+        string $operationId,
+        PaymentMethodInterface $method,
+    ): ?string {
+        try {
+            return $this->operationStatusFetcher->getOperation($operationId, $method)['body'];
         } catch (ApiException $e) {
             $this->logger->error('[PayPlug][UPC] Hosted payment status poll failed.', [
                 'sylius_payment_id' => $payment->getId(),
@@ -101,17 +127,7 @@ final class StatusHostedPaymentRequestHandler
                 'error' => $e->getMessage(),
             ]);
 
-            return;
-        }
-
-        try {
-            $this->webhookNotificationHandler->treat($payment, $response['body'], []);
-        } catch (InvalidNotificationException $e) {
-            $this->logger->error('[PayPlug][UPC] Hosted payment status poll returned a payload that could not be applied.', [
-                'sylius_payment_id' => $payment->getId(),
-                'hosted_fields_operation_id' => $operationId,
-                'error' => $e->getMessage(),
-            ]);
+            return null;
         }
     }
 
