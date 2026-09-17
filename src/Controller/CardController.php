@@ -6,14 +6,13 @@ namespace PayPlug\SyliusPayPlugPlugin\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Payplug\Exception\NotFoundException;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Entity\CardsOwnerInterface;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Customer\Context\CustomerContextInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -27,8 +26,7 @@ final class CardController extends AbstractController
         private CustomerContextInterface $customerContext,
         private EntityRepository $payplugCardRepository,
         private TranslatorInterface $translator,
-        #[Autowire('@payplug_sylius_payplug_plugin.api_client.payplug')]
-        private PayPlugApiClientInterface $payPlugApiClient,
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
         private RequestStack $requestStack,
         private ManagerRegistry $managerRegistry,
     ) {
@@ -73,7 +71,12 @@ final class CardController extends AbstractController
         $cardToken = $card->getExternalId();
 
         try {
-            $this->payPlugApiClient->deleteCard($cardToken);
+            // Signed with the account the card was saved on, not an arbitrary CB config: PayPlug
+            // card tokens are account-scoped, and since PRE-3628 a customer may hold cards from
+            // several channels, each on a different account. Resolving from the ambient channel
+            // context would be wrong for exactly that reason — a Sylius customer spans channels,
+            // so the card's own payment method is the only correct source.
+            $this->apiClientFactory->createForPaymentMethod($card->getPaymentMethod())->deleteCard($cardToken);
         } catch (NotFoundException) {
             $this->requestStack->getSession()->getFlashBag()->add('error', $this->translator->trans('payplug_sylius_payplug_plugin.ui.account.saved_cards.deleted_error'));
 

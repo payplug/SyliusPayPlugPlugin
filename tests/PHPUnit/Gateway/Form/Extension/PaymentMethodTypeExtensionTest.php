@@ -25,7 +25,6 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\ResolvedFormTypeInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -326,7 +325,6 @@ final class PaymentMethodTypeExtensionTest extends TestCase
         $extension = new PaymentMethodTypeExtension(
             new GatewayChannelConflictChecker($repository),
             $translator ?? $this->translator,
-            $this->createMock(RequestStack::class),
         );
 
         $listener = null;
