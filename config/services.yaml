@@ -66,13 +66,12 @@ services:
     PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUnifiedApiHttpClient
 
-    # Kept so UPC's own contract still resolves, but nothing in this plugin injects it any more:
-    # its methods carry no account context, and since PRE-3628 a merchant may have several CB
-    # gateway configs. Consumers take the ScopedConfigurationRepositoryInterface below and scope it
-    # to the payment method they are handling.
-    PayplugUnifiedCore\Contracts\IConfigurationRepository:
-        alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcConfigurationRepository
-
+    # Deliberately NOT aliased: PayplugUnifiedCore\Contracts\IConfigurationRepository carries no
+    # account context on any of its methods, and since PRE-3628 a merchant may hold several CB
+    # gateway configs — an unscoped SyliusUpcConfigurationRepository throws on every read. Aliasing
+    # it would let a future UPC consumer autowire a service that blows up at runtime, in whatever
+    # code path UPC happened to choose; without the alias it fails at container build instead.
+    # Consumers take ScopedConfigurationRepositoryInterface and scope it to their payment method.
     PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcConfigurationRepository
 

@@ -71,8 +71,10 @@ final class GatewayChannelConflictChecker
     /**
      * Channels held by *other* enabled payment methods of the same factory.
      *
-     * Keying by channel code collapses the (post-PRE-3628 unreachable) case of two enabled rivals
-     * holding the same channel down to a single claim, so neither caller reports it twice.
+     * Keying by channel code collapses the case of two enabled rivals holding the same channel down
+     * to a single claim, so neither caller reports it twice. PRE-3628 makes that state hard to
+     * reach, not impossible — see {@see \PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\HasNoGatewayChannelConflict}
+     * for the write paths the rule does not cover — so the collapsing is load-bearing, not defensive.
      *
      * @return array<string, array{channel: ChannelInterface, paymentMethod: PaymentMethodInterface}>
      */

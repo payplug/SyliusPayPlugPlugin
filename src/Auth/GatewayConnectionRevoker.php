@@ -59,10 +59,13 @@ final class GatewayConnectionRevoker
 
         $config = $gatewayConfig->getConfig();
 
-        // Before the keys are dropped: the client id is the only handle on the cache entry.
-        foreach (self::CLIENT_CREDENTIAL_KEYS as $clientKey) {
-            $this->forgetCachedToken($config[$clientKey] ?? null);
-        }
+        // Read before the keys are dropped: the client id is the only handle on the cache entry.
+        // The cache is purged after the flush, so a failing flush cannot leave a gateway whose
+        // credentials still persist but whose tokens are gone.
+        $revokedCredentials = \array_map(
+            static fn (string $clientKey): mixed => $config[$clientKey] ?? null,
+            self::CLIENT_CREDENTIAL_KEYS,
+        );
 
         foreach (self::CONNECTION_KEYS as $key) {
             unset($config[$key]);
@@ -80,6 +83,10 @@ final class GatewayConnectionRevoker
         $paymentMethod->disable();
 
         $this->entityManager->flush();
+
+        foreach ($revokedCredentials as $clientCredentials) {
+            $this->forgetCachedToken($clientCredentials);
+        }
     }
 
     private function forgetCachedToken(mixed $clientCredentials): void

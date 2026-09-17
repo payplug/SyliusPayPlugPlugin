@@ -130,6 +130,7 @@ payplug_sylius_payplug_plugin:
         hosted_fields_option: 'Hosted Fields avanzato (beta)'
         connected_account: Account PayPlug collegato
         connected_account_unknown: Autenticati di nuovo per visualizzare l'account collegato
+        not_connected: Nessun account PayPlug ancora collegato
         logout: Disconnetti questo account
         logout_help: Rimuove le credenziali PayPlug salvate per questo metodo di pagamento e lo disattiva. Gli altri metodi di pagamento mantengono la propria connessione.
     form:
@@ -145,7 +146,7 @@ payplug_sylius_payplug_plugin:
             submit: Convalida e continua
         base_currency_not_euro: |
             Il canale #channel_code# : #payment_method# è disponibile solo per i canali la cui valuta è in EURO
-        gateway_channel_conflict: |
+        gateway_channel_conflict: >-
             Il canale %channel% è già collegato al metodo di pagamento attivo "%payment_method%". Disattivalo oppure rimuovi quel canale da uno dei due.
         one_click_enable: Attiva un clic
         one_click_help: |

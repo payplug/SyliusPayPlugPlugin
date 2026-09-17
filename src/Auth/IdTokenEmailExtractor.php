@@ -33,6 +33,14 @@ final class IdTokenEmailExtractor
 
     private const SEGMENT_COUNT = 3;
 
+    /**
+     * `FILTER_VALIDATE_EMAIL` is stricter than what is deliverable in practice — it rejects unicode
+     * local parts and TLD-less internal domains. That is the intended trade here: the value is
+     * rendered into an admin page, so the cost of an over-strict filter is the "re-authenticate"
+     * placeholder shown to a merchant who is in fact connected, while the cost of a lax one is
+     * arbitrary token content reaching a template. If a real merchant address is ever rejected,
+     * relax this to a plain non-empty-string check plus escaping, not to a hand-rolled regex.
+     */
     public function extract(?string $idToken): ?string
     {
         $claims = $this->decodeClaims($idToken);
@@ -51,17 +59,7 @@ final class IdTokenEmailExtractor
      */
     private function decodeClaims(?string $idToken): array
     {
-        if (null === $idToken || '' === $idToken) {
-            return [];
-        }
-
-        $segments = explode('.', $idToken);
-
-        if (self::SEGMENT_COUNT !== \count($segments)) {
-            return [];
-        }
-
-        $payload = $this->base64UrlDecode($segments[self::PAYLOAD_SEGMENT]);
+        $payload = $this->decodePayloadSegment($idToken);
 
         if (null === $payload) {
             return [];
@@ -70,6 +68,25 @@ final class IdTokenEmailExtractor
         $claims = json_decode($payload, true);
 
         return \is_array($claims) ? $claims : [];
+    }
+
+    /**
+     * @return string|null The decoded payload segment, or null when the token is absent, empty or
+     *                     not the three dot-separated segments a JWT is made of
+     */
+    private function decodePayloadSegment(?string $idToken): ?string
+    {
+        if (null === $idToken || '' === $idToken) {
+            return null;
+        }
+
+        $segments = explode('.', $idToken);
+
+        if (self::SEGMENT_COUNT !== \count($segments)) {
+            return null;
+        }
+
+        return $this->base64UrlDecode($segments[self::PAYLOAD_SEGMENT]);
     }
 
     /**

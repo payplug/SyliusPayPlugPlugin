@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\HasNoGatewayChannelConflict;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsScalapayAmountRangeValid;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
@@ -162,7 +163,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                self::assertCount(1, $constraints);
+                self::assertCount(2, $constraints);
+                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[1]);
 
                 return new ConstraintViolationList();
             })
@@ -199,7 +201,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
                 // Base + CAN_SAVE_CARD + CAN_CREATE_DEFERRED_PAYMENT + CAN_USE_INTEGRATED_PAYMENTS
-                self::assertCount(4, $constraints);
+                self::assertCount(5, $constraints);
+                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[4]);
 
                 return new ConstraintViolationList();
             })
@@ -234,7 +237,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                self::assertCount(1, $constraints);
+                self::assertCount(2, $constraints);
+                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[1]);
                 self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
 
                 return new ConstraintViolationList();
@@ -270,7 +274,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                self::assertCount(2, $constraints);
+                self::assertCount(3, $constraints);
+                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[2]);
                 self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
                 self::assertInstanceOf(PayplugPermission::class, $constraints[1]);
 
@@ -302,7 +307,8 @@ final class PaymentMethodValidatorTest extends TestCase
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                self::assertCount(2, $constraints);
+                self::assertCount(3, $constraints);
+                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[2]);
                 self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
                 self::assertInstanceOf(IsScalapayAmountRangeValid::class, $constraints[1]);
 
