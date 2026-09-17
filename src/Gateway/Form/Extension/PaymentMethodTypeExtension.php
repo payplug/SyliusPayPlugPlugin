@@ -17,9 +17,6 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -33,18 +30,18 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *   form error (PRE-3628) — see `addChannelConflictErrors()` and `addBaseCurrencyErrors()`.
  *
  * Both sit on the *root* payment-method form. Sylius adds `channels` from `CoreBundle`'s own type
- * extension, i.e. after `gatewayConfig`; since children are submitted in insertion order, a
- * listener inside `paymentMethod.gatewayConfig.config` runs before `enabled` and `channels` have
- * been submitted and can only see persisted data. POST_SUBMIT on the root form is the first point
- * where the submitted channel set, the submitted `enabled` flag and the mapped gateway config all
- * exist; the methods above document why POST_SET_DATA is the matching point on the render side.
+ * extension, i.e. after `gatewayConfig` (`PaymentMethodType` adds `enabled` then `gatewayConfig`);
+ * since children are submitted in insertion order, a listener inside
+ * `paymentMethod.gatewayConfig.config` runs before `channels` has been submitted and can only see
+ * the persisted channel set. POST_SUBMIT on the root form is the first point where the submitted
+ * channel set, the submitted `enabled` flag and the mapped gateway config all exist; the methods
+ * above document why POST_SET_DATA is the matching point on the render side.
  */
 final class PaymentMethodTypeExtension extends AbstractTypeExtension
 {
     public function __construct(
         private GatewayChannelConflictChecker $conflictChecker,
         private TranslatorInterface $translator,
-        private RequestStack $requestStack,
     ) {
     }
 
@@ -223,7 +220,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
             return;
         }
 
-        $flashedMessages = [];
+        $seenMessages = [];
         foreach ($this->conflictChecker->findConflicts($paymentMethod, $factoryName) as $conflict) {
             $message = $this->translator->trans(
                 'payplug_sylius_payplug_plugin.form.gateway_channel_conflict',
@@ -233,12 +230,12 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
                 ],
             );
 
-            $form->get('channels')->addError(new FormError($message));
-
-            if (!\in_array($message, $flashedMessages, true)) {
-                $flashedMessages[] = $message;
-                $this->flash($message);
+            if (\in_array($message, $seenMessages, true)) {
+                continue;
             }
+
+            $seenMessages[] = $message;
+            $form->get('channels')->addError(new FormError($message));
         }
     }
 
@@ -275,29 +272,6 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
 
             $seenMessages[] = $message;
             $form->get('channels')->addError(new FormError($message));
-            $this->flash($message);
         }
-    }
-
-    private function flash(string $message): void
-    {
-        $session = $this->resolveSession();
-
-        if (!$session instanceof FlashBagAwareSessionInterface) {
-            return;
-        }
-
-        $session->getFlashBag()->add('error', $message);
-    }
-
-    private function resolveSession(): ?SessionInterface
-    {
-        $request = $this->requestStack->getCurrentRequest();
-
-        if (null === $request || !$request->hasSession()) {
-            return null;
-        }
-
-        return $request->getSession();
     }
 }

@@ -12,6 +12,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\HasNoGatewayChannelConflict;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsScalapayAmountRangeValid;
@@ -79,26 +80,28 @@ final class PaymentMethodValidator
             $constraintList[] = new PayplugPermission(Permission::CAN_USE_INTEGRATED_PAYMENTS);
         }
 
+        $constraintList[] = new HasNoGatewayChannelConflict();
+
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processOney(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
-        $constraintList = [new IsOneyEnabled()];
+        $constraintList = [new IsOneyEnabled(), new HasNoGatewayChannelConflict()];
 
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processDefault(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
-        $constraintList = [new IsCanSavePaymentMethod()];
+        $constraintList = [new IsCanSavePaymentMethod(), new HasNoGatewayChannelConflict()];
 
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }
 
     private function processScalapay(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
-        $constraintList = [new IsCanSavePaymentMethod(), new IsScalapayAmountRangeValid()];
+        $constraintList = [new IsCanSavePaymentMethod(), new IsScalapayAmountRangeValid(), new HasNoGatewayChannelConflict()];
 
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }

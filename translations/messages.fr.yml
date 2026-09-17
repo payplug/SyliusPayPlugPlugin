@@ -165,7 +165,7 @@ payplug_sylius_payplug_plugin:
             submit: Valider et continuer
         base_currency_not_euro: |
             Canal #channel_code# : #payment_method# n’est disponible que sur des canaux dont la devise est l’EURO
-        gateway_channel_conflict: |
+        gateway_channel_conflict: >-
             Le canal %channel% est déjà rattaché au moyen de paiement actif « %payment_method% ». Désactivez-le, ou retirez ce canal de l'un des deux.
         one_click_enable: Activer le One click
         one_click_help: |

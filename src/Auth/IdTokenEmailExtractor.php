@@ -33,6 +33,14 @@ final class IdTokenEmailExtractor
 
     private const SEGMENT_COUNT = 3;
 
+    /**
+     * `FILTER_VALIDATE_EMAIL` is stricter than what is deliverable in practice — it rejects unicode
+     * local parts and TLD-less internal domains. That is the intended trade here: the value is
+     * rendered into an admin page, so the cost of an over-strict filter is the "re-authenticate"
+     * placeholder shown to a merchant who is in fact connected, while the cost of a lax one is
+     * arbitrary token content reaching a template. If a real merchant address is ever rejected,
+     * relax this to a plain non-empty-string check plus escaping, not to a hand-rolled regex.
+     */
     public function extract(?string $idToken): ?string
     {
         $claims = $this->decodeClaims($idToken);

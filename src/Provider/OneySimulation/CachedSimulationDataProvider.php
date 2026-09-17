@@ -25,11 +25,14 @@ final class CachedSimulationDataProvider implements OneySimulationDataProviderIn
     public function getForCart(OrderInterface $cart): array
     {
         $country = \explode('_', $cart->getLocaleCode() ?? 'fr_FR')[1];
+        // The channel is part of the key because `fees_for` is resolved from the Oney gateway
+        // config serving the *current* channel (PRE-3440), and each channel may run its own.
         $cacheKey = \sprintf(
-            'oney_simulation_%s_%s_%s',
+            'oney_simulation_%s_%s_%s_%s',
             $country,
             $cart->getTotal(),
             $this->oneySupportedPaymentChoiceProvider->getFeesFor(),
+            $cart->getChannel()?->getCode() ?? 'no_channel',
         );
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($cart): array {
