@@ -30,6 +30,13 @@ services:
             $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
             $unifiedApiVerifyTls: '%payplug.unified_api_verify_tls%'
 
+    # `security.csrf.token_manager` is only registered while CSRF protection is enabled, so it is
+    # injected with `@?`: a hard reference would break container compilation for an application
+    # that turns it off, rather than degrading the way Sylius's own admin actions do.
+    PayPlug\SyliusPayPlugPlugin\Action\Admin\Auth\UnifiedLogoutController:
+        arguments:
+            $csrfTokenManager: '@?security.csrf.token_manager'
+
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
         parent: sylius.repository.payment

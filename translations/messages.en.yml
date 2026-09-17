@@ -130,6 +130,8 @@ payplug_sylius_payplug_plugin:
         hosted_fields_option: 'Advanced (beta) Hosted Fields'
         connected_account: Connected PayPlug account
         connected_account_unknown: Re-authenticate to display the connected account
+        logout: Disconnect this account
+        logout_help: Removes the PayPlug credentials stored for this payment method and disables it. The other payment methods keep their own connection.
     form:
         oney_error: Some missing information is required to pay using Oney by Payplug
         complete_info:

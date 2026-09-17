@@ -2,8 +2,12 @@
    rather than a form field. Sourced from `form.vars.data` — the same path the surrounding Sylius
    section template uses to read `gatewayConfig.factoryName` — since `account_email` is stored on
    the gateway config without a form child of its own. #}
-{% set gateway_config = hookable_metadata.context.form.vars.data.gatewayConfig %}
+{% set payment_method = hookable_metadata.context.form.vars.data %}
+{% set gateway_config = payment_method.gatewayConfig %}
 {% set account_email = gateway_config ? gateway_config.config['account_email']|default(null) : null %}
+{# What logout would actually clear. Absent on a gateway saved but never authorized, where the
+   button would be a no-op that disables a payment method for nothing. #}
+{% set is_connected = gateway_config and (gateway_config.config['live_client']|default(null) or gateway_config.config['test_client']|default(null)) %}
 
 <div class="col-12 col-md-6 mt-5">
     <div class="form-label">{{ 'payplug_sylius_payplug_plugin.ui.connected_account'|trans }}</div>
@@ -11,5 +15,21 @@
         <div class="fw-bold">{{ account_email }}</div>
     {% else %}
         <div class="text-muted">{{ 'payplug_sylius_payplug_plugin.ui.connected_account_unknown'|trans }}</div>
+    {% endif %}
+
+    {# A link rather than a submit button: this block is rendered inside the payment-method form,
+       and a nested <form> would be invalid HTML. The CSRF token is therefore carried in the query
+       string and verified by UnifiedLogoutController — whose token-id prefix is read from the
+       controller itself so the two ends cannot drift apart. #}
+    {% if is_connected %}
+        {% set csrf_token_id = constant('PayPlug\\SyliusPayPlugPlugin\\Action\\Admin\\Auth\\UnifiedLogoutController::CSRF_TOKEN_ID_PREFIX') ~ payment_method.id %}
+        <a class="btn btn-outline-danger btn-sm mt-2"
+           href="{{ path('payplug_sylius_admin_auth_logout', {
+               id: payment_method.id,
+               _csrf_token: sylius_csrf_protection_enabled() ? csrf_token(csrf_token_id) : null,
+           }) }}">
+            {{ 'payplug_sylius_payplug_plugin.ui.logout'|trans }}
+        </a>
+        <div class="form-hint mt-1">{{ 'payplug_sylius_payplug_plugin.ui.logout_help'|trans }}</div>
     {% endif %}
 </div>

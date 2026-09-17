@@ -10,3 +10,5 @@ payplug_sylius_payplug_plugin:
         oauth_callback_success: The OAuth connection was established successfully.
         payment_method_disabled: ⚠️ The payment method has been disabled because some validation criteria are not met.
         oauth_setup_error: An error occurred while setting up the OAuth connection. Please try again.
+        logout_success: The PayPlug account has been disconnected and this payment method has been disabled.
+        logout_error: An error occurred while disconnecting the PayPlug account. Please try again.
