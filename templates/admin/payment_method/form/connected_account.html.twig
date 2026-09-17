@@ -11,7 +11,13 @@
 
 <div class="col-12 col-md-6 mt-5">
     <div class="form-label">{{ 'payplug_sylius_payplug_plugin.ui.connected_account'|trans }}</div>
-    {% if account_email %}
+    {# Three states, not two: a gateway that was never authorized has no email *and* no credentials,
+       and telling that merchant to "re-authenticate" implies a connection they never had. The
+       "unknown" wording is for a gateway connected before PRE-3631, which has credentials but no
+       account_email until the merchant reconnects. #}
+    {% if not is_connected %}
+        <div class="text-muted">{{ 'payplug_sylius_payplug_plugin.ui.not_connected'|trans }}</div>
+    {% elseif account_email %}
         <div class="fw-bold">{{ account_email }}</div>
     {% else %}
         <div class="text-muted">{{ 'payplug_sylius_payplug_plugin.ui.connected_account_unknown'|trans }}</div>
@@ -20,10 +26,16 @@
     {# A link rather than a submit button: this block is rendered inside the payment-method form,
        and a nested <form> would be invalid HTML. The CSRF token is therefore carried in the query
        string and verified by UnifiedLogoutController — whose token-id prefix is read from the
-       controller itself so the two ends cannot drift apart. #}
+       controller itself so the two ends cannot drift apart.
+
+       `noreferrer` keeps that query-string token out of the Referer header should this admin page
+       ever load a third-party resource — the one leak a POST body would not have. (`nofollow` is
+       inert behind admin authentication, but conventional alongside it.) A Referrer-Policy header
+       would cover the whole admin, but that belongs to the host application, not to a plugin. #}
     {% if is_connected %}
         {% set csrf_token_id = constant('PayPlug\\SyliusPayPlugPlugin\\Action\\Admin\\Auth\\UnifiedLogoutController::CSRF_TOKEN_ID_PREFIX') ~ payment_method.id %}
         <a class="btn btn-outline-danger btn-sm mt-2"
+           rel="nofollow noreferrer"
            href="{{ path('payplug_sylius_admin_auth_logout', {
                id: payment_method.id,
                _csrf_token: sylius_csrf_protection_enabled() ? csrf_token(csrf_token_id) : null,

@@ -27,6 +27,7 @@ use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Core\OrderPaymentTransitions;
 use Sylius\Component\Core\Payment\Exception\NotProvidedOrderPaymentException;
 use Sylius\Component\Core\TokenAssigner\OrderTokenAssignerInterface;
+use Sylius\Component\Customer\Model\CustomerInterface;
 use Sylius\Component\Payment\Factory\PaymentFactoryInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -49,16 +50,16 @@ class ApplePayPaymentProvider
 
     public function provide(Request $request, OrderInterface $order): PaymentInterface
     {
-        $paymentMethod = $this->paymentMethodRepository->findOneByGatewayName(ApplePayGatewayFactory::FACTORY_NAME);
+        $paymentMethod = $this->resolveApplePayPaymentMethod($order);
 
-        if (!$paymentMethod instanceof PaymentMethodInterface || !$paymentMethod->isEnabled()) {
+        if (!$paymentMethod instanceof PaymentMethodInterface) {
             throw new LogicException('Apple Pay is not enabled');
         }
 
-        $payment = $this->initApplePaySyliusPaymentState($order);
+        $payment = $this->initApplePaySyliusPaymentState($order, $paymentMethod);
 
         Assert::notNull($order->getBillingAddress());
-        if (($customer = $order->getBillingAddress()->getCustomer()) instanceof \Sylius\Component\Customer\Model\CustomerInterface) {
+        if (($customer = $order->getBillingAddress()->getCustomer()) instanceof CustomerInterface) {
             $order->setCustomer($customer);
         }
 
@@ -198,19 +199,43 @@ class ApplePayPaymentProvider
     }
 
     /**
+     * Takes the method resolved by the caller rather than resolving it again: provide() has already
+     * rejected the null case, so accepting it as a non-nullable parameter keeps that single gate the
+     * only place the "Apple Pay is not enabled" decision is made.
+     *
      * @throws NotProvidedOrderPaymentException
      */
-    private function initApplePaySyliusPaymentState(OrderInterface $order): PaymentInterface
-    {
+    private function initApplePaySyliusPaymentState(
+        OrderInterface $order,
+        PaymentMethodInterface $paymentMethod,
+    ): PaymentInterface {
         Assert::notNull($order->getCurrencyCode());
 
         $payment = $this->getPayment($order);
 
-        $paymentMethod = $this->paymentMethodRepository->findOneByGatewayName(ApplePayGatewayFactory::FACTORY_NAME);
         $payment->setMethod($paymentMethod);
         $order->addPayment($payment);
 
         return $payment;
+    }
+
+    /**
+     * The enabled Apple Pay method serving the order's own channel. Since PRE-3628 several Apple
+     * Pay configs may coexist, one per channel and each connected to a different PayPlug account,
+     * so resolving by factory name alone would attach an arbitrary channel's method to the payment.
+     */
+    private function resolveApplePayPaymentMethod(OrderInterface $order): ?PaymentMethodInterface
+    {
+        $channel = $order->getChannel();
+
+        if (!$channel instanceof ChannelInterface) {
+            return null;
+        }
+
+        return $this->paymentMethodRepository->findOneEnabledByGatewayNameAndChannel(
+            ApplePayGatewayFactory::FACTORY_NAME,
+            $channel,
+        );
     }
 
     private function getPayment(OrderInterface $order): PaymentInterface
