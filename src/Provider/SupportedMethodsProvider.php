@@ -46,8 +46,9 @@ final class SupportedMethodsProvider
         ?string $billingCountryCode = null,
     ): array {
         $activeCurrencyCode = $paymentCurrencyCode ?? $this->currencyContext->getCurrencyCode();
-        $authorizedCurrencies = null;
-        $allowedCountries = null;
+
+        /** @var array<string, array<array-key, mixed>> $accounts */
+        $accounts = [];
 
         foreach ($supportedMethods as $key => $paymentMethod) {
             Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
@@ -59,8 +60,11 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            $authorizedCurrencies ??= $this->resolveAuthorizedCurrencies($factoryName);
-            $allowedCountries ??= $this->resolveAllowedCountries($factoryName);
+            $memoKey = $this->accountMemoKey($gatewayConfig);
+            $account = $accounts[$memoKey] ??= $this->clientFactory->createForPaymentMethod($paymentMethod)->getAccount();
+
+            $authorizedCurrencies = $this->resolveAuthorizedCurrencies($account, $gatewayConfig);
+            $allowedCountries = $this->resolveAllowedCountries($account, $gatewayConfig);
 
             if ($billingCountryCode !== null && $allowedCountries !== [] && !\in_array($billingCountryCode, $allowedCountries, true)) {
                 unset($supportedMethods[$key]);
@@ -167,26 +171,48 @@ final class SupportedMethodsProvider
     }
 
     /**
-     * @return array<string, array{min_amount: int, max_amount: int}>
+     * Two payment methods of the same factory can be configured on different PayPlug accounts, so
+     * the `/account` payload is memoized per gateway config rather than once per call — sharing one
+     * lookup across the loop let the first method's account govern every later one. The persisted
+     * id is the key; object identity covers a config that has not been flushed yet, whose null id
+     * would otherwise collide with every other unsaved one.
      */
-    private function resolveAuthorizedCurrencies(string $factoryName): array
+    private function accountMemoKey(GatewayConfigInterface $gatewayConfig): string
     {
-        $account = $this->clientFactory->create($factoryName)->getAccount();
-        $underscorePos = strpos($factoryName, '_');
-        $paymentMethodKey = false !== $underscorePos ? substr($factoryName, $underscorePos + 1) : null;
+        $id = $gatewayConfig->getId();
 
-        return $this->amountRangeResolver->resolve($account, $paymentMethodKey);
+        if (\is_int($id) || (\is_string($id) && '' !== $id)) {
+            return 'config:' . $id;
+        }
+
+        return 'object:' . spl_object_id($gatewayConfig);
     }
 
-    private function resolveAllowedCountries(string $factoryName): array
+    /**
+     * Both resolvers below read the factory name off the gateway config the $account was fetched
+     * for, rather than off provide()'s $factoryName argument. The loop guard above makes the two
+     * equal today, but keeping the account payload and the key used to index it sourced from the
+     * same config is what stops the pair drifting apart if that guard is ever relaxed.
+     *
+     * @param array<array-key, mixed> $account
+     *
+     * @return array<string, array{min_amount: int, max_amount: int}>
+     */
+    private function resolveAuthorizedCurrencies(array $account, GatewayConfigInterface $gatewayConfig): array
     {
-        $underscorePos = strpos($factoryName, '_');
-        if ($underscorePos === false) {
+        return $this->amountRangeResolver->resolve($account, $this->paymentMethodKey($gatewayConfig));
+    }
+
+    /**
+     * @param array<array-key, mixed> $account
+     */
+    private function resolveAllowedCountries(array $account, GatewayConfigInterface $gatewayConfig): array
+    {
+        $pmKey = $this->paymentMethodKey($gatewayConfig);
+        if (null === $pmKey) {
             return [];
         }
 
-        $account = $this->clientFactory->create($factoryName)->getAccount();
-        $pmKey = substr($factoryName, $underscorePos + 1);
         $paymentMethods = $account['payment_methods'] ?? [];
         Assert::isArray($paymentMethods);
         $pmData = $paymentMethods[$pmKey] ?? [];
@@ -200,5 +226,21 @@ final class SupportedMethodsProvider
         }
 
         return $allowedCountries;
+    }
+
+    /**
+     * The `/account` payload keys each PPRO method under the factory name's suffix — `payplug_oney`
+     * is advertised as `oney`. A suffix-less factory name (`payplug`) is the card gateway, which
+     * has no such sub-payload.
+     */
+    private function paymentMethodKey(GatewayConfigInterface $gatewayConfig): ?string
+    {
+        // provide()'s loop guard has already matched this config against a non-null factory name,
+        // so the null coalesce is unreachable from there; it keeps the helper total for any later
+        // caller, and an empty name carries no suffix anyway.
+        $factoryName = $gatewayConfig->getFactoryName() ?? '';
+        $underscorePos = strpos($factoryName, '_');
+
+        return false !== $underscorePos ? substr($factoryName, $underscorePos + 1) : null;
     }
 }

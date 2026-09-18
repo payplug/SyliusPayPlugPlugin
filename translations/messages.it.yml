@@ -128,6 +128,10 @@ payplug_sylius_payplug_plugin:
             Se questa opzione è selezionata, un nuovo flusso di autenticazione verrà avviato quando si fa clic sul pulsante "<b>Aggiorna</b>".
         hf_identifier_label: 'ID Account'
         hosted_fields_option: 'Hosted Fields avanzato (beta)'
+        connected_account: Account PayPlug collegato
+        connected_account_unknown: Autenticati di nuovo per visualizzare l'account collegato
+        logout: Disconnetti questo account
+        logout_help: Rimuove le credenziali PayPlug salvate per questo metodo di pagamento e lo disattiva. Gli altri metodi di pagamento mantengono la propria connessione.
     form:
         oney_error: Mancano alcune informazioni per poter pagare con “Oney by Payplug”
         complete_info:
@@ -141,8 +145,8 @@ payplug_sylius_payplug_plugin:
             submit: Convalida e continua
         base_currency_not_euro: |
             Il canale #channel_code# : #payment_method# è disponibile solo per i canali la cui valuta è in EURO
-        only_one_gateway_allowed: |
-            Attenzione: il metodo di pagamento %gateway_title% è già definito. Per modificarlo, vai ai tuoi metodi di pagamento.
+        gateway_channel_conflict: >-
+            Il canale %channel% è già collegato al metodo di pagamento attivo "%payment_method%". Disattivalo oppure rimuovi quel canale da uno dei due.
         one_click_enable: Attiva un clic
         one_click_help: |
             Consenti ai tuoi clienti di salvare i dettagli della loro carta di credito per dopo

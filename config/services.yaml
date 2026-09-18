@@ -30,6 +30,13 @@ services:
             $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
             $unifiedApiVerifyTls: '%payplug.unified_api_verify_tls%'
 
+    # `security.csrf.token_manager` is only registered while CSRF protection is enabled, so it is
+    # injected with `@?`: a hard reference would break container compilation for an application
+    # that turns it off, rather than degrading the way Sylius's own admin actions do.
+    PayPlug\SyliusPayPlugPlugin\Action\Admin\Auth\UnifiedLogoutController:
+        arguments:
+            $csrfTokenManager: '@?security.csrf.token_manager'
+
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
         parent: sylius.repository.payment
@@ -59,7 +66,13 @@ services:
     PayplugUnifiedCore\Contracts\IUnifiedApiHttpClient:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUnifiedApiHttpClient
 
-    PayplugUnifiedCore\Contracts\IConfigurationRepository:
+    # Deliberately NOT aliased: PayplugUnifiedCore\Contracts\IConfigurationRepository carries no
+    # account context on any of its methods, and since PRE-3628 a merchant may hold several CB
+    # gateway configs — an unscoped SyliusUpcConfigurationRepository throws on every read. Aliasing
+    # it would let a future UPC consumer autowire a service that blows up at runtime, in whatever
+    # code path UPC happened to choose; without the alias it fails at container build instead.
+    # Consumers take ScopedConfigurationRepositoryInterface and scope it to their payment method.
+    PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\SyliusUpcConfigurationRepository
 
     PayplugUnifiedCore\Contracts\IPaymentRepository:
