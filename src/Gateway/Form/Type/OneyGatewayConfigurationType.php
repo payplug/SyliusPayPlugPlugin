@@ -19,7 +19,5 @@ final class OneyGatewayConfigurationType extends AbstractGatewayConfigurationTyp
 {
     protected string $gatewayFactoryTitle = OneyGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = OneyGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = OneyGatewayFactory::BASE_CURRENCY_CODE;
 }

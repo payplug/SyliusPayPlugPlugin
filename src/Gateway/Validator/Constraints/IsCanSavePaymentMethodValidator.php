@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints;
 
 use Payplug\Exception\UnauthorizedException;
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Checker\CanSavePayplugPaymentMethodChecker;
 use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
@@ -21,9 +21,12 @@ use Webmozart\Assert\Assert;
  */
 final class IsCanSavePaymentMethodValidator extends ConstraintValidator
 {
+    // `payplug` processes card payments directly and `payplug_oney` has its own dedicated
+    // constraint (IsOneyEnabled); neither is an alternative payment method requiring its own
+    // per-account enablement flag from PayPlug.
     private const GATEWAYS_SKIP = [PayPlugGatewayFactory::FACTORY_NAME, OneyGatewayFactory::FACTORY_NAME];
 
-    public function __construct(private PayPlugApiClientFactory $apiClientFactory)
+    public function __construct(private PayPlugApiClientFactoryInterface $apiClientFactory)
     {
     }
 

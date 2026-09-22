@@ -24,11 +24,17 @@ class PaymentTransitionApplier
         $status = $details['status'] ?? '';
 
         // These are known PayPlug statuses that do not map to a Sylius payment transition.
-        if (\in_array($status, [
-            PayPlugApiClientInterface::STATUS_CREATED,
-            PayPlugApiClientInterface::REFUNDED,
-            PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK,
-        ], true)) {
+        if (
+            \in_array(
+                $status,
+                [
+                PayPlugApiClientInterface::STATUS_CREATED,
+                PayPlugApiClientInterface::REFUNDED,
+                PayPlugApiClientInterface::INTERNAL_STATUS_ONE_CLICK,
+                ],
+                true,
+            )
+        ) {
             return false;
         }
 
@@ -41,23 +47,29 @@ class PaymentTransitionApplier
         };
 
         if (null === $transition) {
-            $this->logger->warning('[PayPlug] Cannot apply payment transition: unknown status.', [
+            $this->logger->warning(
+                '[PayPlug] Cannot apply payment transition: unknown status.',
+                [
                 'sylius_payment_id' => $payment->getId(),
                 'payplug_payment_id' => $details['payment_id'] ?? null,
                 'status' => $status,
-            ]);
+                ],
+            );
 
             return false;
         }
 
         if (!$this->stateMachine->can($payment, PaymentTransitions::GRAPH, $transition)) {
-            $this->logger->warning('[PayPlug] Cannot apply payment transition (already applied or incompatible with current state).', [
+            $this->logger->warning(
+                '[PayPlug] Cannot apply payment transition (already applied or incompatible with current state).',
+                [
                 'sylius_payment_id' => $payment->getId(),
                 'payplug_payment_id' => $details['payment_id'] ?? null,
                 'current_state' => $payment->getState(),
                 'transition' => $transition,
                 'status' => $status,
-            ]);
+                ],
+            );
 
             return false;
         }

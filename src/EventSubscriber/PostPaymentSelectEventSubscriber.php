@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsCaptureData;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -21,30 +24,60 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 {
     private const CHECKOUT_ROUTE = 'sylius_shop_checkout_select_payment';
 
-    private const UPDATE_ORDER_PAYMENT_ROUTE = 'sylius_shop_order_show';
-
     private const TOKEN_FIELD = 'payplug_integrated_payment_token';
+
+    private const HOSTED_FIELDS_TOKEN_FIELD = 'hostedfields_token';
+
+    private const HOSTED_FIELDS_SELECTED_BRAND_FIELD = 'hostedfields_selected_brand';
+
+    private const HOSTED_FIELDS_SAVE_CARD_FIELD = 'hostedfields_save_card';
+
+    private const HOSTED_FIELDS_LAST4_FIELD = 'hostedfields_last4';
+
+    private const HOSTED_FIELDS_EXP_MONTH_FIELD = 'hostedfields_exp_month';
+
+    private const HOSTED_FIELDS_EXP_YEAR_FIELD = 'hostedfields_exp_year';
+
+    private const HOSTED_FIELDS_COUNTRY_FIELD = 'hostedfields_country';
 
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
         private StateMachineInterface $stateMachine,
+        private HostedFieldsPaymentProcessorInterface $hostedFieldsPaymentProcessor,
     ) {
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            RequestEvent::class => 'alterRequestConfigurationForIntegratedPayment',
+            RequestEvent::class => 'alterRequestConfigurationForInlineCardCapture',
             'sylius.order.post_payment' => 'handle',
             'sylius.order.post_update' => 'handle',
         ];
     }
 
-    public function alterRequestConfigurationForIntegratedPayment(RequestEvent $event): void
+    /**
+     * Both inline card-capture modes force the checkout to TRANSITION_COMPLETE inside
+     * `sylius.order.post_payment` (see handle()), so a `redirect` entry MUST be injected here:
+     * Sylius's CheckoutRedirectListener listens to that same event and bails out only when
+     * `_sylius['redirect']` is set. Without it, it would resolve a route for the `completed`
+     * checkout state, which has no entry in `sylius_shop.checkout_resolver.route_map`
+     * (RouteNotFoundException).
+     *
+     * Both Integrated Payment and Hosted Fields target `sylius_shop_order_pay` (Payum
+     * capture/status for Integrated Payment; for Hosted Fields, the same `payplug`-tagged
+     * Capture/Notify/StatusPaymentRequestCommandProvider trio delegates to their
+     * Hosted-Fields-specific counterparts — see PayPlugGatewayFactory::isHostedFieldsConfig() —
+     * so the payment is actually created/confirmed through UPC.
+     */
+    public function alterRequestConfigurationForInlineCardCapture(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if (!$this->hasToken($request) || self::CHECKOUT_ROUTE !== $request->attributes->get('_route')) {
+        if (
+            (!$this->hasToken($request) && !$this->hasHostedFieldsToken($request)) ||
+            self::CHECKOUT_ROUTE !== $request->attributes->get('_route')
+        ) {
             return;
         }
         if (!$request->attributes->has('_sylius')) {
@@ -71,7 +104,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if (!\in_array($request->attributes->get('_route'), [self::CHECKOUT_ROUTE, self::UPDATE_ORDER_PAYMENT_ROUTE], true)) {
+        if (self::CHECKOUT_ROUTE !== $request->attributes->get('_route')) {
             return;
         }
 
@@ -79,6 +112,12 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         $order = $resourceControllerEvent->getSubject();
         $lastPayment = $order->getLastPayment();
         if (null === $lastPayment) {
+            return;
+        }
+
+        if ($this->hasHostedFieldsToken($request)) {
+            $this->handleHostedFieldsToken($request, $lastPayment);
+
             return;
         }
 
@@ -126,6 +165,63 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         Assert::string($token);
 
         return $token;
+    }
+
+    private function hasHostedFieldsToken(Request $request): bool
+    {
+        if (!$request->request->has(self::HOSTED_FIELDS_TOKEN_FIELD)) {
+            return false;
+        }
+
+        return '' !== $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
+    }
+
+    private function handleHostedFieldsToken(Request $request, PaymentInterface $lastPayment): void
+    {
+        // Guard against a crafted POST completing checkout through this path for a payment
+        // method that does not actually have Hosted Fields enabled.
+        if (!$this->isHostedFieldsEnabled($lastPayment)) {
+            return;
+        }
+
+        $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
+        $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
+        $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
+        $last4 = $this->getRequestField($request, self::HOSTED_FIELDS_LAST4_FIELD);
+        $expirationMonth = $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_MONTH_FIELD);
+        $expirationYear = $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_YEAR_FIELD);
+        $countryCode = $this->getRequestField($request, self::HOSTED_FIELDS_COUNTRY_FIELD);
+
+        $this->hostedFieldsPaymentProcessor->process(
+            $lastPayment,
+            new HostedFieldsCaptureData($hfToken, $selectedBrand, $saveCard, $last4, $expirationMonth, $expirationYear, $countryCode),
+        );
+
+        $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
+    }
+
+    private function isHostedFieldsEnabled(PaymentInterface $payment): bool
+    {
+        return PayPlugGatewayFactory::isHostedFieldsConfig($payment->getMethod()?->getGatewayConfig());
+    }
+
+    private function getRequestField(Request $request, string $field): string
+    {
+        $value = $request->request->get($field, '');
+        Assert::string($value);
+
+        return $value;
+    }
+
+    /**
+     * Distinguishes a genuinely absent field from a legitimately-fetched 0, unlike a plain
+     * (int) cast on the empty-string default, which would collapse both to the same value.
+     */
+    private function getOptionalIntRequestField(Request $request, string $field): ?int
+    {
+        $value = $this->getRequestField($request, $field);
+
+        return '' === $value ? null : (int) $value;
     }
 
     private function applyToComplete(OrderInterface $order): void

@@ -8,6 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Command\NotifyPaymentRequest;
 use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug',
@@ -39,6 +40,14 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 )]
 final class NotifyPaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
+    use DelegatesToHostedFieldsCommandProviderTrait;
+
+    public function __construct(
+        #[Autowire(service: NotifyHostedPaymentRequestCommandProvider::class)]
+        private PaymentRequestCommandProviderInterface $hostedFieldsCommandProvider,
+    ) {
+    }
+
     public function supports(PaymentRequestInterface $paymentRequest): bool
     {
         return $paymentRequest->getAction() === PaymentRequestInterface::ACTION_NOTIFY;
@@ -46,6 +55,8 @@ final class NotifyPaymentRequestCommandProvider implements PaymentRequestCommand
 
     public function provide(PaymentRequestInterface $paymentRequest): object
     {
-        return new NotifyPaymentRequest($paymentRequest->getId());
+        $hostedFieldsResult = $this->delegateToHostedFieldsCommandProvider($paymentRequest, $this->hostedFieldsCommandProvider);
+
+        return $hostedFieldsResult ?? new NotifyPaymentRequest($paymentRequest->getId());
     }
 }

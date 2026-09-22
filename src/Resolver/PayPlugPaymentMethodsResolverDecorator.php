@@ -37,7 +37,8 @@ final class PayPlugPaymentMethodsResolverDecorator implements PaymentMethodsReso
             $supportedMethods,
             PayPlugGatewayFactory::FACTORY_NAME,
             $subject->getAmount() ?? 0,
-            $billingCountryCode,
+            paymentCurrencyCode: $subject->getCurrencyCode(),
+            billingCountryCode: $billingCountryCode,
         );
     }
 

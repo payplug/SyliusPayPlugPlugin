@@ -37,7 +37,8 @@ final class ScalapayPaymentMethodsResolverDecorator implements PaymentMethodsRes
             $supportedMethods,
             ScalapayGatewayFactory::FACTORY_NAME,
             $subject->getAmount() ?? 0,
-            $billingCountryCode,
+            paymentCurrencyCode: $subject->getCurrencyCode(),
+            billingCountryCode: $billingCountryCode,
         );
     }
 

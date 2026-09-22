@@ -17,6 +17,7 @@ use Sylius\Component\Resource\Model\ResourceInterface;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'payplug_cards')]
+#[ORM\UniqueConstraint(name: 'UNIQ_payplug_cards_external_id_is_live', columns: ['external_id', 'is_live'])]
 class Card implements ResourceInterface
 {
     /**

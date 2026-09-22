@@ -3,9 +3,12 @@ payplug_sylius_payplug_plugin:
         oney_not_enabled: Oney n'est pas ou plus activé sur votre compte.
         api_unknow_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
         transaction_failed_1click: La transaction a échoué, votre carte de paiement ne sera pas débitée.
+        transaction_failed: La transaction a échoué, votre carte de paiement ne sera pas débitée.
     warning:
         payment_success_no_card_saved: Le paiement a été effectué avec succès, mais nous n'avons pas pu enregistrer votre carte bancaire.
     admin:
         oauth_callback_success: La connexion OAuth a été établie avec succès.
         payment_method_disabled: ⚠️ La méthode de paiement a été désactivée car certains critères de validation ne sont pas remplis.
         oauth_setup_error: Une erreur s'est produite lors de la configuration de la connexion OAuth. Veuillez réessayer.
+        logout_success: Le compte PayPlug a été déconnecté et ce moyen de paiement a été désactivé.
+        logout_error: Une erreur s’est produite lors de la déconnexion du compte PayPlug. Veuillez réessayer.
