@@ -1,7 +1,24 @@
 <?xml version="1.0" ?>
 <!--
-    This service file was used to register payum gateways.
-    We don't use payum anymore, but if mandatory, you can import this file to register them and still use payum
+    DEPRECATED / INERT — this file is not loaded, and nothing in it runs by default.
+
+    It was used to register the Payum gateways. The plugin no longer uses Payum: the live payment
+    flow is Sylius 2.x command/response providers, wired in config/services.yaml and implemented in
+    src/Command/Handler/. PayPlugSyliusPayPlugExtension::load() loads exactly two files,
+    config/services.yaml and config/services/client.xml — never this one.
+
+    This file holds the only `payum.gateway_factory_builder` tags in the repository, so with it
+    unloaded no Payum gateway exists for the `payplug*` factory names. Note that the four actions in
+    src/Action/ ARE tagged `payum.action` in the compiled container, via #[AutoconfigureTag]
+    attributes on the classes themselves — but with no gateway to attach to, those tags are
+    collected and never used, and the actions never execute. Do not reason about the payment flow
+    from src/Action/; see src/Command/Handler/ instead.
+
+    It is kept as an opt-in escape hatch: a host application that still needs Payum can import this
+    file itself to register the gateways. Removing it would therefore be a BC break, so it is
+    deprecated rather than deleted.
+
+    Will be removed permanently, along with src/Action/, in early 2027. See PRE-3684.
 -->
 <container xmlns="http://symfony.com/schema/dic/services"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
