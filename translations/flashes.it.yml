@@ -12,3 +12,25 @@ payplug_sylius_payplug_plugin:
         oauth_setup_error: Si è verificato un errore durante la configurazione della connessione OAuth. Per favore riprova.
         logout_success: L’account PayPlug è stato disconnesso e questo metodo di pagamento è stato disattivato.
         logout_error: Si è verificato un errore durante la disconnessione dell’account PayPlug. Per favore riprova.
+        authorization:
+            capture_success: L'incasso è stato effettuato.
+            cancel_success: L'annullamento è stato effettuato.
+            error:
+                not_authorized: Questo pagamento non è (o non è più) un'autorizzazione in attesa di incasso. Ricarica la pagina per vederne lo stato attuale.
+                stale: L'ordine è cambiato dalla visualizzazione della pagina (operazione già eseguita?). Ricarica la pagina e verifica l'importo residuo prima di riprovare.
+                in_progress: Un'altra operazione è già in corso su questo pagamento. Attendi qualche secondo, poi ricarica la pagina.
+                expired: L'autorizzazione è scaduta e i fondi sono stati rilasciati. Non è più possibile alcun incasso; se necessario, chiedi al cliente un nuovo pagamento.
+                cancel_after_capture: Su questo pagamento è già stato effettuato un incasso, quindi non può più essere annullato. Usa un rimborso per restituire tutto o parte dell'importo incassato.
+                nothing_remaining: Non resta alcun importo da incassare o annullare su questa autorizzazione.
+                invalid_amount: "Importo non valido. Inserisci un importo positivo, ad es. 12,50, oppure lascia il campo vuoto per l'importo residuo."
+                amount_exceeds_remaining: "L'importo supera quello ancora disponibile (%remaining%). Inserisci un importo inferiore o uguale."
+                amount_refused: PayPlug ha rifiutato questo importo (superiore a quello disponibile o non valido). Ricarica la pagina e verifica l'importo residuo.
+                already_captured: PayPlug indica che questo pagamento è già stato incassato. Ricarica la pagina; se lo stato mostrato non corrisponde, contatta il supporto PayPlug.
+                already_cancelled: PayPlug indica che questo pagamento è già stato annullato. Ricarica la pagina; se lo stato mostrato non corrisponde, contatta il supporto PayPlug.
+                not_operable: PayPlug indica che questo pagamento non è più in uno stato che consente questa operazione (già incassato o annullato). Ricarica la pagina; se lo stato mostrato non corrisponde, contatta il supporto PayPlug.
+                partial_cancellation_not_allowed: L'annullamento parziale non è attivo sul tuo contratto PayPlug. Annulla l'intero importo (campo importo vuoto) o contatta PayPlug per attivare l'opzione.
+                conflict: Un'altra operazione è in corso di elaborazione presso PayPlug per questo pagamento. Riprova tra qualche istante.
+                refused_by_issuer: La banca del cliente ha rifiutato l'operazione. Il pagamento non è stato modificato.
+                multiple_capture_not_allowed: Con il tuo account PayPlug è possibile un solo incasso su questa autorizzazione, ed è già stato effettuato. L'importo residuo non può essere incassato. Per i prossimi ordini, incassa l'importo finale in una sola volta, oppure contatta PayPlug per attivare l'incasso multiplo.
+                payment_not_found: Questo pagamento non è stato trovato presso PayPlug. Verifica che il metodo di pagamento sia collegato all'account PayPlug corretto.
+                api_error: L'operazione non è stata eseguita a causa di un errore PayPlug. Il pagamento non è stato modificato; riprova tra qualche istante.

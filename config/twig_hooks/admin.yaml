@@ -82,3 +82,12 @@ sylius_twig_hooks:
             <<: *weroGateway
             renew_oauth: *renewOAuth
             connected_account: *connectedAccount
+
+        'sylius_admin.order.show.content.sections#left':
+            payplug_authorization:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/order/show/authorization.html.twig'
+                priority: 50
+        'sylius_admin.order.show.content.sections.payments.item.actions':
+            complete:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/order/show/payment_complete.html.twig'
+                priority: 100

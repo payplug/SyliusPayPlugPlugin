@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Upc;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Upc\OrderAddressDtoCreator;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentCaptureContextBuilder;
+use PayplugUnifiedCore\Dto\CommonFieldsDto;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\CoreBundle\OrderPay\Provider\UrlProviderInterface;
@@ -16,6 +18,8 @@ use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethod;
+use Sylius\Component\Payment\Model\GatewayConfig;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -218,6 +222,39 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         self::assertSame('42', $common->orderId);
         self::assertNull($common->billing);
         self::assertNull($common->shipping);
+    }
+
+    public function testBuildCommonFields_capturesImmediatelyUnlessDeferredCaptureIsEnabledOnHostedFields(): void
+    {
+        $this->urlGenerator->method('generate')->willReturn('https://shop.test/payplug/notify/abc');
+
+        self::assertTrue($this->commonFieldsForGatewayConfig([PayPlugGatewayFactory::HOSTED_FIELDS => true])->capture);
+        self::assertFalse($this->commonFieldsForGatewayConfig([
+            PayPlugGatewayFactory::HOSTED_FIELDS => true,
+            PayPlugGatewayFactory::DEFERRED_CAPTURE => true,
+        ])->capture);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function commonFieldsForGatewayConfig(array $config): CommonFieldsDto
+    {
+        $gatewayConfig = new GatewayConfig();
+        $gatewayConfig->setFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
+        $gatewayConfig->setConfig($config);
+        $method = new PaymentMethod();
+        $method->setGatewayConfig($gatewayConfig);
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getId')->willReturn(42);
+        $payment->method('getMethod')->willReturn($method);
+
+        $paymentRequest = $this->createMock(PaymentRequestInterface::class);
+        $paymentRequest->method('getPayment')->willReturn($payment);
+        $paymentRequest->method('getHash')->willReturn(Uuid::v4());
+
+        return $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, null);
     }
 
     public function testBuildCommonFields_withAnOrderItem_usesItsProductNameAsDescription(): void

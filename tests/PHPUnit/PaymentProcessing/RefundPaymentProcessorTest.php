@@ -14,6 +14,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\RefundCreatorInterface;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Exceptions\ApiException;
@@ -328,6 +329,30 @@ final class RefundPaymentProcessorTest extends TestCase
 
         $this->refundCreator->method('createRefund')
             ->with(self::isInstanceOf(PaymentMethodInterface::class), 'pay_hf_123', '000000042', null)
+            ->willReturn(['status' => 200, 'body' => json_encode(['operationIds' => ['op_ref_full']])]);
+
+        $this->processor->process($payment);
+    }
+
+    /**
+     * A deferred-capture payment whose authorization was partly cancelled before being captured
+     * only ever received the captured amount (1700 of 2400 here): that, not the payment's own
+     * amount, is what a full refund actually returns.
+     */
+    public function testProcess_hostedFields_onAPartlyCancelledDeferredPayment_recordsTheCapturedAmount(): void
+    {
+        $payment = $this->buildHostedFieldsPayment([
+            'hosted_fields_payment_id' => 'pay_hf_123',
+            AuthorizationDetails::DEFERRED => true,
+            AuthorizationDetails::AUTHORIZED_AMOUNT => 2400,
+            AuthorizationDetails::CANCELLATIONS => [['id' => 'op_v1', 'amount' => 700]],
+            AuthorizationDetails::CAPTURES => [['id' => 'op_c1', 'amount' => 1700]],
+        ]);
+        $payment->expects(self::once())->method('setDetails')->with(self::callback(
+            static fn (array $details): bool => [['internal_id' => null, 'id' => 'op_ref_full', 'amount' => 1700]] === $details['refunds'],
+        ));
+
+        $this->refundCreator->method('createRefund')
             ->willReturn(['status' => 200, 'body' => json_encode(['operationIds' => ['op_ref_full']])]);
 
         $this->processor->process($payment);
