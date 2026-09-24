@@ -5,6 +5,25 @@ payplug_sylius_payplug_plugin:
             oney_x4_with_fees_payment: Oney 4x
             oney_x3_without_fees_payment: Oney 3x Without Fees
             oney_x4_without_fees_payment: Oney 4x Without Fees
+        authorization:
+            title: PayPlug — Deferred capture
+            authorized_amount: Authorized amount
+            captured_amount: Already captured
+            cancelled_amount: Cancelled
+            remaining_amount: Remaining capturable
+            max_capture_date: Capture deadline
+            max_capture_date_unknown: Not provided
+            expired: The authorization has expired and the funds have been released. No capture is possible any more.
+            expiring_soon: The authorization expires soon. Capture the amount you need before the deadline, or the funds will be released.
+            capture_amount: Amount to capture
+            capture: Capture
+            capture_help: Leave blank to capture the whole remaining amount. You may capture several times as long as the total stays within the authorized amount.
+            cancel_amount: Amount to cancel
+            cancel: Cancel authorization
+            cancel_help: Leave blank to cancel everything. Partial cancellation must be enabled on your PayPlug contract. Not possible after a first capture.
+            cancel_confirm: Confirm the cancellation? The cancelled funds will be released and can no longer be captured.
+            nothing_remaining: Nothing left to capture on this authorization.
+            not_authorized: No action available in the payment's current state.
     ui:
         account:
             saved_cards:

@@ -1,0 +1,110 @@
+{% import '@SyliusAdmin/shared/helper/money.html.twig' as money %}
+
+{# One card per deferred-capture Hosted Fields payment of the order; nothing at all for any other
+   payment. Which actions are offered comes from payplug_authorization() — the same rules
+   AuthorizedPaymentController enforces — so a form is only ever shown when it can succeed as
+   far as Sylius knows; the Unified API stays the final judge, and its refusal comes back as a
+   flash message. #}
+{% set order = hookable_metadata.context.resource %}
+
+{% for payment in order.payments %}
+    {% set authorization = payplug_authorization(payment) %}
+    {% if authorization is not null %}
+        {% set currency = payment.currencyCode %}
+        {% set csrf_token_id = constant('PayPlug\\SyliusPayPlugPlugin\\Action\\Admin\\AuthorizedPaymentController::CSRF_TOKEN_ID_PREFIX') ~ payment.id %}
+        {% set csrf_token_value = sylius_csrf_protection_enabled() ? csrf_token(csrf_token_id) : null %}
+        {# Disables the button on the first submit, so a double click sends one request; the server
+           side (lock + version) is what actually guarantees it. #}
+        {% set single_submit = "this.querySelector('button[type=submit]').disabled = true;" %}
+
+        <div class="card mb-3" {{ sylius_test_html_attribute('payplug-authorization', payment.id) }}>
+            <div class="card-header">
+                <div class="card-title">{{ 'payplug_sylius_payplug_plugin.admin.authorization.title'|trans }}</div>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-3">
+                    <dt class="col-6">{{ 'payplug_sylius_payplug_plugin.admin.authorization.authorized_amount'|trans }}</dt>
+                    <dd class="col-6 text-end">{{ money.format(authorization.authorized_amount, currency) }}</dd>
+                    <dt class="col-6">{{ 'payplug_sylius_payplug_plugin.admin.authorization.captured_amount'|trans }}</dt>
+                    <dd class="col-6 text-end">{{ money.format(authorization.captured_amount, currency) }}</dd>
+                    {% if authorization.cancelled_amount > 0 %}
+                        <dt class="col-6">{{ 'payplug_sylius_payplug_plugin.admin.authorization.cancelled_amount'|trans }}</dt>
+                        <dd class="col-6 text-end">{{ money.format(authorization.cancelled_amount, currency) }}</dd>
+                    {% endif %}
+                    <dt class="col-6">{{ 'payplug_sylius_payplug_plugin.admin.authorization.remaining_amount'|trans }}</dt>
+                    <dd class="col-6 text-end" {{ sylius_test_html_attribute('payplug-remaining-amount') }}>
+                        <strong>{{ money.format(authorization.remaining_amount, currency) }}</strong>
+                    </dd>
+                    <dt class="col-6">{{ 'payplug_sylius_payplug_plugin.admin.authorization.max_capture_date'|trans }}</dt>
+                    <dd class="col-6 text-end">
+                        {% if authorization.max_capture_date is not null %}
+                            {{ authorization.max_capture_date|date('d/m/Y H:i') }}
+                        {% else %}
+                            <span class="text-secondary">{{ 'payplug_sylius_payplug_plugin.admin.authorization.max_capture_date_unknown'|trans }}</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+
+                {% if authorization.expired %}
+                    <div class="alert alert-danger" role="alert">{{ 'payplug_sylius_payplug_plugin.admin.authorization.expired'|trans }}</div>
+                {% elseif authorization.expiring_soon and authorization.can_capture %}
+                    <div class="alert alert-warning" role="alert">{{ 'payplug_sylius_payplug_plugin.admin.authorization.expiring_soon'|trans }}</div>
+                {% endif %}
+
+                {% if authorization.can_capture %}
+                    <form method="POST" novalidate class="mb-3"
+                          action="{{ path('payplug_sylius_admin_payment_capture', {orderId: order.id, paymentId: payment.id}) }}"
+                          onsubmit="{{ single_submit }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token_value }}">
+                        <input type="hidden" name="version" value="{{ authorization.version }}">
+                        <label class="form-label" for="payplug-capture-amount-{{ payment.id }}">
+                            {{ 'payplug_sylius_payplug_plugin.admin.authorization.capture_amount'|trans }}
+                        </label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" class="form-control" name="amount"
+                                   id="payplug-capture-amount-{{ payment.id }}"
+                                   placeholder="{{ (authorization.remaining_amount / 100)|number_format(2, '.', '') }}">
+                            <span class="input-group-text">{{ currency }}</span>
+                            <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('payplug-capture', payment.id) }}>
+                                {{ ux_icon('tabler:cash') }} {{ 'payplug_sylius_payplug_plugin.admin.authorization.capture'|trans }}
+                            </button>
+                        </div>
+                        <div class="form-hint">{{ 'payplug_sylius_payplug_plugin.admin.authorization.capture_help'|trans }}</div>
+                    </form>
+                {% endif %}
+
+                {% if authorization.can_cancel %}
+                    <form method="POST" novalidate
+                          action="{{ path('payplug_sylius_admin_payment_cancel', {orderId: order.id, paymentId: payment.id}) }}"
+                          onsubmit="if (!confirm({{ 'payplug_sylius_payplug_plugin.admin.authorization.cancel_confirm'|trans|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e('html_attr') }})) { return false; } {{ single_submit }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token_value }}">
+                        <input type="hidden" name="version" value="{{ authorization.version }}">
+                        <label class="form-label" for="payplug-cancel-amount-{{ payment.id }}">
+                            {{ 'payplug_sylius_payplug_plugin.admin.authorization.cancel_amount'|trans }}
+                        </label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" class="form-control" name="amount"
+                                   id="payplug-cancel-amount-{{ payment.id }}"
+                                   placeholder="{{ (authorization.remaining_amount / 100)|number_format(2, '.', '') }}">
+                            <span class="input-group-text">{{ currency }}</span>
+                            <button type="submit" class="btn btn-outline-danger" {{ sylius_test_html_attribute('payplug-cancel', payment.id) }}>
+                                {{ ux_icon('tabler:x') }} {{ 'payplug_sylius_payplug_plugin.admin.authorization.cancel'|trans }}
+                            </button>
+                        </div>
+                        <div class="form-hint">{{ 'payplug_sylius_payplug_plugin.admin.authorization.cancel_help'|trans }}</div>
+                    </form>
+                {% endif %}
+
+                {% if not authorization.can_capture and not authorization.expired %}
+                    <div class="text-secondary">
+                        {% if authorization.remaining_amount == 0 %}
+                            {{ 'payplug_sylius_payplug_plugin.admin.authorization.nothing_remaining'|trans }}
+                        {% else %}
+                            {{ 'payplug_sylius_payplug_plugin.admin.authorization.not_authorized'|trans }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}

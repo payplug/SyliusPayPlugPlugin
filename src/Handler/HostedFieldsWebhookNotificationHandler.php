@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Handler;
 
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\CardDataFromPaymentMethodExtractor;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
@@ -104,6 +105,24 @@ class HostedFieldsWebhookNotificationHandler
         // (see ExecCodeMapper), so this classification is made locally, from ids this plugin
         // itself generated and already knows the meaning of.
         $refundAmount = self::findMatchingRefundAmount($payment, $operationData->operationId);
+
+        // Same local classification for a deferred-capture payment's captures/cancellations:
+        // AuthorizedPaymentOperationProcessor recorded each one's operation id when it triggered
+        // it, and already applied its effect on the payment state synchronously — the webhook
+        // only confirms it.
+        $authorizationOperation = null === $refundAmount
+            ? AuthorizationDetails::fromDetails($payment->getDetails())->findOperation($operationData->operationId)
+            : null;
+        if (null !== $authorizationOperation) {
+            $this->treatAuthorizationOperation($payment, $rawBody, $operationData, $authorizationOperation);
+
+            return;
+        }
+
+        if (null === $refundAmount) {
+            $this->resolveAuthorizationOutcome($payment, $rawBody, $operationData);
+        }
+
         $expectedAmount = $refundAmount ?? $payment->getAmount();
 
         if (!$this->matchesPayment($payment, $operationData, $expectedAmount)) {
@@ -148,6 +167,76 @@ class HostedFieldsWebhookNotificationHandler
         $this->applyLocked($payment, $rawBody, $operationData);
     }
 
+    /**
+     * For an authorization-only payment, the confirmation of its own creation reads "authorized",
+     * never "paid" (see AuthorizationDetails::resolveCreationOutcome()) — and, after a 3DS
+     * challenge, is also the first place its capture deadline shows up. Any other operation id
+     * reaching here on such a payment is one Sylius never triggered: mapping it to AUTHORIZED
+     * too keeps it from ever completing the payment on a guess.
+     */
+    private function resolveAuthorizationOutcome(
+        PaymentInterface $payment,
+        string $rawBody,
+        OperationData $operationData,
+    ): void
+    {
+        $authorization = AuthorizationDetails::fromDetails($payment->getDetails());
+        if (!$authorization->isDeferred()) {
+            return;
+        }
+
+        $operationData->outcome = $authorization->resolveCreationOutcome($operationData->outcome);
+        if (PaymentOutcome::AUTHORIZED === $operationData->outcome) {
+            $payment->setDetails(AuthorizationDetails::withMaxCaptureDateFromBody($payment->getDetails(), $rawBody));
+        }
+    }
+
+    /**
+     * A success confirms what the payment state already reflects, so it is only tracked as
+     * treated. A failure means an operation accepted synchronously did not actually go through:
+     * its entry is flagged failed (so the remaining capturable amount counts it back in) and, since
+     * the payment may already have moved on to "completed"/"cancelled" on the strength of it,
+     * logged critically for the merchant to reconcile — no automatic transition can undo those.
+     *
+     * @param array{operation: string, amount: int} $authorizationOperation
+     */
+    private function treatAuthorizationOperation(
+        PaymentInterface $payment,
+        string $rawBody,
+        OperationData $operationData,
+        array $authorizationOperation,
+    ): void {
+        if (!$this->matchesPayment($payment, $operationData, $authorizationOperation['amount'])) {
+            return;
+        }
+
+        if (PaymentOutcome::PAID !== $operationData->outcome) {
+            $this->logger->critical('[PayPlug][UPC] An authorization operation accepted earlier is reported as not completed; the payment needs manual reconciliation.', [
+                'sylius_payment_id' => $payment->getId(),
+                'payment_state' => $payment->getState(),
+                'operation' => $authorizationOperation['operation'],
+                'operation_id' => $operationData->operationId,
+                'outcome' => $operationData->outcome,
+                'exec_code' => $operationData->execCode,
+            ]);
+
+            $lockKey = AuthorizationDetails::lockKey($payment->getId());
+            if (!$this->lock->acquire($lockKey, self::LOCK_TTL_SECONDS)) {
+                // An operation on this payment is in progress; leave this notification untreated
+                // so its redelivery flags the entry once the lock is free.
+                return;
+            }
+
+            try {
+                $payment->setDetails(AuthorizationDetails::withOperationFailed($payment->getDetails(), $authorizationOperation['operation'], $operationData->operationId));
+            } finally {
+                $this->lock->release($lockKey);
+            }
+        }
+
+        $this->applyLocked($payment, $rawBody, $operationData, applyOutcome: false);
+    }
+
     // Split out of treat() to keep its own return count within SonarCloud's limit (php:S1142) —
     // same rationale as matchesPayment() below: this is its own self-contained "acquire, check
     // idempotency, apply" unit, not a fragment that needs to share treat()'s return budget.
@@ -180,7 +269,11 @@ class HostedFieldsWebhookNotificationHandler
             }
             $this->paymentRepository->markTreated($operationData->operationId);
 
-            if (PaymentOutcome::PAID === $operationData->outcome) {
+            // AUTHORIZED too: a deferred-capture payment's card is saved once its authorization
+            // is confirmed, exactly like an immediate one's once it is paid. Never for a
+            // notification only tracked ($applyOutcome false) — a capture/cancellation
+            // confirmation also reads PAID, and has no card to save.
+            if ($applyOutcome && \in_array($operationData->outcome, [PaymentOutcome::PAID, PaymentOutcome::AUTHORIZED], true)) {
                 $this->maybeSaveCard($payment, $rawBody);
             }
         } finally {

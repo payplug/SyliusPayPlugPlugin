@@ -37,6 +37,10 @@ services:
         arguments:
             $csrfTokenManager: '@?security.csrf.token_manager'
 
+    PayPlug\SyliusPayPlugPlugin\Action\Admin\AuthorizedPaymentController:
+        arguments:
+            $csrfTokenManager: '@?security.csrf.token_manager'
+
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
         parent: sylius.repository.payment
@@ -89,6 +93,9 @@ services:
 
     PayPlug\SyliusPayPlugPlugin\Upc\RefundCreatorInterface:
         alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiRefundCreator
+
+    PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationOperatorInterface:
+        alias: PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiAuthorizationOperator
 
     payplug_sylius_payplug_plugin.action.capture:
         class: PayPlug\SyliusPayPlugPlugin\Action\CaptureAction

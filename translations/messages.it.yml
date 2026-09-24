@@ -5,6 +5,25 @@ payplug_sylius_payplug_plugin:
             oney_x4_with_fees_payment: Oney 4x
             oney_x3_without_fees_payment: Oney 3x Nessuna Commissione
             oney_x4_without_fees_payment: Oney 4x Nessuna Commissione
+        authorization:
+            title: PayPlug — Incasso differito
+            authorized_amount: Importo autorizzato
+            captured_amount: Già incassato
+            cancelled_amount: Annullato
+            remaining_amount: Residuo incassabile
+            max_capture_date: Scadenza per l'incasso
+            max_capture_date_unknown: Non comunicata
+            expired: L'autorizzazione è scaduta e i fondi sono stati rilasciati. Non è più possibile alcun incasso.
+            expiring_soon: L'autorizzazione scade a breve. Incassa l'importo desiderato prima della scadenza, altrimenti i fondi verranno rilasciati.
+            capture_amount: Importo da incassare
+            capture: Incassa
+            capture_help: Lascia vuoto per incassare tutto il residuo. Puoi incassare più volte finché il totale resta entro l'importo autorizzato.
+            cancel_amount: Importo da annullare
+            cancel: Annulla autorizzazione
+            cancel_help: Lascia vuoto per annullare tutto. L'annullamento parziale deve essere attivo sul tuo contratto PayPlug. Non possibile dopo un primo incasso.
+            cancel_confirm: Confermare l'annullamento? I fondi annullati verranno rilasciati e non potranno più essere incassati.
+            nothing_remaining: Non resta nulla da incassare su questa autorizzazione.
+            not_authorized: Nessuna azione disponibile nello stato attuale del pagamento.
     ui:
         account:
             saved_cards:
