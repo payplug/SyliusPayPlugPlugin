@@ -12,3 +12,25 @@ payplug_sylius_payplug_plugin:
         oauth_setup_error: An error occurred while setting up the OAuth connection. Please try again.
         logout_success: The PayPlug account has been disconnected and this payment method has been disabled.
         logout_error: An error occurred while disconnecting the PayPlug account. Please try again.
+        authorization:
+            capture_success: The capture has been performed.
+            cancel_success: The cancellation has been performed.
+            error:
+                not_authorized: This payment is not (or no longer) an authorization awaiting capture. Reload the page to see its current state.
+                stale: The order changed since this page was displayed (operation already performed?). Reload the page and check the remaining amount before trying again.
+                in_progress: Another operation is already in progress on this payment. Wait a few seconds, then reload the page.
+                expired: The authorization has expired and the funds have been released. No capture is possible any more; ask the customer for a new payment if needed.
+                cancel_after_capture: This payment has already been partly captured, so it can no longer be cancelled. Use a refund to return all or part of the captured amount.
+                nothing_remaining: Nothing is left to capture or cancel on this authorization.
+                invalid_amount: "Invalid amount. Enter a positive amount, e.g. 12.50, or leave the field blank for the remaining amount."
+                amount_exceeds_remaining: "The amount exceeds what is still available (%remaining%). Enter a lower or equal amount."
+                amount_refused: PayPlug refused this amount (above the available amount, or invalid). Reload the page and check the remaining amount.
+                already_captured: PayPlug reports this payment as already captured. Reload the page; if the displayed state does not match, contact PayPlug support.
+                already_cancelled: PayPlug reports this payment as already cancelled. Reload the page; if the displayed state does not match, contact PayPlug support.
+                not_operable: PayPlug reports this payment is no longer in a state that allows this operation (already captured or cancelled). Reload the page; if the displayed state does not match, contact PayPlug support.
+                partial_cancellation_not_allowed: Partial cancellation is not enabled on your PayPlug contract. Cancel the whole amount (blank amount field) or contact PayPlug to enable the option.
+                conflict: Another operation is being processed by PayPlug for this payment. Try again in a moment.
+                refused_by_issuer: The customer's bank refused the operation. The payment was not changed.
+                multiple_capture_not_allowed: Only one capture is possible on this authorization with your PayPlug account, and it has already been performed. The remaining amount cannot be captured. For future orders, capture the final amount in one go, or contact PayPlug to enable multiple captures.
+                payment_not_found: This payment could not be found at PayPlug. Check that the payment method is connected to the right PayPlug account.
+                api_error: The operation could not be performed because of a PayPlug error. The payment was not changed; try again in a moment.

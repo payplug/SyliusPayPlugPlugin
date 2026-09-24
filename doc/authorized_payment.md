@@ -6,6 +6,13 @@ The payment is authorized and the capture can be done later.
 > [!IMPORTANT]
 > The authorized payment feature is only available for the "PayPlug" payment gateway.
 
+Two flows exist, depending on the payment method's display mode:
+
+- **Hosted Fields** (Unified API): capture — full, partial, several times — and cancellation are
+  driven from the admin order screen. See [Hosted Fields: capture and cancel from the order screen](#hosted-fields-capture-and-cancel-from-the-order-screen).
+- **Redirected / Integrated Payment** (legacy API): the whole authorized amount is captured at
+  once, by the command or the state machine triggers described in [Trigger the capture](#trigger-the-capture).
+
 ## Activation
 
 On the payment method configuration, you can enable the deferred capture feature.
@@ -153,3 +160,76 @@ final class CaptureOrderProcessor
     }
 }
 ```
+
+## Hosted Fields: capture and cancel from the order screen
+
+With **deferred capture** enabled on a Hosted Fields payment method, each payment is created as an
+authorization only: the customer's funds are held, not debited, and the Sylius payment is
+`authorized` (the order payment state reads *authorized*, not *paid*).
+
+On the order screen (**Sales › Orders › an order**), a **PayPlug — Deferred capture** block is shown
+under *Payments* for each such payment. It displays:
+
+| Field | Meaning |
+|---|---|
+| Authorized amount | What the customer's bank agreed to hold |
+| Already captured | Sum of the captures performed so far |
+| Cancelled | Sum of the cancellations performed so far (shown once there is one) |
+| Remaining capturable | What can still be captured or cancelled |
+| Capture deadline | The date after which the authorization lapses and the funds are released. A warning is shown 48 hours before it; after it, no action is offered any more |
+
+### Capture
+
+Leave the amount blank to capture everything that remains, or type an amount (`12.50` or `12,50`)
+for a partial capture. Captures can be chained as long as their total stays within the authorized
+amount.
+
+| After the capture | Sylius payment state |
+|---|---|
+| Something is still capturable | stays `authorized` |
+| Nothing is left | `completed` (the order becomes *paid*) |
+
+Sylius's own **Complete** button is hidden for these payments. A `complete` transition applied by
+any other means — the `payplug:capture-authorized-payments` command, or your own shipping listener
+as described above — captures the whole remaining amount first; if that capture is refused, the
+transition is aborted and the payment stays `authorized`.
+
+### Cancel
+
+Cancellation is only offered **before any capture**. Leave the amount blank to cancel everything,
+or type an amount for a partial cancellation — which must be enabled on the merchant's PayPlug
+contract; otherwise PayPlug refuses it and the admin explains why.
+
+| After the cancellation | Sylius payment state |
+|---|---|
+| Something is still authorized | stays `authorized` (the rest can still be captured) |
+| Nothing is left | `cancelled` |
+
+Once part of the authorization is captured, use a refund to give money back.
+
+### Refusals
+
+When PayPlug refuses an operation, nothing is recorded and the payment state is left unchanged; the
+admin shows an explicit message, e.g.:
+
+- the authorization has expired;
+- the amount exceeds what remains;
+- partial cancellation is not enabled on the contract;
+- the customer's bank refused the operation;
+- another operation is already in progress on this payment.
+
+A form submitted twice (double click, browser back + resubmit) is refused as *stale*: each form
+carries the state it was built against, and operations on a same payment are serialized.
+
+### Notifications and operations performed outside Sylius
+
+The webhook confirming each capture or cancellation is matched to the operation Sylius triggered.
+If PayPlug later reports that an operation accepted earlier did **not** go through, it is flagged
+as failed in the payment details (the remaining amount counts it back in) and a `critical` entry is
+written to the `payplug` log channel so that the payment can be reconciled manually.
+
+> [!WARNING]
+> Captures and cancellations performed **outside Sylius** (PayPlug portal, PayPlug support, another
+> integration using the same account) are not reflected in Sylius: they carry operation ids Sylius
+> does not know. Perform them from the Sylius order screen so that the payment state stays in step.
+

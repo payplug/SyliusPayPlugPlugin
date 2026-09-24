@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Upc;
 
 use PayPlug\SyliusPayPlugPlugin\Command\PaymentCaptureFlow;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentCaptureOutcomeApplier;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
 use PayplugUnifiedCore\DataValues\PaymentOutcome;
@@ -179,6 +180,18 @@ final class PaymentCaptureOutcomeApplierTest extends TestCase
         $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
 
         $this->applier->applyOutcome($paymentRequest, $payment, $output);
+    }
+
+    public function testApplyOutcome_withDirectSuccessOnADeferredCapturePayment_appliesAuthorizedNotPaid(): void
+    {
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getId')->willReturn(42);
+        $payment->method('getDetails')->willReturn([AuthorizationDetails::DEFERRED => true]);
+        $output = new PaymentOutput(201, '{"id":"pay_1","execCode":"0000"}', null, null, null);
+
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::AUTHORIZED);
+
+        $this->applier->applyOutcome($this->createMock(PaymentRequestInterface::class), $payment, $output);
     }
 
     public function testApplyOutcome_withNoExecCodeInResponseBody_neverAppliesOrderStateMutator(): void
