@@ -47,20 +47,95 @@
     width: 100%;
     margin: 0 0 10px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4px
 }
 
 .payplugHostedFields__cardWrapper .payplugHostedFields__container--card {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
     margin: 0
 }
 
+.payplugHostedFields__network {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    position: relative
+}
+
+.payplugHostedFields__networkLabel {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #767a80
+}
+
+.payplugHostedFields__networkInfo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #767a80;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    font-style: italic;
+    cursor: pointer
+}
+
+.payplugHostedFields__networkInfo:before {
+    content: "i"
+}
+
+.payplugHostedFields__networkTooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    z-index: 10;
+    width: 280px;
+    max-width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.4;
+    color: #fff;
+    background: #000;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s
+}
+
+.payplugHostedFields__networkInfo:hover .payplugHostedFields__networkTooltip,
+.payplugHostedFields__networkInfo:focus .payplugHostedFields__networkTooltip {
+    visibility: visible;
+    opacity: 1
+}
+
+/* The SDK's own label is an absolutely positioned <div id="info-container"> in <body>, placed with
+   pixel coordinates measured once. It stays in the DOM and only toggles inline display, so hide it
+   and show our in-flow label exactly while the SDK reveals its own. */
+body:has(.payplugHostedFields) #info-container {
+    display: none !important
+}
+
+body:has(#info-container:not([style*="display: none"])) .payplugHostedFields__networkLabel {
+    display: inline-flex
+}
+
 .payplugHostedFields__container--brand {
-    height: 42px;
+    height: 44px;
     min-height: 0;
-    width: 90px;
+    width: 170px;
+    margin: 0 0 0 auto;
     flex-shrink: 0;
     align-items: center;
     justify-content: center

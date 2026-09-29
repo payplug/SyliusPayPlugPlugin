@@ -32,11 +32,23 @@
     <div class="payplugHostedFields__schemes">
         <span class="payplugHostedFields__scheme-badge">VISA</span>
         <span class="payplugHostedFields__scheme-badge">MC</span>
-        <span class="payplugHostedFields__scheme-badge">CB</span>
     </div>
     <div class="payplugHostedFields__cardWrapper">
         <div class="payplugHostedFields__container payplugHostedFields__container--card" id="card-container"></div>
-        <div class="payplugHostedFields__container payplugHostedFields__container--brand" id="brand-container"></div>
+        {# The SDK draws its own "select your network" label as an absolutely positioned <div id="info-container">
+           in <body>, with pixel coordinates measured once (they go stale as soon as the layout moves). CSS hides
+           it and shows this in-flow copy instead, only while the SDK reveals its own (see hosted-fields.css). #}
+        <div class="payplugHostedFields__network">
+            <span class="payplugHostedFields__networkLabel">
+                {{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.network_selection.label'|trans }}
+                <span class="payplugHostedFields__networkInfo" tabindex="0" role="img" aria-label="{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.network_selection.label'|trans }}" aria-describedby="payplug-network-tooltip">
+                    <span class="payplugHostedFields__networkTooltip" id="payplug-network-tooltip" role="tooltip">
+                        {{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.network_selection.tooltip'|trans }}
+                    </span>
+                </span>
+            </span>
+            <div class="payplugHostedFields__container payplugHostedFields__container--brand" id="brand-container"></div>
+        </div>
     </div>
     <div class="payplugHostedFields__container payplugHostedFields__container--expiry" id="expiry-container"></div>
     <div class="payplugHostedFields__container payplugHostedFields__container--cvv" id="cvv-container"></div>

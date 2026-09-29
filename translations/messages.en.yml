@@ -116,6 +116,8 @@ payplug_sylius_payplug_plugin:
             error.unsupported_brand: 'This card brand is not supported for this payment method. Please use a different card.'
             save_card.label: 'Save my card'
             place_order.label: 'Place order'
+            network_selection.label: 'Select your network'
+            network_selection.tooltip: 'Your card supports two networks and you can choose the one you want for this payment. If you do not, the network selected by default by the merchant will be used.'
         deferred_capture:
             process_order_info: |
                 You will be charged when your order is processed.

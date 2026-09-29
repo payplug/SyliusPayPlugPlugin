@@ -116,6 +116,8 @@ payplug_sylius_payplug_plugin:
             error.unsupported_brand: 'Questo marchio di carta non è supportato per questo metodo di pagamento. Utilizza un’altra carta.'
             save_card.label: 'Salva la mia carta'
             place_order.label: 'Ordine'
+            network_selection.label: 'Seleziona il tuo circuito'
+            network_selection.tooltip: 'La tua carta supporta due circuiti e puoi scegliere quello che preferisci per questo pagamento. Se non lo fai, verrà utilizzato il circuito selezionato di default dal commerciante.'
         deferred_capture:
             process_order_info: |
                 L'addebito avverrà al momento dell'elaborazione dell'ordine.

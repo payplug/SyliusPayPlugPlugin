@@ -121,7 +121,7 @@ final class PayplugCardPersisterTest extends TestCase
             $payment,
             $method,
             [
-                'hosted_fields_selected_brand' => 'CB',
+                'hosted_fields_selected_brand' => 'MASTERCARD',
                 'hosted_fields_last4' => '0000',
                 'hosted_fields_expiration_month' => 1,
                 'hosted_fields_expiration_year' => 2020,
