@@ -28,8 +28,7 @@ final class UnifiedApiAuthorizationOperator implements AuthorizationOperatorInte
         ?int $amount,
         ?string $currency = null,
         int $sequence = 1,
-    ): CaptureOutput
-    {
+    ): CaptureOutput {
         return $this->createService($method)->capturePayment(
             $paymentId,
             GatewayCredentialsResolver::resolve($method),
@@ -46,10 +45,9 @@ final class UnifiedApiAuthorizationOperator implements AuthorizationOperatorInte
         string $paymentId,
         string $orderId,
         ?int $amount,
-        int $sequence = 1,
         ?string $currency = null,
-    ): CancellationOutput
-    {
+        int $sequence = 1,
+    ): CancellationOutput {
         return $this->createService($method)->cancelPayment(
             $paymentId,
             GatewayCredentialsResolver::resolve($method),

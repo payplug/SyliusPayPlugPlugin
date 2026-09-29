@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\PaymentProcessing;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\AuthorizationOperationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AuthorizedPaymentOperationProcessor;
@@ -38,6 +39,8 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
 
     private ILock&MockObject $lock;
 
+    private EntityManagerInterface&MockObject $entityManager;
+
     private StateMachineInterface&MockObject $stateMachine;
 
     private MockClock $clock;
@@ -49,6 +52,7 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
         $this->operator = $this->createMock(AuthorizationOperatorInterface::class);
         $this->lock = $this->createMock(ILock::class);
         $this->lock->method('acquire')->willReturn(true);
+        $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->stateMachine = $this->createMock(StateMachineInterface::class);
         $this->stateMachine->method('can')->willReturn(true);
         $this->clock = new MockClock('2026-09-24T10:00:00+00:00');
@@ -56,6 +60,7 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
         $this->processor = new AuthorizedPaymentOperationProcessor(
             $this->operator,
             $this->lock,
+            $this->entityManager,
             $this->stateMachine,
             $this->clock,
             $this->createMock(LoggerInterface::class),
@@ -146,11 +151,92 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
         self::assertSame('payplug_sylius_payplug_plugin.admin.authorization.error.stale', $exception->getTranslationKey());
     }
 
+    public function testCapture_flushesTheRecordBeforeReleasingTheLock(): void
+    {
+        $calls = [];
+        $this->lock = $this->createMock(ILock::class);
+        $this->lock->method('acquire')->willReturn(true);
+        $this->lock->method('release')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'release';
+        });
+        $this->entityManager->method('flush')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'flush';
+        });
+        $processor = new AuthorizedPaymentOperationProcessor($this->operator, $this->lock, $this->entityManager, $this->stateMachine, $this->clock, $this->createMock(LoggerInterface::class));
+        $this->operator->method('capture')->willReturn($this->captureOutput('op_c1'));
+
+        $processor->capture($this->authorizedPayment(1000), 300, 0);
+
+        // A second request taking the lock the moment it is released must already see the
+        // recorded operation, or its version check passes and UPC is asked to capture twice.
+        self::assertSame(['flush', 'release'], $calls);
+    }
+
+    public function testCancel_flushesTheRecordBeforeReleasingTheLock(): void
+    {
+        $calls = [];
+        $this->lock = $this->createMock(ILock::class);
+        $this->lock->method('acquire')->willReturn(true);
+        $this->lock->method('release')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'release';
+        });
+        $this->entityManager->method('flush')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'flush';
+        });
+        $processor = new AuthorizedPaymentOperationProcessor($this->operator, $this->lock, $this->entityManager, $this->stateMachine, $this->clock, $this->createMock(LoggerInterface::class));
+        $this->operator->method('cancel')->willReturn(new CancellationOutput(200, '{"operationIds":["op_x1"]}', null, null, null));
+
+        $processor->cancel($this->authorizedPayment(1000), 400, 0);
+
+        self::assertSame(['flush', 'release'], $calls);
+    }
+
+    public function testOnCompleteTransition_flushesTheCaptureBeforeReleasingTheLock(): void
+    {
+        $calls = [];
+        $this->lock = $this->createMock(ILock::class);
+        $this->lock->method('acquire')->willReturn(true);
+        $this->lock->method('release')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'release';
+        });
+        $this->entityManager->method('flush')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'flush';
+        });
+        $processor = new AuthorizedPaymentOperationProcessor($this->operator, $this->lock, $this->entityManager, $this->stateMachine, $this->clock, $this->createMock(LoggerInterface::class));
+        $this->operator->method('capture')->willReturn($this->captureOutput('op_c1'));
+
+        $processor->onCompleteTransition($this->transitionEvent($this->authorizedPayment(1000)));
+
+        self::assertSame(['flush', 'release'], $calls);
+    }
+
+    public function testCapture_whenTheFlushFailsAfterUpcAccepted_releasesTheLockAndRethrows(): void
+    {
+        $this->lock = $this->createMock(ILock::class);
+        $this->lock->method('acquire')->willReturn(true);
+        $this->lock->expects(self::once())->method('release');
+        $this->entityManager->method('flush')->willThrowException(new \RuntimeException('connection lost'));
+        $processor = new AuthorizedPaymentOperationProcessor($this->operator, $this->lock, $this->entityManager, $this->stateMachine, $this->clock, $this->createMock(LoggerInterface::class));
+        $this->operator->expects(self::once())->method('capture')->willReturn($this->captureOutput('op_c1'));
+
+        $this->expectException(\RuntimeException::class);
+
+        $processor->capture($this->authorizedPayment(1000), 300, 0);
+    }
+
+    public function testCapture_refusedByUpc_flushesNothing(): void
+    {
+        $this->operator->method('capture')->willThrowException(new PaymentNotCapturableException('nope'));
+        $this->entityManager->expects(self::never())->method('flush');
+
+        $this->catchRefusal(fn () => $this->processor->capture($this->authorizedPayment(1000), 300, 0));
+    }
+
     public function testCapture_whileAnotherOperationHoldsTheLock_isRefused(): void
     {
         $lock = $this->createMock(ILock::class);
         $lock->method('acquire')->with('payplug_upc_authorization_42', 30)->willReturn(false);
-        $processor = new AuthorizedPaymentOperationProcessor($this->operator, $lock, $this->stateMachine, $this->clock, $this->createMock(LoggerInterface::class));
+        $processor = new AuthorizedPaymentOperationProcessor($this->operator, $lock, $this->entityManager, $this->stateMachine, $this->clock, $this->createMock(LoggerInterface::class));
         $this->operator->expects(self::never())->method('capture');
 
         $exception = $this->catchRefusal(fn () => $processor->capture($this->authorizedPayment(1000), 300));

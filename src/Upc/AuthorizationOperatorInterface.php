@@ -43,7 +43,7 @@ interface AuthorizationOperatorInterface
         string $paymentId,
         string $orderId,
         ?int $amount,
-        int $sequence = 1,
         ?string $currency = null,
+        int $sequence = 1,
     ): CancellationOutput;
 }

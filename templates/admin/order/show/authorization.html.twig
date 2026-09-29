@@ -63,7 +63,7 @@
                         <div class="input-group">
                             <input type="text" inputmode="decimal" class="form-control" name="amount"
                                    id="payplug-capture-amount-{{ payment.id }}"
-                                   placeholder="{{ (authorization.remaining_amount / 100)|number_format(2, '.', '') }}">
+                                   placeholder="{{ authorization.remaining_amount_input }}">
                             <span class="input-group-text">{{ currency }}</span>
                             <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('payplug-capture', payment.id) }}>
                                 {{ ux_icon('tabler:cash') }} {{ 'payplug_sylius_payplug_plugin.admin.authorization.capture'|trans }}
@@ -85,7 +85,7 @@
                         <div class="input-group">
                             <input type="text" inputmode="decimal" class="form-control" name="amount"
                                    id="payplug-cancel-amount-{{ payment.id }}"
-                                   placeholder="{{ (authorization.remaining_amount / 100)|number_format(2, '.', '') }}">
+                                   placeholder="{{ authorization.remaining_amount_input }}">
                             <span class="input-group-text">{{ currency }}</span>
                             <button type="submit" class="btn btn-outline-danger" {{ sylius_test_html_attribute('payplug-cancel', payment.id) }}>
                                 {{ ux_icon('tabler:x') }} {{ 'payplug_sylius_payplug_plugin.admin.authorization.cancel'|trans }}

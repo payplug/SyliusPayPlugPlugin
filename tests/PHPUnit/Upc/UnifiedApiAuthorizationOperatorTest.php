@@ -108,7 +108,7 @@ final class UnifiedApiAuthorizationOperatorTest extends TestCase
 
         $this->expectException(PartialCancellationNotAllowedException::class);
 
-        $this->operator->cancel($this->hostedFieldsPaymentMethod('acct_123'), 'pay_123', 'order_1', 400, 1, 'USD');
+        $this->operator->cancel($this->hostedFieldsPaymentMethod('acct_123'), 'pay_123', 'order_1', 400, 'USD', 1);
     }
 
     /**
@@ -136,7 +136,7 @@ final class UnifiedApiAuthorizationOperatorTest extends TestCase
             ))
             ->willReturn(['status' => 200, 'body' => '{"execCode":"0000","operationIds":["op_v1"]}']);
 
-        $this->operator->cancel($this->hostedFieldsPaymentMethod('acct_123'), 'pay_123', 'order_1', 1000, 1, 'USD');
+        $this->operator->cancel($this->hostedFieldsPaymentMethod('acct_123'), 'pay_123', 'order_1', 1000, 'USD', 1);
     }
 
     private function hostedFieldsPaymentMethod(string $accountId): PaymentMethodInterface&MockObject

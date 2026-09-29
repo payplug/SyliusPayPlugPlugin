@@ -34,3 +34,4 @@ payplug_sylius_payplug_plugin:
                 multiple_capture_not_allowed: Con il tuo account PayPlug è possibile un solo incasso su questa autorizzazione, ed è già stato effettuato. L'importo residuo non può essere incassato. Per i prossimi ordini, incassa l'importo finale in una sola volta, oppure contatta PayPlug per attivare l'incasso multiplo.
                 payment_not_found: Questo pagamento non è stato trovato presso PayPlug. Verifica che il metodo di pagamento sia collegato all'account PayPlug corretto.
                 api_error: L'operazione non è stata eseguita a causa di un errore PayPlug. Il pagamento non è stato modificato; riprova tra qualche istante.
+                unexpected_error: L'operazione potrebbe essere stata eseguita da PayPlug, ma non è stato possibile registrarla qui. Verifica il pagamento nel tuo portale PayPlug prima di riprovare, per non catturare o annullare due volte.
