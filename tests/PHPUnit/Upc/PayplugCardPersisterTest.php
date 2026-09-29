@@ -121,7 +121,7 @@ final class PayplugCardPersisterTest extends TestCase
             $payment,
             $method,
             [
-                'hosted_fields_selected_brand' => 'CB',
+                'hosted_fields_selected_brand' => 'MASTERCARD',
                 'hosted_fields_last4' => '0000',
                 'hosted_fields_expiration_month' => 1,
                 'hosted_fields_expiration_year' => 2020,
@@ -220,6 +220,7 @@ final class PayplugCardPersisterTest extends TestCase
     {
         return [
             'brand not in the allowed list' => [['hosted_fields_selected_brand' => 'AMEX'], 'getBrand', ''],
+            'CB is not supported by Hosted Fields' => [['hosted_fields_selected_brand' => 'CB'], 'getBrand', ''],
             'last4 not 4 digits' => [['hosted_fields_last4' => '42'], 'getLast4', ''],
             'last4 not numeric' => [['hosted_fields_last4' => 'abcd'], 'getLast4', ''],
             'last4 with trailing newline' => [['hosted_fields_last4' => "4242\n"], 'getLast4', ''],
