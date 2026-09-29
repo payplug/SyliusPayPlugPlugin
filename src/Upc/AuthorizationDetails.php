@@ -41,8 +41,6 @@ final class AuthorizationDetails
 
     public const OPERATION_CANCELLATION = 'cancellation';
 
-    private const LOCK_KEY_PREFIX = 'payplug_upc_authorization_';
-
     /**
      * How long before maxCaptureDate the admin starts warning the merchant that the
      * authorization is about to lapse.
@@ -65,17 +63,6 @@ final class AuthorizationDetails
     }
 
     /**
-     * The lock guarding read-modify-write access to this bookkeeping — shared by
-     * AuthorizedPaymentOperationProcessor (whose read-modify-write spans the capture/cancel
-     * network call) and HostedFieldsWebhookNotificationHandler (flagging one of those operations
-     * failed), for the same lost-update reason RefundDetailsLockKey documents for refunds.
-     */
-    public static function lockKey(mixed $paymentId): string
-    {
-        return self::LOCK_KEY_PREFIX . ResourceIdentifier::toString($paymentId);
-    }
-
-    /**
      * The details a freshly created authorization-only payment starts with. $fallbackAmount (the
      * Sylius payment's own amount) only stands in when the creation response carried no amount
      * at all — e.g. a 3DS-pending response, whose authorization is not granted yet.
@@ -94,25 +81,6 @@ final class AuthorizationDetails
             self::CAPTURES => [],
             self::CANCELLATIONS => [],
         ];
-    }
-
-    /**
-     * A 3DS authorization only learns its deadline from the webhook confirming it, not from the
-     * creation response — read it off that notification's own raw body when present.
-     *
-     * @param mixed[] $details
-     *
-     * @return mixed[]
-     */
-    public static function withMaxCaptureDateFromBody(array $details, string $rawBody): array
-    {
-        $decoded = \json_decode($rawBody, true);
-        $maxCaptureDate = \is_array($decoded) ? ($decoded['maxCaptureDate'] ?? null) : null;
-        if (!\is_string($maxCaptureDate) || '' === $maxCaptureDate) {
-            return $details;
-        }
-
-        return [...$details, self::MAX_CAPTURE_DATE => $maxCaptureDate];
     }
 
     /**
