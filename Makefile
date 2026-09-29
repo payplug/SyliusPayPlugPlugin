@@ -47,7 +47,10 @@ install-sylius:
 	@echo "Installing Sylius ${SYLIUS_VERSION} using TestApplication"
 	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
 	${COMPOSER} install
-	${COMPOSER} require --dev sylius/test-application:"^${SYLIUS_VERSION}@alpha" -n -W # TODO: Remove alpha when stable
+	@# Capped below 2.3: Sylius 2.3 (PHP 8.3+, so only resolved on the PHP 8.4 cells) drops knp-gaufrette-bundle,
+	@# which sylius/refund-plugin's config still loads, so test-application:install fails. Lift once RefundPlugin follows.
+	@# sylius/sylius is capped explicitly: older test-application releases (the 2.0.0 cell) do not constrain it and let it float to 2.3.
+	${COMPOSER} require --dev sylius/test-application:">=${SYLIUS_VERSION},<2.3@alpha" sylius/sylius:"<2.3" -n -W # TODO: Remove alpha when stable
 	${COMPOSER} test-application:install
 
 behat-configure: ## Configure Behat

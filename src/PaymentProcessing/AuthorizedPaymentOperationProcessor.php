@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\AuthorizationOperationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationLockKey;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationOperatorInterface;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
 use PayplugUnifiedCore\Contracts\ILock;
@@ -358,7 +359,7 @@ final class AuthorizedPaymentOperationProcessor
      */
     private function runLocked(PaymentInterface $payment, \Closure $operation): void
     {
-        $lockKey = AuthorizationDetails::lockKey($payment->getId());
+        $lockKey = AuthorizationLockKey::forPaymentId($payment->getId());
         if (!$this->lock->acquire($lockKey, self::LOCK_TTL_SECONDS)) {
             throw new AuthorizationOperationException(self::ERROR_KEY_PREFIX . 'in_progress');
         }

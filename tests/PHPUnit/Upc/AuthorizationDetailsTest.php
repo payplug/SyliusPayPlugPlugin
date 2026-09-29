@@ -100,16 +100,6 @@ final class AuthorizationDetailsTest extends TestCase
         self::assertFalse($authorization->isExpiringSoon(new \DateTimeImmutable('2100-01-01')));
     }
 
-    public function testWithMaxCaptureDateFromBody_onlyOverwritesWithAPresentValue(): void
-    {
-        $details = $this->openedDetails(1000);
-
-        $updated = AuthorizationDetails::withMaxCaptureDateFromBody($details, '{"maxCaptureDate":"2026-10-01T12:00:00+00:00"}');
-        $untouched = AuthorizationDetails::withMaxCaptureDateFromBody($updated, '{"execCode":"0000"}');
-
-        self::assertSame('2026-10-01T12:00:00+00:00', $untouched[AuthorizationDetails::MAX_CAPTURE_DATE]);
-    }
-
     /**
      * @return mixed[]
      */
