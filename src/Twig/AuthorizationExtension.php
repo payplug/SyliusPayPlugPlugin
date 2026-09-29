@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Twig;
 
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AuthorizedPaymentOperationProcessor;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
+use PayplugUnifiedCore\Utilities\Helpers\AmountHelper;
 use Psr\Clock\ClockInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Twig\Extension\AbstractExtension;
@@ -38,6 +39,7 @@ final class AuthorizationExtension extends AbstractExtension
      *     captured_amount: int,
      *     cancelled_amount: int,
      *     remaining_amount: int,
+     *     remaining_amount_input: string,
      *     max_capture_date: \DateTimeImmutable|null,
      *     expired: bool,
      *     expiring_soon: bool,
@@ -60,6 +62,8 @@ final class AuthorizationExtension extends AbstractExtension
             'captured_amount' => $authorization->capturedAmount(),
             'cancelled_amount' => $authorization->cancelledAmount(),
             'remaining_amount' => $authorization->remainingAmount(),
+            // What the amount fields' placeholder shows: the same decimal notation they accept.
+            'remaining_amount_input' => \number_format(AmountHelper::fromCents($authorization->remainingAmount()), 2, '.', ''),
             'max_capture_date' => $authorization->maxCaptureDate(),
             'expired' => $authorization->isExpired($now),
             'expiring_soon' => $authorization->isExpiringSoon($now),

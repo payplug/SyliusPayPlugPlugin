@@ -219,7 +219,22 @@ admin shows an explicit message, e.g.:
 - another operation is already in progress on this payment.
 
 A form submitted twice (double click, browser back + resubmit) is refused as *stale*: each form
-carries the state it was built against, and operations on a same payment are serialized.
+carries the state it was built against, and operations on a same payment are serialized. The
+operation is saved before that serialization lock is released, so a second request can never see
+the state from before it.
+
+If PayPlug accepted the operation but Sylius failed to save it (database error), the admin says the
+operation **may have been performed** and asks to check the payment in the PayPlug portal before
+retrying, and a `critical` entry is written to the log. Retrying blindly would capture twice.
+
+### Partial operations and Sylius refunds
+
+Sylius has no notion of a partial capture or a partial cancellation, so the plugin does not try to
+bend it: `Payment::amount` stays at the authorized amount, and Sylius's order payment state and
+RefundPlugin's refundable total are left untouched. What was really captured is tracked in the
+payment details; refunds sent to PayPlug are computed from it. After a partial cancellation followed
+by a capture of the rest, the order therefore reads as paid for the authorized amount, while the
+captured amount is the smaller one shown in the block on the order screen.
 
 ### Notifications and operations performed outside Sylius
 

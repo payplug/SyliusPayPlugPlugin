@@ -34,3 +34,4 @@ payplug_sylius_payplug_plugin:
                 multiple_capture_not_allowed: Une seule capture est possible sur cette autorisation avec votre compte PayPlug ; la capture précédente a déjà été effectuée. Le montant restant ne peut pas être capturé. Pour les prochaines commandes, capturez le montant final en une seule fois, ou contactez PayPlug pour activer la capture multiple.
                 payment_not_found: Ce paiement est introuvable chez PayPlug. Vérifiez que le moyen de paiement est connecté au bon compte PayPlug.
                 api_error: L'opération n'a pas pu être effectuée à cause d'une erreur PayPlug. Le paiement n'a pas été modifié ; réessayez dans quelques instants.
+                unexpected_error: L'opération a peut-être été effectuée par PayPlug, mais elle n'a pas pu être enregistrée ici. Vérifiez le paiement dans votre portail PayPlug avant de réessayer, pour ne pas capturer ou annuler deux fois.

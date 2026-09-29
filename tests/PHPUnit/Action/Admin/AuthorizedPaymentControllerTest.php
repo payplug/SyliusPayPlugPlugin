@@ -83,11 +83,11 @@ final class AuthorizedPaymentControllerTest extends TestCase
             new AuthorizedPaymentOperationProcessor(
                 $this->operator,
                 $lock,
+                $this->entityManager,
                 $stateMachine,
                 new MockClock('2026-09-24T10:00:00+00:00'),
                 $this->createMock(LoggerInterface::class),
             ),
-            $this->entityManager,
             $router,
             $this->authorizationChecker,
             $csrfTokenManager,
@@ -108,6 +108,9 @@ final class AuthorizedPaymentControllerTest extends TestCase
         yield 'too many decimals is refused downstream' => ['12.345', 0];
         yield 'negative is refused downstream' => ['-5', 0];
         yield 'garbage is refused downstream' => ['abc', 0];
+        yield 'nine digits is the ceiling' => ['999999999', 99999999900];
+        yield 'ten digits is refused downstream' => ['1234567890', 0];
+        yield 'an overflowing amount is refused, not a TypeError' => ['99999999999999999999', 0];
     }
 
     /**
@@ -175,8 +178,7 @@ final class AuthorizedPaymentControllerTest extends TestCase
         $authorizationChecker->method('isGranted')->willReturn(false);
         $controller = new AuthorizedPaymentController(
             $this->paymentRepository,
-            new AuthorizedPaymentOperationProcessor($this->operator, $this->createMock(ILock::class), $this->createMock(StateMachineInterface::class), new MockClock(), $this->createMock(LoggerInterface::class)),
-            $this->entityManager,
+            new AuthorizedPaymentOperationProcessor($this->operator, $this->createMock(ILock::class), $this->entityManager, $this->createMock(StateMachineInterface::class), new MockClock(), $this->createMock(LoggerInterface::class)),
             $this->createMock(RouterInterface::class),
             $authorizationChecker,
             null,
@@ -199,11 +201,59 @@ final class AuthorizedPaymentControllerTest extends TestCase
         $this->controller->capture($this->request(['amount' => '']), 8, 42);
     }
 
+    public function testCapture_withoutAVersion_isABadRequestAndMovesNoMoney(): void
+    {
+        $this->paymentRepository->method('find')->willReturn($this->authorizedPayment());
+        $this->operator->expects(self::never())->method('capture');
+
+        $this->expectException(BadRequestHttpException::class);
+
+        $this->controller->capture($this->request(['amount' => ''], self::VALID_TOKEN, false), 7, 42);
+    }
+
+    public function testCancel_withANonNumericVersion_isABadRequestAndMovesNoMoney(): void
+    {
+        $this->paymentRepository->method('find')->willReturn($this->authorizedPayment());
+        $this->operator->expects(self::never())->method('cancel');
+
+        $this->expectException(BadRequestHttpException::class);
+
+        $this->controller->cancel($this->request(['amount' => '', 'version' => 'abc']), 7, 42);
+    }
+
+    public function testCapture_withAnOverflowingAmount_isRefusedAsInvalidWithoutCallingUpc(): void
+    {
+        $this->paymentRepository->method('find')->willReturn($this->authorizedPayment());
+        $this->operator->expects(self::never())->method('capture');
+
+        $request = $this->request(['amount' => '99999999999999999999', 'version' => '0']);
+        $this->controller->capture($request, 7, 42);
+
+        self::assertSame(['payplug_sylius_payplug_plugin.admin.authorization.error.invalid_amount'], $this->flashes($request, 'error'));
+    }
+
+    public function testCapture_whenTheFlushFailsAfterUpcAccepted_tellsTheMerchantToCheckBeforeRetrying(): void
+    {
+        $this->paymentRepository->method('find')->willReturn($this->authorizedPayment());
+        $this->operator->method('capture')->willReturn(new CaptureOutput(200, '{"operationIds":["op_c1"]}', null, null, null));
+        $this->entityManager->method('flush')->willThrowException(new \RuntimeException('connection lost'));
+
+        $request = $this->request(['amount' => '', 'version' => '0']);
+        $this->controller->capture($request, 7, 42);
+
+        // Not "the payment was not changed": UPC did accept the capture.
+        self::assertSame(['payplug_sylius_payplug_plugin.admin.authorization.error.unexpected_error'], $this->flashes($request, 'error'));
+    }
+
     /**
      * @param array<string, string> $body
      */
-    private function request(array $body, string $csrfToken = self::VALID_TOKEN): Request
+    private function request(array $body, string $csrfToken = self::VALID_TOKEN, bool $withVersion = true): Request
     {
+        if ($withVersion) {
+            $body += ['version' => '0'];
+        }
+
         $request = new Request([], [...$body, '_csrf_token' => $csrfToken]);
         $request->setSession(new Session(new MockArraySessionStorage()));
 

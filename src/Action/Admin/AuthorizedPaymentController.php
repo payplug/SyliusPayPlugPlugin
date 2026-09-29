@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Action\Admin;
 
-use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\AuthorizationOperationException;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AuthorizedPaymentOperationProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
+use PayplugUnifiedCore\Utilities\Helpers\AmountHelper;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -55,7 +55,6 @@ final class AuthorizedPaymentController
     public function __construct(
         private PaymentRepositoryInterface $paymentRepository,
         private AuthorizedPaymentOperationProcessor $processor,
-        private EntityManagerInterface $entityManager,
         private RouterInterface $router,
         private AuthorizationCheckerInterface $authorizationChecker,
         private ?CsrfTokenManagerInterface $csrfTokenManager,
@@ -65,14 +64,14 @@ final class AuthorizedPaymentController
 
     public function capture(Request $request, int $orderId, int $paymentId): Response
     {
-        return $this->handle($request, $orderId, $paymentId, 'capture', function (PaymentInterface $payment, ?int $amount, ?int $version): void {
+        return $this->handle($request, $orderId, $paymentId, 'capture', function (PaymentInterface $payment, ?int $amount, int $version): void {
             $this->processor->capture($payment, $amount, $version);
         });
     }
 
     public function cancel(Request $request, int $orderId, int $paymentId): Response
     {
-        return $this->handle($request, $orderId, $paymentId, 'cancel', function (PaymentInterface $payment, ?int $amount, ?int $version): void {
+        return $this->handle($request, $orderId, $paymentId, 'cancel', function (PaymentInterface $payment, ?int $amount, int $version): void {
             $this->processor->cancel($payment, $amount, $version);
         });
     }
@@ -83,30 +82,34 @@ final class AuthorizedPaymentController
         int $paymentId,
         string $action,
         \Closure $operation,
-    ): Response
-    {
+    ): Response {
         if (!$this->authorizationChecker->isGranted(self::ADMIN_ROLE)) {
             throw new AccessDeniedHttpException('Only an administrator may capture or cancel a payment.');
         }
 
         $this->denyUnlessCsrfTokenIsValid($request, $paymentId);
         $payment = $this->findOrderPayment($orderId, $paymentId);
+        // Outside the try below: a malformed request is a 400, not something to swallow as an
+        // unexpected error.
+        $version = self::parseVersion($request);
 
         try {
-            $operation($payment, self::parseAmount($request->request->getString('amount')), self::parseVersion($request));
-            $this->entityManager->flush();
+            // The processor flushes while it still holds its lock, see there.
+            $operation($payment, self::parseAmount($request->request->getString('amount')), $version);
             $this->addFlashMessage($request, 'success', self::FLASH_PREFIX . $action . '_success');
         } catch (AuthorizationOperationException $exception) {
             $this->addFlashMessage($request, 'error', $exception->getTranslationKey(), $exception->getTranslationParameters());
         } catch (\Throwable $exception) {
-            // Reached only after the Unified API accepted the operation (e.g. the flush failed):
-            // the money moved, but Sylius may not reflect it — worth a human's attention.
+            // Anything but a refusal: typically the flush failing after the Unified API accepted the
+            // operation. The money may have moved without Sylius recording it, so the merchant is
+            // told to check at PayPlug before retrying (a retry would capture a second time) and
+            // a human is alerted.
             $this->logger->critical('[PayPlug][UPC] Unexpected error during an authorization operation.', [
                 'sylius_payment_id' => $paymentId,
                 'action' => $action,
                 'exception' => $exception,
             ]);
-            $this->addFlashMessage($request, 'error', self::FLASH_PREFIX . 'error.api_error');
+            $this->addFlashMessage($request, 'error', self::FLASH_PREFIX . 'error.unexpected_error');
         }
 
         return new RedirectResponse($this->router->generate('sylius_admin_order_show', ['id' => $orderId]));
@@ -114,8 +117,10 @@ final class AuthorizedPaymentController
 
     /**
      * Blank means "the whole remaining amount". Accepts a decimal comma as well as a dot, since
-     * that is what a French-speaking merchant types; anything else malformed is sent on as an
-     * invalid amount (0) for the processor to refuse with its own explicit message.
+     * that is what a French-speaking merchant types; anything else malformed — or longer than nine
+     * digits before the decimal point, which no real capture reaches and which would overflow —
+     * is sent on as an invalid amount (0) for the processor to refuse with its own explicit
+     * message.
      */
     public static function parseAmount(string $raw): ?int
     {
@@ -124,18 +129,26 @@ final class AuthorizedPaymentController
             return null;
         }
 
-        if (1 !== \preg_match('/^(\d+)(?:\.(\d{1,2}))?$/', $raw, $matches)) {
+        if (1 !== \preg_match('/^\d{1,9}(?:\.\d{1,2})?$/', $raw)) {
             return 0;
         }
 
-        return (int) $matches[1] * 100 + (int) \str_pad($matches[2] ?? '0', 2, '0');
+        return AmountHelper::toCents((float) $raw);
     }
 
-    private static function parseVersion(Request $request): ?int
+    /**
+     * The AuthorizationDetails::version() the form was built against. Mandatory here: it is the
+     * replay guard, and a hand-crafted POST must not be able to skip it.
+     */
+    private static function parseVersion(Request $request): int
     {
-        $version = $request->request->get('version');
+        $version = $request->request->getString('version');
 
-        return \is_numeric($version) ? (int) $version : null;
+        if (1 !== \preg_match('/^\d{1,9}$/', $version)) {
+            throw new BadRequestHttpException('Missing or invalid version for the PayPlug authorization request.');
+        }
+
+        return (int) $version;
     }
 
     /**

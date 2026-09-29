@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Exception\Payment\AuthorizationOperationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
@@ -24,6 +25,7 @@ use PayplugUnifiedCore\Exceptions\PaymentNotCapturableException;
 use PayplugUnifiedCore\Exceptions\PaymentNotFoundException;
 use PayplugUnifiedCore\Exceptions\PaymentNotVoidableException;
 use PayplugUnifiedCore\Exceptions\PayplugException;
+use PayplugUnifiedCore\Utilities\Helpers\AmountHelper;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
@@ -51,10 +53,25 @@ use Symfony\Component\Workflow\Event\TransitionEvent;
  * Guarded by $lock per payment plus AuthorizationDetails::version(): UPC's capture/cancel calls
  * take no idempotency key, so a double click or a replayed form would otherwise move real money
  * twice. The lock serializes concurrent submissions; the version, checked once the lock is held,
- * rejects a submission built against a state that has since moved on.
+ * rejects a submission built against a state that has since moved on. The recorded operation is
+ * flushed while the lock is still held: released any earlier, a second request could load the
+ * not-yet-persisted details, pass the version check and capture the same money again.
+ *
+ * Sylius has no notion of a partial capture or a partial void, and this deliberately does not
+ * pretend otherwise: Payment::amount is left at the authorized amount, so RefundPlugin's
+ * refundable total is not bent to fit an operation it wasn't designed for. What was actually
+ * captured is tracked in the payment details (AuthorizationDetails), and RefundPaymentProcessor
+ * refunds that captured amount. See doc/authorized_payment.md.
+ *
+ * Amounts are integers in the minor unit Sylius stores everywhere (two decimals, whatever the
+ * currency), converted for display and input with UPC's AmountHelper.
  */
 final class AuthorizedPaymentOperationProcessor
 {
+    // Three times SyliusUnifiedApiHttpClient's 10 s request timeout, which bounds the capture or
+    // cancel call itself. The OAuth token fetch (SyliusOAuthHttpClient) sets no timeout of its own,
+    // so a cold token on a slow network could in theory outlast this; were the lock to expire
+    // mid-call, a second request could take it and operate on the same authorization.
     private const LOCK_TTL_SECONDS = 30;
 
     private const ERROR_KEY_PREFIX = 'payplug_sylius_payplug_plugin.admin.authorization.error.';
@@ -62,6 +79,7 @@ final class AuthorizedPaymentOperationProcessor
     public function __construct(
         private AuthorizationOperatorInterface $authorizationOperator,
         private ILock $lock,
+        private EntityManagerInterface $entityManager,
         private StateMachineInterface $stateMachine,
         private ClockInterface $clock,
         private LoggerInterface $logger,
@@ -111,6 +129,7 @@ final class AuthorizedPaymentOperationProcessor
 
             if (0 === AuthorizationDetails::fromDetails($payment->getDetails())->remainingAmount()) {
                 $this->applyTransition($payment, PaymentTransitions::TRANSITION_COMPLETE);
+                $this->entityManager->flush();
             }
         });
     }
@@ -140,17 +159,19 @@ final class AuthorizedPaymentOperationProcessor
                     // cancelled, "no amount" would target the original authorization again, so the
                     // exact remainder is sent instead.
                     $amount === $remaining && 0 === $authorization->version() ? null : $amount,
-                    $authorization->version() + 1,
                     $payment->getCurrencyCode(),
+                    $authorization->version() + 1,
                 );
             } catch (PayplugException $exception) {
                 throw $this->refusal($payment, AuthorizationDetails::OPERATION_CANCELLATION, $exception);
             }
 
-            $this->record($payment, AuthorizationDetails::OPERATION_CANCELLATION, $output->body, $amount);
+            $this->record($payment, AuthorizationDetails::OPERATION_CANCELLATION, $output->status, $output->body, $amount);
+            $this->entityManager->flush();
 
             if ($amount === $remaining) {
                 $this->applyTransition($payment, PaymentTransitions::TRANSITION_CANCEL);
+                $this->entityManager->flush();
             }
         });
     }
@@ -207,11 +228,14 @@ final class AuthorizedPaymentOperationProcessor
             throw $this->refusal($payment, AuthorizationDetails::OPERATION_CAPTURE, $exception);
         }
 
-        $this->record($payment, AuthorizationDetails::OPERATION_CAPTURE, $output->body, $amount);
+        $this->record($payment, AuthorizationDetails::OPERATION_CAPTURE, $output->status, $output->body, $amount);
 
         if (null !== $output->maxCaptureDate) {
             $payment->setDetails([...$payment->getDetails(), AuthorizationDetails::MAX_CAPTURE_DATE => $output->maxCaptureDate]);
         }
+
+        // Durable before anything else can throw, and before runLocked() lets go of the lock.
+        $this->entityManager->flush();
     }
 
     /**
@@ -268,14 +292,21 @@ final class AuthorizedPaymentOperationProcessor
      * all). Its absence is logged rather than failing the call: the operation did happen, and
      * refusing to record it would leave the payment out of step with the transaction.
      */
-    private function record(PaymentInterface $payment, string $operation, string $responseBody, int $amount): void
-    {
+    private function record(
+        PaymentInterface $payment,
+        string $operation,
+        int $status,
+        string $responseBody,
+        int $amount,
+    ): void {
         $operationId = self::extractFirstOperationId($responseBody);
         if (null === $operationId) {
             $this->logger->error('[PayPlug][UPC] Authorization operation succeeded but the response carried no operationIds.', [
                 'sylius_payment_id' => $payment->getId(),
                 'operation' => $operation,
-                'response_body' => $responseBody,
+                // Status and execCode only: the body is the API's to shape, keep it out of the logs.
+                'status' => $status,
+                'exec_code' => self::extractExecCode($responseBody),
             ]);
         }
 
@@ -293,8 +324,7 @@ final class AuthorizedPaymentOperationProcessor
         PaymentInterface $payment,
         string $operation,
         PayplugException $exception,
-    ): AuthorizationOperationException
-    {
+    ): AuthorizationOperationException {
         $this->logger->error('[PayPlug][UPC] Authorization operation refused.', [
             'sylius_payment_id' => $payment->getId(),
             'operation' => $operation,
@@ -389,8 +419,16 @@ final class AuthorizedPaymentOperationProcessor
         return \is_string($operationId) && '' !== $operationId ? $operationId : null;
     }
 
+    private static function extractExecCode(string $body): int|string|null
+    {
+        $decoded = \json_decode($body, true);
+        $execCode = \is_array($decoded) ? ($decoded['execCode'] ?? null) : null;
+
+        return \is_int($execCode) || \is_string($execCode) ? $execCode : null;
+    }
+
     private static function formatAmount(int $amount, ?string $currencyCode): string
     {
-        return \trim(\number_format($amount / 100, 2, '.', ' ') . ' ' . ($currencyCode ?? ''));
+        return \trim(\number_format(AmountHelper::fromCents($amount), 2, '.', ' ') . ' ' . ($currencyCode ?? ''));
     }
 }
