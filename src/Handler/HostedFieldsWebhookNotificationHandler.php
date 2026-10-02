@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Handler;
 
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationLockKey;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationWebhookBody;
 use PayPlug\SyliusPayPlugPlugin\Upc\CardDataFromPaymentMethodExtractor;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
@@ -104,48 +107,150 @@ class HostedFieldsWebhookNotificationHandler
         // (see ExecCodeMapper), so this classification is made locally, from ids this plugin
         // itself generated and already knows the meaning of.
         $refundAmount = self::findMatchingRefundAmount($payment, $operationData->operationId);
-        $expectedAmount = $refundAmount ?? $payment->getAmount();
 
-        if (!$this->matchesPayment($payment, $operationData, $expectedAmount)) {
+        // Same local classification for a deferred-capture payment's captures/cancellations:
+        // AuthorizedPaymentOperationProcessor recorded each one's operation id when it triggered
+        // it, and already applied its effect on the payment state synchronously — the webhook
+        // only confirms it.
+        $authorizationOperation = null === $refundAmount
+            ? AuthorizationDetails::fromDetails($payment->getDetails())->findOperation($operationData->operationId)
+            : null;
+        if (null !== $authorizationOperation) {
+            $this->treatAuthorizationOperation($payment, $rawBody, $operationData, $authorizationOperation);
+
             return;
         }
 
-        if (null !== $refundAmount) {
-            if (PaymentOutcome::PAID !== $operationData->outcome) {
-                // The refund itself failed (or is still pending) per its own execCode — this must
-                // never be forced into REFUNDED (the money never moved), nor forwarded as-is to
-                // the payment's own state machine: PaymentOutcome::FAILED maps to
-                // TRANSITION_FAIL (see SyliusOrderStateMutator), which means "this PAYMENT
-                // failed," not "this refund attempt failed" — the underlying payment already
-                // succeeded, only the refund didn't. Track/log only, so this notification stops
-                // being redelivered without ever touching the Payment's own state.
-                $this->logger->error('[PayPlug][UPC] Refund confirmation reports a non-success outcome.', [
-                    'sylius_payment_id' => $payment->getId(),
-                    'operation_id' => $operationData->operationId,
-                    'outcome' => $operationData->outcome,
-                    'exec_code' => $operationData->execCode,
-                ]);
+        if (null === $refundAmount) {
+            $this->resolveAuthorizationOutcome($payment, $rawBody, $operationData);
+        }
 
-                if (!$this->markMatchedRefundAsFailedLocked($payment, $operationData->operationId)) {
-                    // Couldn't acquire the lock guarding this payment's $details['refunds'] —
-                    // RefundPaymentProcessor is creating a refund for it right now (see
-                    // markMatchedRefundAsFailedLocked()'s own docblock). Return without calling
-                    // applyLocked(): isTreated()/markTreated() are never touched, so this
-                    // notification stays free to be redelivered and retried once that refund
-                    // creation has released the lock, instead of being marked treated without its
-                    // 'failed' flag ever actually being recorded.
-                    return;
-                }
+        $this->applyConfirmation($payment, $rawBody, $operationData, $refundAmount);
+    }
 
-                $this->applyLocked($payment, $rawBody, $operationData, applyOutcome: false);
+    // Split out of treat() to keep its own return count within SonarCloud's limit (php:S1142).
+    // $refundAmount is non-null when the notification confirms one of the payment's recorded refunds.
+    private function applyConfirmation(
+        PaymentInterface $payment,
+        string $rawBody,
+        OperationData $operationData,
+        ?int $refundAmount,
+    ): void {
+        if (!$this->matchesPayment($payment, $operationData, $refundAmount ?? $payment->getAmount())) {
+            return;
+        }
 
+        if (null === $refundAmount) {
+            $this->applyLocked($payment, $rawBody, $operationData);
+
+            return;
+        }
+
+        if (PaymentOutcome::PAID === $operationData->outcome) {
+            $operationData->outcome = PaymentOutcome::REFUNDED;
+            $this->applyLocked($payment, $rawBody, $operationData);
+
+            return;
+        }
+
+        $this->treatFailedRefund($payment, $rawBody, $operationData);
+    }
+
+    // The refund itself failed (or is still pending) per its own execCode — this must never be
+    // forced into REFUNDED (the money never moved), nor forwarded as-is to the payment's own state
+    // machine: PaymentOutcome::FAILED maps to TRANSITION_FAIL (see SyliusOrderStateMutator), which
+    // means "this PAYMENT failed," not "this refund attempt failed" — the underlying payment
+    // already succeeded, only the refund didn't. Track/log only, so this notification stops being
+    // redelivered without ever touching the Payment's own state.
+    private function treatFailedRefund(PaymentInterface $payment, string $rawBody, OperationData $operationData): void
+    {
+        $this->logger->error('[PayPlug][UPC] Refund confirmation reports a non-success outcome.', [
+            'sylius_payment_id' => $payment->getId(),
+            'operation_id' => $operationData->operationId,
+            'outcome' => $operationData->outcome,
+            'exec_code' => $operationData->execCode,
+        ]);
+
+        if (!$this->markMatchedRefundAsFailedLocked($payment, $operationData->operationId)) {
+            // Couldn't acquire the lock guarding this payment's $details['refunds'] —
+            // RefundPaymentProcessor is creating a refund for it right now (see
+            // markMatchedRefundAsFailedLocked()'s own docblock). Return without calling
+            // applyLocked(): isTreated()/markTreated() are never touched, so this notification
+            // stays free to be redelivered and retried once that refund creation has released the
+            // lock, instead of being marked treated without its 'failed' flag ever being recorded.
+            return;
+        }
+
+        $this->applyLocked($payment, $rawBody, $operationData, applyOutcome: false);
+    }
+
+    /**
+     * For an authorization-only payment, the confirmation of its own creation reads "authorized",
+     * never "paid" (see AuthorizationDetails::resolveCreationOutcome()) — and, after a 3DS
+     * challenge, is also the first place its capture deadline shows up. Any other operation id
+     * reaching here on such a payment is one Sylius never triggered: mapping it to AUTHORIZED
+     * too keeps it from ever completing the payment on a guess.
+     */
+    private function resolveAuthorizationOutcome(
+        PaymentInterface $payment,
+        string $rawBody,
+        OperationData $operationData,
+    ): void {
+        $authorization = AuthorizationDetails::fromDetails($payment->getDetails());
+        if (!$authorization->isDeferred()) {
+            return;
+        }
+
+        $operationData->outcome = $authorization->resolveCreationOutcome($operationData->outcome);
+        if (PaymentOutcome::AUTHORIZED === $operationData->outcome) {
+            $payment->setDetails(AuthorizationWebhookBody::withMaxCaptureDate($payment->getDetails(), $rawBody));
+        }
+    }
+
+    /**
+     * A success confirms what the payment state already reflects, so it is only tracked as
+     * treated. A failure means an operation accepted synchronously did not actually go through:
+     * its entry is flagged failed (so the remaining capturable amount counts it back in) and, since
+     * the payment may already have moved on to "completed"/"cancelled" on the strength of it,
+     * logged critically for the merchant to reconcile — no automatic transition can undo those.
+     *
+     * @param array{operation: string, amount: int} $authorizationOperation
+     */
+    private function treatAuthorizationOperation(
+        PaymentInterface $payment,
+        string $rawBody,
+        OperationData $operationData,
+        array $authorizationOperation,
+    ): void {
+        if (!$this->matchesPayment($payment, $operationData, $authorizationOperation['amount'])) {
+            return;
+        }
+
+        if (PaymentOutcome::PAID !== $operationData->outcome) {
+            $this->logger->critical('[PayPlug][UPC] An authorization operation accepted earlier is reported as not completed; the payment needs manual reconciliation.', [
+                'sylius_payment_id' => $payment->getId(),
+                'payment_state' => $payment->getState(),
+                'operation' => $authorizationOperation['operation'],
+                'operation_id' => $operationData->operationId,
+                'outcome' => $operationData->outcome,
+                'exec_code' => $operationData->execCode,
+            ]);
+
+            $lockKey = AuthorizationLockKey::forPaymentId($payment->getId());
+            if (!$this->lock->acquire($lockKey, self::LOCK_TTL_SECONDS)) {
+                // An operation on this payment is in progress; leave this notification untreated
+                // so its redelivery flags the entry once the lock is free.
                 return;
             }
 
-            $operationData->outcome = PaymentOutcome::REFUNDED;
+            try {
+                $payment->setDetails(AuthorizationDetails::withOperationFailed($payment->getDetails(), $authorizationOperation['operation'], $operationData->operationId));
+            } finally {
+                $this->lock->release($lockKey);
+            }
         }
 
-        $this->applyLocked($payment, $rawBody, $operationData);
+        $this->applyLocked($payment, $rawBody, $operationData, applyOutcome: false);
     }
 
     // Split out of treat() to keep its own return count within SonarCloud's limit (php:S1142) —
@@ -153,7 +258,7 @@ class HostedFieldsWebhookNotificationHandler
     // idempotency, apply" unit, not a fragment that needs to share treat()'s return budget.
     // $applyOutcome false skips the orderStateMutator call while still tracking the notification
     // as treated — used when the resolved $operationData->outcome must not reach the Payment's
-    // own state machine at all (see treat()'s own non-success-refund branch above); a refund
+    // own state machine at all (see treatFailedRefund() above); a refund
     // confirmation never reaches maybeSaveCard() either way, since that only ever runs alongside
     // a genuine PAID outcome being applied.
     private function applyLocked(
@@ -180,7 +285,11 @@ class HostedFieldsWebhookNotificationHandler
             }
             $this->paymentRepository->markTreated($operationData->operationId);
 
-            if (PaymentOutcome::PAID === $operationData->outcome) {
+            // AUTHORIZED too: a deferred-capture payment's card is saved once its authorization
+            // is confirmed, exactly like an immediate one's once it is paid. Never for a
+            // notification only tracked ($applyOutcome false) — a capture/cancellation
+            // confirmation also reads PAID, and has no card to save.
+            if ($applyOutcome && \in_array($operationData->outcome, [PaymentOutcome::PAID, PaymentOutcome::AUTHORIZED], true)) {
                 $this->maybeSaveCard($payment, $rawBody);
             }
         } finally {

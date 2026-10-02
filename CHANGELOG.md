@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The connected PayPlug account is displayed on each gateway's update screen
 - "Disconnect this account" per gateway, clearing that gateway's credentials without touching others
 - Channels already claimed by another enabled gateway of the same type are rendered unselectable
+- **Hosted Fields deferred capture**: with deferred capture enabled, Hosted Fields payments are
+  created as authorizations and captured (in full, partially, several times) or cancelled (in full
+  or partially) from the admin order screen, with the remaining amount and capture deadline shown
 
 > [!IMPORTANT]
 > Merchants will need to contact support to switch to the new authentication method.
