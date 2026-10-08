@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\MessageHandler;
 
-use DateTime;
-use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
 use PayPlug\SyliusPayPlugPlugin\Exception\ApiRefundException;
@@ -20,10 +18,8 @@ use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\RefundPaymentProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
-use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
-use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Core\Repository\PaymentRepositoryInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
@@ -33,9 +29,7 @@ use Sylius\RefundPlugin\Exception\InvalidRefundAmount;
 use Sylius\RefundPlugin\StateResolver\RefundPaymentTransitions;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
-use Webmozart\Assert\Assert;
 
 #[AsMessageHandler]
 final class RefundPaymentGeneratedHandler
@@ -49,8 +43,6 @@ final class RefundPaymentGeneratedHandler
         private RefundPaymentProcessor $refundPaymentProcessor,
         private LoggerInterface $logger,
         private RequestStack $requestStack,
-        private OrderRepositoryInterface $orderRepository,
-        private TranslatorInterface $translator,
     ) {
     }
 
@@ -98,8 +90,6 @@ final class RefundPaymentGeneratedHandler
                 return;
             }
 
-            $this->checkOneyRequirements($payment, $message);
-
             $this->processRefund($payment, $message);
         } catch (InvalidRefundAmount $exception) {
             $this->requestStack->getSession()->getFlashBag()->add('error', $exception->getMessage());
@@ -122,60 +112,5 @@ final class RefundPaymentGeneratedHandler
         $this->stateMachine->apply($refundPayment, RefundPaymentTransitions::GRAPH, RefundPaymentTransitions::TRANSITION_COMPLETE);
 
         $this->entityManager->flush();
-    }
-
-    private function hasLessThanFortyEightHoursTransaction(PaymentInterface $payment, string $orderNumber): bool
-    {
-        $now = new DateTime();
-
-        /** @var OrderInterface $order */
-        $order = $this->orderRepository->findOneByNumber($orderNumber);
-
-        Assert::isInstanceOf($order->getLastPayment(), PaymentInterface::class);
-        Assert::isInstanceOf($order->getLastPayment()->getCreatedAt(), DateTimeInterface::class);
-
-        /** @var RefundHistory|null $refundHistory */
-        $refundHistory = $this->payplugRefundHistoryRepository->findLastProcessedRefundForPayment($payment);
-        if (!$refundHistory instanceof RefundHistory) {
-            Assert::isInstanceOf($order->getLastPayment()->getCreatedAt(), DateTimeInterface::class);
-
-            return $this->isLessThanFortyEightHours(
-                $order->getLastPayment()->getCreatedAt(),
-                $now,
-            );
-        }
-
-        if ($this->isLessThanFortyEightHours($order->getLastPayment()->getCreatedAt(), $now)) {
-            return true;
-        }
-
-        return $this->isLessThanFortyEightHours(
-            $refundHistory->getCreatedAt(),
-            $now,
-        );
-    }
-
-    private function isLessThanFortyEightHours(DateTimeInterface $from, DateTimeInterface $to): bool
-    {
-        $diff = $to->diff($from);
-        Assert::integer($diff->days);
-        $hours = $diff->h + ($diff->days * 24);
-
-        return $hours < OneyGatewayFactory::REFUND_WAIT_TIME_IN_HOURS;
-    }
-
-    private function checkOneyRequirements(
-        PaymentInterface $payment,
-        RefundPaymentGenerated $message,
-    ): void {
-        Assert::isInstanceOf($payment->getMethod(), PaymentMethodInterface::class);
-        Assert::isInstanceOf($payment->getMethod()->getGatewayConfig(), GatewayConfigInterface::class);
-
-        if (
-            OneyGatewayFactory::FACTORY_NAME === $payment->getMethod()->getGatewayConfig()->getFactoryName() &&
-            $this->hasLessThanFortyEightHoursTransaction($payment, $message->orderNumber())
-        ) {
-            throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours'));
-        }
     }
 }
