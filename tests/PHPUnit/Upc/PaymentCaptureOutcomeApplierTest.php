@@ -211,7 +211,7 @@ final class PaymentCaptureOutcomeApplierTest extends TestCase
         $payment->method('getId')->willReturn(42);
 
         $this->logger->expects(self::once())->method('warning')->with(
-            self::stringContains('carried no payment id'),
+            '[PayPlug][UPC] Payment created but the response carried no payment id; it cannot be refunded from the back office until PayPlug returns a payment id.',
             self::callback(static fn (array $context): bool => [
                 'sylius_payment_id' => 42,
                 'flow' => 'Hosted',

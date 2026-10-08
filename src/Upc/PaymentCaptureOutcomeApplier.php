@@ -84,8 +84,8 @@ final class PaymentCaptureOutcomeApplier
 
     /**
      * Refunds are keyed by the payment's top-level id, so a creation response without one leaves
-     * the payment unrefundable until a webhook provides it. Ids only: the response body carries
-     * customer data.
+     * the payment unrefundable from the back office. Ids only: the response body carries customer
+     * data.
      *
      * @param array{hosted_fields_payment_id?: string, hosted_fields_operation_id?: string} $hostedFieldsIds
      */
@@ -98,7 +98,7 @@ final class PaymentCaptureOutcomeApplier
             return;
         }
 
-        $this->logger->warning('[PayPlug][UPC] Payment created but the response carried no payment id; it cannot be refunded until a webhook provides it.', [
+        $this->logger->warning('[PayPlug][UPC] Payment created but the response carried no payment id; it cannot be refunded from the back office until PayPlug returns a payment id.', [
             'sylius_payment_id' => $payment->getId(),
             'flow' => $flow->value,
             'hosted_fields_operation_id' => $hostedFieldsIds['hosted_fields_operation_id'] ?? null,

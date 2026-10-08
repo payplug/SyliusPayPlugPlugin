@@ -8,7 +8,6 @@ use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationLockKey;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationWebhookBody;
 use PayPlug\SyliusPayPlugPlugin\Upc\CardDataFromPaymentMethodExtractor;
-use PayPlug\SyliusPayPlugPlugin\Upc\HostedFieldsPaymentIdBackfiller;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
 use PayPlug\SyliusPayPlugPlugin\Upc\RefundDetailsLockKey;
@@ -27,11 +26,9 @@ use Sylius\Component\Payment\Model\PaymentMethodInterface;
 
 /**
  * Verifies and applies a Unified API (Hosted Fields) webhook notification against a Payment
- * already resolved by UnifiedApiIpnAction, via PaymentRepositoryInterface::findOneByPayPlugPaymentId()
- * — which matches on the webhook's own payment id being present anywhere in Payment::details,
- * including the "hosted_fields_payment_id" key the capture handlers store there — or, for a payment
- * whose creation response carried no id, via findAwaitingHostedFieldsPaymentId(), which matches
- * the webhook's order number and amount against a single active payment.
+ * already resolved by IpnAction, via PaymentRepositoryInterface::findOneByPayPlugPaymentId() —
+ * which matches on the webhook's own payment id being present anywhere in Payment::details,
+ * including the "hosted_fields_payment_id" key CaptureHostedPaymentRequestHandler stores there.
  *
  * The static, per-account IPN receiver counterpart to NotifyHostedPaymentRequestHandler, which
  * instead resolves its target Payment via a per-request PaymentRequest hash. Both share the same
@@ -67,7 +64,6 @@ class HostedFieldsWebhookNotificationHandler
         private ILock $lock,
         private LoggerInterface $logger,
         private PayplugCardPersister $cardPersister,
-        private HostedFieldsPaymentIdBackfiller $paymentIdBackfiller,
     ) {
     }
 
@@ -283,19 +279,11 @@ class HostedFieldsWebhookNotificationHandler
                 return;
             }
 
-            // A backfill deferred by a busy lock leaves the notification untreated, so a redelivery
-            // retries it; re-applying the outcome then is a no-op (SyliusOrderStateMutator checks
-            // the transition first).
-            $backfillSettled = !$applyOutcome || PaymentOutcome::PAID !== $operationData->outcome ||
-                $this->paymentIdBackfiller->backfill($payment, $rawBody);
-
             $this->paymentRepository->save($operationData);
             if ($applyOutcome) {
                 $this->orderStateMutator->apply(ResourceIdentifier::toString($payment->getId()), $operationData->outcome);
             }
-            if ($backfillSettled) {
-                $this->paymentRepository->markTreated($operationData->operationId);
-            }
+            $this->paymentRepository->markTreated($operationData->operationId);
 
             // AUTHORIZED too: a deferred-capture payment's card is saved once its authorization
             // is confirmed, exactly like an immediate one's once it is paid. Never for a
@@ -312,9 +300,9 @@ class HostedFieldsWebhookNotificationHandler
     // A 3DS-challenge capture never gets an alias back synchronously (CaptureHostedPaymentRequestHandler
     // only sees one on a direct, frictionless success) — this webhook, fired once the challenge is
     // validated, is the only place a 3DS payment's card ever gets saved. The alias/card metadata
-    // itself is already in $rawBody: the same paymentMethod.{storedId, card, details} shape as the
-    // operation resource CaptureHostedPaymentRequestHandler fetches separately (the alias in
-    // storedId, paymentMethod.id read as a legacy fallback), so no extra API call is needed here.
+    // itself is already in $rawBody, as paymentMethod.{storedId, card, details}, so no extra API call
+    // is needed here. The operation resource CaptureHostedPaymentRequestHandler fetches separately
+    // carries the alias as paymentMethod.id; CardDataFromPaymentMethodExtractor reads both.
     private function maybeSaveCard(PaymentInterface $payment, string $rawBody): void
     {
         $details = $payment->getDetails();

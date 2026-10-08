@@ -50,9 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `paymentMethod.storedId`
 - Cards the shopper asked to save are stored again, including after a 3DS challenge (the alias is
   read from `paymentMethod.storedId`)
-- A Hosted Fields payment created without a payment reference recovers it from its payment webhook,
-  so it can still be refunded; when it cannot, the refund is refused with a clear back-office
-  message in addition to Sylius's own generic error message, and nothing is sent to PayPlug
+- Refunding a Hosted Fields payment that PayPlug created without a payment reference is refused
+  with a clear back-office message, in addition to Sylius's own generic error message, and nothing
+  is sent to PayPlug; the payment itself is processed normally
 
 ### Breaking changes for anyone extending the plugin
 
@@ -69,9 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `PaymentMethodRepositoryInterface::findOneByGatewayName()` — **deprecated**, returns an arbitrary config when several share a factory name | `findOneEnabledByGatewayNameAndChannel($factoryName, $channel)` |
 | `OneyExtension::__construct()` — `$gatewayConfigRepository` dropped, `$paymentMethodRepository` is now the plugin's `PaymentMethodRepositoryInterface` | inject the plugin repository |
 | `OneySupportedPaymentChoiceProvider::__construct()` | now also takes a `ChannelContextInterface` |
-| `PaymentRepositoryInterface` gains `findAwaitingHostedFieldsPaymentId(string $orderNumber, int $amount): array` | implement it in any custom implementation |
 | `PayPlugExtension::__construct()` | now also takes `string $hostedFieldsSdkUrl` (bound to `%payplug.hosted_fields_sdk_url%`) |
-| `HostedFieldsWebhookNotificationHandler::__construct()` (non-final class) | now also takes a `HostedFieldsPaymentIdBackfiller` as its last argument |
 
 Requires `payplug/unified-plugin-core ^1.2.1` (for the nullable `TokenOutput::$idToken` and the
 Unified API payment contract: `paymentMethod.hfToken`, `paymentMethod.storedId`).

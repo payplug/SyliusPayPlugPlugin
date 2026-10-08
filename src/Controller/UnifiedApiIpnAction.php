@@ -82,55 +82,26 @@ class UnifiedApiIpnAction
     {
         $content = json_decode($input, true);
         $id = \is_array($content) ? ($content['id'] ?? null) : null;
-        if (!\is_array($content) || !\is_string($id) || '' === $id) {
+        if (!\is_string($id) || '' === $id) {
             // if we are too fast canceling a payment before we got an answer from PayPlug gateway
             return null;
         }
 
-        $payment = $this->findPaymentWithRetry($id) ?? $this->findPaymentAwaitingPaymentId($content);
+        $payment = $this->findPaymentWithRetry($id);
+        if (null === $payment) {
+            return null;
+        }
 
-        return null !== $payment && self::isOnHostedFields($payment) ? $payment : null;
-    }
-
-    // Defensive: this route is dedicated to Unified API traffic, so a resolved payment that isn't
-    // actually on a Unified API-backed config (currently, only Hosted Fields) is rejected rather
-    // than guessed at. Update this check if/when a second Unified API-backed payment method is
-    // added.
-    private static function isOnHostedFields(PaymentInterface $payment): bool
-    {
         $paymentMethod = $payment->getMethod();
         Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);
         $gateway = $paymentMethod->getGatewayConfig();
         Assert::isInstanceOf($gateway, GatewayConfigInterface::class);
 
-        return PayPlugGatewayFactory::isHostedFieldsConfig($gateway);
-    }
-
-    /**
-     * A payment whose creation response carried no id cannot be found by the webhook's id. It is
-     * then matched by order number and amount, and only when exactly one payment qualifies;
-     * HostedFieldsWebhookNotificationHandler cross-checks both again before applying anything.
-     *
-     * @param mixed[] $content the decoded webhook body
-     */
-    private function findPaymentAwaitingPaymentId(array $content): ?PaymentInterface
-    {
-        $orderId = $content['orderId'] ?? null;
-        $amount = $content['amount'] ?? null;
-        if (!\is_string($orderId) || '' === $orderId || !\is_int($amount)) {
-            return null;
-        }
-
-        $candidates = $this->paymentRepository->findAwaitingHostedFieldsPaymentId($orderId, $amount);
-        if (1 !== \count($candidates)) {
-            if ([] !== $candidates) {
-                $this->logger->warning('[PayPlug][UPC] Several payments await a payment id for this webhook, refusing to guess.', ['order_id' => $orderId]);
-            }
-
-            return null;
-        }
-
-        return $candidates[0];
+        // Defensive: this route is dedicated to Unified API traffic, so a resolved payment that
+        // isn't actually on a Unified API-backed config (currently, only Hosted Fields) is
+        // rejected rather than guessed at. Update this check if/when a second Unified API-backed
+        // payment method is added.
+        return PayPlugGatewayFactory::isHostedFieldsConfig($gateway) ? $payment : null;
     }
 
     private function findPaymentWithRetry(string $id): ?PaymentInterface

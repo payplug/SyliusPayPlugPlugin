@@ -8,7 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Handler\HostedFieldsWebhookNotificationHandler;
 use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
-use PayPlug\SyliusPayPlugPlugin\Upc\HostedFieldsPaymentIdBackfiller;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
 use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
@@ -28,8 +27,6 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 
 final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
 {
-    private const WEBHOOK_PAYMENT_ID = '715ac841-1111-4111-8111-111111111111';
-
     private IPaymentRepository&MockObject $paymentRepository;
 
     private IOrderStateMutator&MockObject $orderStateMutator;
@@ -69,7 +66,6 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
             $this->lock,
             $this->logger,
             new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
-            new HostedFieldsPaymentIdBackfiller($this->lock, $this->logger),
         );
     }
 
@@ -102,33 +98,6 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
         }
 
         return $payment;
-    }
-
-    /** Shape of a real staging Unified API webhook; the card is masked and the ids are fixtures. */
-    private static function paidWebhookBody(
-        string $id = self::WEBHOOK_PAYMENT_ID,
-        string $orderId = '42',
-        int $amount = 1000,
-        string $execCode = '0000',
-        ?string $operationType = 'PAYMENT',
-    ): string {
-        return (string) \json_encode(\array_filter([
-            'operationType' => $operationType,
-            'customer' => ['id' => '130', 'email' => 'test-client@example.com'],
-            'authentication' => ['status' => 'Y', 'globalStatus' => 'OK', 'mode' => 'FRICTIONLESS', 'version' => '2'],
-            'paymentMethod' => [
-                'storedId' => 'card_new_1',
-                'card' => ['network' => 'VISA', 'type' => 'VISA', 'code6x4' => '446421XXXXXX0000'],
-                'details' => ['fullName' => 'John Doe', 'validityDate' => '2030-12', 'selectedBrand' => 'VISA'],
-            ],
-            'account' => ['id' => 'PLUGINS_UHF_QA'],
-            'currency' => 'EUR',
-            'amount' => $amount,
-            'execCode' => $execCode,
-            'message' => 'Successful operation',
-            'orderId' => $orderId,
-            'id' => $id,
-        ], static fn (mixed $value): bool => null !== $value));
     }
 
     public function testTreat_onValidNotification_savesTreatsAndAppliesTheOutcomeAgainstTheResolvedPayment(): void
@@ -171,7 +140,6 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
             $this->lock,
             $this->logger,
             new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
-            new HostedFieldsPaymentIdBackfiller($this->lock, $this->logger),
         );
 
         $this->paymentRepository->expects(self::never())->method('isTreated');
@@ -359,6 +327,26 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
 
     public function testTreat_onPaidOutcomeWithSaveCardRequestedAndAliasInStoredId_persistsANewCard(): void
     {
+        // Shape of a real staging webhook: the alias is in paymentMethod.storedId and there is no
+        // paymentMethod.id. The card is masked and the ids are fixtures.
+        $body = \json_encode([
+            'operationType' => 'PAYMENT',
+            'customer' => ['id' => '130', 'email' => 'test-client@example.com'],
+            'authentication' => ['status' => 'Y', 'globalStatus' => 'OK', 'mode' => 'FRICTIONLESS', 'version' => '2'],
+            'paymentMethod' => [
+                'storedId' => 'card_new_1',
+                'card' => ['network' => 'VISA', 'type' => 'VISA', 'code6x4' => '446421XXXXXX0000'],
+                'details' => ['fullName' => 'John Doe', 'validityDate' => '2030-12', 'selectedBrand' => 'VISA'],
+            ],
+            'account' => ['id' => 'PLUGINS_UHF_QA'],
+            'currency' => 'EUR',
+            'amount' => 1000,
+            'execCode' => '0000',
+            'message' => 'Successful operation',
+            'orderId' => '42',
+            'id' => 'op_715ac841',
+        ]);
+
         $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
         $this->paymentRepository->method('isTreated')->willReturn(false);
 
@@ -371,7 +359,7 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
         $this->payplugCardRepository->expects(self::once())->method('add')->with($card);
         $this->logger->expects(self::never())->method('error');
 
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
+        $this->handler->treat($payment, $body, ['Authorization' => 'Bearer shared-secret']);
 
         self::assertSame('card_new_1', $card->getExternalId());
         self::assertSame('VISA', $card->getBrand());
@@ -622,7 +610,6 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
             $this->lock,
             $this->logger,
             new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
-            new HostedFieldsPaymentIdBackfiller($this->lock, $this->logger),
         );
 
         $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
@@ -660,7 +647,6 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
             $this->lock,
             $this->logger,
             new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
-            new HostedFieldsPaymentIdBackfiller($this->lock, $this->logger),
         );
 
         $payment = $this->payment(42, 1000, null, $details);
@@ -754,356 +740,5 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
         ));
 
         $this->handler->treat($payment, (string) $body, []);
-    }
-
-    // -------------------------------------------------------------------------
-    // Backfill of hosted_fields_payment_id from the webhook's top-level id
-    // -------------------------------------------------------------------------
-
-    /** @return iterable<string, array{0: string}> */
-    public static function creationTimestampKeys(): iterable
-    {
-        yield 'hosted fields payment' => ['hosted_fields_created_at'];
-        yield 'saved card payment' => ['alias_payment_created_at'];
-    }
-
-    /** @dataProvider creationTimestampKeys */
-    public function testTreat_onPaidNotificationForAPaymentWithoutAStoredPaymentId_backfillsItUnderTheRefundDetailsLock(
-        string $createdAtKey,
-    ): void
-    {
-        $acquiredKeys = [];
-        $releasedKeys = [];
-        $this->useLock(static function (string $key) use (&$acquiredKeys): bool {
-            $acquiredKeys[] = $key;
-
-            return true;
-        }, $releasedKeys);
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $calls = [];
-        $payment = $this->payment(42, 1000, null, [$createdAtKey => '2026-10-08T10:00:00+00:00', 'hosted_fields_operation_id' => 'op_1']);
-        $payment->expects(self::once())->method('setDetails')->with(self::callback(
-            static function (array $details) use (&$calls): bool {
-                $calls[] = 'setDetails';
-
-                return self::WEBHOOK_PAYMENT_ID === $details['hosted_fields_payment_id'] &&
-                    'op_1' === $details['hosted_fields_operation_id'];
-            },
-        ));
-        $this->paymentRepository->expects(self::once())->method('save')
-            ->willReturnCallback(static function () use (&$calls): void {
-                $calls[] = 'save';
-            });
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-        $this->logger->expects(self::once())->method('info')->with(
-            self::stringContains('backfilled'),
-            ['sylius_payment_id' => 42, 'hosted_fields_payment_id' => self::WEBHOOK_PAYMENT_ID],
-        );
-
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-
-        self::assertSame(['payplug_upc_treat_' . self::WEBHOOK_PAYMENT_ID, 'payplug_upc_refund_details_42'], $acquiredKeys);
-        self::assertSame(['payplug_upc_refund_details_42', 'payplug_upc_treat_' . self::WEBHOOK_PAYMENT_ID], $releasedKeys);
-        self::assertSame(['setDetails', 'save'], $calls, 'The backfill must be written before save() flushes.');
-    }
-
-    public function testTreat_whenAPaymentIdIsAlreadyStored_neverOverwritesItAndLogsTheConflict(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, [
-            'hosted_fields_created_at' => '2026-10-08T10:00:00+00:00',
-            'hosted_fields_operation_id' => 'op_1',
-            'hosted_fields_payment_id' => 'pay_stored',
-        ]);
-        $payment->expects(self::never())->method('setDetails');
-        $this->logger->expects(self::once())->method('error')->with(
-            self::stringContains('differs from the stored one'),
-            [
-                'sylius_payment_id' => 42,
-                'stored_payment_id' => 'pay_stored',
-                'webhook_payment_id' => 'pay_other',
-            ],
-        );
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-
-        $this->handler->treat($payment, self::paidWebhookBody('pay_other'), ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    public function testTreat_whenTheStoredPaymentIdEqualsTheWebhookId_isANoOpWithoutTakingTheRefundDetailsLock(): void
-    {
-        $acquiredKeys = [];
-        $this->useLock(static function (string $key) use (&$acquiredKeys): bool {
-            $acquiredKeys[] = $key;
-
-            return true;
-        });
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, [
-            'hosted_fields_created_at' => '2026-10-08T10:00:00+00:00',
-            'hosted_fields_payment_id' => self::WEBHOOK_PAYMENT_ID,
-        ]);
-        $payment->expects(self::never())->method('setDetails');
-        $this->logger->expects(self::never())->method('error');
-
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-
-        self::assertSame(['payplug_upc_treat_' . self::WEBHOOK_PAYMENT_ID], $acquiredKeys);
-    }
-
-    public function testTreat_onAReplayedNotification_doesNotBackfillAgain(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(true);
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::never())->method('setDetails');
-        $this->orderStateMutator->expects(self::never())->method('apply');
-
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    public function testTreat_whenCreationHasNotCommittedYet_doesNotBackfillButStillAppliesTheOutcome(): void
-    {
-        $acquiredKeys = [];
-        $this->useLock(static function (string $key) use (&$acquiredKeys): bool {
-            $acquiredKeys[] = $key;
-
-            return true;
-        });
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_token' => 'hf_token_abc']);
-        $payment->expects(self::never())->method('setDetails');
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-        $this->paymentRepository->expects(self::once())->method('markTreated');
-
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-
-        self::assertNotContains('payplug_upc_refund_details_42', $acquiredKeys);
-    }
-
-    public function testTreat_onNonPaidOutcome_doesNotBackfill(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::never())->method('setDetails');
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::FAILED);
-
-        $this->handler->treat($payment, self::paidWebhookBody(execCode: '9999'), ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    public function testTreat_onAPendingThreeDsNotification_doesNotBackfill(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::never())->method('setDetails');
-
-        $this->handler->treat($payment, self::paidWebhookBody(execCode: '0001'), ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    public function testTreat_onARefundConfirmation_neverStoresTheRefundOperationIdAsPaymentId(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, [
-            'hosted_fields_created_at' => '2026-10-08T10:00:00+00:00',
-            'refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]],
-        ]);
-        $payment->expects(self::never())->method('setDetails');
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::REFUNDED);
-
-        $this->handler->treat($payment, self::paidWebhookBody('op_refund_1', amount: 500), ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    public function testTreat_onAFailedRefundConfirmation_neverStoresTheRefundOperationIdAsPaymentId(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, [
-            'hosted_fields_created_at' => '2026-10-08T10:00:00+00:00',
-            'refunds' => [['internal_id' => 77, 'id' => 'op_refund_1', 'amount' => 500]],
-        ]);
-        $payment->expects(self::once())->method('setDetails')
-            ->with(self::callback(static fn (array $details): bool => !\array_key_exists('hosted_fields_payment_id', $details)));
-
-        $this->handler->treat($payment, self::paidWebhookBody('op_refund_1', amount: 500, execCode: '9999'), ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    /**
-     * The status poll passes the body of getOperation(hosted_fields_operation_id) to treat(); an
-     * id equal to the payment's own creation operation id is never stored as its payment id.
-     */
-    public function testTreat_whenTheIdIsThePaymentCreationOperationId_neverStoresItAsPaymentId(): void
-    {
-        $this->configurationRepository->method('get')->willReturn(null);
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, [
-            'hosted_fields_created_at' => '2026-10-08T10:00:00+00:00',
-            'hosted_fields_operation_id' => 'op_1',
-        ]);
-        $payment->expects(self::never())->method('setDetails');
-        $this->logger->expects(self::never())->method('error');
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-
-        $this->handler->treat($payment, self::paidWebhookBody('op_1'), []);
-    }
-
-    public function testTreat_whenTheIdIsThePaymentCreationOperationIdAndAPaymentIdIsStored_logsNoConflict(): void
-    {
-        $this->configurationRepository->method('get')->willReturn(null);
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, [
-            'hosted_fields_created_at' => '2026-10-08T10:00:00+00:00',
-            'hosted_fields_operation_id' => 'op_1',
-            'hosted_fields_payment_id' => 'pay_stored',
-        ]);
-        $payment->expects(self::never())->method('setDetails');
-        $this->logger->expects(self::never())->method('error');
-
-        $this->handler->treat($payment, self::paidWebhookBody('op_1'), []);
-    }
-
-    public function testTreat_whenTheRefundDetailsLockCannotBeAcquired_appliesTheOutcomeButLeavesTheNotificationUntreated(): void
-    {
-        $releasedKeys = [];
-        $this->useLock(static fn (string $key): bool => 'payplug_upc_refund_details_42' !== $key, $releasedKeys);
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::never())->method('setDetails');
-        $this->paymentRepository->expects(self::once())->method('save');
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-        $this->paymentRepository->expects(self::never())->method('markTreated');
-
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-
-        self::assertSame(['payplug_upc_treat_' . self::WEBHOOK_PAYMENT_ID], $releasedKeys);
-    }
-
-    public function testTreat_whenANotificationLeftUntreatedIsRedelivered_backfillsAndMarksItTreated(): void
-    {
-        $refundDetailsLockBusy = true;
-        $this->useLock(static function (string $key) use (&$refundDetailsLockBusy): bool {
-            return !('payplug_upc_refund_details_42' === $key && $refundDetailsLockBusy);
-        });
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $treated = [];
-        $this->paymentRepository->method('isTreated')
-            ->willReturnCallback(static function (string $operationId) use (&$treated): bool {
-                return \in_array($operationId, $treated, true);
-            });
-        $this->paymentRepository->method('markTreated')
-            ->willReturnCallback(static function (string $operationId) use (&$treated): void {
-                $treated[] = $operationId;
-            });
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::once())->method('setDetails')
-            ->with(self::callback(static fn (array $details): bool => self::WEBHOOK_PAYMENT_ID === $details['hosted_fields_payment_id']));
-        $this->orderStateMutator->expects(self::exactly(2))->method('apply')->with('42', PaymentOutcome::PAID);
-
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-        $refundDetailsLockBusy = false;
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-        $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-
-        self::assertSame([self::WEBHOOK_PAYMENT_ID], $treated);
-    }
-
-    /** @return iterable<string, array{0: string|null}> */
-    public static function nonPaymentOperationTypes(): iterable
-    {
-        yield 'refund operation' => ['REFUND'];
-        yield 'no operation type' => [null];
-    }
-
-    /** @dataProvider nonPaymentOperationTypes */
-    public function testTreat_onANotificationThatIsNotAPaymentOperation_neverStoresItsIdAsPaymentId(
-        ?string $operationType,
-    ): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::never())->method('setDetails');
-        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
-        $this->paymentRepository->expects(self::once())->method('markTreated')->with('op_other_1');
-
-        $this->handler->treat(
-            $payment,
-            self::paidWebhookBody('op_other_1', operationType: $operationType),
-            ['Authorization' => 'Bearer shared-secret'],
-        );
-    }
-
-    public function testTreat_whenSaveFailsAfterTheBackfill_releasesBothLocks(): void
-    {
-        $releasedKeys = [];
-        $this->useLock(static fn (): bool => true, $releasedKeys);
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-        $this->paymentRepository->method('isTreated')->willReturn(false);
-        $this->paymentRepository->method('save')->willThrowException(new \RuntimeException('flush failed'));
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $this->orderStateMutator->expects(self::never())->method('apply');
-        $this->paymentRepository->expects(self::never())->method('markTreated');
-
-        try {
-            $this->handler->treat($payment, self::paidWebhookBody(), ['Authorization' => 'Bearer shared-secret']);
-            self::fail('Expected the flush failure to propagate.');
-        } catch (\RuntimeException $exception) {
-            self::assertSame('flush failed', $exception->getMessage());
-        }
-
-        self::assertSame(['payplug_upc_refund_details_42', 'payplug_upc_treat_' . self::WEBHOOK_PAYMENT_ID], $releasedKeys);
-    }
-
-    public function testTreat_onNotificationWithoutAnId_throwsAndNeverBackfills(): void
-    {
-        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
-
-        $payment = $this->payment(42, 1000, null, ['hosted_fields_created_at' => '2026-10-08T10:00:00+00:00']);
-        $payment->expects(self::never())->method('setDetails');
-        $this->expectException(InvalidNotificationException::class);
-
-        $this->handler->treat($payment, '{"execCode":"0000","orderId":"42","amount":1000}', ['Authorization' => 'Bearer shared-secret']);
-    }
-
-    /**
-     * @param \Closure(string): bool $acquire
-     * @param string[] $releasedKeys
-     */
-    private function useLock(\Closure $acquire, array &$releasedKeys = []): void
-    {
-        $this->lock = $this->createMock(ILock::class);
-        $this->lock->method('acquire')->willReturnCallback($acquire);
-        $this->lock->method('release')->willReturnCallback(static function (string $key) use (&$releasedKeys): void {
-            $releasedKeys[] = $key;
-        });
-        $this->handler = new HostedFieldsWebhookNotificationHandler(
-            $this->paymentRepository,
-            $this->orderStateMutator,
-            $this->configurationRepository,
-            $this->lock,
-            $this->logger,
-            new PayplugCardPersister($this->payplugCardFactory, $this->payplugCardRepository, $this->managerRegistry),
-            new HostedFieldsPaymentIdBackfiller($this->lock, $this->logger),
-        );
     }
 }
