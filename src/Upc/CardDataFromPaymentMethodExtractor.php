@@ -9,10 +9,11 @@ namespace PayPlug\SyliusPayPlugPlugin\Upc;
  * `paymentMethod` object — shared by CaptureHostedPaymentRequestHandler (parsing the operation
  * resource fetched via OperationStatusFetcherInterface) and HostedFieldsWebhookNotificationHandler
  * (parsing the webhook's own raw body directly — confirmed the same shape as the operation
- * resource, so no separate API call is needed there). Confirmed against a real staging response:
- * paymentMethod.id ("card_xxx", the alias), paymentMethod.card.{network, code6x4} ("VISA", a
- * masked PAN "424242XXXXXX4242") and paymentMethod.details.{selectedBrand, validityDate} ("VISA",
- * "2027-12" — YYYY-MM). last4 isn't its own field — it's derived from code6x4's last 4 characters.
+ * resource, so no separate API call is needed there). The alias is paymentMethod.storedId, with
+ * paymentMethod.id read as a fallback, as UPC's UnifiedApiPaymentService::extractAliasId() does;
+ * paymentMethod.card.{network, code6x4} ("VISA", a masked PAN "424242XXXXXX4242") and
+ * paymentMethod.details.{selectedBrand, validityDate} ("VISA", "2027-12" — YYYY-MM). last4 isn't
+ * its own field — it's derived from code6x4's last 4 characters.
  */
 final class CardDataFromPaymentMethodExtractor
 {
@@ -56,9 +57,14 @@ final class CardDataFromPaymentMethodExtractor
      */
     private static function extractAliasId(array $paymentMethod): array
     {
-        $aliasId = $paymentMethod['id'] ?? null;
+        foreach (['storedId', 'id'] as $key) {
+            $aliasId = $paymentMethod[$key] ?? null;
+            if (\is_string($aliasId) && '' !== $aliasId) {
+                return ['aliasId' => $aliasId];
+            }
+        }
 
-        return \is_string($aliasId) && '' !== $aliasId ? ['aliasId' => $aliasId] : [];
+        return [];
     }
 
     /** @return array{brand?: string, last4?: string} */

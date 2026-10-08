@@ -39,6 +39,36 @@ final class PaymentRepository extends BasePaymentRepository implements PaymentRe
         return $result;
     }
 
+    public function findAwaitingHostedFieldsPaymentId(string $orderNumber, int $amount): array
+    {
+        /** @var array<PaymentInterface> $result */
+        $result = $this->createQueryBuilder('o')
+            ->innerJoin('o.order', 'ord')
+            ->where('ord.number = :orderNumber')
+            ->andWhere('o.amount = :amount')
+            ->andWhere('o.state IN (:activeStates)')
+            ->andWhere("(o.details LIKE :hostedFieldsCreatedAt ESCAPE '!' OR o.details LIKE :aliasPaymentCreatedAt ESCAPE '!')")
+            ->andWhere("o.details NOT LIKE :paymentId ESCAPE '!'")
+            ->setParameter('orderNumber', $orderNumber)
+            ->setParameter('amount', $amount)
+            ->setParameter('activeStates', [PaymentInterface::STATE_NEW, PaymentInterface::STATE_PROCESSING])
+            ->setParameter('hostedFieldsCreatedAt', self::containsJsonKey('hosted_fields_created_at'))
+            ->setParameter('aliasPaymentCreatedAt', self::containsJsonKey('alias_payment_created_at'))
+            ->setParameter('paymentId', self::containsJsonKey('hosted_fields_payment_id'))
+            ->setMaxResults(2)
+            ->getQuery()
+            ->getResult()
+        ;
+
+        return $result;
+    }
+
+    /** A LIKE pattern, escaped with "!", matching a JSON document that contains $key as a key. */
+    private static function containsJsonKey(string $key): string
+    {
+        return '%"' . \str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $key) . '"%';
+    }
+
     /**
      * @return array<PaymentInterface>
      */

@@ -157,4 +157,110 @@ final class UnifiedApiIpnActionTest extends TestCase
 
         self::assertSame(401, $response->getStatusCode());
     }
+
+    public function testInvoke_whenNoPaymentMatchesTheIdButExactlyOneAwaitsAPaymentId_delegatesToTheHandlerWithIt(): void
+    {
+        $payment = $this->paymentWithGatewayConfig(hostedFields: true);
+        $this->paymentRepository->expects(self::exactly(4))->method('findOneByPayPlugPaymentId')->willReturn(null);
+        $this->paymentRepository->expects(self::once())->method('findAwaitingHostedFieldsPaymentId')
+            ->with('000000042', 1000)
+            ->willReturn([$payment]);
+
+        $request = Request::create('/payplug/v2/ipn', 'POST', content: self::webhookBody());
+
+        $this->hostedFieldsWebhookNotificationHandler->expects(self::once())->method('treat')
+            ->with($payment, $request->getContent(), self::isType('array'));
+
+        $response = $this->action->__invoke($request);
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    public function testInvoke_whenThePaymentMatchesTheId_neverQueriesTheFallback(): void
+    {
+        $payment = $this->paymentWithGatewayConfig(hostedFields: true);
+        $this->paymentRepository->method('findOneByPayPlugPaymentId')->willReturn($payment);
+        $this->paymentRepository->expects(self::never())->method('findAwaitingHostedFieldsPaymentId');
+
+        $response = $this->action->__invoke(Request::create('/payplug/v2/ipn', 'POST', content: self::webhookBody()));
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    public function testInvoke_whenSeveralPaymentsAwaitAPaymentId_returnsUnauthorizedAndLogsAWarning(): void
+    {
+        $this->paymentRepository->method('findOneByPayPlugPaymentId')->willReturn(null);
+        $this->paymentRepository->method('findAwaitingHostedFieldsPaymentId')->willReturn([
+            $this->paymentWithGatewayConfig(hostedFields: true),
+            $this->paymentWithGatewayConfig(hostedFields: true),
+        ]);
+
+        $this->hostedFieldsWebhookNotificationHandler->expects(self::never())->method('treat');
+        $this->logger->expects(self::once())->method('warning')
+            ->with(self::stringContains('refusing to guess'), ['order_id' => '000000042']);
+
+        $response = $this->action->__invoke(Request::create('/payplug/v2/ipn', 'POST', content: self::webhookBody()));
+
+        self::assertSame(401, $response->getStatusCode());
+    }
+
+    public function testInvoke_whenNoPaymentAwaitsAPaymentId_returnsUnauthorizedWithoutAWarning(): void
+    {
+        $this->paymentRepository->method('findOneByPayPlugPaymentId')->willReturn(null);
+        $this->paymentRepository->method('findAwaitingHostedFieldsPaymentId')->willReturn([]);
+
+        $this->hostedFieldsWebhookNotificationHandler->expects(self::never())->method('treat');
+        $this->logger->expects(self::never())->method('warning');
+
+        $response = $this->action->__invoke(Request::create('/payplug/v2/ipn', 'POST', content: self::webhookBody()));
+
+        self::assertSame(401, $response->getStatusCode());
+    }
+
+    /** @dataProvider bodiesWithoutAUsableOrderIdOrAmount */
+    public function testInvoke_whenTheBodyHasNoUsableOrderIdOrAmount_doesNotQueryTheFallback(string $body): void
+    {
+        $this->paymentRepository->method('findOneByPayPlugPaymentId')->willReturn(null);
+        $this->paymentRepository->expects(self::never())->method('findAwaitingHostedFieldsPaymentId');
+
+        $response = $this->action->__invoke(Request::create('/payplug/v2/ipn', 'POST', content: $body));
+
+        self::assertSame(401, $response->getStatusCode());
+    }
+
+    /** @return iterable<string, array{0: string}> */
+    public static function bodiesWithoutAUsableOrderIdOrAmount(): iterable
+    {
+        yield 'no order id nor amount' => [(string) \json_encode(['id' => 'pay_1'])];
+        yield 'empty order id' => [(string) \json_encode(['id' => 'pay_1', 'orderId' => '', 'amount' => 1000])];
+        yield 'integer order id' => [(string) \json_encode(['id' => 'pay_1', 'orderId' => 42, 'amount' => 1000])];
+        yield 'string amount' => [(string) \json_encode(['id' => 'pay_1', 'orderId' => '000000042', 'amount' => '1000'])];
+        yield 'float amount' => [(string) \json_encode(['id' => 'pay_1', 'orderId' => '000000042', 'amount' => 10.5])];
+    }
+
+    public function testInvoke_whenTheFallbackPaymentIsNotOnHostedFields_returnsUnauthorized(): void
+    {
+        $this->paymentRepository->method('findOneByPayPlugPaymentId')->willReturn(null);
+        $this->paymentRepository->method('findAwaitingHostedFieldsPaymentId')
+            ->willReturn([$this->paymentWithGatewayConfig(hostedFields: false)]);
+
+        $this->hostedFieldsWebhookNotificationHandler->expects(self::never())->method('treat');
+
+        $response = $this->action->__invoke(Request::create('/payplug/v2/ipn', 'POST', content: self::webhookBody()));
+
+        self::assertSame(401, $response->getStatusCode());
+    }
+
+    private static function webhookBody(): string
+    {
+        return (string) \json_encode([
+            'operationType' => 'PAYMENT',
+            'paymentMethod' => ['storedId' => 'card_new_1'],
+            'currency' => 'EUR',
+            'amount' => 1000,
+            'execCode' => '0000',
+            'orderId' => '000000042',
+            'id' => '715ac841-1111-4111-8111-111111111111',
+        ]);
+    }
 }

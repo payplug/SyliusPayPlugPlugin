@@ -82,6 +82,29 @@ final class PaymentCaptureOutcomeApplier
         $session->getFlashBag()->add('error', self::SHOPPER_ERROR_FLASH_KEY);
     }
 
+    /**
+     * Refunds are keyed by the payment's top-level id, so a creation response without one leaves
+     * the payment unrefundable until a webhook provides it. Ids only: the response body carries
+     * customer data.
+     *
+     * @param array{hosted_fields_payment_id?: string, hosted_fields_operation_id?: string} $hostedFieldsIds
+     */
+    public function warnWhenPaymentIdMissing(
+        PaymentInterface $payment,
+        PaymentCaptureFlow $flow,
+        array $hostedFieldsIds,
+    ): void {
+        if (isset($hostedFieldsIds['hosted_fields_payment_id'])) {
+            return;
+        }
+
+        $this->logger->warning('[PayPlug][UPC] Payment created but the response carried no payment id; it cannot be refunded until a webhook provides it.', [
+            'sylius_payment_id' => $payment->getId(),
+            'flow' => $flow->value,
+            'hosted_fields_operation_id' => $hostedFieldsIds['hosted_fields_operation_id'] ?? null,
+        ]);
+    }
+
     public function applyOutcome(
         PaymentRequestInterface $paymentRequest,
         PaymentInterface $payment,

@@ -69,14 +69,16 @@ final class CaptureAliasPaymentRequestHandler
             return;
         }
 
+        $hostedFieldsIds = $this->contextBuilder->resolveHostedFieldsIds($output->body);
         $createdDetails = [
             ...$payment->getDetails(),
             'alias_id' => $card->getExternalId(),
             'alias_payment_created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
-            ...$this->contextBuilder->resolveHostedFieldsIds($output->body),
+            ...$hostedFieldsIds,
         ];
         // Before applyOutcome() below — see CaptureHostedPaymentRequestHandler's own comment.
         $payment->setDetails($common->capture ? $createdDetails : AuthorizationDetails::open($createdDetails, $output, $amount));
+        $this->outcomeApplier->warnWhenPaymentIdMissing($payment, PaymentCaptureFlow::Alias, $hostedFieldsIds);
 
         $this->outcomeApplier->applyOutcome($paymentRequest, $payment, $output);
 

@@ -82,6 +82,7 @@ final class CaptureHostedPaymentRequestHandler
         // Before applyOutcome() below, which reads this back to apply "authorize" rather than
         // "complete" for an authorization-only payment.
         $payment->setDetails($dto->common->capture ? $createdDetails : AuthorizationDetails::open($createdDetails, $output, $amountAndCurrency[0]));
+        $this->outcomeApplier->warnWhenPaymentIdMissing($payment, PaymentCaptureFlow::Hosted, $hostedFieldsIds);
 
         $this->outcomeApplier->applyOutcome($paymentRequest, $payment, $output);
 

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hosted Fields deferred capture**: with deferred capture enabled, Hosted Fields payments are
   created as authorizations and captured (in full, partially, several times) or cancelled (in full
   or partially) from the admin order screen, with the remaining amount and capture deadline shown
+- The Hosted Fields JS SDK URL is configurable through `PAYPLUG_HOSTED_FIELDS_SDK_URL` and defaults
+  to the production SDK (`v2.2.0`): QA, staging and local setups must set it to their own SDK URL
 
 > [!IMPORTANT]
 > Merchants will need to contact support to switch to the new authentication method.
@@ -43,6 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   merchant's PayPlug account
 - Oney instalment options, the Oney availability check and Apple Pay now resolve the gateway serving
   the current channel instead of an arbitrary one
+- Hosted Fields payments, with a new or a saved card, are accepted again by the Unified API, which
+  now reads the card token from `paymentMethod.hfToken` and the saved card from
+  `paymentMethod.storedId`
+- Cards the shopper asked to save are stored again, including after a 3DS challenge (the alias is
+  read from `paymentMethod.storedId`)
+- A Hosted Fields payment created without a payment reference recovers it from its payment webhook,
+  so it can still be refunded; when it cannot, the refund is refused with a clear back-office
+  message in addition to Sylius's own generic error message, and nothing is sent to PayPlug
 
 ### Breaking changes for anyone extending the plugin
 
@@ -59,8 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `PaymentMethodRepositoryInterface::findOneByGatewayName()` — **deprecated**, returns an arbitrary config when several share a factory name | `findOneEnabledByGatewayNameAndChannel($factoryName, $channel)` |
 | `OneyExtension::__construct()` — `$gatewayConfigRepository` dropped, `$paymentMethodRepository` is now the plugin's `PaymentMethodRepositoryInterface` | inject the plugin repository |
 | `OneySupportedPaymentChoiceProvider::__construct()` | now also takes a `ChannelContextInterface` |
+| `PaymentRepositoryInterface` gains `findAwaitingHostedFieldsPaymentId(string $orderNumber, int $amount): array` | implement it in any custom implementation |
+| `PayPlugExtension::__construct()` | now also takes `string $hostedFieldsSdkUrl` (bound to `%payplug.hosted_fields_sdk_url%`) |
+| `HostedFieldsWebhookNotificationHandler::__construct()` (non-final class) | now also takes a `HostedFieldsPaymentIdBackfiller` as its last argument |
 
-Requires `payplug/unified-plugin-core ^1.1.2` (for the nullable `TokenOutput::$idToken`).
+Requires `payplug/unified-plugin-core ^1.2.1` (for the nullable `TokenOutput::$idToken` and the
+Unified API payment contract: `paymentMethod.hfToken`, `paymentMethod.storedId`).
 
 > [!NOTE]
 > A gateway connected before this release shows a "re-authenticate" placeholder instead of the
