@@ -33,11 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same type may both be enabled as long as their channel sets are disjoint
 - Credentials are resolved from the payment method rather than from the gateway factory name, so a
   request for one channel can no longer be signed with another channel's account
+- Oney refunds are allowed as soon as the PayPlug API reports the payment as refundable
+  (`refundable_after` / `refundable_until`); outside that window the back-office message states the
+  date from which the refund is possible, or the date on which the refund period ended
 
 ### Removed
 - Drop Payum support
 - Drop Sylius 1.x support
 - Drop usage of Secret key - Use OAuth2 instead
+- The fixed 48h waiting time on Oney refunds, counted from the last payment or refund
 
 ### Fixed
 - Integrated Payment no longer accepts a payment method id that does not belong to the order's
@@ -73,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `OneyExtension::__construct()` — `$gatewayConfigRepository` dropped, `$paymentMethodRepository` is now the plugin's `PaymentMethodRepositoryInterface` | inject the plugin repository |
 | `OneySupportedPaymentChoiceProvider::__construct()` | now also takes a `ChannelContextInterface` |
 | `PayPlugExtension::__construct()` | now also takes `string $hostedFieldsSdkUrl` (bound to `%payplug.hosted_fields_sdk_url%`) |
+| `OneyGatewayFactory::REFUND_WAIT_TIME_IN_HOURS` | none, the PayPlug API refund window is the only rule |
+| Translation key `ui.oney_transaction_less_than_forty_eight_hours` | `ui.oney_refund_not_available_before` / `ui.oney_refund_period_expired` (`%date%`) |
+| `RefundPaymentGeneratedHandler::__construct()` — `$orderRepository` and `$translator` dropped | container-built, no replacement needed |
 
 Requires `payplug/unified-plugin-core ^1.2.1` (for the nullable `TokenOutput::$idToken` and the
 Unified API payment contract: `paymentMethod.hfToken`, `paymentMethod.storedId`).
