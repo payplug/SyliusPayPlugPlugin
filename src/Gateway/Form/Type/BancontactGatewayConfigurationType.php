@@ -19,7 +19,5 @@ final class BancontactGatewayConfigurationType extends AbstractGatewayConfigurat
 {
     protected string $gatewayFactoryTitle = BancontactGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = BancontactGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = BancontactGatewayFactory::BASE_CURRENCY_CODE;
 }

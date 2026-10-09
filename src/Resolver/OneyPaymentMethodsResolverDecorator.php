@@ -36,7 +36,11 @@ final class OneyPaymentMethodsResolverDecorator implements PaymentMethodsResolve
         /** @var OrderInterface $order */
         $order = $subject->getOrder();
 
-        $activeCurrencyCode = $this->currencyContext->getCurrencyCode();
+        // The payment's own currency, not the one currently displayed: isPriceEligible() below
+        // compares $subject->getAmount() against Oney's per-currency bounds, and on a
+        // multi-currency channel the display currency need not be the order's. Falls back to the
+        // context for a payment carrying no currency, which the Sylius contract allows.
+        $activeCurrencyCode = $subject->getCurrencyCode() ?? $this->currencyContext->getCurrencyCode();
 
         foreach ($supportedMethods as $key => $paymentMethod) {
             Assert::isInstanceOf($paymentMethod, PaymentMethodInterface::class);

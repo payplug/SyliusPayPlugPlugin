@@ -4,22 +4,35 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\ApiClient;
 
-use Payplug\Authentication;
 use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
+use PayplugUnifiedCore\Auth\TokenManager;
+use PayplugUnifiedCore\Exceptions\ApiException;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 
 final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
 {
     public function __construct(
         private RepositoryInterface $gatewayConfigRepository,
         private CacheInterface $cache,
+        private TokenManager $tokenManager,
     ) {
     }
 
+    /**
+     * Channel-ambiguous: since PRE-3628 several enabled gateway configs may share a factory name —
+     * one per channel — and findOneBy() then returns an arbitrary one of them, so the client this
+     * returns may carry another channel's account credentials.
+     *
+     * @internal Kept off {@see PayPlugApiClientFactoryInterface} so no application class can reach
+     *           it; the sole remaining callers are the `payplug_sylius_payplug_plugin.api_client.*`
+     *           service-factory definitions in config/services/client.xml, which are #[Autowire]d
+     *           into seven services that have no payment method in scope. Use
+     *           {@see self::createForPaymentMethod()} everywhere else. Removed once those
+     *           singletons are made channel-aware — the open half of PRE-3682.
+     */
     public function create(string $factoryName): PayPlugApiClientInterface
     {
         /** @var GatewayConfigInterface|null $gatewayConfig */
@@ -54,26 +67,17 @@ final class PayPlugApiClientFactory implements PayPlugApiClientFactoryInterface
         }
         /** @var array<string, string> $clientConfig */
         $clientConfig = $rawClientConfig;
-        $cacheKey = sprintf('payplug_%s_api_key_%s', $gatewayConfig->getFactoryName(), $isLive ? 'live' : 'test');
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($clientConfig) {
-            $response = Authentication::generateJWT($clientConfig['client_id'] ?? '', $clientConfig['client_secret'] ?? '');
-            if ([] === $response || !is_array($response['httpResponse'])) {
-                throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
-            }
+        $clientId = $clientConfig['client_id'] ?? '';
+        $clientSecret = $clientConfig['client_secret'] ?? '';
+        if ('' === $clientId || '' === $clientSecret) {
+            throw new GatewayConfigurationException('No client config found for ' . $gatewayConfig->getFactoryName() . '. Please renew your credentials in the PayPlug plugin configuration.');
+        }
 
-            $accessToken = $response['httpResponse']['access_token'];
-            if (!is_string($accessToken)) {
-                throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.');
-            }
-            $expiresIn = $response['httpResponse']['expires_in'];
-            if (!is_int($expiresIn)) {
-                $expiresIn = 200;
-            }
-
-            $item->expiresAfter($expiresIn);
-
-            return $accessToken;
-        });
+        try {
+            return $this->tokenManager->getValidToken($clientId, $clientSecret);
+        } catch (ApiException $e) {
+            throw new GatewayConfigurationException('Unable to connect to PayPlug API. Please check your credentials in the PayPlug plugin configuration.', 0, $e);
+        }
     }
 }

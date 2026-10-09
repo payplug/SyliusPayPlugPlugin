@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
 
-use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactory;
+use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Handler\PaymentNotificationHandler;
@@ -18,7 +18,7 @@ use Symfony\Component\Workflow\Event\TransitionEvent;
 final class CaptureAuthorizedPaymentProcessor
 {
     public function __construct(
-        private PayPlugApiClientFactory $apiClientFactory,
+        private PayPlugApiClientFactoryInterface $apiClientFactory,
         private PaymentNotificationHandler $paymentNotificationHandler,
     ) {
     }

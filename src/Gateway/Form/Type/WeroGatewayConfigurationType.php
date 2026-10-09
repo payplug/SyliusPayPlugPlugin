@@ -19,7 +19,5 @@ final class WeroGatewayConfigurationType extends AbstractGatewayConfigurationTyp
 {
     protected string $gatewayFactoryTitle = WeroGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = WeroGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = WeroGatewayFactory::BASE_CURRENCY_CODE;
 }

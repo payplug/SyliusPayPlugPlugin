@@ -27,7 +27,21 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Webmozart\Assert\Assert;
 
-/** @deprecated  */
+/**
+ * @deprecated Legacy Payum-era static webhook receiver for the non-Unified-API (SDK-based)
+ *             gateways — Oney, Bancontact, Apple Pay, and the legacy card flow. Superseded by
+ *             Sylius's native per-payment-method notify mechanism: NotifyPaymentProvider and
+ *             NotifyRefundPaymentProvider (both #[AsNotifyPaymentProvider]) already route these
+ *             gateways' real notifications through sylius_payment_method_notify
+ *             (/payment-methods/{code}) instead, via the notification_url PayPlugPaymentDataCreator
+ *             sends at payment-creation time. Unified API traffic (Hosted Fields and any future
+ *             UPC-backed method) never used this branch — see UnifiedApiIpnAction instead, which
+ *             needs its own fixed, parameter-less URL since PayPlug's Unified API notifier
+ *             Receiver is configured once per merchant in Cockpit and cannot target a
+ *             per-payment-method route. Kept, rather than deleted outright, until it's confirmed
+ *             no already-onboarded merchant's account still has a webhook pointed at this route
+ *             for the legacy flow.
+ */
 #[AsController]
 class IpnAction
 {
@@ -76,7 +90,7 @@ class IpnAction
 
         if (
             !$paymentMethod->getGatewayConfig() instanceof GatewayConfigInterface ||
-            !\in_array($factoryName = $paymentMethod->getGatewayConfig()->getFactoryName(), [
+            !\in_array($paymentMethod->getGatewayConfig()->getFactoryName(), [
                 PayPlugGatewayFactory::FACTORY_NAME,
                 OneyGatewayFactory::FACTORY_NAME,
                 BancontactGatewayFactory::FACTORY_NAME,
@@ -86,7 +100,7 @@ class IpnAction
             return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
 
-        $this->payPlugApiClient = $this->apiClientFactory->create($factoryName);
+        $this->payPlugApiClient = $this->apiClientFactory->createForPaymentMethod($paymentMethod);
 
         try {
             $resource = $this->payPlugApiClient->treat($input);

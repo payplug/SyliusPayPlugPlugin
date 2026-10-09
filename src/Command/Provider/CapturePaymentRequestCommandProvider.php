@@ -10,6 +10,7 @@ use Sylius\Bundle\PaymentBundle\Command\Offline\CapturePaymentRequest as Offline
 use Sylius\Bundle\PaymentBundle\CommandProvider\PaymentRequestCommandProviderInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 #[AutoconfigureTag(
     'payplug_sylius_payplug_plugin.command_provider.payplug',
@@ -41,6 +42,14 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 )]
 final class CapturePaymentRequestCommandProvider implements PaymentRequestCommandProviderInterface
 {
+    use DelegatesToHostedFieldsCommandProviderTrait;
+
+    public function __construct(
+        #[Autowire(service: CaptureHostedPaymentRequestCommandProvider::class)]
+        private PaymentRequestCommandProviderInterface $hostedFieldsCommandProvider,
+    ) {
+    }
+
     public function supports(PaymentRequestInterface $paymentRequest): bool
     {
         return $paymentRequest->getAction() === PaymentRequestInterface::ACTION_CAPTURE;
@@ -48,6 +57,11 @@ final class CapturePaymentRequestCommandProvider implements PaymentRequestComman
 
     public function provide(PaymentRequestInterface $paymentRequest): object
     {
+        $hostedFieldsResult = $this->delegateToHostedFieldsCommandProvider($paymentRequest, $this->hostedFieldsCommandProvider);
+        if (null !== $hostedFieldsResult) {
+            return $hostedFieldsResult;
+        }
+
         if ($this->isAlreadyCreated($paymentRequest)) {
             // The payment has already been created, let's use the offline capture request to be redirected to the thank-you page
             return new OfflineCapturePaymentRequest($paymentRequest->getId());

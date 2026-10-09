@@ -19,7 +19,5 @@ final class AmericanExpressGatewayConfigurationType extends AbstractGatewayConfi
 {
     protected string $gatewayFactoryTitle = AmericanExpressGatewayFactory::FACTORY_TITLE;
 
-    protected string $gatewayFactoryName = AmericanExpressGatewayFactory::FACTORY_NAME;
-
     protected string $gatewayBaseCurrencyCode = AmericanExpressGatewayFactory::BASE_CURRENCY_CODE;
 }

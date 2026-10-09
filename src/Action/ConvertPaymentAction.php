@@ -18,7 +18,19 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-/** @deprecated */
+/**
+ * @deprecated Dead Payum wiring — this action is never executed.
+ *
+ * The `payum.action` tags declared below do reach the compiled container, but no Payum gateway is
+ * ever registered for the `payplug*` factory names: the only `payum.gateway_factory_builder` tags
+ * live in config/services/gateway.xml, which PayPlugSyliusPayPlugExtension::load() does not load.
+ * With no gateway to attach to, the tagged action is collected and then never run.
+ *
+ * The payment payload is now built by {@see \PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator},
+ * called directly from {@see \PayPlug\SyliusPayPlugPlugin\Command\Handler\CapturePaymentRequestHandler}.
+ * Kept only as an opt-in escape hatch for host applications importing gateway.xml themselves.
+ * Will be removed permanently in early 2027.
+ */
 #[AutoconfigureTag(
     name: 'payum.action',
     attributes: [

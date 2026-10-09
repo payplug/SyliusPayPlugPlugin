@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PayPlug\SyliusPayPlugPlugin\PaymentProcessing;
+
+use Sylius\Component\Core\Model\PaymentInterface;
+
+interface HostedFieldsPaymentProcessorInterface
+{
+    public function process(PaymentInterface $payment, HostedFieldsCaptureData $captureData): void;
+}
