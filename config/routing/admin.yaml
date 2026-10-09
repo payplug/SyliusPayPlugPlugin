@@ -3,3 +3,19 @@ controllers:
         path: '../../src/Action/Admin/'
         namespace: 'PayPlug\SyliusPayPlugPlugin\Action\Admin'
     type: attribute
+# Declared here rather than with #[Route] attributes — see AuthorizedPaymentController's docblock.
+payplug_sylius_admin_payment_capture:
+    path: /payplug/orders/{orderId}/payments/{paymentId}/capture
+    methods: [POST]
+    controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\AuthorizedPaymentController::capture
+    requirements:
+        orderId: \d+
+        paymentId: \d+
+
+payplug_sylius_admin_payment_cancel:
+    path: /payplug/orders/{orderId}/payments/{paymentId}/cancel
+    methods: [POST]
+    controller: PayPlug\SyliusPayPlugPlugin\Action\Admin\AuthorizedPaymentController::cancel
+    requirements:
+        orderId: \d+
+        paymentId: \d+

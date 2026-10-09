@@ -8,6 +8,7 @@ use PayPlug\SyliusPayPlugPlugin\Command\CaptureAliasPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Command\PaymentCaptureFlow;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Resolver\SelectedCardResolver;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentCaptureContextBuilder;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentCaptureOutcomeApplier;
 use PayPlug\SyliusPayPlugPlugin\Upc\UnifiedApiPaymentCreatorInterface;
@@ -68,12 +69,14 @@ final class CaptureAliasPaymentRequestHandler
             return;
         }
 
-        $payment->setDetails([
+        $createdDetails = [
             ...$payment->getDetails(),
             'alias_id' => $card->getExternalId(),
             'alias_payment_created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
             ...$this->contextBuilder->resolveHostedFieldsIds($output->body),
-        ]);
+        ];
+        // Before applyOutcome() below — see CaptureHostedPaymentRequestHandler's own comment.
+        $payment->setDetails($common->capture ? $createdDetails : AuthorizationDetails::open($createdDetails, $output, $amount));
 
         $this->outcomeApplier->applyOutcome($paymentRequest, $payment, $output);
 

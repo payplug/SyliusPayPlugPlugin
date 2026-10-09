@@ -7,6 +7,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Handler;
 use Doctrine\Persistence\ManagerRegistry;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
 use PayPlug\SyliusPayPlugPlugin\Handler\HostedFieldsWebhookNotificationHandler;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\PayplugCardPersister;
 use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
@@ -639,5 +640,62 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
         $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
 
         $this->handler->treat($this->payment(42, 1000, null, $details), $body, ['Authorization' => 'Bearer shared-secret']);
+    }
+
+    public function testTreat_onADeferredCapturePaymentsOwnConfirmation_appliesAuthorizedNotPaid(): void
+    {
+        $body = \json_encode(['id' => 'op_auth', 'execCode' => '0000', 'orderId' => '42', 'amount' => 1000, 'maxCaptureDate' => '2026-10-01T12:00:00+00:00']);
+        $payment = $this->payment(42, 1000, null, [
+            'hosted_fields_operation_id' => 'op_auth',
+            AuthorizationDetails::DEFERRED => true,
+            AuthorizationDetails::AUTHORIZED_AMOUNT => 1000,
+        ]);
+
+        $this->paymentRepository->method('isTreated')->willReturn(false);
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::AUTHORIZED);
+        // A 3DS authorization only learns its capture deadline here.
+        $payment->expects(self::once())->method('setDetails')->with(self::callback(
+            static fn (array $details): bool => '2026-10-01T12:00:00+00:00' === $details[AuthorizationDetails::MAX_CAPTURE_DATE],
+        ));
+
+        $this->handler->treat($payment, (string) $body, []);
+    }
+
+    public function testTreat_onACaptureConfirmation_onlyTracksItWithoutTouchingThePaymentState(): void
+    {
+        $body = \json_encode(['id' => 'op_c1', 'execCode' => '0000', 'orderId' => '42', 'amount' => 300]);
+        $payment = $this->payment(42, 1000, null, [
+            AuthorizationDetails::DEFERRED => true,
+            AuthorizationDetails::AUTHORIZED_AMOUNT => 1000,
+            AuthorizationDetails::CAPTURES => [['id' => 'op_c1', 'amount' => 300]],
+        ]);
+
+        $this->paymentRepository->method('isTreated')->willReturn(false);
+        $this->paymentRepository->expects(self::once())->method('markTreated')->with('op_c1');
+        // Its "0000" must never reach the payment as PAID: the capture's effect was already
+        // applied synchronously, and a partial capture leaves the payment authorized.
+        $this->orderStateMutator->expects(self::never())->method('apply');
+        $payment->expects(self::never())->method('setDetails');
+
+        $this->handler->treat($payment, (string) $body, []);
+    }
+
+    public function testTreat_onAFailedCaptureConfirmation_flagsTheCaptureFailedAndAlertsTheMerchant(): void
+    {
+        $body = \json_encode(['id' => 'op_c1', 'execCode' => '4001', 'orderId' => '42', 'amount' => 300]);
+        $payment = $this->payment(42, 1000, null, [
+            AuthorizationDetails::DEFERRED => true,
+            AuthorizationDetails::AUTHORIZED_AMOUNT => 1000,
+            AuthorizationDetails::CAPTURES => [['id' => 'op_c1', 'amount' => 300]],
+        ]);
+
+        $this->paymentRepository->method('isTreated')->willReturn(false);
+        $this->orderStateMutator->expects(self::never())->method('apply');
+        $this->logger->expects(self::once())->method('critical');
+        $payment->expects(self::once())->method('setDetails')->with(self::callback(
+            static fn (array $details): bool => true === $details[AuthorizationDetails::CAPTURES][0]['failed'],
+        ));
+
+        $this->handler->treat($payment, (string) $body, []);
     }
 }

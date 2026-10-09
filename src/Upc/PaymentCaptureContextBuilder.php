@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPlug\SyliusPayPlugPlugin\Upc;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayplugUnifiedCore\Dto\BrowserDto;
 use PayplugUnifiedCore\Dto\CommonFieldsDto;
 use PayplugUnifiedCore\Dto\CustomerDto;
@@ -52,6 +53,11 @@ final class PaymentCaptureContextBuilder
         // here targets the multi-currency ones. UPC omits the key entirely rather than sending null.
         $common = new CommonFieldsDto($accountId, $amount, \strtoupper($currencyCode), $orderId);
         $common->description = $this->resolveDescription($order);
+        // Deferred capture: open an authorization only, captured/cancelled later from the admin
+        // order screen (see AuthorizedPaymentOperationProcessor).
+        $common->capture = !PayPlugGatewayFactory::isDeferredCaptureHostedFieldsConfig(
+            $paymentRequest->getPayment()->getMethod()?->getGatewayConfig(),
+        );
         // Confirmed with PayPlug: this field has no effect on their side regardless of value for
         // Hosted Fields/UPC — the only working notification path is the static Cockpit-configured
         // Receiver at /payplug/v2/ipn (see UnifiedApiIpnAction's docblock). Set anyway to keep the

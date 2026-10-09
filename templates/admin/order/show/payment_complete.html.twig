@@ -1,0 +1,7 @@
+{# Replaces Sylius's own "Complete" payment action only for a deferred-capture Hosted Fields
+   payment, whose capture is driven from the PayPlug authorization block instead (partial amounts,
+   remaining amount, deadline, explicit refusal messages). Every other payment keeps Sylius's
+   action untouched. #}
+{% if payplug_authorization(hookable_metadata.context.payment) is null %}
+    {% include '@SyliusAdmin/order/show/content/sections/payments/item/actions/complete.html.twig' %}
+{% endif %}

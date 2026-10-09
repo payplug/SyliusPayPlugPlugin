@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
 use PayPlug\SyliusPayPlugPlugin\Command\NotifyHostedPaymentRequest;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\ScopedConfigurationRepositoryInterface;
 use PayplugUnifiedCore\Contracts\ILock;
 use PayplugUnifiedCore\Contracts\IOrderStateMutator;
@@ -82,7 +83,10 @@ final class NotifyHostedPaymentRequestHandler
             }
 
             $this->paymentRepository->save($operationData);
-            $this->orderStateMutator->apply($operationData->orderId, $operationData->outcome);
+            // This per-request notification only ever confirms the payment's own creation, so an
+            // authorization-only payment's success is "authorized", never "paid".
+            $outcome = AuthorizationDetails::fromDetails($paymentRequest->getPayment()->getDetails())->resolveCreationOutcome($operationData->outcome);
+            $this->orderStateMutator->apply($operationData->orderId, $outcome);
             $this->paymentRepository->markTreated($operationData->operationId);
 
             $this->stateMachine->apply($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);

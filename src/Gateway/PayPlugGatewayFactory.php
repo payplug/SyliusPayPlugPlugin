@@ -103,6 +103,18 @@ final class PayPlugGatewayFactory extends AbstractGatewayFactory
             true === ($gatewayConfig->getConfig()[self::HOSTED_FIELDS] ?? false);
     }
 
+    /**
+     * True for a Hosted Fields config whose merchant opted into deferred capture: its payments are
+     * then created as authorizations only (UPC capture=false), captured or cancelled later from the
+     * admin order screen. The legacy SDK flow reads the same DEFERRED_CAPTURE flag on its own
+     * (PayPlugPaymentDataCreator), so this deliberately excludes it.
+     */
+    public static function isDeferredCaptureHostedFieldsConfig(?GatewayConfigInterface $gatewayConfig): bool
+    {
+        return self::isHostedFieldsConfig($gatewayConfig) &&
+            true === ($gatewayConfig?->getConfig()[self::DEFERRED_CAPTURE] ?? false);
+    }
+
     private static function isBlank(mixed $value): bool
     {
         if (!is_scalar($value)) {

@@ -16,6 +16,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentOrderIdResolver;
 use PayPlug\SyliusPayPlugPlugin\Upc\RefundCreatorInterface;
 use PayPlug\SyliusPayPlugPlugin\Upc\RefundDetailsLockKey;
@@ -195,7 +196,11 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
             // Subtracting whatever this plugin already recorded as refunded (computed BEFORE
             // appending the new entry below) keeps this one accurate, which matchesPayment() then
             // relies on to ever match this refund's own webhook confirmation.
-            $refundedAmount = $originalAmount - self::sumRecordedRefunds($refunds);
+            // A deferred-capture payment only ever received what was captured — less than its
+            // own amount once part of the authorization was cancelled.
+            $authorization = AuthorizationDetails::fromDetails($details);
+            $receivedAmount = $authorization->isDeferred() ? $authorization->capturedAmount() : $originalAmount;
+            $refundedAmount = $receivedAmount - self::sumRecordedRefunds($refunds);
             self::appendRefundEntry($payment, $details, $refunds, null, $externalId, $refundedAmount);
         });
     }

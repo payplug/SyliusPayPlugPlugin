@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Command\Handler;
 
 use PayPlug\SyliusPayPlugPlugin\Command\CaptureHostedPaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Command\PaymentCaptureFlow;
+use PayPlug\SyliusPayPlugPlugin\Upc\AuthorizationDetails;
 use PayPlug\SyliusPayPlugPlugin\Upc\CardDataFromPaymentMethodExtractor;
 use PayPlug\SyliusPayPlugPlugin\Upc\OperationStatusFetcherInterface;
 use PayPlug\SyliusPayPlugPlugin\Upc\PaymentCaptureContextBuilder;
@@ -73,11 +74,14 @@ final class CaptureHostedPaymentRequestHandler
         }
 
         $hostedFieldsIds = $this->contextBuilder->resolveHostedFieldsIds($output->body);
-        $payment->setDetails([
+        $createdDetails = [
             ...$details,
             'hosted_fields_created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
             ...$hostedFieldsIds,
-        ]);
+        ];
+        // Before applyOutcome() below, which reads this back to apply "authorize" rather than
+        // "complete" for an authorization-only payment.
+        $payment->setDetails($dto->common->capture ? $createdDetails : AuthorizationDetails::open($createdDetails, $output, $amountAndCurrency[0]));
 
         $this->outcomeApplier->applyOutcome($paymentRequest, $payment, $output);
 
