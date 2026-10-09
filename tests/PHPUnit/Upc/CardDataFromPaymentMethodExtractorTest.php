@@ -112,6 +112,64 @@ final class CardDataFromPaymentMethodExtractorTest extends TestCase
         self::assertSame([], CardDataFromPaymentMethodExtractor::extract($body));
     }
 
+    public function testExtract_withStoredId_returnsItAsTheAliasId(): void
+    {
+        $body = json_encode(['paymentMethod' => ['storedId' => 'card_stored']]);
+
+        self::assertSame(['aliasId' => 'card_stored'], CardDataFromPaymentMethodExtractor::extract($body));
+    }
+
+    public function testExtract_withBothStoredIdAndId_prefersStoredId(): void
+    {
+        $body = json_encode(['paymentMethod' => ['storedId' => 'card_stored', 'id' => 'card_other']]);
+
+        self::assertSame(['aliasId' => 'card_stored'], CardDataFromPaymentMethodExtractor::extract($body));
+    }
+
+    /** @dataProvider unusableStoredIds */
+    public function testExtract_withAnUnusableStoredId_fallsBackToId(mixed $storedId): void
+    {
+        $body = json_encode(['paymentMethod' => ['storedId' => $storedId, 'id' => 'card_xxx']]);
+
+        self::assertSame(['aliasId' => 'card_xxx'], CardDataFromPaymentMethodExtractor::extract($body));
+    }
+
+    /** @return iterable<string, array{0: mixed}> */
+    public static function unusableStoredIds(): iterable
+    {
+        yield 'empty string' => [''];
+        yield 'null' => [null];
+        yield 'integer' => [123];
+        yield 'array' => [['card_stored']];
+    }
+
+    public function testExtract_withNeitherStoredIdNorId_returnsNoAliasId(): void
+    {
+        self::assertSame([], CardDataFromPaymentMethodExtractor::extract(json_encode(['paymentMethod' => ['card' => []]])));
+    }
+
+    public function testExtract_withTheRealWebhookShape_extractsTheAliasAndTheCardFields(): void
+    {
+        $body = json_encode([
+            'operationType' => 'PAYMENT',
+            'paymentMethod' => [
+                'storedId' => 'card_new_1',
+                'card' => ['network' => 'VISA', 'type' => 'VISA', 'code6x4' => '446421XXXXXX0000'],
+                'details' => ['fullName' => 'John Doe', 'validityDate' => '2030-12', 'selectedBrand' => 'VISA'],
+            ],
+            'orderId' => '42',
+            'id' => '715ac841-1111-4111-8111-111111111111',
+        ]);
+
+        self::assertSame([
+            'aliasId' => 'card_new_1',
+            'brand' => 'VISA',
+            'last4' => '0000',
+            'expirationYear' => 2030,
+            'expirationMonth' => 12,
+        ], CardDataFromPaymentMethodExtractor::extract($body));
+    }
+
     public function testExtractFromDecoded_withAnAlreadyDecodedBody_behavesLikeExtract(): void
     {
         $decoded = ['paymentMethod' => ['id' => 'card_xxx', 'card' => ['network' => 'VISA']]];

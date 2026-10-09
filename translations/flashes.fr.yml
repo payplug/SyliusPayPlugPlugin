@@ -23,6 +23,7 @@ payplug_sylius_payplug_plugin:
                 cancel_after_capture: Une capture a déjà été effectuée sur ce paiement, il ne peut plus être annulé. Utilisez le remboursement pour rendre tout ou partie du montant capturé.
                 nothing_remaining: Il ne reste aucun montant à capturer ou annuler sur cette autorisation.
                 invalid_amount: "Montant invalide. Saisissez un montant positif, par exemple 12,50, ou laissez le champ vide pour le montant restant."
+                unsupported_currency: "Impossible de saisir un montant pour un paiement dans cette devise (%currency%). Laissez le champ vide pour utiliser tout le montant restant. Le paiement n'a pas été modifié."
                 amount_exceeds_remaining: "Le montant dépasse le restant disponible (%remaining%). Saisissez un montant inférieur ou égal."
                 amount_refused: PayPlug a refusé ce montant (supérieur au montant disponible ou invalide). Rechargez la page et vérifiez le montant restant.
                 already_captured: PayPlug indique que ce paiement a déjà été capturé. Rechargez la page ; si l'état affiché ne correspond pas, contactez le support PayPlug.

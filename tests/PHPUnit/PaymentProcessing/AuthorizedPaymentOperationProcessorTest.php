@@ -140,6 +140,86 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
         self::assertSame(['%remaining%' => '10.00 EUR'], $exception->getTranslationParameters());
     }
 
+    public function testCapture_aboveTheRemainderInUsd_formatsTheRemainingAmountInUsd(): void
+    {
+        $payment = $this->authorizedPayment(1000, currency: 'USD');
+        $this->operator->expects(self::never())->method('capture');
+
+        $exception = $this->catchRefusal(fn () => $this->processor->capture($payment, 1001));
+
+        self::assertSame(['%remaining%' => '10.00 USD'], $exception->getTranslationParameters());
+    }
+
+    /**
+     * @return iterable<string, array{string|null, bool}>
+     */
+    public static function typedAmountCurrencies(): iterable
+    {
+        yield 'EUR' => ['EUR', true];
+        yield 'USD' => ['USD', true];
+        yield 'lowercase eur' => ['eur', true];
+        yield 'zero-decimal JPY' => ['JPY', false];
+        yield 'zero-decimal XPF' => ['XPF', false];
+        yield 'three-decimal KWD' => ['KWD', false];
+        yield 'empty' => ['', false];
+        yield 'malformed' => ['EU', false];
+        yield 'with a digit' => ['E1R', false];
+        yield 'no currency' => [null, false];
+    }
+
+    /**
+     * @dataProvider typedAmountCurrencies
+     */
+    public function testSupportsTypedAmounts_onlyForATwoDecimalCurrency(?string $currency, bool $expected): void
+    {
+        self::assertSame($expected, AuthorizedPaymentOperationProcessor::supportsTypedAmounts($currency));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function explicitAmountsInUnsupportedCurrencies(): iterable
+    {
+        yield 'capture in JPY' => ['capture', 'JPY'];
+        yield 'cancel in KWD' => ['cancel', 'KWD'];
+        yield 'capture without a currency' => ['capture', ''];
+    }
+
+    /**
+     * @dataProvider explicitAmountsInUnsupportedCurrencies
+     */
+    public function testAnExplicitAmountInAnUnsupportedCurrency_isRefusedBeforeUpcAndRecordsNothing(
+        string $operation,
+        string $currency,
+    ): void
+    {
+        $payment = $this->authorizedPayment(1000, currency: $currency);
+        $detailsBefore = $payment->getDetails();
+        $this->operator->expects(self::never())->method('capture');
+        $this->operator->expects(self::never())->method('cancel');
+        $this->entityManager->expects(self::never())->method('flush');
+
+        $exception = $this->catchRefusal(fn () => 'capture' === $operation
+            ? $this->processor->capture($payment, 500)
+            : $this->processor->cancel($payment, 500));
+
+        self::assertSame('payplug_sylius_payplug_plugin.admin.authorization.error.unsupported_currency', $exception->getTranslationKey());
+        self::assertSame(['%currency%' => $currency], $exception->getTranslationParameters());
+        self::assertSame($detailsBefore, $payment->getDetails());
+    }
+
+    public function testCapture_ofTheWholeRemainderInAZeroDecimalCurrency_sendsTheStoredAmount(): void
+    {
+        $payment = $this->authorizedPayment(1000, currency: 'JPY');
+        $this->operator->expects(self::once())->method('capture')
+            ->with(self::anything(), 'pay_1', '42', 1000, 'JPY')
+            ->willReturn($this->captureOutput('op_c1'));
+
+        $this->processor->capture($payment, null);
+
+        self::assertSame(1000, AuthorizationDetails::fromDetails($payment->getDetails())->capturedAmount());
+    }
+
     public function testCapture_withAStaleVersion_isRefusedSoAReplayedFormCannotCaptureTwice(): void
     {
         $payment = $this->authorizedPayment(1000);
@@ -393,7 +473,11 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
         $this->processor->onCompleteTransition($this->transitionEvent($payment));
     }
 
-    private function authorizedPayment(int $amount, ?string $maxCaptureDate = '2026-09-30T10:00:00+00:00'): Payment
+    private function authorizedPayment(
+        int $amount,
+        ?string $maxCaptureDate = '2026-09-30T10:00:00+00:00',
+        string $currency = 'EUR',
+    ): Payment
     {
         $gatewayConfig = new GatewayConfig();
         $gatewayConfig->setFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
@@ -416,7 +500,7 @@ final class AuthorizedPaymentOperationProcessorTest extends TestCase
         $payment->setOrder(new Order());
         $payment->setMethod($method);
         $payment->setAmount($amount);
-        $payment->setCurrencyCode('EUR');
+        $payment->setCurrencyCode($currency);
         $payment->setState(PaymentInterface::STATE_AUTHORIZED);
         $payment->setDetails(AuthorizationDetails::open(
             ['hosted_fields_payment_id' => 'pay_1'],

@@ -300,9 +300,9 @@ class HostedFieldsWebhookNotificationHandler
     // A 3DS-challenge capture never gets an alias back synchronously (CaptureHostedPaymentRequestHandler
     // only sees one on a direct, frictionless success) — this webhook, fired once the challenge is
     // validated, is the only place a 3DS payment's card ever gets saved. The alias/card metadata
-    // itself is already in $rawBody: confirmed the same paymentMethod.{id, card, details} shape as
-    // the operation resource CaptureHostedPaymentRequestHandler fetches separately, so no extra API
-    // call is needed here.
+    // itself is already in $rawBody, as paymentMethod.{storedId, card, details}, so no extra API call
+    // is needed here. The operation resource CaptureHostedPaymentRequestHandler fetches separately
+    // carries the alias as paymentMethod.id; CardDataFromPaymentMethodExtractor reads both.
     private function maybeSaveCard(PaymentInterface $payment, string $rawBody): void
     {
         $details = $payment->getDetails();

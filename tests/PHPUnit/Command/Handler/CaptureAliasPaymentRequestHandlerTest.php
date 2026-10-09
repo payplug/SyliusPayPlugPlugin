@@ -354,6 +354,63 @@ final class CaptureAliasPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new CaptureAliasPaymentRequest(null));
     }
 
+    public function testInvoke_sendsTheSavedCardAliasOnlyThroughTheDtoAndCompletesWhenOutputCarriesNoAliasId(): void
+    {
+        $card = $this->savedCard();
+        $paymentRequest = $this->paymentRequestWithSelectedCard($card);
+        $payment = $paymentRequest->getPayment();
+
+        $this->unifiedApiPaymentCreator->expects(self::once())->method('createPayment')
+            ->with(self::callback(static function (PaymentDto $dto) use ($card): bool {
+                self::assertSame($card->getExternalId(), $dto->aliasId);
+                foreach (['id', 'storedId'] as $reserved) {
+                    self::assertArrayNotHasKey($reserved, $dto->paymentMethod ?? []);
+                }
+
+                return true;
+            }))
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1","execCode":"0000"}', null, null, null));
+
+        $payment->expects(self::once())->method('setDetails')
+            ->with(self::callback(static fn (array $details): bool => 'alias_existing_1' === ($details['alias_id'] ?? null)));
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new CaptureAliasPaymentRequest(null));
+    }
+
+    public function testInvoke_whenResponseHasNoPaymentId_stillCompletesAndLogsAWarning(): void
+    {
+        $paymentRequest = $this->paymentRequestWithSelectedCard($this->savedCard());
+        $payment = $paymentRequest->getPayment();
+
+        $this->unifiedApiPaymentCreator->method('createPayment')
+            ->willReturn(new PaymentOutput(201, '{"execCode":"0000","operationIds":["op_1"]}', null, null, null));
+
+        $payment->expects(self::once())->method('setDetails')
+            ->with(self::callback(static fn (array $details): bool => !isset($details['hosted_fields_payment_id']) &&
+                'op_1' === ($details['hosted_fields_operation_id'] ?? null)));
+        $this->logger->expects(self::once())->method('warning')
+            ->with(self::stringContains('carried no payment id'), self::anything());
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new CaptureAliasPaymentRequest(null));
+    }
+
+    public function testInvoke_whenResponseHasAPaymentId_logsNoWarning(): void
+    {
+        $this->paymentRequestWithSelectedCard($this->savedCard());
+
+        $this->unifiedApiPaymentCreator->method('createPayment')
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1","execCode":"0000","operationIds":["op_1"]}', null, null, null));
+
+        $this->logger->expects(self::never())->method('warning');
+
+        $this->handler->__invoke(new CaptureAliasPaymentRequest(null));
+    }
+
     public function testInvoke_onPending3ds_storesTheUnifiedApiPaymentAndOperationIdsOnThePaymentDetails(): void
     {
         $paymentRequest = $this->paymentRequestWithSelectedCard($this->savedCard());

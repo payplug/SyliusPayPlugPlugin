@@ -204,4 +204,47 @@ final class PaymentCaptureOutcomeApplierTest extends TestCase
 
         $this->applier->applyOutcome($paymentRequest, $payment, $output);
     }
+
+    public function testWarnWhenPaymentIdMissing_withNoPaymentId_logsAWarningWithIdsOnly(): void
+    {
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getId')->willReturn(42);
+
+        $this->logger->expects(self::once())->method('warning')->with(
+            '[PayPlug][UPC] Payment created but the response carried no payment id; it cannot be refunded from the back office until PayPlug returns a payment id.',
+            self::callback(static fn (array $context): bool => [
+                'sylius_payment_id' => 42,
+                'flow' => 'Hosted',
+                'hosted_fields_operation_id' => 'op_1',
+            ] === $context),
+        );
+
+        $this->applier->warnWhenPaymentIdMissing($payment, PaymentCaptureFlow::Hosted, ['hosted_fields_operation_id' => 'op_1']);
+    }
+
+    public function testWarnWhenPaymentIdMissing_withNeitherId_logsANullOperationId(): void
+    {
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getId')->willReturn(42);
+
+        $this->logger->expects(self::once())->method('warning')->with(
+            self::anything(),
+            self::callback(static fn (array $context): bool => 'Alias' === $context['flow'] &&
+                \array_key_exists('hosted_fields_operation_id', $context) &&
+                null === $context['hosted_fields_operation_id']),
+        );
+
+        $this->applier->warnWhenPaymentIdMissing($payment, PaymentCaptureFlow::Alias, []);
+    }
+
+    public function testWarnWhenPaymentIdMissing_withAPaymentId_logsNothing(): void
+    {
+        $this->logger->expects(self::never())->method('warning');
+
+        $this->applier->warnWhenPaymentIdMissing(
+            $this->createMock(PaymentInterface::class),
+            PaymentCaptureFlow::Alias,
+            ['hosted_fields_payment_id' => 'pay_1', 'hosted_fields_operation_id' => 'op_1'],
+        );
+    }
 }

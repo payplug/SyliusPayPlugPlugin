@@ -25,7 +25,29 @@ final class PayPlugExtensionTest extends TestCase
         $this->canSaveCardChecker = $this->createMock(CanSaveCardCheckerInterface::class);
         $this->apiClientFactory = $this->createMock(PayPlugApiClientFactoryInterface::class);
 
-        $this->extension = new PayPlugExtension($this->canSaveCardChecker, $this->apiClientFactory);
+        $this->extension = new PayPlugExtension(
+            $this->canSaveCardChecker,
+            $this->apiClientFactory,
+            'https://sdk.example.test/hosted-fields.min.js',
+        );
+    }
+
+    public function testHostedFieldsSdkUrl_returnsTheConfiguredUrl(): void
+    {
+        self::assertSame('https://sdk.example.test/hosted-fields.min.js', $this->extension->hostedFieldsSdkUrl());
+    }
+
+    public function testGetFunctions_registersThePayplugHostedFieldsSdkUrlFunction(): void
+    {
+        $functions = [];
+        foreach ($this->extension->getFunctions() as $function) {
+            $functions[$function->getName()] = $function;
+        }
+
+        self::assertArrayHasKey('payplug_hosted_fields_sdk_url', $functions);
+        $callable = $functions['payplug_hosted_fields_sdk_url']->getCallable();
+        self::assertIsCallable($callable);
+        self::assertSame('https://sdk.example.test/hosted-fields.min.js', $callable());
     }
 
     public function testHostedFieldsCompanyId_returnsCompanyIdFromAccount(): void

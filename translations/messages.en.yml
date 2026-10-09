@@ -53,6 +53,7 @@ payplug_sylius_payplug_plugin:
             shipping.postcode: The postal code %postalCode% entered for the delivery address is invalid
         payplug_gateway_label: Payplug
         payment_refund_locally: The payment refund was made locally only.
+        payment_refund_missing_payment_id: 'This payment cannot be refunded from the back office: Payplug did not return its payment reference. Contact Payplug support mentioning order %order%.'
         test_mode: TEST Mode
         payplug_id: |
             Payplug ID: %paymentId%

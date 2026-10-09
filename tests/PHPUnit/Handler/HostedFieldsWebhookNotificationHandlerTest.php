@@ -325,6 +325,49 @@ final class HostedFieldsWebhookNotificationHandlerTest extends TestCase
         self::assertSame(2030, $card->getExpirationYear());
     }
 
+    public function testTreat_onPaidOutcomeWithSaveCardRequestedAndAliasInStoredId_persistsANewCard(): void
+    {
+        // Shape of a real staging webhook: the alias is in paymentMethod.storedId and there is no
+        // paymentMethod.id. The card is masked and the ids are fixtures.
+        $body = \json_encode([
+            'operationType' => 'PAYMENT',
+            'customer' => ['id' => '130', 'email' => 'test-client@example.com'],
+            'authentication' => ['status' => 'Y', 'globalStatus' => 'OK', 'mode' => 'FRICTIONLESS', 'version' => '2'],
+            'paymentMethod' => [
+                'storedId' => 'card_new_1',
+                'card' => ['network' => 'VISA', 'type' => 'VISA', 'code6x4' => '446421XXXXXX0000'],
+                'details' => ['fullName' => 'John Doe', 'validityDate' => '2030-12', 'selectedBrand' => 'VISA'],
+            ],
+            'account' => ['id' => 'PLUGINS_UHF_QA'],
+            'currency' => 'EUR',
+            'amount' => 1000,
+            'execCode' => '0000',
+            'message' => 'Successful operation',
+            'orderId' => '42',
+            'id' => 'op_715ac841',
+        ]);
+
+        $this->configurationRepository->method('get')->willReturn('Bearer shared-secret');
+        $this->paymentRepository->method('isTreated')->willReturn(false);
+
+        $method = $this->createMock(PaymentMethodInterface::class);
+        $customer = $this->createMock(CustomerInterface::class);
+        $payment = $this->payment(42, 1000, '42', ['hosted_fields_save_card' => true], $method, $customer);
+
+        $card = new Card();
+        $this->payplugCardFactory->method('createNew')->willReturn($card);
+        $this->payplugCardRepository->expects(self::once())->method('add')->with($card);
+        $this->logger->expects(self::never())->method('error');
+
+        $this->handler->treat($payment, $body, ['Authorization' => 'Bearer shared-secret']);
+
+        self::assertSame('card_new_1', $card->getExternalId());
+        self::assertSame('VISA', $card->getBrand());
+        self::assertSame('0000', $card->getLast4());
+        self::assertSame(12, $card->getExpirationMonth());
+        self::assertSame(2030, $card->getExpirationYear());
+    }
+
     public function testTreat_onPaidOutcomeWithoutSaveCardRequested_doesNotPersistACard(): void
     {
         $body = \json_encode([
