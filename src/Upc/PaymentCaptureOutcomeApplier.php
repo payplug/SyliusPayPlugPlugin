@@ -113,7 +113,10 @@ final class PaymentCaptureOutcomeApplier
         $responseBody = \json_decode($output->body, true);
         $execCode = \is_array($responseBody) ? ($responseBody['execCode'] ?? null) : null;
         if (\is_string($execCode)) {
-            $this->orderStateMutator->apply(ResourceIdentifier::toString($payment->getId()), ExecCodeMapper::toPaymentOutcome($execCode));
+            // An authorization-only payment's success is "authorized", not "paid" — see
+            // AuthorizationDetails::resolveCreationOutcome().
+            $outcome = AuthorizationDetails::fromDetails($payment->getDetails())->resolveCreationOutcome(ExecCodeMapper::toPaymentOutcome($execCode));
+            $this->orderStateMutator->apply(ResourceIdentifier::toString($payment->getId()), $outcome);
         }
     }
 }
