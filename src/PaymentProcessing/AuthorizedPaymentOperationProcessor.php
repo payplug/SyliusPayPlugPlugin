@@ -17,6 +17,7 @@ use PayplugUnifiedCore\Exceptions\AuthorizationExpiredException;
 use PayplugUnifiedCore\Exceptions\CancellationAmountException;
 use PayplugUnifiedCore\Exceptions\CaptureAmountException;
 use PayplugUnifiedCore\Exceptions\CardOperationException;
+use PayplugUnifiedCore\Exceptions\InvalidCurrencyException;
 use PayplugUnifiedCore\Exceptions\MultipleCaptureNotAllowedException;
 use PayplugUnifiedCore\Exceptions\OperationConflictException;
 use PayplugUnifiedCore\Exceptions\PartialCancellationNotAllowedException;
@@ -65,7 +66,9 @@ use Symfony\Component\Workflow\Event\TransitionEvent;
  * refunds that captured amount. See doc/authorized_payment.md.
  *
  * Amounts are integers in the minor unit Sylius stores everywhere (two decimals, whatever the
- * currency), converted for display and input with UPC's AmountHelper.
+ * currency), converted for display and input with UPC's AmountHelper. The helper converts with the
+ * currency's own minor unit, which matches Sylius's two decimals only for a 2-decimal currency, so
+ * an amount typed by the merchant is accepted in those currencies only (supportsTypedAmounts()).
  */
 final class AuthorizedPaymentOperationProcessor
 {
@@ -99,6 +102,25 @@ final class AuthorizedPaymentOperationProcessor
         return $method instanceof PaymentMethodInterface &&
             PayPlugGatewayFactory::isHostedFieldsConfig($method->getGatewayConfig()) &&
             AuthorizationDetails::fromDetails($payment->getDetails())->isDeferred();
+    }
+
+    /**
+     * Whether an amount in $currencyCode can be converted between the decimal notation the
+     * merchant types and Sylius's two-decimal minor unit: only when UPC's AmountHelper converts it
+     * with that same factor of 100. An empty, malformed or 3-decimal code is rejected by the
+     * helper; a zero-decimal one (JPY, XPF...) converts with a factor of 1.
+     */
+    public static function supportsTypedAmounts(?string $currencyCode): bool
+    {
+        if (null === $currencyCode) {
+            return false;
+        }
+
+        try {
+            return 100 === AmountHelper::toCents(1.0, $currencyCode);
+        } catch (InvalidCurrencyException) {
+            return false;
+        }
     }
 
     public function canCapture(PaymentInterface $payment): bool
@@ -272,6 +294,13 @@ final class AuthorizedPaymentOperationProcessor
      */
     private function resolveAmount(PaymentInterface $payment, ?int $amount, int $remaining): int
     {
+        $currencyCode = $payment->getCurrencyCode();
+        if (null !== $amount && !self::supportsTypedAmounts($currencyCode)) {
+            throw new AuthorizationOperationException(self::ERROR_KEY_PREFIX . 'unsupported_currency', [
+                '%currency%' => $currencyCode ?? '',
+            ]);
+        }
+
         $amount ??= $remaining;
 
         if ($amount <= 0) {
@@ -280,7 +309,7 @@ final class AuthorizedPaymentOperationProcessor
 
         if ($amount > $remaining) {
             throw new AuthorizationOperationException(self::ERROR_KEY_PREFIX . 'amount_exceeds_remaining', [
-                '%remaining%' => self::formatAmount($remaining, $payment->getCurrencyCode()),
+                '%remaining%' => self::formatAmount($remaining, (string) $currencyCode),
             ]);
         }
 
@@ -428,8 +457,12 @@ final class AuthorizedPaymentOperationProcessor
         return \is_int($execCode) || \is_string($execCode) ? $execCode : null;
     }
 
-    private static function formatAmount(int $amount, ?string $currencyCode): string
+    /**
+     * Only reached for an explicit amount, so resolveAmount() has already checked that
+     * $currencyCode is one supportsTypedAmounts() accepts: a 2-decimal currency.
+     */
+    private static function formatAmount(int $amount, string $currencyCode): string
     {
-        return \trim(\number_format(AmountHelper::fromCents($amount), 2, '.', ' ') . ' ' . ($currencyCode ?? ''));
+        return \trim(\number_format(AmountHelper::fromCents($amount, $currencyCode), 2, '.', ' ') . ' ' . $currencyCode);
     }
 }

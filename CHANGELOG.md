@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refunding a Hosted Fields payment that PayPlug created without a payment reference is refused
   with a clear back-office message, in addition to Sylius's own generic error message, and nothing
   is sent to PayPlug; the payment itself is processed normally
+- Hosted Fields deferred capture and cancel keep working with `payplug/unified-plugin-core` 1.2.1:
+  the plugin now passes the payment currency to UPC's `AmountHelper`, which requires it since
+  PRE-3724
 
 ### Breaking changes for anyone extending the plugin
 
