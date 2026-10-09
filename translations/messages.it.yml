@@ -53,6 +53,7 @@ payplug_sylius_payplug_plugin:
             shipping.postcode: Il codice postale %postalCode% inserito per l’indirizzo di consegna non è valido
         payplug_gateway_label: Payplug
         payment_refund_locally: Il rimborso del pagamento è stato effettuato solo a livello locale (interno).
+        payment_refund_missing_payment_id: 'Questo pagamento non può essere rimborsato dal back office: Payplug non ha restituito il suo riferimento di pagamento. Contatta il supporto Payplug indicando l''ordine %order%.'
         test_mode: Modalità TEST
         payplug_id: |
             ID Payplug : %paymentId%

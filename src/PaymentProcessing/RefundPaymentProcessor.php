@@ -31,6 +31,7 @@ use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Workflow\Attribute\AsCompletedListener;
 use Symfony\Component\Workflow\Event\CompletedEvent;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -161,10 +162,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
      */
     private function processHostedFields(PaymentInterface $payment): void
     {
-        // Deliberately outside the try/catch below, mirroring the legacy path's own
-        // Assert::string($details['payment_id']) — a payment reaching here without this detail
-        // set raises a raw InvalidArgumentException rather than UpdateHandlingException.
-        Assert::string($payment->getDetails()['hosted_fields_payment_id']);
+        $hostedFieldsPaymentId = $this->resolveHostedFieldsPaymentId($payment);
         $originalAmount = $payment->getAmount();
         if (null === $originalAmount) {
             throw new \LogicException('Payment amount is not set.');
@@ -174,7 +172,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         $method = $payment->getMethod();
         $lockKey = RefundDetailsLockKey::forPaymentId($payment->getId());
 
-        $this->runLockedRefund($lockKey, ['sylius_payment_id' => $payment->getId()], function () use ($payment, $method, $originalAmount): void {
+        $this->runLockedRefund($lockKey, ['sylius_payment_id' => $payment->getId()], function () use ($payment, $method, $originalAmount, $hostedFieldsPaymentId): void {
             // Re-read now that the lock is held, not a snapshot taken before it: the lock is what
             // actually keeps this read-modify-write from racing
             // HostedFieldsWebhookNotificationHandler::markMatchedRefundAsFailed()'s own — see this
@@ -182,7 +180,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
             $details = $payment->getDetails();
             $externalId = $this->createRefundOperation(
                 $method,
-                $details['hosted_fields_payment_id'],
+                $hostedFieldsPaymentId,
                 PaymentOrderIdResolver::resolve($payment->getOrder(), $payment->getId()),
                 null,
                 $payment->getCurrencyCode(),
@@ -367,8 +365,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
      */
     private function processHostedFieldsWithAmount(PaymentInterface $payment, int $amount, int $refundId): void
     {
-        // Deliberately outside the try/catch below — see processHostedFields()'s own comment.
-        Assert::string($payment->getDetails()['hosted_fields_payment_id']);
+        $hostedFieldsPaymentId = $this->resolveHostedFieldsPaymentId($payment);
 
         /** @var PaymentMethodInterface $method */
         $method = $payment->getMethod();
@@ -377,7 +374,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
         $this->runLockedRefund(
             $lockKey,
             ['sylius_payment_id' => $payment->getId(), 'refund_id' => $refundId],
-            function () use ($payment, $method, $amount, $refundId): void {
+            function () use ($payment, $method, $amount, $refundId, $hostedFieldsPaymentId): void {
                 /** @var RefundPayment $refundPayment */
                 $refundPayment = $this->refundPaymentRepository->findOneBy(['id' => $refundId]);
 
@@ -392,7 +389,7 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
                 $details = $payment->getDetails();
                 $externalId = $this->createRefundOperation(
                     $method,
-                    $details['hosted_fields_payment_id'],
+                    $hostedFieldsPaymentId,
                     PaymentOrderIdResolver::resolve($payment->getOrder(), $payment->getId()),
                     $amount,
                     $payment->getCurrencyCode(),
@@ -412,6 +409,53 @@ final class RefundPaymentProcessor implements PaymentProcessorInterface
                 $this->payplugRefundHistoryRepository->add($refundHistory);
             },
         );
+    }
+
+    /**
+     * Refunds are keyed by the payment's own id; the refund route refuses the operation id ("The
+     * reference transaction has not been found."), so there is nothing to fall back on. Refuses
+     * before the lock, the API call and any bookkeeping, tells the admin and logs ids only. A
+     * stored id is never changed afterwards, so the value read here is the one used under the lock.
+     */
+    private function resolveHostedFieldsPaymentId(PaymentInterface $payment): string
+    {
+        $details = $payment->getDetails();
+        $paymentId = $details['hosted_fields_payment_id'] ?? null;
+        if (\is_string($paymentId) && '' !== $paymentId) {
+            return $paymentId;
+        }
+
+        $orderNumber = $payment->getOrder()?->getNumber();
+        $this->logger->error('[PayPlug][UPC] Refund refused: the payment has no hosted_fields_payment_id.', [
+            'sylius_payment_id' => $payment->getId(),
+            'order_number' => $orderNumber,
+            'hosted_fields_operation_id' => $details['hosted_fields_operation_id'] ?? null,
+        ]);
+        $this->notifyAdminRefundUnavailable($orderNumber);
+
+        throw new UpdateHandlingException();
+    }
+
+    /**
+     * No main request or no session (CLI, worker) means there is no admin to tell; the log entry
+     * and the exception still record the refusal.
+     */
+    private function notifyAdminRefundUnavailable(?string $orderNumber): void
+    {
+        $request = $this->requestStack->getMainRequest();
+        if (null === $request || !$request->hasSession()) {
+            return;
+        }
+
+        $session = $request->getSession();
+        if (!$session instanceof FlashBagAwareSessionInterface) {
+            return;
+        }
+
+        $session->getFlashBag()->add('error', $this->translator->trans(
+            'payplug_sylius_payplug_plugin.ui.payment_refund_missing_payment_id',
+            ['%order%' => $orderNumber ?? ''],
+        ));
     }
 
     private static function extractFirstOperationId(string $body): ?string

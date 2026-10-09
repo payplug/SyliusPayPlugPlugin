@@ -13,6 +13,11 @@ parameters:
     # explicitly opt out for its own known-internal host, not as a general "skip TLS" switch.
     payplug.unified_api_verify_tls.default: true
     payplug.unified_api_verify_tls: '%env(bool:default:payplug.unified_api_verify_tls.default:PAYPLUG_UNIFIED_API_VERIFY_TLS)%'
+    # Hosted Fields JS SDK loaded by the checkout: one full https URL, because the host, the path
+    # and the pinned version all differ per environment. Defaults to the production SDK; QA and
+    # staging setups set PAYPLUG_HOSTED_FIELDS_SDK_URL to their own SDK URL.
+    payplug.hosted_fields_sdk_url.default: 'https://js.dalenys.com/hosted-fields/v2.2.0/hosted-fields.min.js'
+    payplug.hosted_fields_sdk_url: '%env(default:payplug.hosted_fields_sdk_url.default:PAYPLUG_HOSTED_FIELDS_SDK_URL)%'
 
 services:
     _defaults:
@@ -29,6 +34,7 @@ services:
             $payplugOauthAudience: '%payplug.oauth_audience%'
             $unifiedApiBaseUrl: '%payplug.unified_api_base_url%'
             $unifiedApiVerifyTls: '%payplug.unified_api_verify_tls%'
+            $hostedFieldsSdkUrl: '%payplug.hosted_fields_sdk_url%'
 
     # `security.csrf.token_manager` is only registered while CSRF protection is enabled, so it is
     # injected with `@?`: a hard reference would break container compilation for an application

@@ -62,8 +62,7 @@ final class AuthorizationExtension extends AbstractExtension
             'captured_amount' => $authorization->capturedAmount(),
             'cancelled_amount' => $authorization->cancelledAmount(),
             'remaining_amount' => $authorization->remainingAmount(),
-            // What the amount fields' placeholder shows: the same decimal notation they accept.
-            'remaining_amount_input' => \number_format(AmountHelper::fromCents($authorization->remainingAmount()), 2, '.', ''),
+            'remaining_amount_input' => self::remainingAmountInput($authorization->remainingAmount(), $payment->getCurrencyCode()),
             'max_capture_date' => $authorization->maxCaptureDate(),
             'expired' => $authorization->isExpired($now),
             'expiring_soon' => $authorization->isExpiringSoon($now),
@@ -71,5 +70,19 @@ final class AuthorizationExtension extends AbstractExtension
             'can_cancel' => $this->processor->canCancel($payment),
             'version' => $authorization->version(),
         ];
+    }
+
+    /**
+     * What the amount fields' placeholder shows: the same decimal notation they accept. Empty for a
+     * currency in which a typed amount would be refused (see
+     * AuthorizedPaymentOperationProcessor::supportsTypedAmounts()), which is 2-decimal otherwise.
+     */
+    private static function remainingAmountInput(int $remainingAmount, ?string $currencyCode): string
+    {
+        if (null === $currencyCode || !AuthorizedPaymentOperationProcessor::supportsTypedAmounts($currencyCode)) {
+            return '';
+        }
+
+        return \number_format(AmountHelper::fromCents($remainingAmount, $currencyCode), 2, '.', '');
     }
 }

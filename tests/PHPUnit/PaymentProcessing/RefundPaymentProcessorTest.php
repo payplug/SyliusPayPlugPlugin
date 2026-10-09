@@ -28,7 +28,10 @@ use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Resource\Exception\UpdateHandlingException;
 use Sylius\Component\Resource\Repository\RepositoryInterface;
 use Sylius\RefundPlugin\Entity\RefundPayment;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class RefundPaymentProcessorTest extends TestCase
@@ -754,6 +757,137 @@ final class RefundPaymentProcessorTest extends TestCase
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // Hosted Fields (UHF) refund without hosted_fields_payment_id → clean refusal
+    // -------------------------------------------------------------------------
+
+    /** @return iterable<string, array{0: array<string, mixed>}> */
+    public static function detailsWithoutAPaymentId(): iterable
+    {
+        yield 'key absent' => [['hosted_fields_operation_id' => 'op_1']];
+        yield 'empty string' => [['hosted_fields_payment_id' => '', 'hosted_fields_operation_id' => 'op_1']];
+        yield 'not a string' => [['hosted_fields_payment_id' => 123, 'hosted_fields_operation_id' => 'op_1']];
+    }
+
+    /** @dataProvider detailsWithoutAPaymentId */
+    public function testProcess_hostedFields_withoutAPaymentId_refusesWithoutTouchingTheApiOrTheLock(
+        array $details,
+    ): void
+    {
+        $lock = $this->createMock(ILock::class);
+        $lock->expects(self::never())->method('acquire');
+        $processor = $this->buildProcessor($this->requestStack, $lock);
+        $payment = $this->buildHostedFieldsPayment($details);
+        $payment->expects(self::never())->method('setDetails');
+
+        $this->refundCreator->expects(self::never())->method('createRefund');
+        $this->logger->expects(self::once())->method('error')->with(
+            self::stringContains('has no hosted_fields_payment_id'),
+            [
+                'sylius_payment_id' => 42,
+                'order_number' => '000000042',
+                'hosted_fields_operation_id' => 'op_1',
+            ],
+        );
+        $this->expectException(UpdateHandlingException::class);
+
+        $processor->process($payment);
+    }
+
+    /** @dataProvider detailsWithoutAPaymentId */
+    public function testProcessWithAmount_hostedFields_withoutAPaymentId_refusesAndRecordsNothing(array $details): void
+    {
+        $lock = $this->createMock(ILock::class);
+        $lock->expects(self::never())->method('acquire');
+        $processor = $this->buildProcessor($this->requestStack, $lock);
+        $payment = $this->buildHostedFieldsPayment($details);
+        $payment->expects(self::never())->method('setDetails');
+
+        $this->refundCreator->expects(self::never())->method('createRefund');
+        $this->payplugRefundHistoryRepository->expects(self::never())->method('add');
+        $this->logger->expects(self::once())->method('error')
+            ->with(self::stringContains('has no hosted_fields_payment_id'), self::anything());
+        $this->expectException(UpdateHandlingException::class);
+
+        $processor->processWithAmount($payment, 500, 77);
+    }
+
+    public function testProcess_hostedFields_withoutAPaymentId_tellsTheAdminWhy(): void
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $request = new Request();
+        $request->setSession($session);
+        $requestStack = new RequestStack();
+        $requestStack->push($request);
+        $this->translator->method('trans')
+            ->with('payplug_sylius_payplug_plugin.ui.payment_refund_missing_payment_id', ['%order%' => '000000042'])
+            ->willReturn('cannot be refunded');
+        $processor = $this->buildProcessor($requestStack, $this->lock);
+
+        try {
+            $processor->process($this->buildHostedFieldsPayment([]));
+            self::fail('Expected UpdateHandlingException.');
+        } catch (UpdateHandlingException) {
+        }
+
+        self::assertSame(['cannot be refunded'], $session->getFlashBag()->get('error'));
+    }
+
+    public function testProcessWithAmount_hostedFields_withoutAPaymentId_tellsTheAdminWhy(): void
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $request = new Request();
+        $request->setSession($session);
+        $requestStack = new RequestStack();
+        $requestStack->push($request);
+        $this->translator->method('trans')->willReturn('cannot be refunded');
+        $processor = $this->buildProcessor($requestStack, $this->lock);
+
+        try {
+            $processor->processWithAmount($this->buildHostedFieldsPayment([]), 500, 77);
+            self::fail('Expected UpdateHandlingException.');
+        } catch (UpdateHandlingException) {
+        }
+
+        self::assertSame(['cannot be refunded'], $session->getFlashBag()->get('error'));
+    }
+
+    public function testProcess_hostedFields_withoutAPaymentIdAndWithoutARequest_stillRefusesCleanly(): void
+    {
+        $processor = $this->buildProcessor(new RequestStack(), $this->lock);
+
+        $this->refundCreator->expects(self::never())->method('createRefund');
+        $this->expectException(UpdateHandlingException::class);
+
+        $processor->process($this->buildHostedFieldsPayment([]));
+    }
+
+    public function testProcess_hostedFields_withoutAPaymentIdAndARequestWithoutASession_stillRefusesCleanly(): void
+    {
+        $requestStack = new RequestStack();
+        $requestStack->push(new Request());
+        $processor = $this->buildProcessor($requestStack, $this->lock);
+
+        $this->refundCreator->expects(self::never())->method('createRefund');
+        $this->expectException(UpdateHandlingException::class);
+
+        $processor->process($this->buildHostedFieldsPayment([]));
+    }
+
+    private function buildProcessor(RequestStack $requestStack, ILock $lock): RefundPaymentProcessor
+    {
+        return new RefundPaymentProcessor(
+            $requestStack,
+            $this->logger,
+            $this->translator,
+            $this->refundPaymentRepository,
+            $this->payplugRefundHistoryRepository,
+            $this->apiClientFactory,
+            $this->refundCreator,
+            $lock,
+        );
+    }
 
     private function buildPayment(string $factoryName, array $details): PaymentInterface&MockObject
     {

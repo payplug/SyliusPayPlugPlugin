@@ -23,6 +23,7 @@ payplug_sylius_payplug_plugin:
                 cancel_after_capture: Su questo pagamento è già stato effettuato un incasso, quindi non può più essere annullato. Usa un rimborso per restituire tutto o parte dell'importo incassato.
                 nothing_remaining: Non resta alcun importo da incassare o annullare su questa autorizzazione.
                 invalid_amount: "Importo non valido. Inserisci un importo positivo, ad es. 12,50, oppure lascia il campo vuoto per l'importo residuo."
+                unsupported_currency: "Non è possibile inserire un importo per un pagamento in questa valuta (%currency%). Lascia il campo vuoto per usare l'intero importo residuo. Il pagamento non è stato modificato."
                 amount_exceeds_remaining: "L'importo supera quello ancora disponibile (%remaining%). Inserisci un importo inferiore o uguale."
                 amount_refused: PayPlug ha rifiutato questo importo (superiore a quello disponibile o non valido). Ricarica la pagina e verifica l'importo residuo.
                 already_captured: PayPlug indica che questo pagamento è già stato incassato. Ricarica la pagina; se lo stato mostrato non corrisponde, contatta il supporto PayPlug.

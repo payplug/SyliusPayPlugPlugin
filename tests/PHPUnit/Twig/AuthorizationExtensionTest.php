@@ -24,10 +24,40 @@ use Symfony\Component\Clock\MockClock;
 
 final class AuthorizationExtensionTest extends TestCase
 {
-    public function testDescribe_exposesTheRemainingAmountInTheNotationTheAmountFieldsAccept(): void
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function inputNotations(): iterable
+    {
+        yield 'EUR' => ['EUR', '1234.56'];
+        yield 'USD' => ['USD', '1234.56'];
+        // A typed amount would be refused in these currencies, so no placeholder suggests one.
+        yield 'zero-decimal JPY' => ['JPY', ''];
+        yield 'three-decimal KWD' => ['KWD', ''];
+        yield 'empty currency' => ['', ''];
+        yield 'malformed currency' => ['EU', ''];
+    }
+
+    /**
+     * @dataProvider inputNotations
+     */
+    public function testDescribe_exposesTheRemainingAmountInTheNotationTheAmountFieldsAccept(
+        string $currency,
+        string $expected,
+    ): void
+    {
+        $description = $this->extension()->describe($this->authorizedPayment(123456, $currency));
+
+        self::assertNotNull($description);
+        self::assertSame($expected, $description['remaining_amount_input']);
+        self::assertSame(123456, $description['remaining_amount']);
+    }
+
+    private function extension(): AuthorizationExtension
     {
         $clock = new MockClock('2026-09-24T10:00:00+00:00');
-        $extension = new AuthorizationExtension(
+
+        return new AuthorizationExtension(
             new AuthorizedPaymentOperationProcessor(
                 $this->createMock(AuthorizationOperatorInterface::class),
                 $this->createMock(ILock::class),
@@ -38,14 +68,9 @@ final class AuthorizationExtensionTest extends TestCase
             ),
             $clock,
         );
-
-        $description = $extension->describe($this->authorizedPayment(123456));
-
-        self::assertNotNull($description);
-        self::assertSame('1234.56', $description['remaining_amount_input']);
     }
 
-    private function authorizedPayment(int $amount): Payment
+    private function authorizedPayment(int $amount, string $currency): Payment
     {
         $gatewayConfig = new GatewayConfig();
         $gatewayConfig->setFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
@@ -61,7 +86,7 @@ final class AuthorizationExtensionTest extends TestCase
         $payment->setOrder(new Order());
         $payment->setMethod($method);
         $payment->setAmount($amount);
-        $payment->setCurrencyCode('EUR');
+        $payment->setCurrencyCode($currency);
         $payment->setState(PaymentInterface::STATE_AUTHORIZED);
         $payment->setDetails(AuthorizationDetails::open(
             ['hosted_fields_payment_id' => 'pay_1'],

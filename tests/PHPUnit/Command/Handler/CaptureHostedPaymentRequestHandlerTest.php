@@ -300,6 +300,34 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
     }
 
+    public function testInvoke_whenResponseHasNoPaymentId_stillCompletesAndLogsAWarning(): void
+    {
+        $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
+
+        $this->unifiedApiPaymentCreator->method('createPayment')
+            ->willReturn(new PaymentOutput(201, '{"execCode":"0000","operationIds":["op_1"]}', null, null, null));
+
+        $this->logger->expects(self::once())->method('warning')
+            ->with(self::stringContains('carried no payment id'), self::anything());
+        $this->orderStateMutator->expects(self::once())->method('apply')->with('42', PaymentOutcome::PAID);
+        $this->stateMachine->expects(self::once())->method('apply')
+            ->with($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_whenResponseHasAPaymentId_logsNoWarning(): void
+    {
+        $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
+
+        $this->unifiedApiPaymentCreator->method('createPayment')
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1","execCode":"0000","operationIds":["op_1"]}', null, null, null));
+
+        $this->logger->expects(self::never())->method('warning');
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
     public function testInvoke_onRedirectHtmlOutcome_storesRedirectHtmlAndNeverAppliesOrderStateMutator(): void
     {
         $paymentRequest = $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc']);
@@ -429,6 +457,32 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         self::assertSame(12, $card->getExpirationMonth());
         self::assertSame(2030, $card->getExpirationYear());
         self::assertSame('FR', $card->getCountryCode());
+    }
+
+    public function testInvoke_neverSetsHfTokenIdOrStoredIdInPaymentMethod(): void
+    {
+        $billingAddress = $this->createMock(AddressInterface::class);
+        $billingAddress->method('getFullName')->willReturn('John Doe');
+        $this->paymentRequestWithPayment([
+            'hosted_fields_token' => 'hf_token_abc',
+            'hosted_fields_selected_brand' => 'VISA',
+            'hosted_fields_save_card' => true,
+        ], billingAddress: $billingAddress);
+
+        $this->unifiedApiPaymentCreator->expects(self::once())->method('createPayment')
+            ->with(self::callback(static function (HostedFieldDto $dto): bool {
+                self::assertIsArray($dto->paymentMethod);
+                foreach (['hfToken', 'id', 'storedId'] as $reserved) {
+                    self::assertArrayNotHasKey($reserved, $dto->paymentMethod);
+                }
+                self::assertSame('hf_token_abc', $dto->hfToken);
+
+                return true;
+            }))
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1","execCode":"0000"}', null, null, 'alias_new_1'));
+        $this->payplugCardFactory->method('createNew')->willReturn(new Card());
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
     }
 
     public function testInvoke_whenSaveCardRequestedAndUnifiedApiOperationIdAvailable_enrichesTheCardWithExpirationFetchedFromTheUnifiedApi(): void

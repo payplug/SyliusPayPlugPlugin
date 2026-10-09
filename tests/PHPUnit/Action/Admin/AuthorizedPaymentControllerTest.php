@@ -6,6 +6,7 @@ namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Action\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Action\Admin\AuthorizedPaymentController;
+use PayPlug\SyliusPayPlugPlugin\Exception\Payment\AuthorizationOperationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\AuthorizedPaymentOperationProcessor;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface;
@@ -53,6 +54,8 @@ final class AuthorizedPaymentControllerTest extends TestCase
 
     private AuthorizationCheckerInterface&MockObject $authorizationChecker;
 
+    private LoggerInterface&MockObject $logger;
+
     private AuthorizedPaymentController $controller;
 
     protected function setUp(): void
@@ -62,6 +65,7 @@ final class AuthorizedPaymentControllerTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
         $this->authorizationChecker->method('isGranted')->with('ROLE_ADMINISTRATION_ACCESS')->willReturn(true);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $lock = $this->createMock(ILock::class);
         $lock->method('acquire')->willReturn(true);
@@ -91,7 +95,7 @@ final class AuthorizedPaymentControllerTest extends TestCase
             $router,
             $this->authorizationChecker,
             $csrfTokenManager,
-            $this->createMock(LoggerInterface::class),
+            $this->logger,
         );
     }
 
@@ -118,7 +122,124 @@ final class AuthorizedPaymentControllerTest extends TestCase
      */
     public function testParseAmount(string $raw, ?int $expected): void
     {
-        self::assertSame($expected, AuthorizedPaymentController::parseAmount($raw));
+        self::assertSame($expected, AuthorizedPaymentController::parseAmount($raw, 'EUR'));
+    }
+
+    public function testParseAmount_isTheSameForAnyTwoDecimalCurrencyWhateverItsCase(): void
+    {
+        self::assertSame(1250, AuthorizedPaymentController::parseAmount('12,50', 'USD'));
+        self::assertSame(1250, AuthorizedPaymentController::parseAmount('12,50', 'eur'));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unsupportedCurrencies(): iterable
+    {
+        yield 'zero-decimal currency' => ['JPY'];
+        yield 'another zero-decimal currency' => ['XPF'];
+        yield 'three-decimal currency' => ['KWD'];
+        yield 'empty currency' => [''];
+        yield 'malformed currency' => ['EU'];
+        yield 'currency with a digit' => ['E1R'];
+    }
+
+    /**
+     * @dataProvider unsupportedCurrencies
+     */
+    public function testParseAmount_ofATypedAmountInAnUnsupportedCurrency_isRefused(string $currency): void
+    {
+        try {
+            AuthorizedPaymentController::parseAmount('12.50', $currency);
+            self::fail('Expected the amount to be refused.');
+        } catch (AuthorizationOperationException $exception) {
+            self::assertSame('payplug_sylius_payplug_plugin.admin.authorization.error.unsupported_currency', $exception->getTranslationKey());
+            self::assertSame(['%currency%' => $currency], $exception->getTranslationParameters());
+        }
+    }
+
+    /**
+     * @dataProvider unsupportedCurrencies
+     */
+    public function testParseAmount_ofABlankAmountInAnUnsupportedCurrency_stillMeansTheWholeRemainder(
+        string $currency,
+    ): void
+    {
+        self::assertNull(AuthorizedPaymentController::parseAmount(" \u{00A0}", $currency));
+    }
+
+    public function testParseAmount_ofGarbageInAnUnsupportedCurrency_isStillAnInvalidAmount(): void
+    {
+        self::assertSame(0, AuthorizedPaymentController::parseAmount('abc', 'JPY'));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function typedAmountsInUnsupportedCurrencies(): iterable
+    {
+        yield 'capture in a zero-decimal currency' => ['capture', 'JPY'];
+        yield 'cancel in a three-decimal currency' => ['cancel', 'KWD'];
+        yield 'capture without a currency' => ['capture', ''];
+        yield 'cancel with a malformed currency' => ['cancel', 'EU'];
+    }
+
+    /**
+     * @dataProvider typedAmountsInUnsupportedCurrencies
+     */
+    public function testATypedAmountInAnUnsupportedCurrency_isRefusedBeforeUpcAndRecordsNothing(
+        string $action,
+        string $currency,
+    ): void
+    {
+        $payment = $this->authorizedPayment($currency);
+        $detailsBefore = $payment->getDetails();
+        $this->paymentRepository->method('find')->willReturn($payment);
+        $this->operator->expects(self::never())->method('capture');
+        $this->operator->expects(self::never())->method('cancel');
+        $this->entityManager->expects(self::never())->method('flush');
+        $this->logger->expects(self::once())->method('warning')->with(
+            self::stringContains('currency'),
+            ['sylius_payment_id' => 42, 'action' => $action, 'currency' => $currency],
+        );
+
+        $request = $this->request(['amount' => '5']);
+        $response = 'capture' === $action ? $this->controller->capture($request, 7, 42) : $this->controller->cancel($request, 7, 42);
+
+        self::assertSame('/admin/sylius_admin_order_show/7', $response->headers->get('Location'));
+        self::assertSame([[
+            'message' => 'payplug_sylius_payplug_plugin.admin.authorization.error.unsupported_currency',
+            'parameters' => ['%currency%' => $currency],
+        ]], $this->flashes($request, 'error'));
+        self::assertSame($detailsBefore, $payment->getDetails());
+        self::assertSame(PaymentInterface::STATE_AUTHORIZED, $payment->getState());
+    }
+
+    public function testCapture_ofTheWholeRemainderInAZeroDecimalCurrency_isSentAsBefore(): void
+    {
+        $this->paymentRepository->method('find')->willReturn($this->authorizedPayment('JPY'));
+        $this->operator->expects(self::once())->method('capture')
+            ->with(self::anything(), 'pay_1', self::anything(), 1000, 'JPY')
+            ->willReturn(new CaptureOutput(200, '{"operationIds":["op_c1"]}', null, null, null));
+        $this->logger->expects(self::never())->method('warning');
+
+        $request = $this->request(['amount' => '']);
+        $this->controller->capture($request, 7, 42);
+
+        self::assertSame(['payplug_sylius_payplug_plugin.admin.authorization.capture_success'], $this->flashes($request, 'success'));
+    }
+
+    public function testCapture_aboveTheRemainderInUsd_showsTheRemainingAmountInUsd(): void
+    {
+        $this->paymentRepository->method('find')->willReturn($this->authorizedPayment('USD'));
+
+        $request = $this->request(['amount' => '50']);
+        $this->controller->capture($request, 7, 42);
+
+        self::assertSame([[
+            'message' => 'payplug_sylius_payplug_plugin.admin.authorization.error.amount_exceeds_remaining',
+            'parameters' => ['%remaining%' => '10.00 USD'],
+        ]], $this->flashes($request, 'error'));
     }
 
     public function testCapture_capturesTheTypedAmountFlushesAndRedirectsToTheOrder(): void
@@ -271,7 +392,7 @@ final class AuthorizedPaymentControllerTest extends TestCase
         return $session->getFlashBag()->get($type);
     }
 
-    private function authorizedPayment(): Payment
+    private function authorizedPayment(string $currency = 'EUR'): Payment
     {
         $gatewayConfig = new GatewayConfig();
         $gatewayConfig->setFactoryName(PayPlugGatewayFactory::FACTORY_NAME);
@@ -295,7 +416,7 @@ final class AuthorizedPaymentControllerTest extends TestCase
         $payment->setOrder($order);
         $payment->setMethod($method);
         $payment->setAmount(1000);
-        $payment->setCurrencyCode('EUR');
+        $payment->setCurrencyCode($currency);
         $payment->setState(PaymentInterface::STATE_AUTHORIZED);
         $payment->setDetails(AuthorizationDetails::open(
             ['hosted_fields_payment_id' => 'pay_1'],

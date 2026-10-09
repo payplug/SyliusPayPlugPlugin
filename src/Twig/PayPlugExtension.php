@@ -16,6 +16,7 @@ final class PayPlugExtension extends AbstractExtension
     public function __construct(
         private CanSaveCardCheckerInterface $canSaveCardChecker,
         private PayPlugApiClientFactoryInterface $apiClientFactory,
+        private string $hostedFieldsSdkUrl,
     ) {
     }
 
@@ -25,8 +26,14 @@ final class PayPlugExtension extends AbstractExtension
             new TwigFunction('is_save_card_enabled', $this->isSaveCardAllowed(...)),
             new TwigFunction('is_payplug_test_mode_enabled', $this->isTest(...)),
             new TwigFunction('payplug_hosted_fields_company_id', $this->hostedFieldsCompanyId(...)),
+            new TwigFunction('payplug_hosted_fields_sdk_url', $this->hostedFieldsSdkUrl(...)),
             new TwigFunction('payplug_display_mode', $this->displayMode(...)),
         ];
+    }
+
+    public function hostedFieldsSdkUrl(): string
+    {
+        return $this->hostedFieldsSdkUrl;
     }
 
     /**

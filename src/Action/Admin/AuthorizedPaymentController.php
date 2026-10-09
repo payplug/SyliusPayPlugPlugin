@@ -94,8 +94,9 @@ final class AuthorizedPaymentController
         $version = self::parseVersion($request);
 
         try {
+            $amount = $this->parseAmountFor($payment, $request->request->getString('amount'), $action);
             // The processor flushes while it still holds its lock, see there.
-            $operation($payment, self::parseAmount($request->request->getString('amount')), $version);
+            $operation($payment, $amount, $version);
             $this->addFlashMessage($request, 'success', self::FLASH_PREFIX . $action . '_success');
         } catch (AuthorizationOperationException $exception) {
             $this->addFlashMessage($request, 'error', $exception->getTranslationKey(), $exception->getTranslationParameters());
@@ -121,8 +122,11 @@ final class AuthorizedPaymentController
      * digits before the decimal point, which no real capture reaches and which would overflow —
      * is sent on as an invalid amount (0) for the processor to refuse with its own explicit
      * message.
+     *
+     * @throws AuthorizationOperationException when an amount is typed in a currency that
+     *                                         AuthorizedPaymentOperationProcessor::supportsTypedAmounts() refuses
      */
-    public static function parseAmount(string $raw): ?int
+    public static function parseAmount(string $raw, string $currencyCode): ?int
     {
         $raw = \str_replace([' ', "\u{00A0}", ','], ['', '', '.'], \trim($raw));
         if ('' === $raw) {
@@ -133,7 +137,31 @@ final class AuthorizedPaymentController
             return 0;
         }
 
-        return AmountHelper::toCents((float) $raw);
+        if (!AuthorizedPaymentOperationProcessor::supportsTypedAmounts($currencyCode)) {
+            throw new AuthorizationOperationException(self::FLASH_PREFIX . 'error.unsupported_currency', ['%currency%' => $currencyCode]);
+        }
+
+        return AmountHelper::toCents((float) $raw, $currencyCode);
+    }
+
+    /**
+     * @throws AuthorizationOperationException
+     */
+    private function parseAmountFor(PaymentInterface $payment, string $raw, string $action): ?int
+    {
+        $currencyCode = (string) $payment->getCurrencyCode();
+
+        try {
+            return self::parseAmount($raw, $currencyCode);
+        } catch (AuthorizationOperationException $exception) {
+            $this->logger->warning('[PayPlug][UPC] Typed amount refused: its currency cannot be converted to the stored amounts.', [
+                'sylius_payment_id' => $payment->getId(),
+                'action' => $action,
+                'currency' => $currencyCode,
+            ]);
+
+            throw $exception;
+        }
     }
 
     /**
