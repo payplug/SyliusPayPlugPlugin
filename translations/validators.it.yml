@@ -32,8 +32,6 @@ payplug_sylius_payplug_plugin:
             Non puoi ancora accedere a questa funzionalità.
             Per attivare Scalapay, contattaci a support@payplug.com
             e attiva la modalità LIVE.
-        min_amount_greater_than_max: L'importo minimo deve essere inferiore o uguale all'importo massimo.
-        amount_out_of_authorized_range: I limiti di importo devono essere compresi tra %min_amount% e %max_amount%.
     payplug_wero:
         can_not_save_method_with_test_key: |
             Il metodo di pagamento Wero non è disponibile in modalità TEST.
@@ -64,3 +62,10 @@ payplug_sylius_payplug_plugin:
         can_not_save_method_no_access: |
             Non hai accesso alla modalità LIVE.
             Per attivarla, completa il tuo onboarding e riconnettiti.
+    ppro:
+        min_below_api_min: "L'importo minimo non può essere inferiore a %min%, il minimo autorizzato da PayPlug per questo metodo di pagamento (intervallo autorizzato: da %min% a %max%)."
+        max_above_api_max: "L'importo massimo non può essere superiore a %max%, il massimo autorizzato da PayPlug per questo metodo di pagamento (intervallo autorizzato: da %min% a %max%)."
+        min_greater_than_max: L'importo minimo deve essere inferiore o uguale all'importo massimo.
+        invalid_amount: "Inserisci un importo in euro, ad esempio 12,50."
+        no_country: Seleziona almeno un paese di fatturazione.
+        country_not_allowed: "PayPlug non autorizza questo metodo di pagamento per questi paesi: %countries%."

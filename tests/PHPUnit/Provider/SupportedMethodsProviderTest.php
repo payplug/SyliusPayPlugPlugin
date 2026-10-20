@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Provider;
 
+use Payplug\Exception\ConnectionException;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
+use PayPlug\SyliusPayPlugPlugin\Exception\GatewayConfigurationException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\BancontactGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproEligibilityChecker;
 use PayPlug\SyliusPayPlugPlugin\Provider\SupportedMethodsProvider;
+use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAllowedCountriesResolver;
 use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAmountRangeResolver;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
@@ -25,6 +31,8 @@ final class SupportedMethodsProviderTest extends TestCase
     private PayPlugApiClientFactoryInterface&MockObject $clientFactory;
 
     private PayPlugApiClientInterface&MockObject $apiClient;
+
+    private LoggerInterface&MockObject $logger;
 
     private SupportedMethodsProvider $provider;
 
@@ -46,7 +54,15 @@ final class SupportedMethodsProviderTest extends TestCase
                 : $this->apiClient,
         );
 
-        $this->provider = new SupportedMethodsProvider($this->currencyContext, $this->clientFactory, new AccountAmountRangeResolver(), new NullLogger());
+        $this->logger = $this->createMock(LoggerInterface::class);
+        $this->provider = new SupportedMethodsProvider(
+            $this->currencyContext,
+            $this->clientFactory,
+            new AccountAmountRangeResolver(),
+            $this->logger,
+            new PproEligibilityChecker(new NullLogger()),
+            new AccountAllowedCountriesResolver(),
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -310,83 +326,126 @@ final class SupportedMethodsProviderTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // provide() — allowed_countries filter
+    // provide() — PPRO methods read their stored configuration, never the API
     // -------------------------------------------------------------------------
 
-    /**
-     * Billing country is in the allowed_countries list → method kept.
-     */
-    public function testProvide_withAllowedCountry_keepsMethod(): void
+    public function testPproMethodReadsStoredConfigAndNeverCallsTheApi(): void
+    {
+        $this->clientFactory->expects(self::never())->method('createForPaymentMethod');
+
+        $method = $this->buildPaymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(['allowed_countries' => ['BE', 'DE']]),
+        ]);
+
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'FR'));
+        self::assertCount(1, $this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'BE'));
+    }
+
+    public function testPproMethodWithoutStoredConfigIsKept(): void
+    {
+        $this->clientFactory->expects(self::never())->method('createForPaymentMethod');
+
+        $method = $this->buildPaymentMethod(BancontactGatewayFactory::FACTORY_NAME, []);
+
+        self::assertCount(1, $this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 1, 'EUR', 'US'));
+    }
+
+    public function testPproMethodWithNonEurPaymentIsRemoved(): void
+    {
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(),
+        ]);
+
+        self::assertEmpty($this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000, 'USD'));
+    }
+
+    public function testPproMethodFallsBackToTheDisplayCurrencyWhenThePaymentHasNone(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $account = [
-            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
-            'payment_methods' => ['scalapay' => ['min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'allowed_countries' => ['FR', 'DE']]],
-        ];
-        $this->apiClient->method('getAccount')->willReturn($account);
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(),
+        ]);
 
-        $method = $this->buildPaymentMethod('payplug_scalapay');
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, billingCountryCode: 'FR');
+        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000));
+    }
 
-        self::assertCount(1, $result);
+    public function testPproAllowedCountriesNullKeepsAnyBillingCountry(): void
+    {
+        $method = $this->buildPaymentMethod(BancontactGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(['allowed_countries' => null]),
+        ]);
+
+        self::assertCount(1, $this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'US'));
+    }
+
+    public function testPproNullBillingCountryKeepsMethod(): void
+    {
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(['allowed_countries' => ['FR', 'DE']]),
+        ]);
+
+        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000, 'EUR', null));
+    }
+
+    public function testPproMerchantCountrySubsetIsApplied(): void
+    {
+        $method = $this->buildPaymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(['allowed_countries' => ['BE', 'DE'], 'configured_countries' => ['BE']]),
+        ]);
+
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'DE'));
     }
 
     /**
-     * Billing country is NOT in the allowed_countries list → method removed.
+     * The merchant range is no longer a Scalapay-only override: every PPRO gateway honours it.
      */
-    public function testProvide_withDisallowedCountry_removesMethod(): void
+    public function testBancontactHonoursMerchantConfiguredAmount(): void
     {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $account = [
-            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
-            'payment_methods' => ['scalapay' => ['min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'allowed_countries' => ['FR', 'DE']]],
-        ];
-        $this->apiClient->method('getAccount')->willReturn($account);
+        $method = $this->buildPaymentMethod(BancontactGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock(['configured_amount' => ['min' => 1000, 'max' => 100000]]),
+        ]);
 
-        $method = $this->buildPaymentMethod('payplug_scalapay');
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, billingCountryCode: 'US');
-
-        self::assertEmpty($result);
+        self::assertEmpty($this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 999, 'EUR'));
+        self::assertCount(1, $this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 1000, 'EUR'));
+        self::assertCount(1, $this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 100000, 'EUR'));
+        self::assertEmpty($this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 100001, 'EUR'));
     }
 
-    /**
-     * allowed_countries = ["ALL"] → country check skipped, method kept.
-     */
-    public function testProvide_withAllowedCountriesAll_keepsMethod(): void
+    public function testPproApiBoundsApplyWithoutMerchantRange(): void
     {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $account = [
-            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
-            'payment_methods' => ['bancontact' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000], 'allowed_countries' => ['ALL']]],
-        ];
-        $this->apiClient->method('getAccount')->willReturn($account);
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => $this->storedBlock([
+                'default_amount' => ['min' => 500, 'max' => 200000],
+                'configured_amount' => ['min' => null, 'max' => null],
+            ]),
+        ]);
 
-        $method = $this->buildPaymentMethod('payplug_bancontact');
-        $result = $this->provider->provide([$method], 'payplug_bancontact', 1000, billingCountryCode: 'US');
-
-        self::assertCount(1, $result);
+        self::assertEmpty($this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 499, 'EUR'));
+        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 500, 'EUR'));
     }
 
-    /**
-     * Billing country is null (no billing address yet) → country check skipped, method kept.
-     */
-    public function testProvide_withNullBillingCountry_keepsMethod(): void
+    public function testScalapayLegacyMinMaxKeysAreIgnored(): void
     {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $account = [
-            'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
-            'payment_methods' => ['scalapay' => ['min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'allowed_countries' => ['FR', 'DE']]],
-        ];
-        $this->apiClient->method('getAccount')->willReturn($account);
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'min_amount' => 90000,
+            'max_amount' => 'nonsense',
+            'payment_method' => $this->storedBlock(),
+        ]);
 
-        $method = $this->buildPaymentMethod('payplug_scalapay');
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 1000, billingCountryCode: null);
+        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000, 'EUR'));
+    }
 
-        self::assertCount(1, $result);
+    public function testPproMalformedStoredBlockKeepsMethod(): void
+    {
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => ['default_amount' => ['min' => '500']],
+        ]);
+
+        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1, 'EUR'));
     }
 
     // -------------------------------------------------------------------------
-    // provide() — payment method specific amounts used over configuration defaults
+    // provide() — non-PPRO gateways keep the live gate, guarded
     // -------------------------------------------------------------------------
 
     /**
@@ -397,14 +456,13 @@ final class SupportedMethodsProviderTest extends TestCase
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
 
-        // Scalapay has tighter limits (500–200000) vs configuration defaults (30–2000000)
         $account = [
             'configuration' => [
                 'min_amounts' => ['EUR' => 30],
                 'max_amounts' => ['EUR' => 2000000],
             ],
             'payment_methods' => [
-                'scalapay' => [
+                'apple_pay' => [
                     'min_amounts' => ['EUR' => 500],
                     'max_amounts' => ['EUR' => 200000],
                 ],
@@ -412,20 +470,11 @@ final class SupportedMethodsProviderTest extends TestCase
         ];
         $this->apiClient->method('getAccount')->willReturn($account);
 
-        $method = $this->buildPaymentMethod('payplug_scalapay');
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
 
-        // Amount 400 is above the configuration default min (30) but below Scalapay's min (500)
-        $result = $this->provider->provide([$method], 'payplug_scalapay', 400);
-        self::assertEmpty($result);
-
-        // Amount 500 is exactly at Scalapay's min — should be kept
-        $result2 = $this->provider->provide([$method], 'payplug_scalapay', 500);
-        self::assertCount(1, $result2);
+        self::assertEmpty($this->provider->provide([$method], 'payplug_apple_pay', 400));
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 500));
     }
-
-    // -------------------------------------------------------------------------
-    // provide() — fallback to configuration when payment method has no amounts
-    // -------------------------------------------------------------------------
 
     /**
      * When the payment method entry in the API has no min/max amounts (e.g. Apple Pay),
@@ -443,7 +492,6 @@ final class SupportedMethodsProviderTest extends TestCase
             'payment_methods' => [
                 'apple_pay' => [
                     'enabled' => true,
-                    // no min_amounts / max_amounts
                 ],
             ],
         ];
@@ -451,135 +499,155 @@ final class SupportedMethodsProviderTest extends TestCase
 
         $method = $this->buildPaymentMethod('payplug_apple_pay');
 
-        // 30 is at configuration min — should be kept
-        $result = $this->provider->provide([$method], 'payplug_apple_pay', 30);
-        self::assertCount(1, $result);
-
-        // 29 is below configuration min — should be removed
-        $result2 = $this->provider->provide([$method], 'payplug_apple_pay', 29);
-        self::assertEmpty($result2);
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 30));
+        self::assertEmpty($this->provider->provide([$method], 'payplug_apple_pay', 29));
     }
 
-    // -------------------------------------------------------------------------
-    // provide() — merchant-configured min/max override the API bounds
-    // -------------------------------------------------------------------------
-
     /**
-     * The gateway config sets a min_amount (1000) tighter than the API min (99).
-     * Verifies amounts below the merchant's min are removed, and the merchant's own min boundary is kept.
+     * The min_amount/max_amount keys are not read for any gateway: the card gateway carrying them
+     * stays on the raw API bounds.
      */
-    public function testProvide_withMerchantConfiguredMinAmount_overridesApiMin(): void
+    public function testProvide_merchantConfiguredAmountsIgnoredForNonPproGateway(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
         $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
-        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['min_amount' => 1000]);
-
-        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 500);
-        self::assertEmpty($result);
-
-        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000);
-        self::assertCount(1, $result2);
-    }
-
-    /**
-     * The gateway config sets a max_amount (100000) tighter than the API max (2000000).
-     * Verifies amounts above the merchant's max are removed, and the merchant's own max boundary is kept.
-     */
-    public function testProvide_withMerchantConfiguredMaxAmount_overridesApiMax(): void
-    {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
-
-        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['max_amount' => 100000]);
-
-        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 150000);
-        self::assertEmpty($result);
-
-        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 100000);
-        self::assertCount(1, $result2);
-    }
-
-    /**
-     * No min_amount/max_amount set in the gateway config (merchant left the fields blank).
-     * Verifies the API bounds alone still apply, unchanged from today's behavior.
-     */
-    public function testProvide_withoutMerchantConfiguredAmounts_fallsBackToApiBoundsOnly(): void
-    {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
-
-        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, []);
-
-        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 50);
-        self::assertEmpty($result);
-
-        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 99);
-        self::assertCount(1, $result2);
-    }
-
-    /**
-     * The merchant's min_amount/max_amount override is entered as EUR (MoneyType field), but
-     * checkout is happening in USD. The EUR-denominated override must not be applied to a
-     * USD amount — only the API's own per-currency bounds apply.
-     */
-    public function testProvide_merchantConfiguredAmountsIgnoredForNonEurCurrency(): void
-    {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('USD');
-
-        $account = [
-            'configuration' => [
-                'min_amounts' => ['USD' => 100],
-                'max_amounts' => ['USD' => 200000],
-            ],
-            'payment_methods' => [],
-        ];
-        $this->apiClient->method('getAccount')->willReturn($account);
-
-        // If wrongly applied to USD, this EUR-denominated max_amount would exclude the payment.
-        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['max_amount' => 300]);
-
-        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 150000);
-        self::assertCount(1, $result);
-    }
-
-    /**
-     * The min_amount/max_amount keys are Scalapay's own: only IsScalapayAmountRangeValidValidator
-     * keeps them inside the API-authorized range at save time, and it is wired for Scalapay only.
-     * Another gateway carrying the same keys must therefore be left on the raw API bounds rather
-     * than granted an unvalidated checkout override.
-     */
-    public function testProvide_merchantConfiguredAmountsIgnoredForNonScalapayGateway(): void
-    {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
-        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
-
-        // If wrongly honored, this max_amount would exclude the payment below.
         $method = $this->buildPaymentMethod(PayPlugGatewayFactory::FACTORY_NAME, ['min_amount' => 1000, 'max_amount' => 300]);
 
         $result = $this->provider->provide([$method], PayPlugGatewayFactory::FACTORY_NAME, 150000);
         self::assertCount(1, $result);
     }
 
-    /**
-     * The gateway config is a plain serialized array, so a direct DB edit or an import script can
-     * leave a non-int in it. provide() runs on every checkout page with no surrounding try/catch:
-     * a malformed override must degrade to the API bounds, not throw and break payment-method
-     * resolution for the whole checkout.
-     */
-    public function testProvide_withMalformedMerchantConfiguredAmounts_fallsBackToApiBounds(): void
+    public function testNonPproGatewayIsKeptWhenGetAccountThrows(): void
     {
         $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $this->apiClient->method('getAccount')->willThrowException(new ConnectionException('timeout'));
+        $this->logger->expects(self::once())->method('warning');
+
+        $method = $this->buildPaymentMethod('payplug_american_express');
+
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_american_express', 1000));
+    }
+
+    public function testNonPproGatewayIsKeptWhenFactoryThrowsGatewayConfigurationException(): void
+    {
+        $clientFactory = $this->createMock(PayPlugApiClientFactoryInterface::class);
+        $clientFactory->method('createForPaymentMethod')->willThrowException(new GatewayConfigurationException('no client configured'));
+        $this->logger->expects(self::once())->method('warning');
+        $provider = new SupportedMethodsProvider(
+            $this->currencyContext,
+            $clientFactory,
+            new AccountAmountRangeResolver(),
+            $this->logger,
+            new PproEligibilityChecker($this->logger),
+            new AccountAllowedCountriesResolver(),
+        );
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        self::assertCount(1, $provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR'));
+    }
+
+    public function testNonPproGatewayIsKeptWhenThePayloadIsMalformed(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn(['configuration' => ['min_amounts' => ['EUR' => '30']]]);
+        $this->logger->expects(self::once())->method('warning');
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR'));
+    }
+
+    // -------------------------------------------------------------------------
+    // provide() — non-PPRO gateways keep the API allowed_countries filter
+    // -------------------------------------------------------------------------
+
+    public function testNonPproBillingCountryInAllowedCountriesKeepsMethod(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('apple_pay', ['FR', 'DE']));
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR', 'FR'));
+    }
+
+    public function testNonPproBillingCountryOutsideAllowedCountriesRemovesMethod(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('american_express', ['FR', 'DE']));
+
+        $method = $this->buildPaymentMethod('payplug_american_express');
+
+        self::assertEmpty($this->provider->provide([$method], 'payplug_american_express', 1000, 'EUR', 'US'));
+    }
+
+    public function testNonPproAllowedCountriesAllKeepsAnyBillingCountry(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('apple_pay', ['ALL']));
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR', 'US'));
+    }
+
+    public function testNonPproWithoutAllowedCountriesKeepsAnyBillingCountry(): void
+    {
         $this->apiClient->method('getAccount')->willReturn($this->buildAccount(99, 2000000));
 
-        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['min_amount' => '1000', 'max_amount' => 'nonsense']);
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
 
-        // API bounds are 99–2000000: an in-range amount is kept, an out-of-range one still removed.
-        $result = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 150000);
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR', 'US'));
+    }
+
+    public function testNonPproNullBillingCountryKeepsMethod(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('apple_pay', ['FR']));
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR', null));
+    }
+
+    public function testNonPproMalformedAllowedCountriesKeepsMethodAndLogs(): void
+    {
+        $account = $this->buildAccount(99, 2000000);
+        $account['payment_methods'] = ['apple_pay' => ['allowed_countries' => 'FR']];
+        $this->apiClient->method('getAccount')->willReturn($account);
+        $this->logger->expects(self::once())->method('warning');
+
+        $method = $this->buildPaymentMethod('payplug_apple_pay');
+
+        self::assertCount(1, $this->provider->provide([$method], 'payplug_apple_pay', 1000, 'EUR', 'US'));
+    }
+
+    public function testNonPproMethodsOnDifferentAccountsUseTheirOwnAllowedCountries(): void
+    {
+        $frMethod = $this->buildPaymentMethod('payplug_apple_pay', configId: 1);
+        $deMethod = $this->buildPaymentMethod('payplug_apple_pay', configId: 2);
+
+        $this->assignAccount($frMethod, $this->buildAccountWithCountries('apple_pay', ['FR']));
+        $this->assignAccount($deMethod, $this->buildAccountWithCountries('apple_pay', ['DE']));
+
+        $result = $this->provider->provide([$frMethod, $deMethod], 'payplug_apple_pay', 1000, 'EUR', 'FR');
+
         self::assertCount(1, $result);
+        self::assertSame($frMethod, reset($result));
+    }
 
-        $result2 = $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 50);
-        self::assertEmpty($result2);
+    /**
+     * A failed read is memoized like a successful one: the API is not hammered once per method.
+     */
+    public function testFailedAccountReadIsNotRetriedForTheSameGatewayConfig(): void
+    {
+        $gatewayConfig = $this->buildGatewayConfig(PayPlugGatewayFactory::FACTORY_NAME, [], 1);
+        $first = $this->buildPaymentMethodFor($gatewayConfig);
+        $second = $this->buildPaymentMethodFor($gatewayConfig);
+
+        $client = $this->createMock(PayPlugApiClientInterface::class);
+        $client->expects(self::once())->method('getAccount')->willThrowException(new ConnectionException('timeout'));
+        $this->clientsByPaymentMethod[$first] = $client;
+        $this->clientsByPaymentMethod[$second] = $client;
+
+        self::assertCount(2, $this->provider->provide([$first, $second], PayPlugGatewayFactory::FACTORY_NAME, 1000, 'EUR'));
     }
 
     // -------------------------------------------------------------------------
@@ -612,20 +680,15 @@ final class SupportedMethodsProviderTest extends TestCase
     }
 
     /**
-     * Same split, for the billing-country gate: each method is checked against its own account's
-     * allowed_countries.
+     * Same split, for the billing-country gate: each PPRO method is checked against its own stored
+     * allowed countries.
      */
     public function testProvide_withMethodsOnDifferentAccounts_filtersEachAgainstItsOwnAllowedCountries(): void
     {
-        $this->currencyContext->method('getCurrencyCode')->willReturn('EUR');
+        $frMethod = $this->buildPaymentMethod('payplug_scalapay', ['payment_method' => $this->storedBlock(['allowed_countries' => ['FR']])], 1);
+        $deMethod = $this->buildPaymentMethod('payplug_scalapay', ['payment_method' => $this->storedBlock(['allowed_countries' => ['DE']])], 2);
 
-        $frMethod = $this->buildPaymentMethod('payplug_scalapay', configId: 1);
-        $deMethod = $this->buildPaymentMethod('payplug_scalapay', configId: 2);
-
-        $this->assignAccount($frMethod, $this->buildScalapayAccount(['FR']));
-        $this->assignAccount($deMethod, $this->buildScalapayAccount(['DE']));
-
-        $result = $this->provider->provide([$frMethod, $deMethod], 'payplug_scalapay', 1000, billingCountryCode: 'FR');
+        $result = $this->provider->provide([$frMethod, $deMethod], 'payplug_scalapay', 1000, 'EUR', 'FR');
 
         self::assertCount(1, $result);
         self::assertSame($frMethod, reset($result));
@@ -670,17 +733,32 @@ final class SupportedMethodsProviderTest extends TestCase
 
     /**
      * @param list<string> $allowedCountries
+     *
+     * @return array<string, mixed>
      */
-    private function buildScalapayAccount(array $allowedCountries): array
+    private function buildAccountWithCountries(string $paymentMethodKey, array $allowedCountries): array
     {
         return [
             'configuration' => ['min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
-            'payment_methods' => ['scalapay' => [
-                'min_amounts' => ['EUR' => 500],
-                'max_amounts' => ['EUR' => 200000],
-                'allowed_countries' => $allowedCountries,
-            ]],
+            'payment_methods' => [$paymentMethodKey => ['enabled' => true, 'allowed_countries' => $allowedCountries]],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     *
+     * @return array<string, mixed>
+     */
+    private function storedBlock(array $overrides = []): array
+    {
+        return array_merge([
+            'name' => 'wero',
+            'enabled' => true,
+            'allowed_countries' => null,
+            'default_amount' => ['min' => 30, 'max' => 2000000],
+            'configured_amount' => ['min' => 30, 'max' => 2000000],
+            'configured_countries' => null,
+        ], $overrides);
     }
 
     /**
@@ -691,8 +769,7 @@ final class SupportedMethodsProviderTest extends TestCase
         string $factoryName,
         array $config = [],
         int|string|null $configId = null,
-    ): PaymentMethodInterface
-    {
+    ): PaymentMethodInterface {
         return $this->buildPaymentMethodFor($this->buildGatewayConfig($factoryName, $config, $configId));
     }
 
@@ -703,8 +780,7 @@ final class SupportedMethodsProviderTest extends TestCase
         string $factoryName,
         array $config = [],
         int|string|null $configId = null,
-    ): GatewayConfigInterface
-    {
+    ): GatewayConfigInterface {
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
         $gatewayConfig->method('getFactoryName')->willReturn($factoryName);
         $gatewayConfig->method('getConfig')->willReturn($config);

@@ -9,10 +9,12 @@ use PayPlug\SyliusPayPlugPlugin\Checker\GatewayChannelConflictChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\PaymentMethodTypeExtension;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PayPlugGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationValidator;
 use PayPlug\SyliusPayPlugPlugin\Repository\PaymentMethodRepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
+use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatter;
 use Sylius\Bundle\PaymentBundle\Form\Type\PaymentMethodType;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -325,6 +327,7 @@ final class PaymentMethodTypeExtensionTest extends TestCase
         $extension = new PaymentMethodTypeExtension(
             new GatewayChannelConflictChecker($repository),
             $translator ?? $this->translator,
+            new PproConfigurationValidator($translator ?? $this->translator, new MoneyFormatter()),
         );
 
         $listener = null;

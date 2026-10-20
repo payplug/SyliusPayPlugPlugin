@@ -9,18 +9,29 @@ use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientInterface;
 use PayPlug\SyliusPayPlugPlugin\Command\CapturePaymentRequest;
 use PayPlug\SyliusPayPlugPlugin\Creator\PayPlugPaymentDataCreator;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PproPaymentMethods;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationRefresherInterface;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproRefusalClassifier;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
+use Sylius\Bundle\CoreBundle\OrderPay\Provider\FinalUrlProviderInterface;
 use Sylius\Bundle\CoreBundle\OrderPay\Provider\UrlProviderInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler]
 final class CapturePaymentRequestHandler
 {
+    private const PPRO_NOT_AVAILABLE_MESSAGE = 'payplug_sylius_payplug_plugin.error.ppro_not_available';
+
     public function __construct(
         private PaymentRequestProviderInterface $paymentRequestProvider,
         private StateMachineInterface $stateMachine,
@@ -29,6 +40,11 @@ final class CapturePaymentRequestHandler
         #[Autowire(service: 'sylius_shop.provider.order_pay.after_pay_url')]
         private UrlProviderInterface $afterPayUrlProvider,
         private LoggerInterface $logger,
+        private PproConfigurationRefresherInterface $pproConfigurationRefresher,
+        private PproRefusalClassifier $pproRefusalClassifier,
+        #[Autowire(service: 'sylius_shop.provider.order_pay.final_url')]
+        private FinalUrlProviderInterface $finalUrlProvider,
+        private RequestStack $requestStack,
     ) {}
 
     public function __invoke(CapturePaymentRequest $capturePaymentRequest): void
@@ -76,13 +92,7 @@ final class CapturePaymentRequestHandler
         try {
             $payplugPayment = $client->createPayment($data);
         } catch (HttpException $exception) {
-            $paymentRequest->setResponseData(\json_decode($exception->getHttpResponse(), true)); // @phpstan-ignore-line
-            $this->logger->error('[PayPlug] Scalapay capture failed', ['response' => $exception->getHttpResponse()]);
-            $this->stateMachine->apply(
-                $paymentRequest,
-                PaymentRequestTransitions::GRAPH,
-                PaymentRequestTransitions::TRANSITION_FAIL,
-            );
+            $this->failPaymentRequest($paymentRequest, $payment, $method, $exception);
 
             return;
         }
@@ -106,5 +116,57 @@ final class CapturePaymentRequestHandler
             PaymentRequestTransitions::GRAPH,
             PaymentRequestTransitions::TRANSITION_COMPLETE,
         );
+    }
+
+    /**
+     * A PPRO payment refused for its billing country or its amount means the stored PayPlug limits
+     * let the method be shown where PayPlug does not accept it: they are refreshed, and the customer
+     * is sent back to the order page to pick another payment method. No PayPlug payment exists after
+     * a refusal, so there is nothing to cancel.
+     */
+    private function failPaymentRequest(
+        PaymentRequestInterface $paymentRequest,
+        PaymentInterface $payment,
+        PaymentMethodInterface $method,
+        HttpException $exception,
+    ): void {
+        $responseBody = $exception->getHttpResponse();
+        $decoded = \json_decode($responseBody, true);
+        /** @var array<string, mixed> $responseData */
+        $responseData = \is_array($decoded) ? $decoded : [];
+        $factoryName = $method->getGatewayConfig()?->getFactoryName();
+
+        $refusal = PproPaymentMethods::isPpro($factoryName) ? $this->pproRefusalClassifier->classify($responseBody) : null;
+
+        if (null === $refusal) {
+            $this->logger->error('[PayPlug] Payment creation failed', ['factory_name' => $factoryName, 'response' => $responseBody]);
+        } else {
+            $this->logger->info('[PayPlug] PPRO payment refused for its billing country or amount; limits refreshed.', [
+                'factory_name' => $factoryName,
+                'refusal' => $refusal,
+            ]);
+            // Flushed by the doctrine_transaction middleware of the payment request command bus.
+            $this->pproConfigurationRefresher->refresh($method, false);
+            $responseData['redirect_url'] = $this->finalUrlProvider->getUrl($payment, UrlGeneratorInterface::ABSOLUTE_URL);
+            $responseData['error'] = self::PPRO_NOT_AVAILABLE_MESSAGE;
+            $this->addErrorFlash();
+        }
+
+        $paymentRequest->setResponseData($responseData);
+        $this->stateMachine->apply(
+            $paymentRequest,
+            PaymentRequestTransitions::GRAPH,
+            PaymentRequestTransitions::TRANSITION_FAIL,
+        );
+    }
+
+    private function addErrorFlash(): void
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $session = null !== $request && $request->hasSession() ? $request->getSession() : null;
+
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add('error', self::PPRO_NOT_AVAILABLE_MESSAGE);
+        }
     }
 }

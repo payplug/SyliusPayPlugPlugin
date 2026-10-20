@@ -41,6 +41,10 @@
             "apple-pay": {
                 "enabled": true,
                 "fetch": "lazy"
+            },
+            "ppro-eligibility": {
+                "enabled": true,
+                "fetch": "lazy"
             }
         }
     },

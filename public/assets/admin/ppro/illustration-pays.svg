@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="230" viewBox="0 0 400 230" role="img">
+  <title>Billing countries</title>
+  <rect width="400" height="230" rx="12" fill="#f1f3f6"/>
+  <rect x="20" y="16" width="360" height="198" rx="8" fill="#ffffff"/>
+  <rect x="44" y="40" width="70" height="6" rx="3" fill="#d0d5dd"/>
+  <rect x="44" y="56" width="140" height="6" rx="3" fill="#d0d5dd"/>
+  <rect x="44" y="72" width="70" height="6" rx="3" fill="#d0d5dd"/>
+  <path d="M230 60 l40 -10 l50 15 l20 40 l-10 50 l-45 20 l-50 -10 l-25 -45 z" fill="#e4e7ec"/>
+  <circle cx="300" cy="105" r="5" fill="#1f5af6"/>
+  <path d="M110 160 C 170 100, 240 90, 300 105" fill="none" stroke="#1f5af6" stroke-width="2" stroke-dasharray="4 4"/>
+  <circle cx="90" cy="170" r="26" fill="none" stroke="#1f5af6" stroke-width="5"/>
+  <line x1="64" y1="170" x2="116" y2="170" stroke="#1f5af6" stroke-width="4"/>
+  <ellipse cx="90" cy="170" rx="11" ry="26" fill="none" stroke="#1f5af6" stroke-width="4"/>
+</svg>

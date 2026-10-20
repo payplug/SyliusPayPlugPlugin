@@ -11,7 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test 'admin/controllers/*.test.js'"
   },
   "symfony": {
     "controllers": {
@@ -66,6 +66,12 @@
       },
       "apple-pay": {
         "main": "shop/controllers/apple-pay_controller.js",
+        "webpackMode": "lazy",
+        "fetch": "lazy",
+        "enabled": true
+      },
+      "ppro-eligibility": {
+        "main": "admin/controllers/ppro-eligibility_controller.js",
         "webpackMode": "lazy",
         "fetch": "lazy",
         "enabled": true

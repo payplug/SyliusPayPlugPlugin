@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Authentication;
 use Payplug\Payplug;
 use PayPlug\SyliusPayPlugPlugin\Auth\IdTokenEmailExtractor;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationRefresherInterface;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PayplugUnifiedCore\Auth\OAuth2Client;
 use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
@@ -46,6 +47,7 @@ final class UnifiedAuthenticationController extends AbstractController
         private LoggerInterface $logger,
         private IOAuthHttpClient $oauthHttpClient,
         private IdTokenEmailExtractor $idTokenEmailExtractor,
+        private PproConfigurationRefresherInterface $pproConfigurationRefresher,
         private string $payplugOauthBaseUrl,
         private string $payplugOauthAudience,
     ) {
@@ -137,6 +139,9 @@ final class UnifiedAuthenticationController extends AbstractController
             $gatewayConfig->setConfig($config);
 
             $this->entityManager->flush();
+            // After the credentials are persisted, so a PayPlug outage here cannot lose them. A no-op
+            // for non-PPRO gateways; never throws. PaymentMethodValidator::process() flushes it.
+            $this->pproConfigurationRefresher->refresh($paymentMethod, false);
             $this->cleanSession($request);
 
             $request->getSession()->getFlashBag()->add('success', 'payplug_sylius_payplug_plugin.admin.oauth_callback_success');

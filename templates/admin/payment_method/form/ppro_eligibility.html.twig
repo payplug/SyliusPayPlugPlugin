@@ -1,0 +1,68 @@
+{% set config_form = hookable_metadata.context.form.gatewayConfig.config %}
+{% set gateway_config = hookable_metadata.context.form.vars.data.gatewayConfig %}
+{% set ppro = gateway_config ? gateway_config.config['payment_method']|default(null) : null %}
+{% set default_amount = ppro is iterable ? ppro['default_amount']|default(null) : null %}
+{% set default_min = default_amount is iterable ? default_amount['min']|default(null) : null %}
+{% set default_max = default_amount is iterable ? default_amount['max']|default(null) : null %}
+{% set locale = app.request.locale|default('en') %}
+{% set min_label = default_min is not null ? default_min|sylius_format_money('EUR', locale) : '' %}
+{% set max_label = default_max is not null ? default_max|sylius_format_money('EUR', locale) : '' %}
+{% set controller = '@payplug/sylius-payplug-plugin/ppro-eligibility' %}
+{% set bounds = {} %}
+{% if default_min is not null %}{% set bounds = bounds|merge({minBound: default_min}) %}{% endif %}
+{% if default_max is not null %}{% set bounds = bounds|merge({maxBound: default_max}) %}{% endif %}
+
+<div class="col-12 mt-5"
+    {{ stimulus_controller(controller, bounds|merge({
+        messages: {
+            belowMin: 'payplug_sylius_payplug_plugin.ppro.min_below_api_min'|trans({'%min%': min_label, '%max%': max_label}, 'validators'),
+            aboveMax: 'payplug_sylius_payplug_plugin.ppro.max_above_api_max'|trans({'%min%': min_label, '%max%': max_label}, 'validators'),
+            minGreaterThanMax: 'payplug_sylius_payplug_plugin.ppro.min_greater_than_max'|trans({}, 'validators'),
+            invalidAmount: 'payplug_sylius_payplug_plugin.ppro.invalid_amount'|trans({}, 'validators'),
+            noCountry: 'payplug_sylius_payplug_plugin.ppro.no_country'|trans({}, 'validators'),
+        },
+    })) }}
+    {{ sylius_test_html_attribute('payplug-ppro-eligibility') }}
+>
+    {% if ppro is iterable and ppro['enabled']|default(true) is same as(false) %}
+        <div class="alert alert-warning" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.disabled_by_payplug'|trans }}</div>
+    {% endif %}
+    {% if config_form.ppro_min_amount.vars.disabled %}
+        <div class="alert alert-info" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.not_connected'|trans }}</div>
+    {% endif %}
+
+    <div class="row g-4 align-items-start mb-4">
+        <div class="col-12 col-md-4">
+            <img class="img-fluid" alt="" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/admin/ppro/illustration-min-max.svg') }}">
+        </div>
+        <div class="col-12 col-md-8">
+            <h4 class="mb-1">{{ 'payplug_sylius_payplug_plugin.ui.ppro.amount_title'|trans }}</h4>
+            <p class="text-secondary mb-2">{{ 'payplug_sylius_payplug_plugin.ui.ppro.amount_help'|trans }}</p>
+            {% if default_min is not null and default_max is not null %}
+                <p class="form-hint mb-3">{{ 'payplug_sylius_payplug_plugin.ui.ppro.api_limits'|trans({'%min%': min_label, '%max%': max_label}) }}</p>
+            {% endif %}
+            <div class="row">
+                <div class="col-12 col-sm-6" {{ stimulus_target(controller, 'minField') }}>
+                    {{ form_row(config_form.ppro_min_amount) }}
+                    <div class="invalid-feedback d-block" hidden {{ stimulus_target(controller, 'minError') }}></div>
+                </div>
+                <div class="col-12 col-sm-6" {{ stimulus_target(controller, 'maxField') }}>
+                    {{ form_row(config_form.ppro_max_amount) }}
+                    <div class="invalid-feedback d-block" hidden {{ stimulus_target(controller, 'maxError') }}></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-12 col-md-4">
+            <img class="img-fluid" alt="" src="{{ asset('bundles/payplugsyliuspayplugplugin/assets/admin/ppro/illustration-pays.svg') }}">
+        </div>
+        <div class="col-12 col-md-8" {{ stimulus_target(controller, 'countriesField') }}>
+            <h4 class="mb-1">{{ 'payplug_sylius_payplug_plugin.ui.ppro.countries_title'|trans }}</h4>
+            <p class="text-secondary mb-3">{{ 'payplug_sylius_payplug_plugin.ui.ppro.countries_help'|trans }}</p>
+            {{ form_row(config_form.ppro_countries) }}
+            <div class="alert alert-danger mt-2" role="alert" hidden {{ stimulus_target(controller, 'countriesError') }}></div>
+        </div>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 payplug_sylius_payplug_plugin:
     error:
+        ppro_not_available: "Ce moyen de paiement n'est pas disponible pour votre pays de facturation ou pour ce montant. Veuillez choisir un autre moyen de paiement."
         oney_not_enabled: Oney n'est pas ou plus activé sur votre compte.
         api_unknow_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
         transaction_failed_1click: La transaction a échoué, votre carte de paiement ne sera pas débitée.
@@ -36,3 +37,6 @@ payplug_sylius_payplug_plugin:
                 payment_not_found: Ce paiement est introuvable chez PayPlug. Vérifiez que le moyen de paiement est connecté au bon compte PayPlug.
                 api_error: L'opération n'a pas pu être effectuée à cause d'une erreur PayPlug. Le paiement n'a pas été modifié ; réessayez dans quelques instants.
                 unexpected_error: L'opération a peut-être été effectuée par PayPlug, mais elle n'a pas pu être enregistrée ici. Vérifiez le paiement dans votre portail PayPlug avant de réessayer, pour ne pas capturer ou annuler deux fois.
+    ppro:
+        refresh_failed: "PayPlug n'a pas pu être joint : les limites de montant et de pays affichées sont les dernières enregistrées."
+        settings_adjusted: "PayPlug a modifié les limites de ce moyen de paiement : votre plage de montants ou vos pays de facturation ont été ajustés pour les respecter. Vérifiez-les ci-dessous."

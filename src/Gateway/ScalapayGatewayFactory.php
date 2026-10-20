@@ -12,7 +12,9 @@ final class ScalapayGatewayFactory extends AbstractGatewayFactory
 
     public const PAYMENT_METHOD_SCALAPAY = 'scalapay';
 
+    /** @deprecated no longer read; the merchant range is stored under the `payment_method` config key */
     public const MIN_AMOUNT = 'min_amount';
 
+    /** @deprecated no longer read; the merchant range is stored under the `payment_method` config key */
     public const MAX_AMOUNT = 'max_amount';
 }
