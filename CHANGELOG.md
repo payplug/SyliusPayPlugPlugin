@@ -35,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   request for one channel can no longer be signed with another channel's account
 - Oney refunds are allowed as soon as the PayPlug API reports the payment as refundable
   (`refundable_after` / `refundable_until`); outside that window the back-office message states the
-  date from which the refund is possible, or the date on which the refund period ended
+  date and time, with its timezone, from which the refund is possible or at which the refund period
+  ended
 
 ### Removed
 - Drop Payum support

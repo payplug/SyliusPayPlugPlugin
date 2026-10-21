@@ -29,6 +29,9 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
 {
     private const MINIMUM_REFUND_AMOUNT = 10;
 
+    /** Medium date, hours and minutes in the locale's clock, and the short timezone name. */
+    private const DATE_SKELETON = 'yMMMdjmmz';
+
     private const SUPPORTED_METHODS = [
         PayPlugGatewayFactory::FACTORY_NAME,
         OneyGatewayFactory::FACTORY_NAME,
@@ -136,11 +139,17 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
 
     private function formatDate(int $timestamp): string
     {
+        $locale = $this->translator->getLocale();
+        $pattern = (new \IntlDatePatternGenerator($locale))->getBestPattern(self::DATE_SKELETON);
+        Assert::string($pattern);
+
         $formatter = new \IntlDateFormatter(
-            $this->translator->getLocale(),
-            \IntlDateFormatter::MEDIUM,
-            \IntlDateFormatter::SHORT,
+            $locale,
+            \IntlDateFormatter::NONE,
+            \IntlDateFormatter::NONE,
             date_default_timezone_get(),
+            null,
+            $pattern,
         );
         $formatted = $formatter->format($timestamp);
         Assert::string($formatted);

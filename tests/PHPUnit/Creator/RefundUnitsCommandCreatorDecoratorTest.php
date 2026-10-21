@@ -124,9 +124,9 @@ final class RefundUnitsCommandCreatorDecoratorTest extends TestCase
 
         $message = $this->catchRefusal();
 
-        self::assertStringStartsWith(self::NOT_AVAILABLE_BEFORE_KEY . '|', $message);
-        self::assertStringContainsString('Jan 1, 2100', $message);
-        self::assertStringContainsString('12:00', $message);
+        self::assertStringStartsWith(self::NOT_AVAILABLE_BEFORE_KEY . '|Jan 1, 2100, 12:00', $message);
+        self::assertStringNotContainsString('12:00:00', $message);
+        self::assertMatchesRegularExpression('/ (UTC|GMT)$/', $message);
     }
 
     public function testOneyRefundAfterRefundableUntilIsRefusedWithTheEndDate(): void
@@ -140,8 +140,8 @@ final class RefundUnitsCommandCreatorDecoratorTest extends TestCase
 
         $message = $this->catchRefusal();
 
-        self::assertStringStartsWith(self::PERIOD_EXPIRED_KEY . '|', $message);
-        self::assertStringContainsString('Jan 1, 2020', $message);
+        self::assertStringStartsWith(self::PERIOD_EXPIRED_KEY . '|Jan 1, 2020, 12:00', $message);
+        self::assertMatchesRegularExpression('/ (UTC|GMT)$/', $message);
     }
 
     public function testOneyRefundBeforeRefundableAfterIsRefusedWhenRefundableUntilIsMissing(): void
@@ -206,8 +206,8 @@ final class RefundUnitsCommandCreatorDecoratorTest extends TestCase
 
         $message = $this->catchRefusal();
 
-        self::assertStringContainsString('1 janv. 2100', $message);
-        self::assertStringContainsString('13:00', $message);
+        self::assertStringContainsString('|1 janv. 2100, 13:00 ', $message);
+        self::assertMatchesRegularExpression('/ (UTC|GMT)\+0?1(:00)?$/', $message);
     }
 
     public function testSuccessiveOneyRefundsInsideTheWindowAreNotBlocked(): void
