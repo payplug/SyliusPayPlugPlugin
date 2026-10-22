@@ -61,7 +61,8 @@ payplug_sylius_payplug_plugin:
         impossible_to_refund_this_payment: Non è possibile rimborsare questo pagamento
         oney_gateway_label: Oney by Payplug
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: Il rimborso sarà possibile 48 ore dopo l’ultima operazione di pagamento o rimborso.
+        oney_refund_not_available_before: Il rimborso Oney sarà possibile solo a partire dal %date%.
+        oney_refund_period_expired: Il periodo di rimborso Oney è terminato il %date%. Questo pagamento non può più essere rimborsato.
         or_pay_with_oney: Oppure paga in
         pay: Pagamento
         3x_payment: Pagamento in 3x

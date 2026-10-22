@@ -61,7 +61,8 @@ payplug_sylius_payplug_plugin:
         impossible_to_refund_this_payment: This payment cannot be refunded
         oney_gateway_label: Oney by Payplug
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: The refund will be possible 48 hours after the last payment or refund transaction.
+        oney_refund_not_available_before: The Oney refund will only be possible from %date%.
+        oney_refund_period_expired: The Oney refund period ended on %date%. This payment can no longer be refunded.
         or_pay_with_oney: Or pay in
         pay: Payment
         3x_payment: Pay in 3 installments

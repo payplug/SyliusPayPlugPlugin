@@ -125,15 +125,31 @@ final class PayPlugApiMocker
         $action();
     }
 
-    public function mockApiRetrieveNotRefundablePayment(callable $action): void
+    public function mockApiRetrieveNotYetRefundablePayment(callable $action, int $refundableAfter): void
     {
         $mock = \Mockery::mock(
             'payplug_sylius_payplug_plugin.api_client.oney',
             PayPlugApiClientInterface::class,
         );
         $payment = \Mockery::mock('payment', Payment::class);
-        $payment->refundable_until = (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp();
-        $payment->refundable_after = (new \DateTime())->add(new \DateInterval('P1D'))->getTimestamp();
+        $payment->refundable_until = $refundableAfter + 86400;
+        $payment->refundable_after = $refundableAfter;
+        $mock
+            ->shouldReceive('retrieve')
+            ->andReturn($payment)
+        ;
+        $action();
+    }
+
+    public function mockApiRetrieveNoLongerRefundablePayment(callable $action, int $refundableUntil): void
+    {
+        $mock = \Mockery::mock(
+            'payplug_sylius_payplug_plugin.api_client.oney',
+            PayPlugApiClientInterface::class,
+        );
+        $payment = \Mockery::mock('payment', Payment::class);
+        $payment->refundable_until = $refundableUntil;
+        $payment->refundable_after = $refundableUntil - 86400;
         $mock
             ->shouldReceive('retrieve')
             ->andReturn($payment)

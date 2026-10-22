@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\Behat\Context\Ui\Admin;
 
-use App\Entity\Payment\Payment;
 use Behat\Behat\Context\Context;
-use DateTime;
-use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Action\NotifyAction;
-use PayPlug\SyliusPayPlugPlugin\Entity\RefundHistory;
-use PayPlug\SyliusPayPlugPlugin\Repository\RefundHistoryRepositoryInterface;
 use Payum\Core\Request\Notify;
 use Sylius\Behat\Context\Ui\Admin\ManagingOrdersContext;
 use Sylius\Behat\NotificationType;
@@ -36,28 +31,18 @@ final class RefundContext implements Context
     /** @var NotificationCheckerInterface */
     private $notificationChecker;
 
-    /** @var EntityManagerInterface */
-    private $entityManager;
-
-    /** @var RefundHistoryRepositoryInterface */
-    private $payplugRefundHistoryRepository;
-
     public function __construct(
         PayPlugApiMocker $payPlugApiMocker,
         ManagingOrdersContext $managingOrdersContext,
         RefundingContext $refundingContext,
         NotifyAction $notifyAction,
         NotificationCheckerInterface $notificationChecker,
-        EntityManagerInterface $entityManager,
-        RefundHistoryRepositoryInterface $payplugRefundHistoryRepository,
     ) {
         $this->payPlugApiMocker = $payPlugApiMocker;
         $this->managingOrdersContext = $managingOrdersContext;
         $this->refundingContext = $refundingContext;
         $this->notifyAction = $notifyAction;
         $this->notificationChecker = $notificationChecker;
-        $this->entityManager = $entityManager;
-        $this->payplugRefundHistoryRepository = $payplugRefundHistoryRepository;
     }
 
     /**
@@ -79,21 +64,54 @@ final class RefundContext implements Context
         string $productName,
         string $paymentMethod,
     ): void {
-        $this->payPlugApiMocker->mockApiRetrieveNotRefundablePayment(function () use (
+        $this->payPlugApiMocker->mockApiRetrievePayment(function () use (
             $order,
             $unitNumber,
             $productName,
             $paymentMethod
         ) {
-            $this->payPlugApiMocker->mockApiRefundedWithAmountPayment(function () use (
-                $order,
-                $unitNumber,
-                $productName,
-                $paymentMethod
-            ) {
-                $this->refundingContext->decidedToRefundProduct($unitNumber, $productName, $order->getNumber(), $paymentMethod);
-            });
+            $this->refundProduct($order, $unitNumber, $productName, $paymentMethod);
         });
+    }
+
+    /**
+     * @When /^For (this order) I decide to refund (\d)st "([^"]+)" product with "([^"]+)" payment before the API refund window opens on "([^"]+)"$/
+     */
+    public function decideToRefundProductBeforeTheRefundWindowOpens(
+        OrderInterface $order,
+        int $unitNumber,
+        string $productName,
+        string $paymentMethod,
+        string $refundableAfter,
+    ): void {
+        $this->payPlugApiMocker->mockApiRetrieveNotYetRefundablePayment(function () use (
+            $order,
+            $unitNumber,
+            $productName,
+            $paymentMethod
+        ) {
+            $this->refundProduct($order, $unitNumber, $productName, $paymentMethod);
+        }, (new \DateTimeImmutable($refundableAfter))->getTimestamp());
+    }
+
+    /**
+     * @When /^For (this order) I decide to refund (\d)st "([^"]+)" product with "([^"]+)" payment after the API refund window closed on "([^"]+)"$/
+     */
+    public function decideToRefundProductAfterTheRefundWindowClosed(
+        OrderInterface $order,
+        int $unitNumber,
+        string $productName,
+        string $paymentMethod,
+        string $refundableUntil,
+    ): void {
+        $this->payPlugApiMocker->mockApiRetrieveNoLongerRefundablePayment(function () use (
+            $order,
+            $unitNumber,
+            $productName,
+            $paymentMethod
+        ) {
+            $this->refundProduct($order, $unitNumber, $productName, $paymentMethod);
+        }, (new \DateTimeImmutable($refundableUntil))->getTimestamp());
     }
 
     /**
@@ -142,69 +160,19 @@ final class RefundContext implements Context
         );
     }
 
-    /**
-     * @When /^For (this order) I decide to refund (\d)st "([^"]+)" product with "([^"]+)" payment after 48 hours$/
-     */
-    public function decideToRefundProductAfter48Hours(
+    private function refundProduct(
         OrderInterface $order,
         int $unitNumber,
         string $productName,
         string $paymentMethod,
     ): void {
-        $this->payPlugApiMocker->mockApiRetrievePayment(function () use (
+        $this->payPlugApiMocker->mockApiRefundedWithAmountPayment(function () use (
             $order,
             $unitNumber,
             $productName,
             $paymentMethod
         ) {
-            /** @var DateTime $createdAt */
-            $createdAt = $order->getLastPayment()->getCreatedAt();
-            $createdAt->modify('-48 hours');
-
-            $payment = new Payment();
-            $payment->setCreatedAt($createdAt);
-            $payment->setAmount($order->getLastPayment()->getAmount());
-            $payment->setDetails($order->getLastPayment()->getDetails());
-            $payment->setCurrencyCode($order->getLastPayment()->getCurrencyCode());
-            $payment->setMethod($order->getLastPayment()->getMethod());
-            $payment->setOrder($order);
-            $payment->setState($order->getLastPayment()->getState());
-
-            $this->entityManager->persist($payment);
-            $this->entityManager->flush();
-
-            $this->decideToRefundProduct($order, $unitNumber, $productName, $paymentMethod);
+            $this->refundingContext->decidedToRefundProduct($unitNumber, $productName, $order->getNumber(), $paymentMethod);
         });
-    }
-
-    /**
-     * @Then /^I wait 48 hours after the last refund of (this order)$/
-     */
-    public function iWait48HoursAfterTheLastRefundOfThisOrder(OrderInterface $order)
-    {
-        $createdAt = new DateTime();
-        $createdAt->modify('-48 hours');
-
-        $payment = new Payment();
-        $payment->setCreatedAt($createdAt);
-        $payment->setAmount($order->getLastPayment()->getAmount());
-        $payment->setDetails($order->getLastPayment()->getDetails());
-        $payment->setCurrencyCode($order->getLastPayment()->getCurrencyCode());
-        $payment->setMethod($order->getLastPayment()->getMethod());
-        $payment->setOrder($order);
-        $payment->setState($order->getLastPayment()->getState());
-
-        $refundHistory = new RefundHistory();
-        $refundHistory
-            ->setCreatedAt($createdAt)
-            ->setPayment($payment)
-            ->setExternalId('09876543')
-            ->setProcessed(true)
-            ->setValue(1)
-        ;
-
-        $this->entityManager->persist($payment);
-        $this->entityManager->persist($refundHistory);
-        $this->entityManager->flush();
     }
 }
