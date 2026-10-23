@@ -6,14 +6,15 @@ namespace PayPlug\SyliusPayPlugPlugin\Provider;
 
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
-use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PproPaymentMethods;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproEligibilityChecker;
+use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAllowedCountriesResolver;
 use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAmountRangeResolver;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Webmozart\Assert\Assert;
-use Webmozart\Assert\InvalidArgumentException;
 
 final class SupportedMethodsProvider
 {
@@ -22,6 +23,8 @@ final class SupportedMethodsProvider
         private PayPlugApiClientFactoryInterface $clientFactory,
         private AccountAmountRangeResolver $amountRangeResolver,
         private LoggerInterface $logger,
+        private PproEligibilityChecker $pproEligibilityChecker,
+        private AccountAllowedCountriesResolver $allowedCountriesResolver,
     ) {
     }
 
@@ -47,7 +50,7 @@ final class SupportedMethodsProvider
     ): array {
         $activeCurrencyCode = $paymentCurrencyCode ?? $this->currencyContext->getCurrencyCode();
 
-        /** @var array<string, array<array-key, mixed>> $accounts */
+        /** @var array<string, array{currencies: array<string, array{min_amount: int, max_amount: int}>, allowedCountries: list<string>|null}|null> $accounts */
         $accounts = [];
 
         foreach ($supportedMethods as $key => $paymentMethod) {
@@ -60,46 +63,22 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            $memoKey = $this->accountMemoKey($gatewayConfig);
-            $account = $accounts[$memoKey] ??= $this->clientFactory->createForPaymentMethod($paymentMethod)->getAccount();
+            // A PPRO method is filtered from its stored PayPlug limits; until they are stored, it is
+            // filtered live from the account like every other method.
+            $isSupported = PproPaymentMethods::isPpro($factoryName)
+                ? $this->pproEligibilityChecker->isEligible($paymentMethod, $paymentAmount, $activeCurrencyCode, $billingCountryCode)
+                : null;
 
-            $authorizedCurrencies = $this->resolveAuthorizedCurrencies($account, $gatewayConfig);
-            $allowedCountries = $this->resolveAllowedCountries($account, $gatewayConfig);
-
-            if ($billingCountryCode !== null && $allowedCountries !== [] && !\in_array($billingCountryCode, $allowedCountries, true)) {
-                unset($supportedMethods[$key]);
-
-                continue;
-            }
-
-            if (!\array_key_exists($activeCurrencyCode, $authorizedCurrencies)) {
-                // Unified Hosted Fields is exempt from the currency gate, pending a source of truth
-                // that actually knows a UHF account's currencies. The Retail `/account` payload only
-                // advertises the legacy acquiring setup (`configuration.min_amounts` /
-                // `max_amounts`), which is demonstrably wrong for a UHF account: account 1461487
-                // reports `currencies: ['EUR']` while a USD payment on that same account completed
-                // on staging (schemeTransactionId 6a9ad8eb905d3). Hiding a method that works is the
-                // worse failure, so UHF is kept and left to the API to accept or refuse.
-                //
-                // Every other gateway keeps the gate: Bancontact, Scalapay, Apple Pay, American
-                // Express and Wero are EUR-only, and `payplug` in integrated_payment mode is served
-                // by the very legacy setup this payload does describe correctly.
-                if (!PayPlugGatewayFactory::isHostedFieldsConfig($gatewayConfig)) {
-                    unset($supportedMethods[$key]);
+            if (null === $isSupported) {
+                $memoKey = $this->accountMemoKey($gatewayConfig);
+                if (!\array_key_exists($memoKey, $accounts)) {
+                    $accounts[$memoKey] = $this->readAccountLimits($paymentMethod, $gatewayConfig);
                 }
 
-                // An unadvertised currency carries no amount limits either, so a method kept above
-                // skips the bounds check rather than indexing a missing key.
-                continue;
+                $isSupported = $this->isWithinAccountLimits($accounts[$memoKey], $gatewayConfig, $paymentAmount, $activeCurrencyCode, $billingCountryCode);
             }
 
-            [$minAmount, $maxAmount] = $this->resolveAmountBounds(
-                $gatewayConfig,
-                $activeCurrencyCode,
-                $authorizedCurrencies[$activeCurrencyCode],
-            );
-
-            if ($paymentAmount < $minAmount || $paymentAmount > $maxAmount) {
+            if (!$isSupported) {
                 unset($supportedMethods[$key]);
             }
         }
@@ -108,66 +87,55 @@ final class SupportedMethodsProvider
     }
 
     /**
-     * ScalapayGatewayConfigurationTypeExtension lets the merchant tighten the API-provided bounds
-     * via the min_amount/max_amount config keys. The override is deliberately scoped to Scalapay:
-     * IsScalapayAmountRangeValidValidator — the save-time guardrail that keeps the configured
-     * range inside what PayPlug authorizes — is wired for Scalapay only, so honouring the same
-     * keys on another gateway would grant it a checkout override with no validation behind it.
-     * The values are entered in EUR, so the override also only applies to an EUR checkout; other
-     * currencies keep the raw API bounds.
-     *
-     * @param array{min_amount: int, max_amount: int} $authorizedRange
-     *
-     * @return array{0: int, 1: int}
+     * @param array{currencies: array<string, array{min_amount: int, max_amount: int}>, allowedCountries: list<string>|null}|null $accountLimits null when the account could not be read
      */
-    private function resolveAmountBounds(
+    private function isWithinAccountLimits(
+        ?array $accountLimits,
         GatewayConfigInterface $gatewayConfig,
+        int $paymentAmount,
         string $activeCurrencyCode,
-        array $authorizedRange,
-    ): array {
-        if ('EUR' !== $activeCurrencyCode || ScalapayGatewayFactory::FACTORY_NAME !== $gatewayConfig->getFactoryName()) {
-            return [$authorizedRange['min_amount'], $authorizedRange['max_amount']];
+        ?string $billingCountryCode,
+    ): bool {
+        if (null === $accountLimits) {
+            return true;
         }
 
-        [$minAmount, $maxAmount] = $this->readConfiguredAmounts($gatewayConfig->getConfig());
+        $allowedCountries = $accountLimits['allowedCountries'];
+        if (null !== $billingCountryCode && null !== $allowedCountries && !\in_array($billingCountryCode, $allowedCountries, true)) {
+            return false;
+        }
 
-        return [
-            $minAmount ?? $authorizedRange['min_amount'],
-            $maxAmount ?? $authorizedRange['max_amount'],
-        ];
+        return $this->isWithinCurrencyLimits($accountLimits['currencies'], $gatewayConfig, $paymentAmount, $activeCurrencyCode);
     }
 
     /**
-     * The admin form only ever writes null or an int, but the gateway config is a plain serialized
-     * array that a direct DB edit, an import script or an admin API write can leave anything in.
-     * provide() runs unguarded on every checkout page (via the gateway resolver decorators), so a
-     * malformed value degrades to "not configured" — falling back to the API bounds — rather than
-     * throwing an assertion error that would break payment-method resolution for the whole
-     * checkout, not just hide Scalapay.
-     *
-     * @param array<array-key, mixed> $config
-     *
-     * @return array{0: int|null, 1: int|null}
+     * @param array<string, array{min_amount: int, max_amount: int}> $authorizedCurrencies
      */
-    private function readConfiguredAmounts(array $config): array
-    {
-        $minAmount = $config[ScalapayGatewayFactory::MIN_AMOUNT] ?? null;
-        $maxAmount = $config[ScalapayGatewayFactory::MAX_AMOUNT] ?? null;
-
-        try {
-            Assert::nullOrInteger($minAmount);
-            Assert::nullOrInteger($maxAmount);
-        } catch (InvalidArgumentException $exception) {
-            $this->logger->warning('Ignoring malformed Scalapay amount range in gateway config; falling back to the PayPlug API bounds.', [
-                'min_amount' => $minAmount,
-                'max_amount' => $maxAmount,
-                'exception' => $exception->getMessage(),
-            ]);
-
-            return [null, null];
+    private function isWithinCurrencyLimits(
+        array $authorizedCurrencies,
+        GatewayConfigInterface $gatewayConfig,
+        int $paymentAmount,
+        string $activeCurrencyCode,
+    ): bool {
+        if (!\array_key_exists($activeCurrencyCode, $authorizedCurrencies)) {
+            // Unified Hosted Fields is exempt from the currency gate, pending a source of truth
+            // that actually knows a UHF account's currencies. The Retail `/account` payload only
+            // advertises the legacy acquiring setup (`configuration.min_amounts` /
+            // `max_amounts`), which is demonstrably wrong for a UHF account: account 1461487
+            // reports `currencies: ['EUR']` while a USD payment on that same account completed
+            // on staging (schemeTransactionId 6a9ad8eb905d3). Hiding a method that works is the
+            // worse failure, so UHF is kept and left to the API to accept or refuse.
+            //
+            // Every other gateway keeps the gate: Apple Pay and American Express are EUR-only,
+            // and `payplug` in integrated_payment mode is served by the very legacy setup this
+            // payload does describe correctly. An unadvertised currency carries no amount limits
+            // either, so a kept method skips the bounds check.
+            return PayPlugGatewayFactory::isHostedFieldsConfig($gatewayConfig);
         }
 
-        return [$minAmount, $maxAmount];
+        $authorizedRange = $authorizedCurrencies[$activeCurrencyCode];
+
+        return $paymentAmount >= $authorizedRange['min_amount'] && $paymentAmount <= $authorizedRange['max_amount'];
     }
 
     /**
@@ -189,48 +157,42 @@ final class SupportedMethodsProvider
     }
 
     /**
-     * Both resolvers below read the factory name off the gateway config the $account was fetched
-     * for, rather than off provide()'s $factoryName argument. The loop guard above makes the two
-     * equal today, but keeping the account payload and the key used to index it sourced from the
-     * same config is what stops the pair drifting apart if that guard is ever relaxed.
+     * A PPRO gateway reaches this point only while no PayPlug limits are stored for it; for every
+     * other gateway the `/account` payload is read live (through the token-keyed cache of
+     * PayPlugApiClient). A failure to read or parse it keeps the method rather than breaking
+     * payment-method resolution for the whole checkout, and is memoized by the caller like a
+     * successful read.
      *
-     * @param array<array-key, mixed> $account
+     * The factory name is read off the gateway config the account is fetched for, so the payload and
+     * the key used to index it always come from the same config.
      *
-     * @return array<string, array{min_amount: int, max_amount: int}>
+     * @return array{currencies: array<string, array{min_amount: int, max_amount: int}>, allowedCountries: list<string>|null}|null
      */
-    private function resolveAuthorizedCurrencies(array $account, GatewayConfigInterface $gatewayConfig): array
-    {
-        return $this->amountRangeResolver->resolve($account, $this->paymentMethodKey($gatewayConfig));
+    private function readAccountLimits(
+        PaymentMethodInterface $paymentMethod,
+        GatewayConfigInterface $gatewayConfig,
+    ): ?array {
+        try {
+            $account = $this->clientFactory->createForPaymentMethod($paymentMethod)->getAccount();
+            $paymentMethodKey = $this->paymentMethodKey($gatewayConfig);
+
+            return [
+                'currencies' => $this->amountRangeResolver->resolve($account, $paymentMethodKey),
+                'allowedCountries' => $this->allowedCountriesResolver->resolve($account, $paymentMethodKey),
+            ];
+        } catch (\Throwable $exception) {
+            $this->logger->warning('[PayPlug] Could not read the PayPlug account; the payment method is kept.', [
+                'factory_name' => $gatewayConfig->getFactoryName(),
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
-     * @param array<array-key, mixed> $account
-     */
-    private function resolveAllowedCountries(array $account, GatewayConfigInterface $gatewayConfig): array
-    {
-        $pmKey = $this->paymentMethodKey($gatewayConfig);
-        if (null === $pmKey) {
-            return [];
-        }
-
-        $paymentMethods = $account['payment_methods'] ?? [];
-        Assert::isArray($paymentMethods);
-        $pmData = $paymentMethods[$pmKey] ?? [];
-        Assert::isArray($pmData);
-
-        $allowedCountries = $pmData['allowed_countries'] ?? [];
-        Assert::isArray($allowedCountries);
-
-        if (\in_array('ALL', $allowedCountries, true)) {
-            return [];
-        }
-
-        return $allowedCountries;
-    }
-
-    /**
-     * The `/account` payload keys each PPRO method under the factory name's suffix — `payplug_oney`
-     * is advertised as `oney`. A suffix-less factory name (`payplug`) is the card gateway, which
+     * The `/account` payload keys each payment method under the factory name's suffix —
+     * `payplug_apple_pay` is advertised as `apple_pay`. A suffix-less factory name (`payplug`) is the card gateway, which
      * has no such sub-payload.
      */
     private function paymentMethodKey(GatewayConfigInterface $gatewayConfig): ?string

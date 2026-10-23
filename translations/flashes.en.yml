@@ -1,5 +1,6 @@
 payplug_sylius_payplug_plugin:
     error:
+        ppro_not_available: "This payment method is not available for your billing country or for this amount. Please choose another payment method."
         oney_not_enabled: Oney is not (or is no longer) activated on your account.
         api_unknow_error: An error occurred. Please retry in few seconds.
         transaction_failed_1click: The transaction was not completed and your card was not charged.
@@ -36,3 +37,6 @@ payplug_sylius_payplug_plugin:
                 payment_not_found: This payment could not be found at PayPlug. Check that the payment method is connected to the right PayPlug account.
                 api_error: The operation could not be performed because of a PayPlug error. The payment was not changed; try again in a moment.
                 unexpected_error: The operation may have been performed by PayPlug, but it could not be recorded here. Check the payment in your PayPlug portal before trying again, to avoid capturing or cancelling twice.
+    ppro:
+        refresh_failed: "The PayPlug limits of this payment method could not be refreshed: the amount and country limits shown are the last ones saved. Details are in the payplug log channel."
+        settings_adjusted: "PayPlug changed the limits of this payment method: your amount range or billing countries were adjusted to fit them. Check them below."

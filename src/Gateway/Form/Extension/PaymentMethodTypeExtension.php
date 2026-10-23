@@ -6,6 +6,9 @@ namespace PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension;
 
 use PayPlug\SyliusPayPlugPlugin\Checker\GatewayChannelConflictChecker;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\AbstractGatewayConfigurationType;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PproPaymentMethods;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfig;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationValidator;
 use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
 use Sylius\Bundle\PaymentBundle\Form\Type\PaymentMethodType;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -27,7 +30,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * - POST_SET_DATA guards the picker, rendering the channels another enabled gateway of the same
  *   factory already holds as unselectable (PRE-3629) — see `disableClaimedChannelChoices()`.
  * - POST_SUBMIT enforces the rule, turning a channel conflict or a base-currency violation into a
- *   form error (PRE-3628) — see `addChannelConflictErrors()` and `addBaseCurrencyErrors()`.
+ *   form error (PRE-3628) — see `addChannelConflictErrors()` and `addBaseCurrencyErrors()`. It
+ *   also refuses PPRO amount and country settings outside the stored PayPlug limits — see
+ *   `addPproEligibilityErrors()`.
  *
  * Both sit on the *root* payment-method form. Sylius adds `channels` from `CoreBundle`'s own type
  * extension, i.e. after `gatewayConfig` (`PaymentMethodType` adds `enabled` then `gatewayConfig`);
@@ -42,6 +47,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
     public function __construct(
         private GatewayChannelConflictChecker $conflictChecker,
         private TranslatorInterface $translator,
+        private PproConfigurationValidator $pproConfigurationValidator,
     ) {
     }
 
@@ -78,6 +84,7 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
 
             $this->addChannelConflictErrors($form, $paymentMethod, (string) $gatewayConfig->getFactoryName());
             $this->addBaseCurrencyErrors($form, $paymentMethod, $gatewayConfig, $configurationType);
+            $this->addPproEligibilityErrors($form, $gatewayConfig);
         });
     }
 
@@ -272,6 +279,45 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
 
             $seenMessages[] = $message;
             $form->get('channels')->addError(new FormError($message));
+        }
+    }
+
+    /**
+     * The submitted values are read from the fields, the PayPlug limits from the gateway config,
+     * where the form never writes them. A field that failed to transform already carries its own
+     * error and is not checked again.
+     */
+    private function addPproEligibilityErrors(FormInterface $form, GatewayConfigInterface $gatewayConfig): void
+    {
+        if (!PproPaymentMethods::isPpro($gatewayConfig->getFactoryName())) {
+            return;
+        }
+
+        $configForm = $form->get('gatewayConfig')->get('config');
+        $fields = [
+            PproEligibilityTypeExtension::MIN_AMOUNT_FIELD,
+            PproEligibilityTypeExtension::MAX_AMOUNT_FIELD,
+            PproEligibilityTypeExtension::COUNTRIES_FIELD,
+        ];
+        foreach ($fields as $field) {
+            if (!$configForm->has($field) || $configForm->get($field)->isDisabled() || !$configForm->get($field)->isSynchronized()) {
+                return;
+            }
+        }
+
+        /** @var int|null $min */
+        $min = $configForm->get(PproEligibilityTypeExtension::MIN_AMOUNT_FIELD)->getData();
+        /** @var int|null $max */
+        $max = $configForm->get(PproEligibilityTypeExtension::MAX_AMOUNT_FIELD)->getData();
+        /** @var list<string>|null $countries */
+        $countries = $configForm->get(PproEligibilityTypeExtension::COUNTRIES_FIELD)->getData();
+
+        $stored = PproConfig::fromArray($gatewayConfig->getConfig()[PproConfig::CONFIG_KEY] ?? null);
+
+        foreach ($this->pproConfigurationValidator->violations($stored, $min, $max, $countries) as $field => $messages) {
+            foreach ($messages as $message) {
+                $configForm->get($field)->addError(new FormError($message));
+            }
         }
     }
 }

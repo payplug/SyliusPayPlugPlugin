@@ -35,6 +35,9 @@ sylius_twig_hooks:
                 priority: 0
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_bancontact': &bancontactGateway
             live_checkbox: *liveCheckbox
+            ppro_eligibility: &pproEligibility
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/ppro_eligibility.html.twig'
+                priority: -10
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_apple_pay': &applePayGateway
             live_checkbox: *liveCheckbox
 
@@ -43,12 +46,11 @@ sylius_twig_hooks:
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_scalapay': &scalapayGateway
             live_checkbox: *liveCheckbox
-            amount_range:
-                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/scalapay_amount_range.html.twig'
-                priority: 0
+            ppro_eligibility: *pproEligibility
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_wero': &weroGateway
             live_checkbox: *liveCheckbox
+            ppro_eligibility: *pproEligibility
 
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.payplug':
             <<: *payplugGateway

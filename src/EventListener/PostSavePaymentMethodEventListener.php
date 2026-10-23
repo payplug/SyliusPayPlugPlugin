@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventListener;
 
 use Payplug\Authentication;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PproPaymentMethods;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfig;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationRefresherInterface;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use Psr\Log\LoggerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
@@ -23,6 +26,7 @@ final class PostSavePaymentMethodEventListener
         private RouterInterface $router,
         private PaymentMethodValidator $paymentMethodValidator,
         private LoggerInterface $logger,
+        private PproConfigurationRefresherInterface $pproConfigurationRefresher,
     ) {
     }
 
@@ -61,6 +65,7 @@ final class PostSavePaymentMethodEventListener
         if (true !== $isRenewal) {
             // No need to renew the oauth token, let's validate the payment method with already existing config
             $this->paymentMethodValidator->process($paymentMethod);
+            $this->refreshPproLimitsOnEnvironmentChange($paymentMethod);
 
             return;
         }
@@ -92,6 +97,26 @@ final class PostSavePaymentMethodEventListener
             $this->logger->critical('Error while starting Payplug OAuth process', ['message' => $e->getMessage(), 'exception' => $e]);
             $request->getSession()->getFlashBag()->add('error', 'payplug_sylius_payplug_plugin.admin.oauth_setup_error');
         }
+    }
+
+    /**
+     * The stored PPRO limits belong to the environment (live or test) they were fetched in.
+     */
+    private function refreshPproLimitsOnEnvironmentChange(PaymentMethodInterface $paymentMethod): void
+    {
+        $gatewayConfig = $paymentMethod->getGatewayConfig();
+        if (!PproPaymentMethods::isPpro($gatewayConfig?->getFactoryName())) {
+            return;
+        }
+
+        $config = $gatewayConfig?->getConfig() ?? [];
+        $stored = PproConfig::fromArray($config[PproConfig::CONFIG_KEY] ?? null);
+
+        if (null === $stored?->live || $stored->live === (true === ($config['live'] ?? false))) {
+            return;
+        }
+
+        $this->pproConfigurationRefresher->refresh($paymentMethod);
     }
 
     private function isPayplugPaymentMethod(PaymentMethodInterface $paymentMethod): bool

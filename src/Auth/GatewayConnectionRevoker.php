@@ -6,6 +6,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Auth;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfig;
 use PayplugUnifiedCore\Contracts\ITokenCache;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 
@@ -42,6 +43,13 @@ final class GatewayConnectionRevoker
     /** Everything the OAuth callback writes, all of it account-bound. */
     private const CONNECTION_KEYS = ['live_client', 'test_client', 'account_email'];
 
+    /**
+     * The PayPlug limits stored in a PPRO `payment_method` block, fetched from the account being
+     * disconnected. The merchant's own narrowing (`configured_amount`, `configured_countries`) is a
+     * setting, not account data, and is kept.
+     */
+    private const PPRO_ACCOUNT_KEYS = ['name', 'enabled', 'allowed_countries', 'default_amount', 'live', 'refreshed_at'];
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private ITokenCache $tokenCache,
@@ -69,6 +77,13 @@ final class GatewayConnectionRevoker
 
         foreach (self::CONNECTION_KEYS as $key) {
             unset($config[$key]);
+        }
+
+        // Left in place, the old account's limits would keep filtering the checkout after a
+        // reconnection to another account whose first refresh fails.
+        $pproBlock = $config[PproConfig::CONFIG_KEY] ?? null;
+        if (\is_array($pproBlock)) {
+            $config[PproConfig::CONFIG_KEY] = array_diff_key($pproBlock, array_flip(self::PPRO_ACCOUNT_KEYS));
         }
 
         // The Hosted Fields account id identifies the account that was just disconnected, so it is
