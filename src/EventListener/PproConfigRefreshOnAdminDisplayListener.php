@@ -17,9 +17,10 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Refreshes the stored PayPlug limits of a PPRO payment method when its admin edit page is
- * displayed. It runs before the controller so that the form built on this request already shows
- * the refreshed limits; a submit (POST) is never refreshed, so it is validated against the limits
- * that were displayed. A payment method not connected to PayPlug yet has no limits to fetch.
+ * displayed, unless they were refreshed a few minutes ago: reloading the page, or a link or a
+ * browser prefetch hitting it, neither calls PayPlug nor writes each time. It runs before the
+ * controller so that the form built on this request already shows the refreshed limits; a submit
+ * (POST) is never refreshed, so it is validated against the limits that were displayed. A payment method not connected to PayPlug yet has no limits to fetch.
  */
 #[AsEventListener(event: KernelEvents::CONTROLLER)]
 final class PproConfigRefreshOnAdminDisplayListener
@@ -47,7 +48,7 @@ final class PproConfigRefreshOnAdminDisplayListener
             return;
         }
 
-        $result = $this->pproConfigurationRefresher->refresh($paymentMethod, true);
+        $result = $this->pproConfigurationRefresher->refreshIfStale($paymentMethod);
 
         if (!$result->refreshed) {
             $this->addFlash($request, 'warning', 'payplug_sylius_payplug_plugin.ppro.refresh_failed');

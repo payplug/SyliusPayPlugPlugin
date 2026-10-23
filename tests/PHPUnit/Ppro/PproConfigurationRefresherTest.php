@@ -338,7 +338,7 @@ final class PproConfigurationRefresherTest extends TestCase
         self::assertSame(['DE'], $this->storedBlock($paymentMethod)['configured_countries']);
     }
 
-    public function testScalapayOldMinMaxKeysAreIgnoredOnFirstCapture(): void
+    public function testScalapayLegacyRangeIsCarriedOverOnFirstCapture(): void
     {
         $this->client->method('getAccount')->willReturn(self::sampleAccount());
         $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
@@ -346,12 +346,163 @@ final class PproConfigurationRefresherTest extends TestCase
             'max_amount' => 90000,
         ]);
 
+        $result = $this->refresher->refresh($paymentMethod);
+
+        self::assertSame(['min' => 5000, 'max' => 90000], $this->storedBlock($paymentMethod)['configured_amount']);
+        self::assertFalse($result->adjusted);
+    }
+
+    public function testScalapayLegacyRangeIsClampedToThePayPlugLimits(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'min_amount' => 100,
+            'max_amount' => 900000,
+        ]);
+
+        $result = $this->refresher->refresh($paymentMethod);
+
+        self::assertSame(['min' => 500, 'max' => 200000], $this->storedBlock($paymentMethod)['configured_amount']);
+        self::assertTrue($result->adjusted);
+    }
+
+    public function testScalapayLegacySideOfUnexpectedTypeIsDropped(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'min_amount' => '5000',
+            'max_amount' => 90000,
+        ]);
+
         $this->refresher->refresh($paymentMethod);
 
-        $config = $paymentMethod->getGatewayConfig()?->getConfig() ?? [];
+        self::assertSame(['min' => null, 'max' => 90000], $this->storedBlock($paymentMethod)['configured_amount']);
+    }
+
+    public function testScalapayLegacyRangeIsNotReadOnceABlockIsStored(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'min_amount' => 5000,
+            'max_amount' => 90000,
+            'payment_method' => self::previousBlock(['min' => null, 'max' => null]),
+        ]);
+
+        $this->refresher->refresh($paymentMethod);
+
         self::assertSame(['min' => null, 'max' => null], $this->storedBlock($paymentMethod)['configured_amount']);
-        self::assertSame(5000, $config['min_amount']);
-        self::assertSame(90000, $config['max_amount']);
+    }
+
+    public function testLegacyRangeKeysAreOnlyReadForScalapay(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'min_amount' => 5000,
+            'max_amount' => 90000,
+        ]);
+
+        $this->refresher->refresh($paymentMethod);
+
+        self::assertSame(['min' => null, 'max' => null], $this->storedBlock($paymentMethod)['configured_amount']);
+    }
+
+    /**
+     * The PayPlug call can take a while: a save of the gateway config made meanwhile (credentials,
+     * merchant settings) is read back before writing, and only the `payment_method` block is replaced.
+     */
+    public function testReReadsTheGatewayConfigBeforeWriting(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'live' => true,
+            'account_email' => 'old@example.com',
+        ]);
+        $gatewayConfig = $paymentMethod->getGatewayConfig();
+        self::assertNotNull($gatewayConfig);
+
+        $this->entityManager->expects(self::once())->method('refresh')->with($gatewayConfig)->willReturnCallback(
+            static function (GatewayConfig $gatewayConfig): void {
+                $gatewayConfig->setConfig([
+                    'live' => true,
+                    'account_email' => 'new@example.com',
+                    'payment_method' => self::previousBlock(['min' => 1000, 'max' => 50000], ['BE']),
+                ]);
+            },
+        );
+
+        $this->refresher->refresh($paymentMethod);
+
+        $config = $gatewayConfig->getConfig();
+        self::assertSame('new@example.com', $config['account_email']);
+        self::assertSame(['min' => 1000, 'max' => 50000], $this->storedBlock($paymentMethod)['configured_amount']);
+        self::assertSame(['BE'], $this->storedBlock($paymentMethod)['configured_countries']);
+        self::assertSame(self::NOW, $this->storedBlock($paymentMethod)['refreshed_at']);
+    }
+
+    public function testLogsAnEmptyAmountRangeWhenStoringIt(): void
+    {
+        $account = self::sampleAccount();
+        $account['payment_methods']['wero']['min_amounts'] = ['EUR' => 5000];
+        $account['payment_methods']['wero']['max_amounts'] = ['EUR' => 1000];
+        $this->client->method('getAccount')->willReturn($account);
+        $this->logger->expects(self::once())->method('warning')->with(self::stringContains('amount range is empty'));
+
+        $result = $this->refresher->refresh($this->paymentMethod(WeroGatewayFactory::FACTORY_NAME));
+
+        self::assertTrue($result->refreshed);
+    }
+
+    public function testRefreshIfStaleSkipsARecentRefresh(): void
+    {
+        $initial = ['live' => true, 'payment_method' => self::refreshedBlock('2026-10-20T08:55:01+00:00', true)];
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, $initial);
+        $this->clientFactory->expects(self::never())->method('createForPaymentMethod');
+        $this->entityManager->expects(self::never())->method('flush');
+
+        $result = $this->refresher->refreshIfStale($paymentMethod);
+
+        self::assertTrue($result->refreshed);
+        self::assertTrue($result->skipped);
+        self::assertFalse($result->adjusted);
+        self::assertSame($initial, $paymentMethod->getGatewayConfig()?->getConfig());
+    }
+
+    /**
+     * @dataProvider staleConfigs
+     *
+     * @param array<string, mixed> $initial
+     */
+    public function testRefreshIfStaleRefreshesStaleLimits(array $initial): void
+    {
+        $this->client->expects(self::once())->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, $initial);
+
+        $result = $this->refresher->refreshIfStale($paymentMethod);
+
+        self::assertTrue($result->refreshed);
+        self::assertFalse($result->skipped);
+        self::assertSame(self::NOW, $this->storedBlock($paymentMethod)['refreshed_at']);
+    }
+
+    /**
+     * @return iterable<string, array{0: array<string, mixed>}>
+     */
+    public static function staleConfigs(): iterable
+    {
+        yield 'older than five minutes' => [['live' => true, 'payment_method' => self::refreshedBlock('2026-10-20T08:54:59+00:00', true)]];
+        yield 'fetched in the other environment' => [['live' => false, 'payment_method' => self::refreshedBlock('2026-10-20T08:59:00+00:00', true)]];
+        yield 'never refreshed' => [['live' => true]];
+        yield 'merchant settings only' => [['live' => true, 'payment_method' => ['configured_amount' => ['min' => 1000, 'max' => null]]]];
+        yield 'unreadable timestamp' => [['live' => true, 'payment_method' => self::refreshedBlock('yesterday', true)]];
+    }
+
+    public function testRefreshIfStaleOnANonPproMethodIsNotRefreshed(): void
+    {
+        $this->clientFactory->expects(self::never())->method('createForPaymentMethod');
+
+        $result = $this->refresher->refreshIfStale($this->paymentMethod(OneyGatewayFactory::FACTORY_NAME));
+
+        self::assertFalse($result->refreshed);
     }
 
     public function testUnrelatedConfigKeysSurvive(): void
@@ -501,6 +652,17 @@ final class PproConfigurationRefresherTest extends TestCase
             'live' => true,
             'refreshed_at' => '2026-10-01T09:00:00+00:00',
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function refreshedBlock(string $refreshedAt, bool $live): array
+    {
+        return array_merge(self::previousBlock(['min' => null, 'max' => null]), [
+            'live' => $live,
+            'refreshed_at' => $refreshedAt,
+        ]);
     }
 
     /**

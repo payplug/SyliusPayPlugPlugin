@@ -46,6 +46,38 @@ final class PproConfigurationValidatorTest extends TestCase
         );
     }
 
+    /**
+     * Refused whatever the PayPlug limits: a stored negative amount would make the whole stored
+     * block unreadable, and the method would then be shown regardless of the merchant settings.
+     *
+     * @dataProvider storedLimits
+     */
+    public function testNegativeAmountsAreRefused(?PproConfig $stored): void
+    {
+        self::assertSame(
+            [
+                'ppro_min_amount' => ['validators|payplug_sylius_payplug_plugin.ppro.invalid_amount'],
+                'ppro_max_amount' => ['validators|payplug_sylius_payplug_plugin.ppro.invalid_amount'],
+            ],
+            $this->validator->violations($stored, -500, -1, null),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0: PproConfig|null}>
+     */
+    public static function storedLimits(): iterable
+    {
+        yield 'no stored block' => [null];
+        yield 'no PayPlug amount' => [new PproConfig('wero', true, null, null, null, null, null, null)];
+        yield 'PayPlug limits stored' => [new PproConfig('wero', true, null, 500, 200000, null, null, null)];
+    }
+
+    public function testZeroIsAcceptedWithoutPayPlugLimits(): void
+    {
+        self::assertSame([], $this->validator->violations(null, 0, 0, null));
+    }
+
     public function testMinGreaterThanMax(): void
     {
         self::assertSame(

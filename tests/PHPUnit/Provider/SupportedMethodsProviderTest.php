@@ -23,9 +23,12 @@ use Psr\Log\NullLogger;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Currency\Context\CurrencyContextInterface;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
+use Symfony\Component\Clock\MockClock;
 
 final class SupportedMethodsProviderTest extends TestCase
 {
+    private const NOW = '2026-10-20T09:00:00+00:00';
+
     private CurrencyContextInterface&MockObject $currencyContext;
 
     private PayPlugApiClientFactoryInterface&MockObject $clientFactory;
@@ -60,7 +63,7 @@ final class SupportedMethodsProviderTest extends TestCase
             $this->clientFactory,
             new AccountAmountRangeResolver(),
             $this->logger,
-            new PproEligibilityChecker(new NullLogger()),
+            new PproEligibilityChecker(new NullLogger(), new MockClock(self::NOW)),
             new AccountAllowedCountriesResolver(),
         );
     }
@@ -326,7 +329,7 @@ final class SupportedMethodsProviderTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // provide() — PPRO methods read their stored configuration, never the API
+    // provide() — PPRO methods read their stored configuration, the account only until it is stored
     // -------------------------------------------------------------------------
 
     public function testPproMethodReadsStoredConfigAndNeverCallsTheApi(): void
@@ -341,9 +344,35 @@ final class SupportedMethodsProviderTest extends TestCase
         self::assertCount(1, $this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'BE'));
     }
 
-    public function testPproMethodWithoutStoredConfigIsKept(): void
+    /**
+     * Until the PayPlug limits are first stored (right after the upgrade, or after a logout), the
+     * method is filtered live from the account, as it was before the limits were stored.
+     */
+    public function testPproMethodWithoutStoredConfigFallsBackToTheAccount(): void
     {
-        $this->clientFactory->expects(self::never())->method('createForPaymentMethod');
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('wero', ['BE', 'DE']));
+
+        $method = $this->buildPaymentMethod(WeroGatewayFactory::FACTORY_NAME, []);
+
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'FR'));
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 29, 'EUR', 'BE'));
+        self::assertCount(1, $this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'BE'));
+    }
+
+    public function testPproMethodWithMerchantSettingsOnlyFallsBackToTheAccount(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('bancontact', ['BE']));
+
+        $method = $this->buildPaymentMethod(BancontactGatewayFactory::FACTORY_NAME, [
+            'payment_method' => ['configured_amount' => ['min' => 1000, 'max' => null], 'configured_countries' => ['BE']],
+        ]);
+
+        self::assertEmpty($this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'FR'));
+    }
+
+    public function testPproMethodWithoutStoredConfigIsKeptWhenTheAccountCannotBeRead(): void
+    {
+        $this->apiClient->method('getAccount')->willThrowException(new ConnectionException('timeout'));
 
         $method = $this->buildPaymentMethod(BancontactGatewayFactory::FACTORY_NAME, []);
 
@@ -435,13 +464,15 @@ final class SupportedMethodsProviderTest extends TestCase
         self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1000, 'EUR'));
     }
 
-    public function testPproMalformedStoredBlockKeepsMethod(): void
+    public function testPproMalformedStoredBlockFallsBackToTheAccount(): void
     {
+        $this->apiClient->expects(self::once())->method('getAccount')->willReturn($this->buildAccount(500, 200000));
+
         $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
             'payment_method' => ['default_amount' => ['min' => '500']],
         ]);
 
-        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1, 'EUR'));
+        self::assertEmpty($this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 1, 'EUR'));
     }
 
     // -------------------------------------------------------------------------
@@ -539,7 +570,7 @@ final class SupportedMethodsProviderTest extends TestCase
             $clientFactory,
             new AccountAmountRangeResolver(),
             $this->logger,
-            new PproEligibilityChecker($this->logger),
+            new PproEligibilityChecker($this->logger, new MockClock(self::NOW)),
             new AccountAllowedCountriesResolver(),
         );
 
@@ -758,6 +789,8 @@ final class SupportedMethodsProviderTest extends TestCase
             'default_amount' => ['min' => 30, 'max' => 2000000],
             'configured_amount' => ['min' => 30, 'max' => 2000000],
             'configured_countries' => null,
+            'live' => false,
+            'refreshed_at' => self::NOW,
         ], $overrides);
     }
 

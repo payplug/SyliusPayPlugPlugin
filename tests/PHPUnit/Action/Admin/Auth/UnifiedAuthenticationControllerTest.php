@@ -65,6 +65,8 @@ final class UnifiedAuthenticationControllerTest extends TestCase
 
     private PproRefreshResult $refreshResult;
 
+    private ?Request $callbackRequest = null;
+
     protected function setUp(): void
     {
         $this->router = $this->createMock(RouterInterface::class);
@@ -397,6 +399,7 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         $this->logger->expects(self::never())->method('critical');
 
         $this->controller->oauthCallback($request);
+        $this->callbackRequest = $request;
 
         return $storedConfig;
     }
@@ -482,5 +485,43 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         self::assertSame('generated_client', $config['live_client']['client_id'] ?? null);
         self::assertContains('refresh', $this->calls);
         self::assertContains('validate', $this->calls);
+    }
+
+    /**
+     * Without fresh limits the method keeps the previous account's ones, or none: the merchant is
+     * told, so the limits get refreshed from the payment method page.
+     */
+    public function testCallbackWarnsWhenThePproLimitsCouldNotBeRefreshed(): void
+    {
+        $this->refreshResult = PproRefreshResult::notRefreshed();
+
+        $this->runSuccessfulCallback(
+            ['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer'],
+            factoryName: WeroGatewayFactory::FACTORY_NAME,
+        );
+
+        self::assertSame(
+            ['payplug_sylius_payplug_plugin.ppro.refresh_failed'],
+            $this->callbackRequest?->getSession()->getFlashBag()->peek('warning'),
+        );
+    }
+
+    public function testCallbackDoesNotWarnForANonPproGateway(): void
+    {
+        $this->refreshResult = PproRefreshResult::notRefreshed();
+
+        $this->runSuccessfulCallback(['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer']);
+
+        self::assertSame([], $this->callbackRequest?->getSession()->getFlashBag()->peek('warning'));
+    }
+
+    public function testCallbackDoesNotWarnWhenThePproLimitsWereRefreshed(): void
+    {
+        $this->runSuccessfulCallback(
+            ['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer'],
+            factoryName: WeroGatewayFactory::FACTORY_NAME,
+        );
+
+        self::assertSame([], $this->callbackRequest?->getSession()->getFlashBag()->peek('warning'));
     }
 }

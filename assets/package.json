@@ -11,7 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "node --test 'admin/controllers/*.test.js'"
+    "test": "node --test admin/controllers/*.test.js"
   },
   "symfony": {
     "controllers": {

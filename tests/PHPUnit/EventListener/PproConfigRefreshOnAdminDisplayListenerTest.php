@@ -40,7 +40,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     {
         $paymentMethod = $this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME);
         $this->paymentMethodRepository->method('find')->with('7')->willReturn($paymentMethod);
-        $this->refresher->expects(self::once())->method('refresh')->with($paymentMethod, true)->willReturn(new PproRefreshResult(true));
+        $this->refresher->expects(self::once())->method('refreshIfStale')->with($paymentMethod, true)->willReturn(new PproRefreshResult(true));
 
         $request = $this->request();
         ($this->listener)($this->event($request));
@@ -51,7 +51,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresPost(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request(method: 'POST')));
     }
@@ -59,7 +59,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresOtherRoutes(): void
     {
         $this->paymentMethodRepository->expects(self::never())->method('find');
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request(route: 'sylius_admin_payment_method_index')));
     }
@@ -67,7 +67,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresNonPproPaymentMethod(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(OneyGatewayFactory::FACTORY_NAME));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request()));
     }
@@ -79,7 +79,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresNeverConnectedPaymentMethod(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME, false));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         $request = $this->request();
         ($this->listener)($this->event($request));
@@ -90,7 +90,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresPaymentMethodWithoutGatewayConfig(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn(new PaymentMethod());
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request()));
     }
@@ -98,7 +98,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresUnknownId(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn(null);
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request()));
     }
@@ -106,7 +106,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testIgnoresMissingId(): void
     {
         $this->paymentMethodRepository->expects(self::never())->method('find');
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request(id: null)));
     }
@@ -114,7 +114,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testFailureAddsWarningFlashAndDoesNotThrow(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME));
-        $this->refresher->method('refresh')->willReturn(PproRefreshResult::notRefreshed());
+        $this->refresher->method('refreshIfStale')->willReturn(PproRefreshResult::notRefreshed());
 
         $request = $this->request();
         ($this->listener)($this->event($request));
@@ -128,7 +128,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testAdjustedResultAddsInfoFlash(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME));
-        $this->refresher->method('refresh')->willReturn(new PproRefreshResult(true, true));
+        $this->refresher->method('refreshIfStale')->willReturn(new PproRefreshResult(true, true));
 
         $request = $this->request();
         ($this->listener)($this->event($request));
@@ -139,10 +139,25 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
         );
     }
 
+    /**
+     * Limits refreshed a few minutes ago are shown as they are: no PayPlug call, no write, no flash.
+     */
+    public function testRecentLimitsAddNoFlash(): void
+    {
+        $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME));
+        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::once())->method('refreshIfStale')->willReturn(PproRefreshResult::upToDate());
+
+        $request = $this->request();
+        ($this->listener)($this->event($request));
+
+        self::assertSame([], $request->getSession()->getFlashBag()->peekAll());
+    }
+
     public function testRequestWithoutSessionStillRefreshes(): void
     {
         $this->paymentMethodRepository->method('find')->willReturn($this->paymentMethod(BancontactGatewayFactory::FACTORY_NAME));
-        $this->refresher->expects(self::once())->method('refresh')->willReturn(PproRefreshResult::notRefreshed());
+        $this->refresher->expects(self::once())->method('refreshIfStale')->willReturn(PproRefreshResult::notRefreshed());
 
         $request = new Request([], [], ['_route' => 'sylius_admin_payment_method_update', 'id' => '7']);
         ($this->listener)($this->event($request));
@@ -151,7 +166,7 @@ final class PproConfigRefreshOnAdminDisplayListenerTest extends TestCase
     public function testSubRequestIsIgnored(): void
     {
         $this->paymentMethodRepository->expects(self::never())->method('find');
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
 
         ($this->listener)($this->event($this->request(), HttpKernelInterface::SUB_REQUEST));
     }

@@ -8,7 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Payplug\Authentication;
 use Payplug\Payplug;
 use PayPlug\SyliusPayPlugPlugin\Auth\IdTokenEmailExtractor;
+use PayPlug\SyliusPayPlugPlugin\Gateway\PproPaymentMethods;
 use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationRefresherInterface;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproRefreshResult;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PayplugUnifiedCore\Auth\OAuth2Client;
 use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
@@ -18,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -141,10 +144,11 @@ final class UnifiedAuthenticationController extends AbstractController
             $this->entityManager->flush();
             // After the credentials are persisted, so a PayPlug outage here cannot lose them. A no-op
             // for non-PPRO gateways; never throws. PaymentMethodValidator::process() flushes it.
-            $this->pproConfigurationRefresher->refresh($paymentMethod, false);
+            $pproRefresh = $this->pproConfigurationRefresher->refresh($paymentMethod, false);
             $this->cleanSession($request);
 
             $request->getSession()->getFlashBag()->add('success', 'payplug_sylius_payplug_plugin.admin.oauth_callback_success');
+            $this->warnOnFailedPproRefresh($request, $gatewayConfig->getFactoryName(), $pproRefresh);
             // Ensure that the payment method is well configured
             $this->paymentMethodValidator->process($paymentMethod);
 
@@ -154,6 +158,20 @@ final class UnifiedAuthenticationController extends AbstractController
 
             return $this->handleOAuthError($request);
         }
+    }
+
+    /**
+     * Without fresh limits, the checkout keeps filtering with whatever was stored before: the merchant
+     * is told, so they can be refreshed from the payment method page.
+     */
+    private function warnOnFailedPproRefresh(Request $request, ?string $factoryName, PproRefreshResult $result): void
+    {
+        $session = $request->getSession();
+        if ($result->refreshed || !PproPaymentMethods::isPpro($factoryName) || !$session instanceof FlashBagAwareSessionInterface) {
+            return;
+        }
+
+        $session->getFlashBag()->add('warning', 'payplug_sylius_payplug_plugin.ppro.refresh_failed');
     }
 
     private function handleOAuthError(Request $request): RedirectResponse

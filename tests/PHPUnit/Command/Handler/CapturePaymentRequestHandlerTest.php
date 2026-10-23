@@ -97,7 +97,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
         $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
         // The bus's doctrine_transaction middleware flushes once the handler returns.
-        $this->refresher->expects(self::once())->method('refresh')->with($paymentRequest->getMethod(), false)->willReturn(new PproRefreshResult(true, true));
+        $this->refresher->expects(self::once())->method('refreshIfStale')->with($paymentRequest->getMethod(), false)->willReturn(new PproRefreshResult(true, true));
         $this->finalUrlProvider->expects(self::once())->method('getUrl')->with($paymentRequest->getPayment());
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_FAIL);
         $this->logger->expects(self::once())->method('info');
@@ -115,7 +115,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
     {
         $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', '{"details":{"amount":"Too low."}}', 400));
-        $this->refresher->expects(self::once())->method('refresh')->willReturn(new PproRefreshResult(true));
+        $this->refresher->expects(self::once())->method('refreshIfStale')->willReturn(new PproRefreshResult(true));
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_FAIL);
 
         ($this->handler)(new CapturePaymentRequest('hash'));
@@ -131,7 +131,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
 
         $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
-        $this->refresher->method('refresh')->willReturn(new PproRefreshResult(true));
+        $this->refresher->method('refreshIfStale')->willReturn(new PproRefreshResult(true));
 
         ($this->handler)(new CapturePaymentRequest('hash'));
 
@@ -146,18 +146,63 @@ final class CapturePaymentRequestHandlerTest extends TestCase
         $this->requestStack->push(new Request());
         $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
-        $this->refresher->method('refresh')->willReturn(new PproRefreshResult(true));
+        $this->refresher->method('refreshIfStale')->willReturn(new PproRefreshResult(true));
 
         ($this->handler)(new CapturePaymentRequest('hash'));
 
         self::assertSame(self::RETRY_URL, $paymentRequest->getResponseData()['redirect_url']);
     }
 
+    /**
+     * A decoupled frontend gets `redirect_url` and `error` in the response data; a flash would stay
+     * in its session and show up later on an unrelated page.
+     *
+     * @dataProvider headlessRequests
+     */
+    public function testNoFlashForAHeadlessRequest(Request $request): void
+    {
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        $this->requestStack->push($request);
+        $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
+        $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
+        $this->refresher->method('refreshIfStale')->willReturn(new PproRefreshResult(true));
+
+        ($this->handler)(new CapturePaymentRequest('hash'));
+
+        self::assertSame([], $request->getSession()->getFlashBag()->peekAll());
+        self::assertSame('payplug_sylius_payplug_plugin.error.ppro_not_available', $paymentRequest->getResponseData()['error']);
+    }
+
+    /**
+     * @return iterable<string, array{0: Request}>
+     */
+    public static function headlessRequests(): iterable
+    {
+        $json = new Request();
+        $json->setRequestFormat('json');
+        yield 'JSON request format' => [$json];
+
+        yield 'XHR request' => [new Request([], [], [], [], [], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'])];
+    }
+
+    public function testRefusalLogSaysWhetherTheLimitsWereRefreshed(): void
+    {
+        $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
+        $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
+        $this->refresher->method('refreshIfStale')->willReturn(PproRefreshResult::notRefreshed());
+        $this->logger->expects(self::once())->method('info')->with(
+            self::anything(),
+            self::callback(static fn (array $context): bool => false === $context['limits_refreshed']),
+        );
+
+        ($this->handler)(new CapturePaymentRequest('hash'));
+    }
+
     public function testRefresherFailureStillRedirects(): void
     {
         $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
-        $this->refresher->method('refresh')->willReturn(PproRefreshResult::notRefreshed());
+        $this->refresher->method('refreshIfStale')->willReturn(PproRefreshResult::notRefreshed());
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_FAIL);
 
         ($this->handler)(new CapturePaymentRequest('hash'));
@@ -169,7 +214,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
     {
         $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::POSTCODE_REFUSAL, 400));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_FAIL);
         $this->logger->expects(self::once())->method('error');
 
@@ -185,7 +230,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
     {
         $paymentRequest = $this->paymentRequest(ApplePayGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad request', self::COUNTRY_REFUSAL, 400));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_FAIL);
 
         ($this->handler)(new CapturePaymentRequest('hash'));
@@ -201,7 +246,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
     {
         $paymentRequest = $this->paymentRequest(WeroGatewayFactory::FACTORY_NAME);
         $this->client->method('createPayment')->willThrowException(new BadRequestException('Bad gateway', '<html>502</html>', 502));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_FAIL);
 
         ($this->handler)(new CapturePaymentRequest('hash'));
@@ -216,7 +261,7 @@ final class CapturePaymentRequestHandlerTest extends TestCase
             'id' => 'pay_123',
             'hosted_payment' => ['payment_url' => 'https://secure.payplug.com/pay/123'],
         ]));
-        $this->refresher->expects(self::never())->method('refresh');
+        $this->refresher->expects(self::never())->method('refreshIfStale');
         $this->expectTransition(PaymentRequestTransitions::TRANSITION_COMPLETE);
 
         ($this->handler)(new CapturePaymentRequest('hash'));

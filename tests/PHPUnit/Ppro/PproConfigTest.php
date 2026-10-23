@@ -169,6 +169,26 @@ final class PproConfigTest extends TestCase
         self::assertFalse($this->config(['enabled' => false])->isEligible(1000, 'BE'));
     }
 
+    public function testDisabledFlagIsIgnoredWhenNotTrusted(): void
+    {
+        $config = $this->config(['enabled' => false, 'allowed_countries' => ['BE']]);
+
+        self::assertTrue($config->isEligible(1000, 'BE', false));
+        self::assertFalse($config->isEligible(1000, 'FR', false));
+        self::assertFalse($config->isEligible(49, 'BE', false));
+    }
+
+    public function testIsRefreshedSince(): void
+    {
+        $threshold = new \DateTimeImmutable('2026-10-20T09:00:00+00:00');
+
+        self::assertTrue($this->config(['refreshed_at' => '2026-10-20T09:00:00+00:00'])->isRefreshedSince($threshold));
+        self::assertTrue($this->config(['refreshed_at' => '2026-10-20T11:00:00+02:00'])->isRefreshedSince($threshold));
+        self::assertFalse($this->config(['refreshed_at' => '2026-10-20T08:59:59+00:00'])->isRefreshedSince($threshold));
+        self::assertFalse($this->config(['refreshed_at' => null])->isRefreshedSince($threshold));
+        self::assertFalse($this->config(['refreshed_at' => 'yesterday'])->isRefreshedSince($threshold));
+    }
+
     public function testToArrayRoundTrips(): void
     {
         $stored = $this->stored([

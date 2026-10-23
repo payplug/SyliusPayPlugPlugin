@@ -120,9 +120,9 @@ final class CapturePaymentRequestHandler
 
     /**
      * A PPRO payment refused for its billing country or its amount means the stored PayPlug limits
-     * let the method be shown where PayPlug does not accept it: they are refreshed, and the customer
-     * is sent back to the order page to pick another payment method. No PayPlug payment exists after
-     * a refusal, so there is nothing to cancel.
+     * let the method be shown where PayPlug does not accept it: they are refreshed (unless they were
+     * a few minutes ago), and the customer is sent back to the order page to pick another payment
+     * method. No PayPlug payment exists after a refusal, so there is nothing to cancel.
      */
     private function failPaymentRequest(
         PaymentRequestInterface $paymentRequest,
@@ -141,12 +141,14 @@ final class CapturePaymentRequestHandler
         if (null === $refusal) {
             $this->logger->error('[PayPlug] Payment creation failed', ['factory_name' => $factoryName, 'response' => $responseBody]);
         } else {
-            $this->logger->info('[PayPlug] PPRO payment refused for its billing country or amount; limits refreshed.', [
+            // Flushed by the doctrine_transaction middleware of the payment request command bus.
+            // Throttled, so repeated refusals do not each call PayPlug.
+            $refresh = $this->pproConfigurationRefresher->refreshIfStale($method, false);
+            $this->logger->info('[PayPlug] PPRO payment refused for its billing country or amount.', [
                 'factory_name' => $factoryName,
                 'refusal' => $refusal,
+                'limits_refreshed' => $refresh->refreshed && !$refresh->skipped,
             ]);
-            // Flushed by the doctrine_transaction middleware of the payment request command bus.
-            $this->pproConfigurationRefresher->refresh($method, false);
             $responseData['redirect_url'] = $this->finalUrlProvider->getUrl($payment, UrlGeneratorInterface::ABSOLUTE_URL);
             $responseData['error'] = self::PPRO_NOT_AVAILABLE_MESSAGE;
             $this->addErrorFlash();
@@ -160,10 +162,15 @@ final class CapturePaymentRequestHandler
         );
     }
 
+    /**
+     * Only for the Twig checkout: a decoupled frontend reads `redirect_url` and `error` from the
+     * response data, and a flash would stay in its session until some unrelated page shows it.
+     */
     private function addErrorFlash(): void
     {
         $request = $this->requestStack->getCurrentRequest();
-        $session = null !== $request && $request->hasSession() ? $request->getSession() : null;
+        $isTwigCheckout = null !== $request && 'html' === $request->getRequestFormat() && !$request->isXmlHttpRequest();
+        $session = $isTwigCheckout && $request->hasSession() ? $request->getSession() : null;
 
         if ($session instanceof FlashBagAwareSessionInterface) {
             $session->getFlashBag()->add('error', self::PPRO_NOT_AVAILABLE_MESSAGE);

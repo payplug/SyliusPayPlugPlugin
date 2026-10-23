@@ -38,5 +38,5 @@ payplug_sylius_payplug_plugin:
                 api_error: L'operazione non è stata eseguita a causa di un errore PayPlug. Il pagamento non è stato modificato; riprova tra qualche istante.
                 unexpected_error: L'operazione potrebbe essere stata eseguita da PayPlug, ma non è stato possibile registrarla qui. Verifica il pagamento nel tuo portale PayPlug prima di riprovare, per non catturare o annullare due volte.
     ppro:
-        refresh_failed: "Impossibile contattare PayPlug: i limiti di importo e di paese mostrati sono gli ultimi salvati."
+        refresh_failed: "Impossibile aggiornare i limiti PayPlug di questo metodo di pagamento: i limiti di importo e di paese mostrati sono gli ultimi salvati. I dettagli sono nel canale di log payplug."
         settings_adjusted: "PayPlug ha modificato i limiti di questo metodo di pagamento: l'intervallo di importi o i paesi di fatturazione sono stati adattati per rispettarli. Verificali qui sotto."

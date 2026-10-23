@@ -63,9 +63,13 @@ final class SupportedMethodsProvider
                 continue;
             }
 
-            if (PproPaymentMethods::isPpro($factoryName)) {
-                $isSupported = $this->pproEligibilityChecker->isEligible($paymentMethod, $paymentAmount, $activeCurrencyCode, $billingCountryCode);
-            } else {
+            // A PPRO method is filtered from its stored PayPlug limits; until they are stored, it is
+            // filtered live from the account like every other method.
+            $isSupported = PproPaymentMethods::isPpro($factoryName)
+                ? $this->pproEligibilityChecker->isEligible($paymentMethod, $paymentAmount, $activeCurrencyCode, $billingCountryCode)
+                : null;
+
+            if (null === $isSupported) {
                 $memoKey = $this->accountMemoKey($gatewayConfig);
                 if (!\array_key_exists($memoKey, $accounts)) {
                     $accounts[$memoKey] = $this->readAccountLimits($paymentMethod, $gatewayConfig);
@@ -153,10 +157,11 @@ final class SupportedMethodsProvider
     }
 
     /**
-     * The PPRO gateways never reach this point; for the others the `/account` payload is still read
-     * live (through the token-keyed cache of PayPlugApiClient). A failure to read or parse it keeps
-     * the method rather than breaking payment-method resolution for the whole checkout, and is
-     * memoized by the caller like a successful read.
+     * A PPRO gateway reaches this point only while no PayPlug limits are stored for it; for every
+     * other gateway the `/account` payload is read live (through the token-keyed cache of
+     * PayPlugApiClient). A failure to read or parse it keeps the method rather than breaking
+     * payment-method resolution for the whole checkout, and is memoized by the caller like a
+     * successful read.
      *
      * The factory name is read off the gateway config the account is fetched for, so the payload and
      * the key used to index it always come from the same config.

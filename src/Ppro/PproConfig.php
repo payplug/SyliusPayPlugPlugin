@@ -92,9 +92,12 @@ final class PproConfig
             (null !== $previous->configuredCountries && $previous->configuredCountries !== $this->configuredCountries);
     }
 
-    public function isEligible(int $amount, ?string $billingCountry): bool
+    /**
+     * @param bool $trustDisabledFlag false when the stored `enabled` flag is too old to hide the method
+     */
+    public function isEligible(int $amount, ?string $billingCountry, bool $trustDisabledFlag = true): bool
     {
-        if (!$this->enabled || $this->hasEmptyAmountRange()) {
+        if (($trustDisabledFlag && !$this->enabled) || $this->hasEmptyAmountRange()) {
             return false;
         }
 
@@ -103,6 +106,20 @@ final class PproConfig
         }
 
         return null === $billingCountry || $this->isCountryEligible($billingCountry);
+    }
+
+    /**
+     * False when the PayPlug limits were never captured or their timestamp cannot be read.
+     */
+    public function isRefreshedSince(\DateTimeInterface $threshold): bool
+    {
+        if (null === $this->refreshedAt) {
+            return false;
+        }
+
+        $refreshedAt = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $this->refreshedAt);
+
+        return false !== $refreshedAt && $refreshedAt >= $threshold;
     }
 
     public function effectiveMin(): ?int

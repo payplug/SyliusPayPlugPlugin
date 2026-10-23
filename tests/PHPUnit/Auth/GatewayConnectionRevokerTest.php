@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Auth\GatewayConnectionRevoker;
 use PayPlug\SyliusPayPlugPlugin\Auth\SyliusTokenCache;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\PaymentMethod;
@@ -63,6 +64,43 @@ final class GatewayConnectionRevokerTest extends TestCase
         self::assertTrue($config['live']);
         self::assertTrue($config[PayPlugGatewayFactory::ONE_CLICK]);
         self::assertSame('merchant', $config['fees_for']);
+    }
+
+    /**
+     * The PayPlug limits stored for a PPRO method belong to the disconnected account; after a
+     * reconnection to another account they must not keep filtering the checkout. The merchant's own
+     * narrowing is a setting, not account data, and is kept.
+     */
+    public function testRevoke_clearsTheStoredPayPlugLimitsButKeepsTheMerchantSettings(): void
+    {
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'payment_method' => [
+                'name' => 'wero',
+                'enabled' => true,
+                'allowed_countries' => ['BE', 'DE'],
+                'default_amount' => ['min' => 30, 'max' => 2000000],
+                'configured_amount' => ['min' => 1000, 'max' => null],
+                'configured_countries' => ['BE'],
+                'live' => true,
+                'refreshed_at' => '2026-10-20T09:00:00+00:00',
+            ],
+        ]);
+
+        $this->revoker->revoke($paymentMethod);
+
+        self::assertSame(
+            ['configured_amount' => ['min' => 1000, 'max' => null], 'configured_countries' => ['BE']],
+            ($paymentMethod->getGatewayConfig()?->getConfig() ?? [])['payment_method'] ?? null,
+        );
+    }
+
+    public function testRevoke_leavesAMalformedPproBlockAlone(): void
+    {
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, ['payment_method' => 'garbage']);
+
+        $this->revoker->revoke($paymentMethod);
+
+        self::assertSame('garbage', ($paymentMethod->getGatewayConfig()?->getConfig() ?? [])['payment_method'] ?? null);
     }
 
     public function testRevoke_disablesThePaymentMethod(): void

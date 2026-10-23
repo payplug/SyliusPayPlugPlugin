@@ -47,6 +47,10 @@ final class PproConfigurationValidator
      */
     private function minViolations(?PproConfig $stored, ?int $min, ?int $max): array
     {
+        if (null !== $min && $min < 0) {
+            return [$this->message('invalid_amount')];
+        }
+
         $messages = [];
         $defaultMin = $stored?->defaultMin;
         $defaultMax = $stored?->defaultMax;
@@ -69,6 +73,10 @@ final class PproConfigurationValidator
      */
     private function maxViolations(?PproConfig $stored, ?int $max): array
     {
+        if (null !== $max && $max < 0) {
+            return [$this->message('invalid_amount')];
+        }
+
         $defaultMax = $stored?->defaultMax;
 
         if (null !== $max && null !== $defaultMax && $max > $defaultMax) {

@@ -32,15 +32,18 @@ shown while typing, and the save is refused with the same message.
 
 The PayPlug limits are stored with the payment method. They are refreshed:
 
-- when the payment method page is opened in the admin;
+- when the payment method page is opened in the admin, unless they were refreshed less than 5 minutes
+  ago;
 - after connecting (or reconnecting) the payment method to PayPlug;
 - after a save that switches the LIVE mode on or off;
-- when PayPlug refuses a payment for its billing country or its amount;
+- when PayPlug refuses a payment for its billing country or its amount (same 5-minute rule);
 - with the console command `bin/console payplug:ppro:refresh`, which refreshes every Bancontact,
   Wero and Scalapay payment method connected to PayPlug (run it once after upgrading the plugin);
   payment methods not connected yet are reported as skipped.
 
-The checkout itself never calls PayPlug to decide whether to show these payment methods.
+Once the limits are stored, the checkout no longer calls PayPlug to decide whether to show these
+payment methods. Before that (right after the upgrade, or after a logout from PayPlug), they are
+filtered live from the PayPlug account, as before the upgrade.
 
 An empty minimum or maximum, like a selection of every country, follows PayPlug's changes. A value
 the merchant entered is kept; when PayPlug narrows its limits below it, it is adjusted at the next
@@ -48,13 +51,20 @@ refresh and a notice is shown on the payment method page.
 
 If PayPlug reports the payment method as not enabled on the account, it is hidden at checkout and a
 warning is shown on the payment method page. The payment method itself stays enabled in Sylius.
+PayPlug may enable it later: 24 hours after the last refresh, the method is shown again and PayPlug
+decides at payment time.
+
+A Scalapay range set before the upgrade becomes the merchant range when the limits are first stored.
+
+Logging out from PayPlug clears the stored PayPlug limits but keeps the merchant range and countries.
 
 ## When PayPlug cannot be reached
 
 - On the payment method page: the last stored limits are shown, with a warning.
 - At checkout: nothing changes, the stored limits are used.
 - If no limits have ever been stored (payment method never refreshed since the upgrade), Bancontact,
-  Wero and Scalapay are shown for every amount and country, and PayPlug accepts or refuses the payment.
+  Wero and Scalapay are filtered live from the PayPlug account; if it cannot be read either, they are
+  shown for every amount and country, and PayPlug accepts or refuses the payment.
 
 The checkout is never blocked by this feature.
 
@@ -66,7 +76,8 @@ for this amount. Please choose another payment method." The stored limits are re
 time, so the payment method is no longer offered where PayPlug does not accept it.
 
 For a headless frontend, the payment request response data carries `redirect_url` (the order page)
-and `error` (the translation key `payplug_sylius_payplug_plugin.error.ppro_not_available`).
+and `error` (the translation key `payplug_sylius_payplug_plugin.error.ppro_not_available`). No flash
+message is added for a JSON or XHR request.
 
 ## Adding a PPRO payment method
 
