@@ -299,7 +299,11 @@ final class PproConfigurationRefresherTest extends TestCase
         self::assertSame(['BE'], $this->storedBlock($paymentMethod)['configured_countries']);
     }
 
-    public function testResetsConfiguredCountriesToNullWhenIntersectionIsEmpty(): void
+    /**
+     * None of the merchant's countries is allowed any more: the method is hidden until the merchant
+     * picks new ones, rather than widened to every country PayPlug allows.
+     */
+    public function testEmptyCountryIntersectionHidesTheMethod(): void
     {
         $this->client->method('getAccount')->willReturn(self::sampleAccount());
         $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME, [
@@ -309,7 +313,7 @@ final class PproConfigurationRefresherTest extends TestCase
         $result = $this->refresher->refresh($paymentMethod);
 
         self::assertTrue($result->adjusted);
-        self::assertNull($this->storedBlock($paymentMethod)['configured_countries']);
+        self::assertSame([], $this->storedBlock($paymentMethod)['configured_countries']);
     }
 
     public function testKeepsConfiguredCountriesWhenApiHasNoRestriction(): void
@@ -391,6 +395,39 @@ final class PproConfigurationRefresherTest extends TestCase
         $this->refresher->refresh($paymentMethod);
 
         self::assertSame(['min' => null, 'max' => null], $this->storedBlock($paymentMethod)['configured_amount']);
+    }
+
+    /**
+     * Countries saved before the first successful refresh create the block without an amount range:
+     * the legacy range is still carried over, since the form never showed it.
+     */
+    public function testScalapayLegacyRangeIsCarriedOverWhenOnlyCountriesWereSaved(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'min_amount' => 5000,
+            'max_amount' => 90000,
+            'payment_method' => ['configured_amount' => ['min' => null, 'max' => null], 'configured_countries' => ['FR']],
+        ]);
+
+        $this->refresher->refresh($paymentMethod);
+
+        self::assertSame(['min' => 5000, 'max' => 90000], $this->storedBlock($paymentMethod)['configured_amount']);
+        self::assertSame(['FR'], $this->storedBlock($paymentMethod)['configured_countries']);
+    }
+
+    public function testScalapayLegacyRangeIsNotReadOverAnEnteredRange(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'min_amount' => 5000,
+            'max_amount' => 90000,
+            'payment_method' => ['configured_amount' => ['min' => 1000, 'max' => null]],
+        ]);
+
+        $this->refresher->refresh($paymentMethod);
+
+        self::assertSame(['min' => 1000, 'max' => null], $this->storedBlock($paymentMethod)['configured_amount']);
     }
 
     public function testLegacyRangeKeysAreOnlyReadForScalapay(): void

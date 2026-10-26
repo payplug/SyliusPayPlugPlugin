@@ -42,19 +42,23 @@ The PayPlug limits are stored with the payment method. They are refreshed:
   payment methods not connected yet are reported as skipped.
 
 Once the limits are stored, the checkout no longer calls PayPlug to decide whether to show these
-payment methods. Before that (right after the upgrade, or after a logout from PayPlug), they are
-filtered live from the PayPlug account, as before the upgrade.
+payment methods. Before that (right after the upgrade, or after a logout from PayPlug), and while
+the stored limits belong to the other environment (TEST vs LIVE), they are filtered live from the
+PayPlug account, as before the upgrade, and by the merchant settings already saved.
 
 An empty minimum or maximum, like a selection of every country, follows PayPlug's changes. A value
 the merchant entered is kept; when PayPlug narrows its limits below it, it is adjusted at the next
-refresh and a notice is shown on the payment method page.
+refresh and a notice is shown on the payment method page. When none of the selected countries is
+allowed by PayPlug any more, the payment method is hidden at checkout, never shown more widely than
+the merchant chose, until new countries are selected; the payment method page shows a warning.
 
 If PayPlug reports the payment method as not enabled on the account, it is hidden at checkout and a
-warning is shown on the payment method page. The payment method itself stays enabled in Sylius.
+warning is shown on the payment method page, as of the last refresh. The payment method itself stays enabled in Sylius.
 PayPlug may enable it later: 24 hours after the last refresh, the method is shown again and PayPlug
 decides at payment time.
 
-A Scalapay range set before the upgrade becomes the merchant range when the limits are first stored.
+A Scalapay range set before the upgrade keeps narrowing the checkout, and becomes the merchant range
+when the limits are first stored, unless a range was entered in the meantime.
 
 Logging out from PayPlug clears the stored PayPlug limits but keeps the merchant range and countries.
 

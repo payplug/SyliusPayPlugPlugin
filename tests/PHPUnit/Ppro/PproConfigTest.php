@@ -169,6 +169,14 @@ final class PproConfigTest extends TestCase
         self::assertFalse($this->config(['enabled' => false])->isEligible(1000, 'BE'));
     }
 
+    public function testNoConfiguredCountryLeftHidesTheMethodEverywhere(): void
+    {
+        $config = $this->config(['configured_countries' => []]);
+
+        self::assertFalse($config->isEligible(1000, 'BE'));
+        self::assertFalse($config->isEligible(1000, null));
+    }
+
     public function testDisabledFlagIsIgnoredWhenNotTrusted(): void
     {
         $config = $this->config(['enabled' => false, 'allowed_countries' => ['BE']]);

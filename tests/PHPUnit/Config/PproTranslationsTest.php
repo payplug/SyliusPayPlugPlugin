@@ -49,6 +49,7 @@ final class PproTranslationsTest extends TestCase
                 'payplug_sylius_payplug_plugin.ui.ppro.countries_label',
                 'payplug_sylius_payplug_plugin.ui.ppro.not_connected',
                 'payplug_sylius_payplug_plugin.ui.ppro.disabled_by_payplug',
+                'payplug_sylius_payplug_plugin.ui.ppro.no_country_left',
                 'payplug_sylius_payplug_plugin.error.ppro_not_available',
             ],
             'validators' => [

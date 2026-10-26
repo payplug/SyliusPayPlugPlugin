@@ -64,7 +64,7 @@ final class SupportedMethodsProvider
             }
 
             // A PPRO method is filtered from its stored PayPlug limits; until they are stored, it is
-            // filtered live from the account like every other method.
+            // filtered live from the account like every other method, then by the merchant settings.
             $isSupported = PproPaymentMethods::isPpro($factoryName)
                 ? $this->pproEligibilityChecker->isEligible($paymentMethod, $paymentAmount, $activeCurrencyCode, $billingCountryCode)
                 : null;
@@ -75,7 +75,8 @@ final class SupportedMethodsProvider
                     $accounts[$memoKey] = $this->readAccountLimits($paymentMethod, $gatewayConfig);
                 }
 
-                $isSupported = $this->isWithinAccountLimits($accounts[$memoKey], $gatewayConfig, $paymentAmount, $activeCurrencyCode, $billingCountryCode);
+                $isSupported = $this->isWithinAccountLimits($accounts[$memoKey], $gatewayConfig, $paymentAmount, $activeCurrencyCode, $billingCountryCode) &&
+                    (!PproPaymentMethods::isPpro($factoryName) || $this->pproEligibilityChecker->isAllowedByMerchantSettings($paymentMethod, $paymentAmount, $billingCountryCode));
             }
 
             if (!$isSupported) {

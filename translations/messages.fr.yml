@@ -142,7 +142,8 @@ payplug_sylius_payplug_plugin:
             countries_help: Le moyen de paiement s'affiche uniquement pour les clients dont l'adresse de facturation est dans un des pays sélectionnés.
             countries_label: Pays
             not_connected: Les limites de montant et de pays sont chargées depuis PayPlug une fois ce moyen de paiement connecté à votre compte PayPlug.
-            disabled_by_payplug: PayPlug indique que ce moyen de paiement n'est pas activé sur votre compte, il est donc masqué au checkout. Contactez PayPlug pour l'activer.
+            disabled_by_payplug: Lors de la dernière actualisation de ses limites, PayPlug indiquait que ce moyen de paiement n'est pas activé sur votre compte. Il est masqué au checkout pendant 24 heures après cette actualisation, puis de nouveau affiché, et PayPlug accepte ou refuse le paiement. Contactez PayPlug pour l'activer.
+            no_country_left: Aucun des pays de facturation que vous avez sélectionnés n'est encore autorisé par PayPlug, ce moyen de paiement est donc masqué au checkout. Sélectionnez ci-dessous les pays pour lesquels l'afficher.
         integrated_payment:
             card_holder.title: 'Nom du titulaire de la carte'
             card_holder.error: 'Nom et/ou prénom invalide(s).'

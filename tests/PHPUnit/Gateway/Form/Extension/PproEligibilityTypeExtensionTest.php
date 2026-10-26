@@ -23,6 +23,25 @@ final class PproEligibilityTypeExtensionTest extends TypeTestCase
 {
     private const CONNECTED = ['live' => true, 'live_client' => ['client_id' => 'id', 'client_secret' => 'secret']];
 
+    private string $previousLocale;
+
+    protected function setUp(): void
+    {
+        // The placeholders are formatted with the default locale: pin it so the expected values do
+        // not depend on the locale of the machine running the tests.
+        $this->previousLocale = \Locale::getDefault();
+        \Locale::setDefault('en');
+
+        parent::setUp();
+    }
+
+    protected function tearDown(): void
+    {
+        \Locale::setDefault($this->previousLocale);
+
+        parent::tearDown();
+    }
+
     protected function getTypes(): array
     {
         $translator = $this->createMock(TranslatorInterface::class);

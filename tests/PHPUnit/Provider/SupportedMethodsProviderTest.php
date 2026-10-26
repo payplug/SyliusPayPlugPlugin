@@ -370,6 +370,51 @@ final class SupportedMethodsProviderTest extends TestCase
         self::assertEmpty($this->provider->provide([$method], BancontactGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'FR'));
     }
 
+    /**
+     * The fallback is the account check plus the merchant's own settings, which the stored block
+     * keeps without PayPlug limits (saved before the first refresh, or left by a logout).
+     */
+    public function testPproFallbackAppliesTheStoredMerchantSettings(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('wero', ['BE', 'DE']));
+
+        $method = $this->buildPaymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'payment_method' => ['configured_amount' => ['min' => 1000, 'max' => null], 'configured_countries' => ['BE']],
+        ]);
+
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 999, 'EUR', 'BE'));
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'DE'));
+        self::assertCount(1, $this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'BE'));
+    }
+
+    /**
+     * Until the first refresh carries it over, the Scalapay range set before the upgrade still
+     * narrows the checkout, as it did before.
+     */
+    public function testScalapayFallbackAppliesTheLegacyRange(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccount(500, 200000));
+
+        $method = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, ['min_amount' => 5000, 'max_amount' => 90000]);
+
+        self::assertEmpty($this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 4999, 'EUR'));
+        self::assertCount(1, $this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 5000, 'EUR'));
+        self::assertEmpty($this->provider->provide([$method], ScalapayGatewayFactory::FACTORY_NAME, 90001, 'EUR'));
+    }
+
+    public function testPproBlockFromTheOtherEnvironmentFallsBackToTheAccount(): void
+    {
+        $this->apiClient->method('getAccount')->willReturn($this->buildAccountWithCountries('wero', ['BE']));
+
+        $method = $this->buildPaymentMethod(WeroGatewayFactory::FACTORY_NAME, [
+            'live' => true,
+            'payment_method' => $this->storedBlock(['live' => false, 'allowed_countries' => ['FR']]),
+        ]);
+
+        self::assertCount(1, $this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'BE'));
+        self::assertEmpty($this->provider->provide([$method], WeroGatewayFactory::FACTORY_NAME, 1000, 'EUR', 'FR'));
+    }
+
     public function testPproMethodWithoutStoredConfigIsKeptWhenTheAccountCannotBeRead(): void
     {
         $this->apiClient->method('getAccount')->willThrowException(new ConnectionException('timeout'));

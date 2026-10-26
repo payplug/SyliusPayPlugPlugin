@@ -24,8 +24,12 @@
     })) }}
     {{ sylius_test_html_attribute('payplug-ppro-eligibility') }}
 >
-    {% if ppro is iterable and ppro['enabled']|default(true) is same as(false) %}
+    {# `??`, not `default`: Twig's `default` filter also replaces `false` and `[]`. #}
+    {% if ppro is iterable and (ppro['enabled'] ?? true) is same as(false) %}
         <div class="alert alert-warning" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.disabled_by_payplug'|trans }}</div>
+    {% endif %}
+    {% if ppro is iterable and (ppro['configured_countries'] ?? null) is same as([]) %}
+        <div class="alert alert-warning" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.no_country_left'|trans }}</div>
     {% endif %}
     {% if config_form.ppro_min_amount.vars.disabled %}
         <div class="alert alert-info" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.not_connected'|trans }}</div>

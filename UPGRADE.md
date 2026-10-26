@@ -39,13 +39,14 @@ stored, the checkout no longer reads the PayPlug API for these methods.
 
 What changes for a merchant already in production, in this order:
 
-1. **The Scalapay minimum/maximum amount override is carried over** when the PayPlug limits are
-   first captured: the former `min_amount` and `max_amount` keys of a Scalapay gateway config become
-   the merchant range, adjusted to the PayPlug limits if they no longer fit (the payment method page
-   then shows a notice). They are not read again afterwards.
+1. **The Scalapay minimum/maximum amount override is carried over.** Until the PayPlug limits are
+   first captured, the former `min_amount` and `max_amount` keys of a Scalapay gateway config keep
+   narrowing the checkout. At the first capture they become the merchant range, adjusted to the
+   PayPlug limits if they no longer fit (the payment method page then shows a notice), unless the
+   merchant entered a range in the meantime. They are not read again afterwards.
 2. **Until the PayPlug limits are first captured, these methods are filtered live from the PayPlug
-   account**, by amount and billing country, as before the upgrade (the merchant settings apply once
-   the limits are stored). The limits are captured when the payment method page is opened in the
+   account**, by amount and billing country, as before the upgrade, and by the merchant settings
+   already saved (including the former Scalapay range). The limits are captured when the payment method page is opened in the
    admin, after an OAuth (re)connection, after a save that switches the LIVE mode, or after a payment
    refused by PayPlug for its country or amount. To capture them right after the upgrade, run once:
 
@@ -59,8 +60,10 @@ What changes for a merchant already in production, in this order:
 3. Every country allowed by PayPlug is accepted by default, and the merchant range is empty, which
    means "the PayPlug limits" (shown as the placeholder of the minimum and maximum fields). At least one country must stay selected, and an amount outside the PayPlug limits
    is refused when saving (the payment method is no longer saved and disabled instead).
-4. **Fallback.** Without stored limits, or with stored limits that cannot be read, the payment method
-   is filtered live from the PayPlug account as before; if the account cannot be read either, it is
+4. **Fallback.** Without stored limits, with stored limits that cannot be read, or with limits fetched
+   in the other environment (TEST vs LIVE, when the refresh after a switch failed), the payment
+   method is filtered live from the PayPlug account and by the merchant settings; if the account
+   cannot be read either, it is
    shown and PayPlug arbitrates at payment time: this feature never blocks the checkout. When
    PayPlug refuses a payment for its billing country or amount, the limits are refreshed and the
    customer is sent back to the order page to choose another payment method; the payment request
@@ -68,7 +71,9 @@ What changes for a merchant already in production, in this order:
 5. The stored limits move only on the events listed in point 2, not on a schedule. The admin page and
    a refused payment reuse limits refreshed less than 5 minutes ago instead of calling PayPlug again.
    An empty minimum or maximum, like a selection of every country, follows PayPlug's changes. A value
-   the merchant entered is kept, and only adjusted when PayPlug narrows its limits below it. A method
+   the merchant entered is kept, and only adjusted when PayPlug narrows its limits below it. When none
+   of the merchant's countries is allowed any more, the method is hidden until new countries are
+   selected (a warning is shown on the payment method page). A method
    PayPlug reports as not enabled is hidden for 24 hours after the last refresh; past that, it is
    shown again and PayPlug decides at payment time.
 6. A logout from PayPlug clears the stored PayPlug limits (the merchant range and countries are

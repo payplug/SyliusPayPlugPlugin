@@ -53,8 +53,8 @@ final class PproSettingsAdjuster
             return $configured;
         }
 
-        $intersection = array_values(array_intersect($configured, $allowed));
-
-        return [] === $intersection ? null : $intersection;
+        // Empty when none of the merchant's countries is allowed any more: the method is then hidden,
+        // never shown more widely than the merchant chose.
+        return array_values(array_intersect($configured, $allowed));
     }
 }

@@ -47,17 +47,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   method and refreshed when the admin page is opened, after an OAuth connection, after a save that
   switches the LIVE mode and after a payment PayPlug refuses for its country or amount (the admin page
   and a refusal reuse limits refreshed less than 5 minutes ago): once they are stored, the checkout no
-  longer calls the PayPlug API for these methods, which are filtered live from the account until then
+  longer calls the PayPlug API for these methods, which are filtered live from the account and by the
+  merchant settings until then (or while the stored limits belong to the other LIVE/TEST environment)
 - A PPRO method PayPlug reports as not enabled is hidden for 24 hours after the last refresh, then
   shown again for PayPlug to decide at payment time
+- When PayPlug no longer allows any of the billing countries the merchant selected, the PPRO method
+  is hidden until new countries are selected, instead of being shown for every allowed country
 - A logout from PayPlug clears the stored PayPlug limits of a PPRO method (the merchant range and
   countries are kept), and a warning is shown when they cannot be captured after a connection
 - A Bancontact, Wero or Scalapay payment refused by PayPlug for its billing country or amount sends
   the customer back to the order page with a message to choose another payment method
 - A PPRO amount outside the PayPlug limits, or an empty country selection, is refused when saving
   the payment method instead of being saved with the payment method disabled
-- The Scalapay minimum/maximum amount override becomes the merchant range of the new PPRO settings
-  when the PayPlug limits are first stored, adjusted to them if needed (see [UPGRADE.md](UPGRADE.md))
+- The Scalapay minimum/maximum amount override keeps narrowing the checkout until the PayPlug limits
+  are first stored, then becomes the merchant range of the new PPRO settings, adjusted to them if
+  needed (see [UPGRADE.md](UPGRADE.md))
 
 ### Removed
 - Drop Payum support

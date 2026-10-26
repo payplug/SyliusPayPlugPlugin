@@ -52,8 +52,24 @@ final class PproEligibilityChecker
     }
 
     /**
+     * The merchant's own range and countries, applied on top of the live account check while no
+     * usable PayPlug limits are stored: those come from the account then, not from the stored block.
+     */
+    public function isAllowedByMerchantSettings(
+        PaymentMethodInterface $paymentMethod,
+        int $amount,
+        ?string $billingCountryCode,
+    ): bool {
+        $gatewayConfig = $paymentMethod->getGatewayConfig();
+        $settings = PproMerchantSettings::readMerchantOnly($gatewayConfig?->getFactoryName(), $gatewayConfig?->getConfig() ?? []);
+
+        return null === $settings || $settings->isEligible($amount, $billingCountryCode);
+    }
+
+    /**
      * Null when nothing is stored, when only merchant settings are (the PayPlug limits were never
-     * captured, or were cleared by a logout), or when the stored block is malformed (logged).
+     * captured, or were cleared by a logout), when the limits were fetched in the other environment
+     * (TEST vs LIVE), or when the stored block is malformed (logged).
      */
     private function readStoredConfig(PaymentMethodInterface $paymentMethod): ?PproConfig
     {
@@ -67,6 +83,8 @@ final class PproEligibilityChecker
             ]);
         }
 
-        return null === $config?->refreshedAt ? null : $config;
+        $live = true === ($gatewayConfig?->getConfig()['live'] ?? false);
+
+        return null === $config?->refreshedAt || $config->live !== $live ? null : $config;
     }
 }

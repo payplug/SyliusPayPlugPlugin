@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\PayPlug\SyliusPayPlugPlugin\PHPUnit\Ppro;
 
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Ppro\PproEligibilityChecker;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -120,6 +121,85 @@ final class PproEligibilityCheckerTest extends TestCase
     }
 
     /**
+     * Limits fetched in the other environment (TEST vs LIVE) are not the ones the payment method now
+     * runs on, for instance when the refresh after a LIVE switch failed: the caller falls back to the
+     * live account check until they are refreshed.
+     */
+    public function testBlockFromTheOtherEnvironmentIsUndecided(): void
+    {
+        $paymentMethod = $this->paymentMethod(['live' => true, 'payment_method' => $this->block(['live' => false])]);
+
+        self::assertNull($this->checker->isEligible($paymentMethod, 1000, 'EUR', 'BE'));
+    }
+
+    public function testMerchantSettingsAllowEverythingWhenNoneAreStored(): void
+    {
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($this->paymentMethod([]), 1, 'US'));
+        self::assertTrue($this->checker->isAllowedByMerchantSettings(new PaymentMethod(), 1, 'US'));
+    }
+
+    public function testMerchantSettingsApplyTheConfiguredRangeAndCountries(): void
+    {
+        $paymentMethod = $this->paymentMethod(['payment_method' => [
+            'configured_amount' => ['min' => 1000, 'max' => 5000],
+            'configured_countries' => ['BE'],
+        ]]);
+
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 999, 'BE'));
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($paymentMethod, 1000, 'BE'));
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 5001, 'BE'));
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 1000, 'FR'));
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($paymentMethod, 1000, null));
+    }
+
+    /**
+     * Only the merchant's own settings: the PayPlug side comes from the live account check, so stored
+     * PayPlug limits (possibly stale, or from the other environment) are not applied again.
+     */
+    public function testMerchantSettingsIgnoreTheStoredPayPlugLimits(): void
+    {
+        $paymentMethod = $this->paymentMethod(['payment_method' => $this->block([
+            'enabled' => false,
+            'allowed_countries' => ['DE'],
+            'default_amount' => ['min' => 5000, 'max' => 9000],
+            'configured_amount' => ['min' => null, 'max' => null],
+        ])]);
+
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($paymentMethod, 1000, 'BE'));
+    }
+
+    public function testMerchantSettingsWithNoCountryLeftHideTheMethod(): void
+    {
+        $paymentMethod = $this->paymentMethod(['payment_method' => ['configured_countries' => []]]);
+
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 1000, 'BE'));
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 1000, null));
+    }
+
+    public function testMerchantSettingsUseTheLegacyScalapayRange(): void
+    {
+        $paymentMethod = $this->paymentMethod(['min_amount' => 5000, 'max_amount' => 90000], ScalapayGatewayFactory::FACTORY_NAME);
+
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 4999, 'FR'));
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($paymentMethod, 5000, 'FR'));
+        self::assertFalse($this->checker->isAllowedByMerchantSettings($paymentMethod, 90001, 'FR'));
+    }
+
+    public function testLegacyRangeKeysAreIgnoredForOtherFactories(): void
+    {
+        $paymentMethod = $this->paymentMethod(['min_amount' => 5000, 'max_amount' => 90000]);
+
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($paymentMethod, 1, 'FR'));
+    }
+
+    public function testMalformedMerchantSettingsAllowEverything(): void
+    {
+        $paymentMethod = $this->paymentMethod(['payment_method' => ['configured_amount' => ['min' => 'abc']]]);
+
+        self::assertTrue($this->checker->isAllowedByMerchantSettings($paymentMethod, 1, 'US'));
+    }
+
+    /**
      * @param array<string, mixed> $overrides
      *
      * @return array<string, mixed>
@@ -141,11 +221,11 @@ final class PproEligibilityCheckerTest extends TestCase
     /**
      * @param array<string, mixed> $config
      */
-    private function paymentMethod(array $config): PaymentMethod
+    private function paymentMethod(array $config, string $factoryName = WeroGatewayFactory::FACTORY_NAME): PaymentMethod
     {
         $gatewayConfig = new GatewayConfig();
-        $gatewayConfig->setFactoryName(WeroGatewayFactory::FACTORY_NAME);
-        $gatewayConfig->setGatewayName(WeroGatewayFactory::FACTORY_NAME);
+        $gatewayConfig->setFactoryName($factoryName);
+        $gatewayConfig->setGatewayName($factoryName);
         $gatewayConfig->setConfig($config);
 
         $paymentMethod = new PaymentMethod();

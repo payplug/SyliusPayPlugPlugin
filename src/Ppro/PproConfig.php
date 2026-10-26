@@ -53,7 +53,8 @@ final class PproConfig
      * Combines freshly fetched PayPlug limits ($api) with the merchant settings of $previous: a
      * configured amount is kept but clamped into the new bounds (an empty side keeps following the
      * PayPlug limit, a range left empty falls back to the PayPlug limits), and configured countries
-     * are intersected with the new allowed list (an empty intersection falls back to all countries).
+     * are intersected with the new allowed list (an empty intersection hides the method until the
+     * merchant picks new countries, rather than widening it to every allowed country).
      */
     public static function fromApiLimits(self $api, ?self $previous): self
     {
@@ -97,7 +98,7 @@ final class PproConfig
      */
     public function isEligible(int $amount, ?string $billingCountry, bool $trustDisabledFlag = true): bool
     {
-        if (($trustDisabledFlag && !$this->enabled) || $this->hasEmptyAmountRange()) {
+        if (($trustDisabledFlag && !$this->enabled) || $this->hasEmptyAmountRange() || [] === $this->configuredCountries) {
             return false;
         }
 
