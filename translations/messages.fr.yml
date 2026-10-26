@@ -162,10 +162,12 @@ payplug_sylius_payplug_plugin:
         hosted_fields:
             error.tokenization_failed: 'Les informations de votre carte n’ont pas pu être validées. Veuillez les vérifier et réessayer.'
             error.unsupported_brand: 'Cette marque de carte n’est pas prise en charge pour ce moyen de paiement. Merci d’utiliser une autre carte.'
+            error.card_holder_required: 'Renseignez le nom du titulaire de la carte.'
+            error.card_holder_length: 'Le nom du titulaire doit contenir entre %min% et %max% caractères.'
+            card_holder.label: 'Nom du titulaire de la carte'
+            card_holder.placeholder: 'Nom du titulaire de la carte'
             save_card.label: 'Enregistrer ma carte bancaire'
             place_order.label: 'Confirmer le paiement'
-            network_selection.label: 'Sélectionnez votre réseau'
-            network_selection.tooltip: 'Votre carte supporte deux réseaux et vous pouvez choisir celui que vous voulez pour ce paiement. Si vous ne le faites pas, alors le réseau sera celui sélectionné par défaut par le marchand.'
         deferred_capture:
             process_order_info: |
                 Vous serez prélevé(é) lors du traitement de votre commande.

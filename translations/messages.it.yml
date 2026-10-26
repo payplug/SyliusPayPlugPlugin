@@ -143,10 +143,12 @@ payplug_sylius_payplug_plugin:
         hosted_fields:
             error.tokenization_failed: 'Non è stato possibile verificare i dati della tua carta. Controllali e riprova.'
             error.unsupported_brand: 'Questo marchio di carta non è supportato per questo metodo di pagamento. Utilizza un’altra carta.'
+            error.card_holder_required: 'Inserisci il nome del titolare della carta.'
+            error.card_holder_length: 'Il nome del titolare deve contenere da %min% a %max% caratteri.'
+            card_holder.label: 'Nome del titolare della carta'
+            card_holder.placeholder: 'Nome del titolare della carta'
             save_card.label: 'Salva la mia carta'
             place_order.label: 'Ordine'
-            network_selection.label: 'Seleziona il tuo circuito'
-            network_selection.tooltip: 'La tua carta supporta due circuiti e puoi scegliere quello che preferisci per questo pagamento. Se non lo fai, verrà utilizzato il circuito selezionato di default dal commerciante.'
         deferred_capture:
             process_order_info: |
                 L'addebito avverrà al momento dell'elaborazione dell'ordine.

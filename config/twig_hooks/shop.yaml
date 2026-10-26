@@ -21,6 +21,13 @@ sylius_twig_hooks:
                 template: '@PayPlugSyliusPayPlugPlugin/shared/modal/index.html.twig'
                 priority: 0
 
+        # Sylius renders no flash message on the payment step, where a refused Hosted Fields
+        # submission sends the shopper back (PostPaymentSelectEventSubscriber).
+        'sylius_shop.checkout.select_payment.content':
+            payplug_flashes:
+                template: '@SyliusShop/shared/flashes.html.twig'
+                priority: 50
+
         'sylius_shop.shared.form.select_payment.payment':
             choice:
                 template: '@PayPlugSyliusPayPlugPlugin/shared/form/select_payment/payment/choice.html.twig'

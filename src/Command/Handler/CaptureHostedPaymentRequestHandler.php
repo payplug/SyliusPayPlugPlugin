@@ -127,7 +127,10 @@ final class CaptureHostedPaymentRequestHandler
 
         $selectedBrand = $details['hosted_fields_selected_brand'] ?? null;
         $hasSelectedBrand = \is_string($selectedBrand) && '' !== $selectedBrand;
-        $fullName = $this->contextBuilder->resolveFullNameForCardDetails($order);
+        $cardHolderName = $details['hosted_fields_card_holder_name'] ?? null;
+        $fullName = \is_string($cardHolderName) && '' !== $cardHolderName
+            ? $cardHolderName
+            : $this->contextBuilder->resolveFullNameForCardDetails($order);
         $hasFullName = null !== $fullName;
 
         $saveCard = true === ($details['hosted_fields_save_card'] ?? false);

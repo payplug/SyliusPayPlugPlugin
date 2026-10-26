@@ -1,4 +1,6 @@
 <script type="text/javascript" src="{{ payplug_hosted_fields_sdk_url()|e('html_attr') }}"></script>
+{% set cardHolderMinLength = constant('PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\HostedFieldsCaptureData::CARD_HOLDER_NAME_MIN_LENGTH') %}
+{% set cardHolderMaxLength = constant('PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\HostedFieldsCaptureData::CARD_HOLDER_NAME_MAX_LENGTH') %}
 <script type="text/javascript">
   /* <![CDATA[ */
   var payplug_hosted_fields_params = {
@@ -9,9 +11,16 @@
        string, and would hand JS a truthy "false" the moment it stopped doing so. #}
     has_saved_cards: {{ hasSavedCards|default(false) ? 'true' : 'false' }},
     locale: '{{ app.request.locale|split('_')|first }}',
+    allowed_brands: {{ constant('PayPlug\\SyliusPayPlugPlugin\\PaymentProcessing\\HostedFieldsCaptureData::ALLOWED_BRANDS')|json_encode|raw }},
+    card_holder_length: {
+      min: {{ cardHolderMinLength }},
+      max: {{ cardHolderMaxLength }},
+    },
     error: {
       tokenization_failed: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.tokenization_failed'|trans|e('js') }}',
       unsupported_brand: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.unsupported_brand'|trans|e('js') }}',
+      holder_required: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.card_holder_required'|trans|e('js') }}',
+      holder_length: '{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.error.card_holder_length'|trans({'%min%': cardHolderMinLength, '%max%': cardHolderMaxLength})|e('js') }}',
     },
   }
   /* ]] */
@@ -29,29 +38,37 @@
     <div class="sylius-shop-loader d-none">
         <img src="{{ asset('build/shop/images/loader.gif', 'shop') }}" alt="{{ 'sylius.ui.loading'|trans }}" loading="lazy"/>
     </div>
-    <div class="payplugHostedFields__schemes">
-        <span class="payplugHostedFields__scheme-badge">VISA</span>
-        <span class="payplugHostedFields__scheme-badge">MC</span>
-    </div>
-    <div class="payplugHostedFields__cardWrapper">
-        <div class="payplugHostedFields__container payplugHostedFields__container--card" id="card-container"></div>
-        {# The SDK draws its own "select your network" label as an absolutely positioned <div id="info-container">
-           in <body>, with pixel coordinates measured once (they go stale as soon as the layout moves). CSS hides
-           it and shows this in-flow copy instead, only while the SDK reveals its own (see hosted-fields.css). #}
-        <div class="payplugHostedFields__network">
-            <span class="payplugHostedFields__networkLabel">
-                {{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.network_selection.label'|trans }}
-                <span class="payplugHostedFields__networkInfo" tabindex="0" role="img" aria-label="{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.network_selection.label'|trans }}" aria-describedby="payplug-network-tooltip">
-                    <span class="payplugHostedFields__networkTooltip" id="payplug-network-tooltip" role="tooltip">
-                        {{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.network_selection.tooltip'|trans }}
-                    </span>
-                </span>
-            </span>
-            <div class="payplugHostedFields__container payplugHostedFields__container--brand" id="brand-container"></div>
+    <div class="payplugHostedFields__field payplugHostedFields__field--holder">
+        <div class="payplugHostedFields__container payplugHostedFields__container--holder" id="holder-container">
+            {# No name: the value is copied into hostedfields_card_holder_name on submit, and a named
+               input would trigger the checkout LiveComponent. #}
+            <input
+                type="text"
+                id="hostedfields_card_holder"
+                class="payplugHostedFields__holderInput"
+                autocomplete="cc-name"
+                placeholder="{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.card_holder.placeholder'|trans }}"
+                aria-label="{{ 'payplug_sylius_payplug_plugin.ui.hosted_fields.card_holder.label'|trans }}"
+                aria-describedby="hostedfields_card_holder_error"
+                aria-invalid="false"
+                {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'holder') }}
+            />
         </div>
+        <div class="payplugHostedFields__fieldError" id="hostedfields_card_holder_error" data-field="holder" aria-live="polite"></div>
     </div>
-    <div class="payplugHostedFields__container payplugHostedFields__container--expiry" id="expiry-container"></div>
-    <div class="payplugHostedFields__container payplugHostedFields__container--cvv" id="cvv-container"></div>
+    <div class="payplugHostedFields__field payplugHostedFields__field--card">
+        <div class="payplugHostedFields__container payplugHostedFields__container--card" id="card-container"></div>
+        <div class="payplugHostedFields__brand" id="brand-container"></div>
+        <div class="payplugHostedFields__fieldError" data-field="card" aria-live="polite"></div>
+    </div>
+    <div class="payplugHostedFields__field payplugHostedFields__field--expiry">
+        <div class="payplugHostedFields__container payplugHostedFields__container--expiry" id="expiry-container"></div>
+        <div class="payplugHostedFields__fieldError" data-field="expiry" aria-live="polite"></div>
+    </div>
+    <div class="payplugHostedFields__field payplugHostedFields__field--cvv">
+        <div class="payplugHostedFields__container payplugHostedFields__container--cvv" id="cvv-container"></div>
+        <div class="payplugHostedFields__fieldError" data-field="cryptogram" aria-live="polite"></div>
+    </div>
     <div class="payplugHostedFields__error payplugHostedFields__error--hide" {{ stimulus_target('@payplug/sylius-payplug-plugin/hosted-fields', 'error') }}></div>
     {% if is_save_card_enabled(paymentMethod) %}
         <div class="payplugHostedFields__container payplugHostedFields__container--saveCard">
@@ -76,3 +93,4 @@
 <input type="hidden" name="hostedfields_exp_month" id="hostedfields_exp_month" />
 <input type="hidden" name="hostedfields_exp_year" id="hostedfields_exp_year" />
 <input type="hidden" name="hostedfields_country" id="hostedfields_country" />
+<input type="hidden" name="hostedfields_card_holder_name" id="hostedfields_card_holder_name" />
