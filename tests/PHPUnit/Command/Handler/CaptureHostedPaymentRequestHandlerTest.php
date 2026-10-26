@@ -381,6 +381,90 @@ final class CaptureHostedPaymentRequestHandlerTest extends TestCase
         $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
     }
 
+    public function testInvoke_withACardHolderNameInDetails_sendsItAsFullNameInsteadOfTheBillingName(): void
+    {
+        $billingAddress = $this->createMock(AddressInterface::class);
+        $billingAddress->method('getFullName')->willReturn('John Doe');
+
+        $this->paymentRequestWithPayment(
+            [
+                'hosted_fields_token' => 'hf_token_abc',
+                'hosted_fields_selected_brand' => 'VISA',
+                'hosted_fields_card_holder_name' => 'Jane Holder',
+            ],
+            billingAddress: $billingAddress,
+        );
+
+        $this->unifiedApiPaymentCreator->expects(self::once())->method('createPayment')
+            ->with(self::callback(function (HostedFieldDto $dto): bool {
+                self::assertIsArray($dto->paymentMethod);
+                self::assertSame('Jane Holder', $dto->paymentMethod['details']['fullName'] ?? null);
+                self::assertSame('VISA', $dto->paymentMethod['details']['selectedBrand'] ?? null);
+                self::assertArrayNotHasKey('saveFutureUsage', $dto->paymentMethod);
+
+                return true;
+            }))
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1"}', null, null, null));
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    public function testInvoke_withCardHolderNameAndSaveCardAndNoBillingName_sendsSaveFutureUsage(): void
+    {
+        $this->paymentRequestWithPayment([
+            'hosted_fields_token' => 'hf_token_abc',
+            'hosted_fields_selected_brand' => 'CB',
+            'hosted_fields_save_card' => true,
+            'hosted_fields_card_holder_name' => 'Jane Holder',
+        ]);
+
+        $this->unifiedApiPaymentCreator->expects(self::once())->method('createPayment')
+            ->with(self::callback(function (HostedFieldDto $dto): bool {
+                self::assertIsArray($dto->paymentMethod);
+                self::assertSame('Jane Holder', $dto->paymentMethod['details']['fullName'] ?? null);
+                self::assertTrue($dto->paymentMethod['saveFutureUsage'] ?? null);
+
+                return true;
+            }))
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1"}', null, null, null));
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    /**
+     * @dataProvider provideMissingCardHolderNames
+     */
+    public function testInvoke_withoutAUsableCardHolderNameInDetails_fallsBackToTheBillingName(
+        array $holderDetails,
+    ): void
+    {
+        $billingAddress = $this->createMock(AddressInterface::class);
+        $billingAddress->method('getFullName')->willReturn('John Doe');
+
+        $this->paymentRequestWithPayment(
+            ['hosted_fields_token' => 'hf_token_abc', 'hosted_fields_selected_brand' => 'VISA', ...$holderDetails],
+            billingAddress: $billingAddress,
+        );
+
+        $this->unifiedApiPaymentCreator->expects(self::once())->method('createPayment')
+            ->with(self::callback(function (HostedFieldDto $dto): bool {
+                self::assertIsArray($dto->paymentMethod);
+                self::assertSame('John Doe', $dto->paymentMethod['details']['fullName'] ?? null);
+
+                return true;
+            }))
+            ->willReturn(new PaymentOutput(201, '{"id":"pay_1"}', null, null, null));
+
+        $this->handler->__invoke(new CaptureHostedPaymentRequest(null));
+    }
+
+    public static function provideMissingCardHolderNames(): iterable
+    {
+        yield 'key absent' => [[]];
+        yield 'empty string' => [['hosted_fields_card_holder_name' => '']];
+        yield 'not a string' => [['hosted_fields_card_holder_name' => 42]];
+    }
+
     public function testInvoke_withNoBillingAddress_omitsFullNameButStillSendsSelectedBrand(): void
     {
         $this->paymentRequestWithPayment(['hosted_fields_token' => 'hf_token_abc', 'hosted_fields_selected_brand' => 'VISA']);

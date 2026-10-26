@@ -5,6 +5,7 @@ payplug_sylius_payplug_plugin:
         api_unknow_error: An error occurred. Please retry in few seconds.
         transaction_failed_1click: The transaction was not completed and your card was not charged.
         transaction_failed: The transaction was not completed and your card was not charged.
+        hosted_fields_submission_invalid: "Your card details could not be validated and your card was not charged. Please check the cardholder name and your card details, then try again."
     warning:
         payment_success_no_card_saved: The payment was successful but we were unable to save your credit card details.
     admin:

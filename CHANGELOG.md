@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   countries among those PayPlug allows), with live validation in the admin form
 - `payplug:ppro:refresh` console command, to store the PayPlug limits of every PPRO payment method
   once after the upgrade
+- Hosted Fields card form: a cardholder name field above the card number (5 to 45 characters, checked
+  in the browser and on the server), sent to PayPlug as the card's full name
+- Hosted Fields card form: the network selector is shown inside the card number field; for a
+  co-branded card each network is shown side by side, the preselected one carries a checkmark and the
+  shopper switches with one click
+- Hosted Fields card form: each field shows a green border when valid, and a red border with a message
+  under it when invalid
 
 > [!IMPORTANT]
 > Merchants will need to contact support to switch to the new authentication method.
@@ -62,6 +69,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Scalapay minimum/maximum amount override keeps narrowing the checkout until the PayPlug limits
   are first stored, then becomes the merchant range of the new PPRO settings, adjusted to them if
   needed (see [UPGRADE.md](UPGRADE.md))
+- Hosted Fields card form: the text typed in the card, expiry and CVV fields is vertically centred and
+  uses the same font as the cardholder name field; the static Visa/MC badges above the card field are
+  removed
+- Hosted Fields card form: the "select your network" label of co-branded cards sits under the card
+  field, with its space reserved, instead of overlapping the next fields; an invalid card number
+  message is shown on its own line under that label
+- The Hosted Fields card network and cardholder name are checked on the server: only CB, VISA and
+  MASTERCARD are accepted, the name is composed (NFC) and trimmed like in the browser (Unicode spaces
+  included) and must not contain control characters, and a submission that fails these checks sends
+  the shopper back to the payment step with an error message (a 400 for a non-HTML request) before the
+  Hosted Fields details are stored or the checkout is completed
 
 ### Removed
 - Drop Payum support
@@ -91,6 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A PayPlug account that cannot be read (expired credentials, network error) no longer breaks the
   payment method list at checkout: the Apple Pay, American Express and card methods are kept and the
   error is logged
+- Hosted Fields iframes are only mounted once the payment method's form is displayed, so they no
+  longer render broken when the method is preselected or chosen before its form is shown
 
 ### Breaking changes for anyone extending the plugin
 
@@ -114,6 +134,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `ScalapayGatewayConfigurationTypeExtension`, `IsScalapayAmountRangeValid` and its validator | `PproEligibilityTypeExtension`, `Ppro\PproConfigurationValidator` |
 | `ScalapayGatewayFactory::MIN_AMOUNT` / `MAX_AMOUNT` — **deprecated**, no longer read | `payment_method.configured_amount` in the gateway config |
 | `SupportedMethodsProvider`, `CapturePaymentRequestHandler`, `UnifiedAuthenticationController`, `PostSavePaymentMethodEventListener` constructors | new PPRO collaborators, see [UPGRADE.md](UPGRADE.md) |
+| `HostedFieldsCaptureData::__construct()` — now `($hfToken, $selectedBrand, $saveCard, HostedFieldsCardDetails $card, $cardHolderName)`; the brand and the name are validated and throw `InvalidHostedFieldsSubmissionException` | pass the card metadata as a `HostedFieldsCardDetails` and the cardholder name |
+| `HostedFieldsCaptureData::$last4`, `$expirationMonth`, `$expirationYear`, `$countryCode` | `$card->last4`, `$card->expirationMonth`, `$card->expirationYear`, `$card->countryCode` |
+| `PostPaymentSelectEventSubscriber::__construct()` | now also takes a `LoggerInterface` (container-built) |
+| Translation keys `ui.hosted_fields.network_selection.label` / `ui.hosted_fields.network_selection.tooltip` | none, the label is the SDK's own, localised through the `locale` option |
+
+> [!WARNING]
+> Themes overriding `@PayPlugSyliusPayPlugPlugin/shop/hosted_fields/index.html.twig` must add the
+> cardholder name input (Stimulus target `holder`) and the hidden `hostedfields_card_holder_name`
+> input: a Hosted Fields checkout posted without a valid cardholder name is sent back to the
+> payment step with an error message.
 
 Requires `payplug/unified-plugin-core ^1.2.1` (for the nullable `TokenOutput::$idToken` and the
 Unified API payment contract: `paymentMethod.hfToken`, `paymentMethod.storedId`).

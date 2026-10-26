@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Upc;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\Persistence\ManagerRegistry;
 use PayPlug\SyliusPayPlugPlugin\Entity\Card;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsCaptureData;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface as CorePaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
@@ -27,11 +28,6 @@ final class PayplugCardPersister
     private const COUNTRY_CODE_PATTERN = '/^[A-Za-z]{2}$/D';
 
     private const MAX_EXPIRATION_YEARS_AHEAD = 20;
-
-    // Mirrors ALLOWED_BRANDS in assets/shop/controllers/hosted-fields_controller.js — that JS
-    // check is client-side only and trivially bypassed by posting the form directly, so it must
-    // be re-enforced here before hosted_fields_selected_brand is trusted as a fallback.
-    private const ALLOWED_BRANDS = ['CB', 'VISA', 'MASTERCARD'];
 
     public function __construct(
         private FactoryInterface $payplugCardFactory,
@@ -134,7 +130,7 @@ final class PayplugCardPersister
 
     private function sanitizeBrand(mixed $value): ?string
     {
-        return \is_string($value) && \in_array($value, self::ALLOWED_BRANDS, true) ? $value : null;
+        return \is_string($value) && \in_array($value, HostedFieldsCaptureData::ALLOWED_BRANDS, true) ? $value : null;
     }
 
     private function sanitizeString(mixed $value, string $pattern): ?string

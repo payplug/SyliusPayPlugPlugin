@@ -5,6 +5,7 @@ payplug_sylius_payplug_plugin:
         api_unknow_error: Une erreur s'est produite. Veuillez réessayer dans quelques secondes.
         transaction_failed_1click: La transaction a échoué, votre carte de paiement ne sera pas débitée.
         transaction_failed: La transaction a échoué, votre carte de paiement ne sera pas débitée.
+        hosted_fields_submission_invalid: "Les informations de votre carte n'ont pas pu être validées et votre carte n'a pas été débitée. Veuillez vérifier le nom du titulaire et les informations de votre carte, puis réessayer."
     warning:
         payment_success_no_card_saved: Le paiement a été effectué avec succès, mais nous n'avons pas pu enregistrer votre carte bancaire.
     admin:
