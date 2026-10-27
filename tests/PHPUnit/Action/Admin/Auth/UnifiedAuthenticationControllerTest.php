@@ -9,6 +9,9 @@ use Payplug\Core\HttpClient;
 use PayPlug\SyliusPayPlugPlugin\Action\Admin\Auth\UnifiedAuthenticationController;
 use PayPlug\SyliusPayPlugPlugin\Auth\IdTokenEmailExtractor;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfigurationRefresherInterface;
+use PayPlug\SyliusPayPlugPlugin\Ppro\PproRefreshResult;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PayplugUnifiedCore\Contracts\IOAuthHttpClient;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -53,7 +56,16 @@ final class UnifiedAuthenticationControllerTest extends TestCase
 
     private ValidatorInterface&MockObject $validator;
 
+    private PproConfigurationRefresherInterface&MockObject $pproConfigurationRefresher;
+
     private UnifiedAuthenticationController $controller;
+
+    /** @var list<string> */
+    private array $calls = [];
+
+    private PproRefreshResult $refreshResult;
+
+    private ?Request $callbackRequest = null;
 
     protected function setUp(): void
     {
@@ -71,6 +83,8 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         );
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->oauthHttpClient = $this->createMock(IOAuthHttpClient::class);
+        $this->pproConfigurationRefresher = $this->createMock(PproConfigurationRefresherInterface::class);
+        $this->refreshResult = new PproRefreshResult(true);
 
         $this->controller = new UnifiedAuthenticationController(
             $this->router,
@@ -80,6 +94,7 @@ final class UnifiedAuthenticationControllerTest extends TestCase
             $this->logger,
             $this->oauthHttpClient,
             new IdTokenEmailExtractor(),
+            $this->pproConfigurationRefresher,
             'https://api-qa.payplug.com',
             'https://www.payplug.com',
         );
@@ -178,6 +193,7 @@ final class UnifiedAuthenticationControllerTest extends TestCase
     {
         $this->stubRouterGenerate([]);
         $this->oauthHttpClient->expects(self::never())->method('post');
+        $this->pproConfigurationRefresher->expects(self::never())->method('refresh');
         $this->logger->expects(self::once())->method('critical')
             ->with('Error while perform Payplug OAuth callback', self::anything())
         ;
@@ -319,8 +335,11 @@ final class UnifiedAuthenticationControllerTest extends TestCase
      *
      * @return array<array-key, mixed>
      */
-    private function runSuccessfulCallback(array $tokenResponse, array $initialConfig = []): array
-    {
+    private function runSuccessfulCallback(
+        array $tokenResponse,
+        array $initialConfig = [],
+        string $factoryName = PayPlugGatewayFactory::FACTORY_NAME,
+    ): array {
         $this->stubRouterGenerate([
             'payplug_sylius_admin_auth_oauth_callback' => 'https://shop.example.com/payplug/auth/oauth-callback',
             'sylius_admin_payment_method_update' => '/admin/payment-methods/1/edit',
@@ -338,7 +357,7 @@ final class UnifiedAuthenticationControllerTest extends TestCase
 
         $storedConfig = $initialConfig;
         $gatewayConfig = $this->createMock(GatewayConfigInterface::class);
-        $gatewayConfig->method('getFactoryName')->willReturn(PayPlugGatewayFactory::FACTORY_NAME);
+        $gatewayConfig->method('getFactoryName')->willReturn($factoryName);
         $gatewayConfig->method('getConfig')->willReturnCallback(static fn (): array => $storedConfig);
         $gatewayConfig->method('setConfig')->willReturnCallback(
             static function (array $config) use (&$storedConfig): void {
@@ -352,7 +371,22 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         $paymentMethod->method('getId')->willReturn(1);
 
         $this->paymentMethodRepository->method('find')->willReturn($paymentMethod);
-        $this->validator->method('validate')->willReturn(new ConstraintViolationList());
+        $this->entityManager->method('flush')->willReturnCallback(function (): void {
+            $this->calls[] = 'flush';
+        });
+        $this->pproConfigurationRefresher->method('refresh')->willReturnCallback(
+            function (PaymentMethodInterface $refreshed, bool $flush = true) use ($paymentMethod): PproRefreshResult {
+                self::assertSame($paymentMethod, $refreshed);
+                $this->calls[] = $flush ? 'refresh+flush' : 'refresh';
+
+                return $this->refreshResult;
+            },
+        );
+        $this->validator->method('validate')->willReturnCallback(function (): ConstraintViolationList {
+            $this->calls[] = 'validate';
+
+            return new ConstraintViolationList();
+        });
 
         $request = $this->buildRequest(['code' => 'auth_code', 'state' => 'matching-state']);
         $session = $request->getSession();
@@ -365,6 +399,7 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         $this->logger->expects(self::never())->method('critical');
 
         $this->controller->oauthCallback($request);
+        $this->callbackRequest = $request;
 
         return $storedConfig;
     }
@@ -421,5 +456,72 @@ final class UnifiedAuthenticationControllerTest extends TestCase
         );
 
         self::assertSame('new-owner@example.com', $config['account_email'] ?? null);
+    }
+
+    // -------------------------------------------------------------------------
+    // oauthCallback() — PPRO limits captured right after the credentials
+    // -------------------------------------------------------------------------
+
+    public function testCallbackRefreshesPproConfigAfterCredentialsAreFlushed(): void
+    {
+        $this->runSuccessfulCallback(
+            ['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer'],
+            factoryName: WeroGatewayFactory::FACTORY_NAME,
+        );
+
+        // The refresher does not flush: PaymentMethodValidator::process() flushes right after it.
+        self::assertSame(['flush', 'refresh', 'validate', 'flush'], $this->calls);
+    }
+
+    public function testCallbackStillSucceedsWhenRefreshReportsFailure(): void
+    {
+        $this->refreshResult = PproRefreshResult::notRefreshed();
+
+        $config = $this->runSuccessfulCallback(
+            ['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer'],
+            factoryName: WeroGatewayFactory::FACTORY_NAME,
+        );
+
+        self::assertSame('generated_client', $config['live_client']['client_id'] ?? null);
+        self::assertContains('refresh', $this->calls);
+        self::assertContains('validate', $this->calls);
+    }
+
+    /**
+     * Without fresh limits the method keeps the previous account's ones, or none: the merchant is
+     * told, so the limits get refreshed from the payment method page.
+     */
+    public function testCallbackWarnsWhenThePproLimitsCouldNotBeRefreshed(): void
+    {
+        $this->refreshResult = PproRefreshResult::notRefreshed();
+
+        $this->runSuccessfulCallback(
+            ['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer'],
+            factoryName: WeroGatewayFactory::FACTORY_NAME,
+        );
+
+        self::assertSame(
+            ['payplug_sylius_payplug_plugin.ppro.refresh_failed'],
+            $this->callbackRequest?->getSession()->getFlashBag()->peek('warning'),
+        );
+    }
+
+    public function testCallbackDoesNotWarnForANonPproGateway(): void
+    {
+        $this->refreshResult = PproRefreshResult::notRefreshed();
+
+        $this->runSuccessfulCallback(['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer']);
+
+        self::assertSame([], $this->callbackRequest?->getSession()->getFlashBag()->peek('warning'));
+    }
+
+    public function testCallbackDoesNotWarnWhenThePproLimitsWereRefreshed(): void
+    {
+        $this->runSuccessfulCallback(
+            ['access_token' => 'jwt', 'expires_in' => 3600, 'token_type' => 'Bearer'],
+            factoryName: WeroGatewayFactory::FACTORY_NAME,
+        );
+
+        self::assertSame([], $this->callbackRequest?->getSession()->getFlashBag()->peek('warning'));
     }
 }

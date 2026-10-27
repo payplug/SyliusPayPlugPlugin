@@ -132,10 +132,18 @@ payplug_sylius_payplug_plugin:
                 title: 'Les frais sont :'
                 client: Répartis entre vous et vos clients
                 merchant: À votre charge
-        scalapay_gateway_config:
-            min_amount: Montant minimum
-            max_amount: Montant maximum
-            amount_help: Laissez vide pour utiliser les limites autorisées par PayPlug.
+        ppro:
+            amount_title: Montant du panier
+            amount_help: Le moyen de paiement s'affiche uniquement si le montant du panier est compris entre ces deux valeurs.
+            min_amount: Minimum
+            max_amount: Maximum
+            api_limits: "Limites autorisées par PayPlug : de %min% à %max%. Laissez un champ vide pour utiliser la limite PayPlug."
+            countries_title: Pays de facturation
+            countries_help: Le moyen de paiement s'affiche uniquement pour les clients dont l'adresse de facturation est dans un des pays sélectionnés.
+            countries_label: Pays
+            not_connected: Les limites de montant et de pays sont chargées depuis PayPlug une fois ce moyen de paiement connecté à votre compte PayPlug.
+            disabled_by_payplug: Lors de la dernière actualisation de ses limites, PayPlug indiquait que ce moyen de paiement n'est pas activé sur votre compte. Il est masqué au checkout pendant 24 heures après cette actualisation, puis de nouveau affiché, et PayPlug accepte ou refuse le paiement. Contactez PayPlug pour l'activer.
+            no_country_left: Aucun des pays de facturation que vous avez sélectionnés n'est encore autorisé par PayPlug, ce moyen de paiement est donc masqué au checkout. Sélectionnez ci-dessous les pays pour lesquels l'afficher.
         integrated_payment:
             card_holder.title: 'Nom du titulaire de la carte'
             card_holder.error: 'Nom et/ou prénom invalide(s).'
@@ -203,3 +211,5 @@ payplug_sylius_payplug_plugin:
         deferred_capture_enable: Activer la capture différée
         deferred_capture_help: |
             Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet
+    error:
+        ppro_not_available: "Ce moyen de paiement n'est pas disponible pour votre pays de facturation ou pour ce montant. Veuillez choisir un autre moyen de paiement."

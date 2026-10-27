@@ -114,10 +114,18 @@ payplug_sylius_payplug_plugin:
                 title: 'The fees are:'
                 client: Split between you and your customers
                 merchant: For you
-        scalapay_gateway_config:
-            min_amount: Minimum amount
-            max_amount: Maximum amount
-            amount_help: Leave empty to use the limits authorized by PayPlug.
+        ppro:
+            amount_title: Cart amount
+            amount_help: The payment method is displayed only if the cart amount is between these two values.
+            min_amount: Minimum
+            max_amount: Maximum
+            api_limits: "Limits authorized by PayPlug: from %min% to %max%. Leave a field empty to use the PayPlug limit."
+            countries_title: Billing countries
+            countries_help: The payment method is displayed only for customers whose billing address is in one of the selected countries.
+            countries_label: Countries
+            not_connected: The amount and country limits are loaded from PayPlug once this payment method is connected to your PayPlug account.
+            disabled_by_payplug: At the last refresh of its limits, PayPlug reported this payment method as not enabled on your account. It is hidden at checkout for 24 hours after that refresh, then shown again and PayPlug accepts or refuses the payment. Contact PayPlug to enable it.
+            no_country_left: None of the billing countries you selected is still allowed by PayPlug, so this payment method is hidden at checkout. Select the countries to display it for below.
         integrated_payment:
             card_holder.title: 'Cardholder name'
             card_holder.error: 'Invalid Name and/or Last Name.'
@@ -183,3 +191,5 @@ payplug_sylius_payplug_plugin:
         deferred_capture_enable: Enable deferred capture
         deferred_capture_help: |
             Please ensure that a delayed capture trigger has been added to the project source code.
+    error:
+        ppro_not_available: "This payment method is not available for your billing country or for this amount. Please choose another payment method."

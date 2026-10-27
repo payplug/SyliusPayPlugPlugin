@@ -114,10 +114,18 @@ payplug_sylius_payplug_plugin:
                 title: 'Le spese sono:'
                 client: Ripartite tra te e i tuoi clienti
                 merchant: A tuo carico
-        scalapay_gateway_config:
-            min_amount: Importo minimo
-            max_amount: Importo massimo
-            amount_help: Lascia vuoto per usare i limiti autorizzati da PayPlug.
+        ppro:
+            amount_title: Importo del carrello
+            amount_help: Il metodo di pagamento viene mostrato solo se l'importo del carrello è compreso tra questi due valori.
+            min_amount: Minimo
+            max_amount: Massimo
+            api_limits: "Limiti autorizzati da PayPlug: da %min% a %max%. Lascia un campo vuoto per usare il limite PayPlug."
+            countries_title: Paesi di fatturazione
+            countries_help: Il metodo di pagamento viene mostrato solo ai clienti il cui indirizzo di fatturazione si trova in uno dei paesi selezionati.
+            countries_label: Paesi
+            not_connected: I limiti di importo e di paese vengono caricati da PayPlug una volta collegato questo metodo di pagamento al tuo account PayPlug.
+            disabled_by_payplug: All'ultimo aggiornamento dei suoi limiti, PayPlug indicava che questo metodo di pagamento non è attivo sul tuo account. È nascosto al checkout per 24 ore dopo questo aggiornamento, poi viene mostrato di nuovo e PayPlug accetta o rifiuta il pagamento. Contatta PayPlug per attivarlo.
+            no_country_left: Nessuno dei paesi di fatturazione che hai selezionato è ancora autorizzato da PayPlug, quindi questo metodo di pagamento è nascosto al checkout. Seleziona qui sotto i paesi per cui mostrarlo.
         integrated_payment:
             card_holder.title: 'Titolare della carta'
             card_holder.error: 'Nome e/o Cognome non valido(i).'
@@ -182,3 +190,5 @@ payplug_sylius_payplug_plugin:
         deferred_capture_enable: Abilita la cattura differita
         deferred_capture_help: |
             Assicurarsi che nel codice sorgente del progetto sia stato aggiunto un trigger di acquisizione ritardata
+    error:
+        ppro_not_available: "Questo metodo di pagamento non è disponibile per il tuo paese di fatturazione o per questo importo. Scegli un altro metodo di pagamento."

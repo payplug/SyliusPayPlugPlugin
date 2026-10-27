@@ -217,6 +217,10 @@ For better Oney integration, you can check the [Oney enhancement documentation](
 
 Since 1.11.0, the plugin supports the authorized payment feature. You can check the [Authorized Payment documentation](doc/authorized_payment.md).
 
+## PPRO display eligibility
+
+Bancontact, Wero and Scalapay are shown only for the cart amounts and billing countries PayPlug and the merchant accept. You can check the [PPRO display eligibility documentation](doc/ppro_display_eligibility.md).
+
 ## Doc
 - [Development](doc/development.md)
 - [Release Process](RELEASE.md)
