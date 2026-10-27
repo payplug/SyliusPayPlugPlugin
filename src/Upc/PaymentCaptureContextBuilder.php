@@ -71,8 +71,10 @@ final class PaymentCaptureContextBuilder
         $common->successUrl = $successUrl;
         $common->cancelUrl = $successUrl . '?' . http_build_query(['status' => 'canceled']);
         if (null !== $order) {
-            $common->billing = $this->orderAddressDtoCreator->createBilling($order);
-            $common->shipping = $this->orderAddressDtoCreator->createShipping($order);
+            // Any valid phone number is sent, even from another country than the address. The
+            // creator's strict mode (requireRegionMatch: true) is there for a method that needs it.
+            $common->billing = $this->orderAddressDtoCreator->createBilling($order, requireRegionMatch: false);
+            $common->shipping = $this->orderAddressDtoCreator->createShipping($order, requireRegionMatch: false);
         }
 
         return $common;
