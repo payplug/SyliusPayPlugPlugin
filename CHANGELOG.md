@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > Merchants will need to contact support to switch to the new authentication method.
 
 ### Changed
+- Requires `payplug/unified-plugin-core` 1.2.2 or later
 - Plugin structure has been changed to follow the new Symfony bundle structure
 - Front assets have been migrated to use Stimulus
 - Gateway uniqueness is now enforced **per channel** instead of per installation: two gateways of
@@ -111,6 +112,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   error is logged
 - Hosted Fields iframes are only mounted once the payment method's form is displayed, so they no
   longer render broken when the method is preselected or chosen before its form is shown
+- A phone number valid in a country other than the address, or a metropolitan French number entered
+  on an overseas address (GP, MQ, RE, GF, YT, PM, BL, MF, NC, PF, WF), is no longer dropped from the
+  billing and shipping details sent to PayPlug (Hosted Fields), and the overseas case is also fixed
+  for the other payment methods; a local overseas number keeps its own territory
 
 ### Breaking changes for anyone extending the plugin
 

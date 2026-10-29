@@ -22,6 +22,7 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Upc\CustomerTitleResolver;
+use PayPlug\SyliusPayPlugPlugin\Upc\PhoneRegionResolver;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -112,31 +113,36 @@ class PayPlugPaymentDataCreator
         return $details;
     }
 
+    /**
+     * The number is read in each region of PhoneRegionResolver::resolve() in turn, the first one
+     * in which it is valid wins.
+     */
     public function formatNumber(string $phoneNumber, ?string $isoCode): array
     {
-        try {
-            $phoneNumberUtil = PhoneNumberUtil::getInstance();
-            $parsed = $phoneNumberUtil->parse($phoneNumber, $isoCode);
+        $phoneNumberUtil = PhoneNumberUtil::getInstance();
+        $regions = null !== $isoCode ? PhoneRegionResolver::resolve($isoCode) : [null];
 
-            if (!$phoneNumberUtil->isValidNumber($parsed)) {
-                return [
-                    'phone' => null,
-                    'is_mobile' => null,
-                ];
+        foreach ($regions as $region) {
+            try {
+                $parsed = $phoneNumberUtil->parse($phoneNumber, $region);
+            } catch (NumberParseException) {
+                continue;
             }
 
-            $formatted = $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164);
+            if (!$phoneNumberUtil->isValidNumber($parsed)) {
+                continue;
+            }
 
             return [
-                'phone' => $formatted,
+                'phone' => $phoneNumberUtil->format($parsed, PhoneNumberFormat::E164),
                 'is_mobile' => PhoneNumberType::MOBILE === $phoneNumberUtil->getNumberType($parsed),
             ];
-        } catch (NumberParseException) {
-            return [
-                'phone' => null,
-                'is_mobile' => null,
-            ];
         }
+
+        return [
+            'phone' => null,
+            'is_mobile' => null,
+        ];
     }
 
     private function formatTitle(CustomerInterface $customer): ?string
