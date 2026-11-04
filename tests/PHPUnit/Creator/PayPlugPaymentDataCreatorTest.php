@@ -127,6 +127,65 @@ final class PayPlugPaymentDataCreatorTest extends TestCase
         self::assertFalse($result['is_mobile']);
     }
 
+    /**
+     * @dataProvider phoneRegionProvider
+     */
+    public function testFormatNumber_readsTheNumberInTheAddressRegionsAndAcceptsForeignNumbers(
+        string $phoneNumber,
+        ?string $isoCode,
+        ?string $expectedPhone,
+        ?bool $expectedIsMobile,
+    ): void {
+        $result = $this->creator->formatNumber($phoneNumber, $isoCode);
+
+        self::assertSame(['phone' => $expectedPhone, 'is_mobile' => $expectedIsMobile], $result);
+    }
+
+    /**
+     * @return iterable<string, array{string, string|null, string|null, bool|null}>
+     */
+    public static function phoneRegionProvider(): iterable
+    {
+        yield 'metropolitan mobile on a MQ address' => ['07 81 23 45 67', 'MQ', '+33781234567', true];
+        yield 'metropolitan mobile on a lowercase mq address' => ['07 81 23 45 67', 'mq', '+33781234567', true];
+        yield 'MQ mobile stays in MQ' => ['0696 12 34 56', 'MQ', '+596696123456', true];
+        yield 'YT landline also valid in FR stays in YT' => ['02 69 61 23 45', 'YT', '+262269612345', false];
+        yield 'shared +590 mobile on a BL address' => ['0690 12 34 56', 'BL', '+590690123456', true];
+        yield 'shared +590 mobile on a MF address' => ['0690123456', 'MF', '+590690123456', true];
+        yield 'shared +590 landline on a MF address' => ['0590871234', 'MF', '+590590871234', false];
+        yield 'FR mobile on a DE address' => ['+33612345678', 'DE', '+33612345678', true];
+        yield 'FR landline on a DE address' => ['+33142345678', 'DE', '+33142345678', false];
+        yield 'FR mobile with 00 prefix on a BE address' => ['0033609860479', 'BE', '+33609860479', true];
+        yield 'BE mobile with 00 prefix on a FR address' => ['0032 470 12 34 56', 'FR', '+32470123456', true];
+        yield 'FR mobile on a FR address' => ['06 12 34 56 78', 'FR', '+33612345678', true];
+        yield 'national number read in DE, not retried as FR' => ['0612345678', 'DE', '+49612345678', false];
+        yield 'national number invalid in BE, not retried as FR' => ['0612345678', 'BE', null, null];
+        yield 'invalid number on a MQ address' => ['0612 34', 'MQ', null, null];
+        yield 'national number without country' => ['0612345678', null, null, null];
+        yield 'international number without country' => ['+33612345678', null, '+33612345678', true];
+    }
+
+    /**
+     * @dataProvider frenchNumberingTerritoryProvider
+     */
+    public function testFormatNumber_withAMetropolitanMobileOnAnOverseasTerritory_returnsItAsFrench(
+        string $isoCode,
+    ): void {
+        $result = $this->creator->formatNumber('0612345678', $isoCode);
+
+        self::assertSame(['phone' => '+33612345678', 'is_mobile' => true], $result);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function frenchNumberingTerritoryProvider(): iterable
+    {
+        foreach (['GP', 'MQ', 'RE', 'GF', 'YT', 'PM', 'BL', 'MF', 'NC', 'PF', 'WF'] as $isoCode) {
+            yield $isoCode => [$isoCode];
+        }
+    }
+
     // -------------------------------------------------------------------------
     // create() — basic fields
     // -------------------------------------------------------------------------
@@ -503,6 +562,18 @@ final class PayPlugPaymentDataCreatorTest extends TestCase
         self::assertNull($details['billing']['landline_phone_number']);
     }
 
+    public function testCreate_withAMetropolitanMobileOnAnOverseasAddress_sendsItAsFrenchInBillingAndShipping(): void
+    {
+        $payment = $this->buildMinimalPayment(1000, 'EUR', 1, 'ORD-1', phone: '07 81 23 45 67', countryCode: 'MQ');
+
+        $details = $this->creator->create($payment);
+
+        self::assertSame('+33781234567', $details['billing']['mobile_phone_number']);
+        self::assertNull($details['billing']['landline_phone_number']);
+        self::assertSame('+33781234567', $details['shipping']['mobile_phone_number']);
+        self::assertNull($details['shipping']['landline_phone_number']);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -516,14 +587,15 @@ final class PayPlugPaymentDataCreatorTest extends TestCase
         string $locale = 'fr_FR',
         bool $sameAddress = false,
         ?string $phone = null,
+        string $countryCode = 'FR',
     ): PaymentInterface {
         $customer = $this->createMock(CustomerInterface::class);
         $customer->method('getId')->willReturn($customerId);
         $customer->method('getGender')->willReturn($gender);
         $customer->method('getEmail')->willReturn('test@example.com');
 
-        $billingAddress = $this->buildAddress(1, 'FR', $phone);
-        $shippingAddress = $this->buildAddress($sameAddress ? 1 : 2, 'FR', $phone);
+        $billingAddress = $this->buildAddress(1, $countryCode, $phone);
+        $shippingAddress = $this->buildAddress($sameAddress ? 1 : 2, $countryCode, $phone);
 
         $order = $this->createMock(OrderInterface::class);
         $order->method('getCustomer')->willReturn($customer);

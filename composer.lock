@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39a63c300688d00971a9a43114e99ec7",
+    "content-hash": "b501ab6e80635ff6a85bbfdf3e64f58a",
     "packages": [
         {
             "name": "alcohol/iso4217",
@@ -5748,16 +5748,16 @@
         },
         {
             "name": "payplug/unified-plugin-core",
-            "version": "1.2.1",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/payplug/unified-plugin-core.git",
-                "reference": "05423ee4bae1bef5e1374ba1aeadf127c9bb0dca"
+                "reference": "d43d8cd45da031060189385fc40e0c8d407a7242"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/payplug/unified-plugin-core/zipball/05423ee4bae1bef5e1374ba1aeadf127c9bb0dca",
-                "reference": "05423ee4bae1bef5e1374ba1aeadf127c9bb0dca",
+                "url": "https://api.github.com/repos/payplug/unified-plugin-core/zipball/d43d8cd45da031060189385fc40e0c8d407a7242",
+                "reference": "d43d8cd45da031060189385fc40e0c8d407a7242",
                 "shasum": ""
             },
             "require": {
@@ -5794,9 +5794,9 @@
             "description": "Core foundations shared library for Payplug e-commerce plugins.",
             "support": {
                 "issues": "https://github.com/payplug/unified-plugin-core/issues",
-                "source": "https://github.com/payplug/unified-plugin-core/tree/1.2.1"
+                "source": "https://github.com/payplug/unified-plugin-core/tree/1.2.2"
             },
-            "time": "2026-10-08T07:20:41+00:00"
+            "time": "2026-10-19T13:45:18+00:00"
         },
         {
             "name": "payum/core",

@@ -257,6 +257,55 @@ final class PaymentCaptureContextBuilderTest extends TestCase
         return $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, null);
     }
 
+    /**
+     * @dataProvider paymentMethodFactoryProvider
+     */
+    public function testBuildCommonFields_withAPhoneNumberFromAnotherCountry_sendsItOnBillingAndShipping(
+        ?string $factoryName,
+    ): void {
+        $this->urlGenerator->method('generate')->willReturn('https://shop.test/payplug/notify/abc');
+
+        $address = $this->createMock(AddressInterface::class);
+        $address->method('getCountryCode')->willReturn('DE');
+        $address->method('getPhoneNumber')->willReturn('+33612345678');
+
+        $order = $this->createMock(OrderInterface::class);
+        $order->method('getNumber')->willReturn('00000042');
+        $order->method('getItems')->willReturn(new ArrayCollection());
+        $order->method('getBillingAddress')->willReturn($address);
+        $order->method('getShippingAddress')->willReturn($address);
+
+        $method = null;
+        if (null !== $factoryName) {
+            $gatewayConfig = new GatewayConfig();
+            $gatewayConfig->setFactoryName($factoryName);
+            $method = new PaymentMethod();
+            $method->setGatewayConfig($gatewayConfig);
+        }
+
+        $payment = $this->createMock(PaymentInterface::class);
+        $payment->method('getId')->willReturn(42);
+        $payment->method('getMethod')->willReturn($method);
+
+        $paymentRequest = $this->createMock(PaymentRequestInterface::class);
+        $paymentRequest->method('getPayment')->willReturn($payment);
+        $paymentRequest->method('getHash')->willReturn(Uuid::v4());
+
+        $common = $this->builder->buildCommonFields('acct_123', 1000, 'eur', $paymentRequest, $order);
+
+        self::assertSame('+33612345678', $common->billing?->contact?->mobilePhone);
+        self::assertSame('+33612345678', $common->shipping?->contact?->mobilePhone);
+    }
+
+    /**
+     * @return iterable<string, array{string|null}>
+     */
+    public static function paymentMethodFactoryProvider(): iterable
+    {
+        yield 'Hosted Fields card payment' => [PayPlugGatewayFactory::FACTORY_NAME];
+        yield 'no payment method' => [null];
+    }
+
     public function testBuildCommonFields_withAnOrderItem_usesItsProductNameAsDescription(): void
     {
         $this->urlGenerator->method('generate')->willReturn('https://shop.test/payplug/notify/abc');
