@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   countries among those PayPlug allows), with live validation in the admin form
 - `payplug:ppro:refresh` console command, to store the PayPlug limits of every PPRO payment method
   once after the upgrade
+- **Scalapay widget** (Scalapay widget v5, CCD2) on the product page, the cart page and under the
+  Scalapay payment method at checkout, with the merchant token read from the PayPlug account; off by default, each
+  page can be turned on and its amount CSS selector adapted to the theme on the Scalapay payment
+  method page (see [UPGRADE.md](UPGRADE.md))
 - Hosted Fields card form: a cardholder name field above the card number (5 to 45 characters, checked
   in the browser and on the server), sent to PayPlug as the card's full name
 - Hosted Fields card form: the network selector is shown inside the card number field; for a

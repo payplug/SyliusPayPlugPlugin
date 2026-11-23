@@ -1,0 +1,4 @@
+{% set widget = payplug_scalapay_cart_widget() %}
+{% if widget is not null %}
+    {% include '@PayPlugSyliusPayPlugPlugin/shop/scalapay/widget.html.twig' with {widget} only %}
+{% endif %}

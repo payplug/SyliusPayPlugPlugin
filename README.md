@@ -221,6 +221,10 @@ Since 1.11.0, the plugin supports the authorized payment feature. You can check 
 
 Bancontact, Wero and Scalapay are shown only for the cart amounts and billing countries PayPlug and the merchant accept. You can check the [PPRO display eligibility documentation](doc/ppro_display_eligibility.md).
 
+## Scalapay widget
+
+The Scalapay installment widget can be shown on the product page, the cart page and at checkout once the merchant turns it on (it is off by default). You can check the [Scalapay widget documentation](doc/scalapay_widget.md).
+
 ## Doc
 - [Development](doc/development.md)
 - [Release Process](RELEASE.md)

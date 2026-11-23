@@ -1,0 +1,8 @@
+<scalapay-widget
+    type="{{ widget.type }}"
+    merchant-token="{{ widget.merchantToken }}"
+    amount-selectors="{{ widget.amountSelectors }}"
+    locale="{{ widget.locale }}"
+    {%- if widget.amountSeparator is not null %} amount-separator="{{ widget.amountSeparator }}"{% endif %}
+    {%- if widget.environment is not null %} environment="{{ widget.environment }}"{% endif %}
+></scalapay-widget>
