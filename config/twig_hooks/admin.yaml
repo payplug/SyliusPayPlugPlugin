@@ -47,6 +47,9 @@ sylius_twig_hooks:
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_scalapay': &scalapayGateway
             live_checkbox: *liveCheckbox
             ppro_eligibility: *pproEligibility
+            scalapay_widget:
+                template: '@PayPlugSyliusPayPlugPlugin/admin/payment_method/form/scalapay_widget.html.twig'
+                priority: -20
 
         'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.payplug_wero': &weroGateway
             live_checkbox: *liveCheckbox

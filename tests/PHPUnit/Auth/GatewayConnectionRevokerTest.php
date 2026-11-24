@@ -9,6 +9,7 @@ use PayPlug\SyliusPayPlugPlugin\Auth\GatewayConnectionRevoker;
 use PayPlug\SyliusPayPlugPlugin\Auth\SyliusTokenCache;
 use PayPlug\SyliusPayPlugPlugin\Gateway\OneyGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -90,6 +91,27 @@ final class GatewayConnectionRevokerTest extends TestCase
 
         self::assertSame(
             ['configured_amount' => ['min' => 1000, 'max' => null], 'configured_countries' => ['BE']],
+            ($paymentMethod->getGatewayConfig()?->getConfig() ?? [])['payment_method'] ?? null,
+        );
+    }
+
+    public function testRevoke_clearsTheStoredScalapayMerchantToken(): void
+    {
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => [
+                'name' => 'scalapay',
+                'enabled' => true,
+                'configured_amount' => ['min' => null, 'max' => null],
+                'live' => true,
+                'refreshed_at' => '2026-10-20T09:00:00+00:00',
+                'merchant_token' => 'TESTTOKEN1',
+            ],
+        ]);
+
+        $this->revoker->revoke($paymentMethod);
+
+        self::assertSame(
+            ['configured_amount' => ['min' => null, 'max' => null]],
             ($paymentMethod->getGatewayConfig()?->getConfig() ?? [])['payment_method'] ?? null,
         );
     }

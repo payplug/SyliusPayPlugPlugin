@@ -69,3 +69,6 @@ payplug_sylius_payplug_plugin:
         invalid_amount: "Inserisci un importo in euro, ad esempio 12,50."
         no_country: Seleziona almeno un paese di fatturazione.
         country_not_allowed: "PayPlug non autorizza questo metodo di pagamento per questi paesi: %countries%."
+    scalapay_widget:
+        amount_selector_required: Inserisci il selettore CSS dell'importo mostrato in questa pagina.
+        invalid_amount_selector: "Inserisci un selettore CSS valido, ad esempio #product-price."

@@ -1,0 +1,21 @@
+{% set config_form = hookable_metadata.context.form.gatewayConfig.config %}
+{% set gateway_config = hookable_metadata.context.form.vars.data.gatewayConfig %}
+{% set ppro = gateway_config ? gateway_config.config['payment_method']|default(null) : null %}
+{% set merchant_token = ppro is iterable ? ppro['merchant_token'] ?? null : null %}
+
+<div class="col-12 mt-5" {{ sylius_test_html_attribute('payplug-scalapay-widget') }}>
+    <h4 class="mb-1">{{ 'payplug_sylius_payplug_plugin.ui.scalapay_widget.title'|trans }}</h4>
+    <p class="text-secondary mb-3">{{ 'payplug_sylius_payplug_plugin.ui.scalapay_widget.help'|trans }}</p>
+    {% if merchant_token is empty %}
+        <div class="alert alert-info" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.scalapay_widget.no_merchant_token'|trans }}</div>
+    {% endif %}
+
+    <div class="row g-4">
+        {% for page in constant('PayPlug\\SyliusPayPlugPlugin\\Scalapay\\ScalapayWidgetSettings::PAGES') %}
+            <div class="col-12 col-lg-4">
+                {{ form_row(config_form['scalapay_widget_' ~ page]) }}
+                {{ form_row(config_form['scalapay_widget_' ~ page ~ '_amount_selector']) }}
+            </div>
+        {% endfor %}
+    </div>
+</div>
