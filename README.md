@@ -211,20 +211,20 @@ This library is under the MIT license.
 
 ## Oney Integration
 
-For better Oney integration, you can check the [Oney enhancement documentation](doc/oney_enhancement.md).
+For better Oney integration, you can check the [Oney enhancement documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Oney-Enhancement).
 
 ## Authorized Payment
 
-Since 1.11.0, the plugin supports the authorized payment feature. You can check the [Authorized Payment documentation](doc/authorized_payment.md).
+Since 1.11.0, the plugin supports the authorized payment feature. You can check the [Deferred capture documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Deferred-Capture).
 
 ## PPRO display eligibility
 
-Bancontact, Wero and Scalapay are shown only for the cart amounts and billing countries PayPlug and the merchant accept. You can check the [PPRO display eligibility documentation](doc/ppro_display_eligibility.md).
+Bancontact, Wero and Scalapay are shown only for the cart amounts and billing countries PayPlug and the merchant accept. You can check the [PPRO display eligibility documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/PPRO-Display-Eligibility).
 
 ## Scalapay widget
 
-The Scalapay installment widget can be shown on the product page, the cart page and at checkout once the merchant turns it on (it is off by default). You can check the [Scalapay widget documentation](doc/scalapay_widget.md).
+The Scalapay installment widget can be shown on the product page, the cart page and at checkout once the merchant turns it on (it is off by default). You can check the [Scalapay widget documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Scalapay-Widget).
 
 ## Doc
-- [Development](doc/development.md)
+- [Development](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Development)
 - [Release Process](RELEASE.md)
