@@ -7,7 +7,8 @@ COMPOSER=composer
 SYLIUS_VERSION=2.1.0
 SYMFONY_VERSION=6.4
 SYLIUS_MINOR := $(shell echo '$(SYLIUS_VERSION)' | cut -d. -f1,2)
-SYLIUS_AUDIT_IGNORE := $(filter 2.1,$(SYLIUS_MINOR))
+SYLIUS_2_1 := $(filter 2.1,$(SYLIUS_MINOR))
+TEST_APPLICATION_WEBPACK_CAP := node -e 'const fs = require("fs"); const file = "vendor/sylius/test-application/package.json.dist"; const pkg = JSON.parse(fs.readFileSync(file, "utf8")); pkg.resolutions = { ...pkg.resolutions, webpack: ">=5.72 <5.109" }; fs.writeFileSync(file, JSON.stringify(pkg, null, 4) + "\n");'
 PLUGIN_NAME=payplug/sylius-payplug-plugin
 
 # Coverage runs inside Docker (PHP 8.2 + PCOV) instead of the host PHP, since the host's default
@@ -63,9 +64,14 @@ install-sylius:
 	@# resolve them. The ignore applies to the 2.1 minor only, so new advisories on 2.2 still block the install. It is set
 	@# for this require only and removed right after, so composer.json keeps no trace of it.
 	@# audit.ignore is used because Composer 2.9 does not know policy.advisories.ignore.
-	$(if $(SYLIUS_AUDIT_IGNORE),${COMPOSER} config --json audit.ignore '["sylius/sylius"]')
-	${COMPOSER} require --dev sylius/test-application:"~${SYLIUS_MINOR}.0-alpha@alpha" sylius/sylius:"~${SYLIUS_MINOR}.0" -n -W; status=$$?; $(if $(SYLIUS_AUDIT_IGNORE),${COMPOSER} config --unset audit;) exit $$status # TODO: Remove alpha when stable
+	$(if $(SYLIUS_2_1),${COMPOSER} config --json audit.ignore '["sylius/sylius"]')
+	${COMPOSER} require --dev sylius/test-application:"~${SYLIUS_MINOR}.0-alpha@alpha" sylius/sylius:"~${SYLIUS_MINOR}.0" -n -W; status=$$?; $(if $(SYLIUS_2_1),${COMPOSER} config --unset audit;) exit $$status # TODO: Remove alpha when stable
 	@$(MAKE) --no-print-directory show-versions
+	@# Sylius 2.1's admin and shop bundles require webpack ^5.72, and webpack 5.109+ breaks the @symfony/stimulus-bridge
+	@# loader (Cannot find module 'webpack/lib/dependencies/LoaderDependency'). Sylius 2.2 caps it at >=5.72 <5.109 in
+	@# the same files; the same cap is set here for 2.1 as a yarn resolution. It goes into package.json.dist because the
+	@# test-application's preinstall script rebuilds package.json from it.
+	$(if $(SYLIUS_2_1),$(TEST_APPLICATION_WEBPACK_CAP))
 	${COMPOSER} test-application:install
 
 behat-configure: ## Configure Behat
