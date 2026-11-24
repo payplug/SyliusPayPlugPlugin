@@ -1,0 +1,21 @@
+name: PHPUnit matrix
+
+'on':
+    workflow_call:
+
+# sylius_phpunit.yml builds the full cross product of its inputs and has no exclude input,
+# so PHP 8.4 gets its own job, run on the newest Sylius / Symfony pair only.
+jobs:
+    php-8-2:
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.2"]'
+            sylius-versions: '["2.1.0","2.2.0"]'
+            symfony-versions: '["6.4","7.4"]'
+
+    php-8-4:
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.4"]'
+            sylius-versions: '["2.2.0"]'
+            symfony-versions: '["7.4"]'

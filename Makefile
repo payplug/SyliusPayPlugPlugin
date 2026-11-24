@@ -6,6 +6,8 @@ CONSOLE=vendor/bin/console
 COMPOSER=composer
 SYLIUS_VERSION=2.1.0
 SYMFONY_VERSION=6.4
+SYLIUS_MINOR := $(shell echo '$(SYLIUS_VERSION)' | cut -d. -f1,2)
+SYLIUS_AUDIT_IGNORE := $(filter 2.1,$(SYLIUS_MINOR))
 PLUGIN_NAME=payplug/sylius-payplug-plugin
 
 # Coverage runs inside Docker (PHP 8.2 + PCOV) instead of the host PHP, since the host's default
@@ -17,7 +19,7 @@ DOCKER_RUN := docker run --rm -v $(CURDIR):/app -w /app -u "$$(id -u):$$(id -g)"
 ###
 ### DEVELOPMENT
 ### ¯¯¯¯¯¯¯¯¯¯¯
-install: sylius ## Install all dependencies with [SYLIUS_VERSION=2.1.0] [SYMFONY_VERSION=6.4]
+install: sylius ## Install all dependencies with [SYLIUS_VERSION=2.1.0] (latest patch of that minor) [SYMFONY_VERSION=6.4]
 .PHONY: install
 
 reset: ## Remove dependencies
@@ -28,6 +30,11 @@ reset: ## Remove dependencies
 phpunit: ## Run PHPUnit tests
 	./vendor/bin/phpunit
 .PHONY: phpunit
+
+show-versions: ## Print the installed Sylius / Symfony / PHP versions
+	@php -r 'echo "PHP ", PHP_VERSION, PHP_EOL;'
+	@set -e; for p in sylius/sylius sylius/test-application symfony/framework-bundle; do ${COMPOSER} show $$p | grep -E '^(name|versions) +:'; done
+.PHONY: show-versions
 
 build-dev: ## Build the Docker image used to run coverage
 	docker build -t $(IMAGE_DEV) .
@@ -45,12 +52,20 @@ sylius: install-sylius
 
 install-sylius:
 	@echo "Installing Sylius ${SYLIUS_VERSION} using TestApplication"
-	${COMPOSER} config extra.symfony.require "^${SYMFONY_VERSION}"
+	${COMPOSER} config extra.symfony.require "~${SYMFONY_VERSION}.0"
 	${COMPOSER} install
-	@# Capped below 2.3: Sylius 2.3 (PHP 8.3+, so only resolved on the PHP 8.4 cells) drops knp-gaufrette-bundle,
-	@# which sylius/refund-plugin's config still loads, so test-application:install fails. Lift once RefundPlugin follows.
-	@# sylius/sylius is capped explicitly: older test-application releases (the 2.0.0 cell) do not constrain it and let it float to 2.3.
-	${COMPOSER} require --dev sylius/test-application:">=${SYLIUS_VERSION},<2.3@alpha" sylius/sylius:"<2.3" -n -W # TODO: Remove alpha when stable
+	@# Both packages are pinned to the minor of SYLIUS_VERSION (latest patch). sylius/sylius is pinned explicitly so the
+	@# installed minor does not depend on what the test-application release requires.
+	@# Sylius 2.3 is not supported yet: it drops knp-gaufrette-bundle, which sylius/refund-plugin's config still loads,
+	@# so test-application:install fails.
+	@# Every sylius/sylius 2.1.x release is affected by advisories left unpatched upstream (Sylius 2.1 is out of security
+	@# support, see the 2026-11-18 advisories on https://packagist.org/security-advisories/), and Composer 2.9+ refuses to
+	@# resolve them. The ignore applies to the 2.1 minor only, so new advisories on 2.2 still block the install. It is set
+	@# for this require only and removed right after, so composer.json keeps no trace of it.
+	@# audit.ignore is used because Composer 2.9 does not know policy.advisories.ignore.
+	$(if $(SYLIUS_AUDIT_IGNORE),${COMPOSER} config --json audit.ignore '["sylius/sylius"]')
+	${COMPOSER} require --dev sylius/test-application:"~${SYLIUS_MINOR}.0-alpha@alpha" sylius/sylius:"~${SYLIUS_MINOR}.0" -n -W; status=$$?; $(if $(SYLIUS_AUDIT_IGNORE),${COMPOSER} config --unset audit;) exit $$status # TODO: Remove alpha when stable
+	@$(MAKE) --no-print-directory show-versions
 	${COMPOSER} test-application:install
 
 behat-configure: ## Configure Behat

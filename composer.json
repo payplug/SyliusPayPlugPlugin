@@ -17,7 +17,7 @@
         "payplug/unified-plugin-core": "^1.2.2",
         "php-http/message-factory": "^1.1",
         "sylius/refund-plugin": "^2.0",
-        "sylius/sylius": "^2.0",
+        "sylius/sylius": "^2.1",
         "symfony/asset": "^6.4|| ^7.2",
         "symfony/lock": "^6.4|| ^7.2",
         "symfony/validator": "^6.4|| ^7.2"
