@@ -300,17 +300,24 @@ final class PaymentMethodTypeExtension extends AbstractTypeExtension
             PproEligibilityTypeExtension::COUNTRIES_FIELD,
         ];
         foreach ($fields as $field) {
-            if (!$configForm->has($field) || $configForm->get($field)->isDisabled() || !$configForm->get($field)->isSynchronized()) {
+            if (!$configForm->has($field) || !$configForm->get($field)->isSynchronized()) {
                 return;
             }
+        }
+
+        if ($configForm->get(PproEligibilityTypeExtension::MIN_AMOUNT_FIELD)->isDisabled()) {
+            return;
         }
 
         /** @var int|null $min */
         $min = $configForm->get(PproEligibilityTypeExtension::MIN_AMOUNT_FIELD)->getData();
         /** @var int|null $max */
         $max = $configForm->get(PproEligibilityTypeExtension::MAX_AMOUNT_FIELD)->getData();
+        // The countries field is disabled on its own when no country enabled in Sylius is allowed
+        // by PayPlug: it then keeps the stored value, which is not checked again here.
+        $countriesField = $configForm->get(PproEligibilityTypeExtension::COUNTRIES_FIELD);
         /** @var list<string>|null $countries */
-        $countries = $configForm->get(PproEligibilityTypeExtension::COUNTRIES_FIELD)->getData();
+        $countries = $countriesField->isDisabled() ? null : $countriesField->getData();
 
         $stored = PproConfig::fromArray($gatewayConfig->getConfig()[PproConfig::CONFIG_KEY] ?? null);
 

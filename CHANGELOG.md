@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PPRO display eligibility** for Bancontact, Wero and Scalapay: each method is shown at checkout
   only for the cart amounts and billing countries PayPlug accepts, and the merchant can narrow both
   from the payment method page (minimum/maximum in euros inside the PayPlug limits, billing
-  countries among those PayPlug allows), with live validation in the admin form
+  countries among those PayPlug allows that are enabled in Sylius), with live validation in the
+  admin form
 - `payplug:ppro:refresh` console command, to store the PayPlug limits of every PPRO payment method
   once after the upgrade
 - **Scalapay widget** (Scalapay widget v5, CCD2) on the product page, the cart page and under the

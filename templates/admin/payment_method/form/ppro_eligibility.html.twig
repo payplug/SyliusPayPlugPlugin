@@ -31,6 +31,9 @@
     {% if ppro is iterable and (ppro['configured_countries'] ?? null) is same as([]) %}
         <div class="alert alert-warning" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.no_country_left'|trans }}</div>
     {% endif %}
+    {% if config_form.ppro_countries.vars.choices is empty and not config_form.ppro_min_amount.vars.disabled %}
+        <div class="alert alert-warning" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.no_compatible_country'|trans }}</div>
+    {% endif %}
     {% if config_form.ppro_min_amount.vars.disabled %}
         <div class="alert alert-info" role="alert">{{ 'payplug_sylius_payplug_plugin.ui.ppro.not_connected'|trans }}</div>
     {% endif %}

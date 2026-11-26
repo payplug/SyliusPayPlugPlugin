@@ -10,6 +10,8 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PproCountryChoiceType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\ScalapayGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Scalapay\ScalapayWidgetSettings;
 use Sylius\Bundle\MoneyBundle\Form\Type\MoneyType;
+use Sylius\Component\Addressing\Model\Country;
+use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormInterface;
@@ -43,7 +45,15 @@ final class ScalapayWidgetTypeExtensionTest extends TypeTestCase
 
     protected function getTypeExtensions(): array
     {
-        return [new PproEligibilityTypeExtension(), new ScalapayWidgetTypeExtension($this->translator())];
+        $countryRepository = $this->createMock(RepositoryInterface::class);
+        $countryRepository->method('findBy')->willReturn(array_map(static function (string $code): Country {
+            $country = new Country();
+            $country->setCode($code);
+
+            return $country;
+        }, self::PAYMENT_METHOD_BLOCK['allowed_countries']));
+
+        return [new PproEligibilityTypeExtension($countryRepository), new ScalapayWidgetTypeExtension($this->translator())];
     }
 
     public function testExtendsTheScalapayConfigTypeOnly(): void
