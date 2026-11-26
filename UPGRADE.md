@@ -114,6 +114,40 @@ live validation of the form never runs (the save is still validated on the serve
 
 Then rebuild the admin assets.
 
+# Scalapay widget (PRE-3606)
+
+The Scalapay widget (v5, the version compliant with the consumer credit rules applying from
+20 November 2026) can be shown on the product page, the cart page and under the Scalapay payment
+method at checkout, once the merchant turns it on. How it works is described on the
+[Scalapay widget](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Scalapay-Widget) page of the wiki.
+
+What to do on upgrade:
+
+1. **Run `bin/console payplug:ppro:refresh` once.** A Scalapay payment method saved before the upgrade
+   has no merchant token until its limits are refreshed, and shows no widget until then.
+2. **Nothing changes on an existing shop until the merchant turns a page on** (widget off by default),
+   in the **Scalapay widget** block of the Scalapay payment method page. **A custom theme that
+   displays the price elsewhere than the Sylius 2 default shop theme must set its own amount
+   selectors** there.
+3. **A QA setup must set `PAYPLUG_OAUTH_BASE_URL`** to the OAuth URL of the QA platform: the widget is
+   rendered with `environment="integration"` whenever the plugin is connected to a PayPlug platform
+   other than production. `PAYPLUG_OAUTH_BASE_URL` defaults to the production platform.
+4. **A shop layout that does not render the `sylius_shop.base.head` hook must load the widget
+   script itself, and a Content Security Policy must allow the host it is served from** (see
+   [Script loading](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Scalapay-Widget#script-loading)).
+
+For anyone extending the plugin:
+
+| Added / changed | Notes |
+| --- | --- |
+| `Ppro\PproConfig::__construct()` | new optional last argument `?string $merchantToken = null`; `toArray()` adds `merchant_token` when it is known |
+| `Auth\GatewayConnectionRevoker` | a logout also clears the stored merchant token |
+| `Scalapay\ScalapayWidgetResolver`, `Scalapay\ScalapayWidgetSettings`, `Scalapay\ScalapayWidgetEnvironment`, `Twig\ScalapayWidgetExtension` | Twig functions `payplug_scalapay_product_widget()`, `payplug_scalapay_cart_widget()`, `payplug_scalapay_checkout_widget()`, `payplug_scalapay_widget_script_required()` |
+| `Gateway\Form\Extension\ScalapayWidgetTypeExtension` | fields `scalapay_widget_<page>` and `scalapay_widget_<page>_amount_selector` on the Scalapay configuration type, admin hook `scalapay_widget` |
+| Shop Twig hooks | `sylius_shop.base.head` (`payplug_scalapay_widget_script`), `pay_with_scalapay` on the product summary and cart hooks, `scalapay_widget` on `sylius_shop.shared.form.select_payment.payment.choice.payplug_scalapay` |
+| `templates/shared/form/select_payment/payment/choice.html.twig` | renders, for each payment method, the hookables of `sylius_shop.shared.form.select_payment.payment.choice.<factory_name>` together with those of `choice`, ordered by priority (the Scalapay widget, priority -100, comes after the payment card, `details` at 0), and adds `parent_form` to the `form` and `method` context. This is what the Sylius template does from 2.0.8; on Sylius 2.0.0 to 2.0.7 it is an addition |
+| Hooks of your own on `sylius_shop.shared.form.select_payment.payment.choice.<factory_name>` | are now rendered by the plugin template, on every supported Sylius version |
+
 # Upgrading from 1.0.0
 
 1. Skip the faulty migration

@@ -47,6 +47,7 @@ final class PproMerchantSettings
             $stored?->configuredCountries,
             $stored?->live,
             $stored?->refreshedAt,
+            $stored?->merchantToken,
         );
     }
 

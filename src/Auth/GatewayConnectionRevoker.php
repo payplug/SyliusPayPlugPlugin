@@ -44,11 +44,11 @@ final class GatewayConnectionRevoker
     private const CONNECTION_KEYS = ['live_client', 'test_client', 'account_email'];
 
     /**
-     * The PayPlug limits stored in a PPRO `payment_method` block, fetched from the account being
-     * disconnected. The merchant's own narrowing (`configured_amount`, `configured_countries`) is a
-     * setting, not account data, and is kept.
+     * The PayPlug limits and Scalapay merchant token stored in a PPRO `payment_method` block, fetched
+     * from the account being disconnected. The merchant's own narrowing (`configured_amount`,
+     * `configured_countries`) is a setting, not account data, and is kept.
      */
-    private const PPRO_ACCOUNT_KEYS = ['name', 'enabled', 'allowed_countries', 'default_amount', 'live', 'refreshed_at'];
+    private const PPRO_ACCOUNT_KEYS = ['name', 'enabled', 'allowed_countries', 'default_amount', 'live', 'refreshed_at', 'merchant_token'];
 
     public function __construct(
         private EntityManagerInterface $entityManager,

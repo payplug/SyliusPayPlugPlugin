@@ -6,9 +6,10 @@ namespace PayPlug\SyliusPayPlugPlugin\Ppro;
 
 /**
  * Read model of the `payment_method` block a PPRO gateway config stores: the PayPlug limits
- * (`allowed_countries`, `default_amount`) and the merchant's narrowing of them
- * (`configured_amount`, `configured_countries`). Amounts are EUR cents. A null country list
- * means "no restriction"; a null amount side is not compared.
+ * (`allowed_countries`, `default_amount`), the merchant's narrowing of them
+ * (`configured_amount`, `configured_countries`) and, for Scalapay, the `merchant_token` its widget
+ * is rendered with. Amounts are EUR cents. A null country list means "no restriction"; a null
+ * amount side is not compared.
  */
 final class PproConfig
 {
@@ -29,6 +30,7 @@ final class PproConfig
         public readonly ?array $configuredCountries,
         public readonly ?bool $live = null,
         public readonly ?string $refreshedAt = null,
+        public readonly ?string $merchantToken = null,
     ) {
     }
 
@@ -50,7 +52,7 @@ final class PproConfig
     }
 
     /**
-     * Combines freshly fetched PayPlug limits ($api) with the merchant settings of $previous: a
+     * Combines freshly fetched PayPlug data ($api) with the merchant settings of $previous: a
      * configured amount is kept but clamped into the new bounds (an empty side keeps following the
      * PayPlug limit, a range left empty falls back to the PayPlug limits), and configured countries
      * are intersected with the new allowed list (an empty intersection hides the method until the
@@ -76,6 +78,7 @@ final class PproConfig
             PproSettingsAdjuster::intersectCountries($previous?->configuredCountries, $api->allowedCountries),
             $api->live,
             $api->refreshedAt,
+            $api->merchantToken,
         );
     }
 
@@ -159,6 +162,7 @@ final class PproConfig
      *     configured_countries: list<string>|null,
      *     live: bool|null,
      *     refreshed_at: string|null,
+     *     merchant_token?: string,
      * }
      */
     public function toArray(): array
@@ -167,7 +171,7 @@ final class PproConfig
             ? null
             : ['min' => $this->defaultMin, 'max' => $this->defaultMax];
 
-        return [
+        $stored = [
             'name' => $this->name,
             'enabled' => $this->enabled,
             'allowed_countries' => $this->allowedCountries,
@@ -177,6 +181,12 @@ final class PproConfig
             'live' => $this->live,
             'refreshed_at' => $this->refreshedAt,
         ];
+
+        if (null !== $this->merchantToken) {
+            $stored['merchant_token'] = $this->merchantToken;
+        }
+
+        return $stored;
     }
 
     private function isAmountInRange(int $amount): bool

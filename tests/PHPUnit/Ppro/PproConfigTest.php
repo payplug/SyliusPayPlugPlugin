@@ -219,6 +219,38 @@ final class PproConfigTest extends TestCase
         self::assertNull($config->toArray()['default_amount']);
     }
 
+    public function testMerchantTokenRoundTrips(): void
+    {
+        $stored = $this->stored(['name' => 'scalapay', 'merchant_token' => 'TESTTOKEN1']);
+
+        $config = PproConfig::fromArray($stored);
+
+        self::assertNotNull($config);
+        self::assertSame('TESTTOKEN1', $config->merchantToken);
+        self::assertSame($stored, $config->toArray());
+    }
+
+    public function testBlockWithoutMerchantTokenHasNoToken(): void
+    {
+        $config = $this->config();
+
+        self::assertNull($config->merchantToken);
+        self::assertArrayNotHasKey('merchant_token', $config->toArray());
+    }
+
+    public function testNonStringMerchantTokenMakesTheBlockUnreadable(): void
+    {
+        self::assertNull(PproConfig::fromArray($this->stored(['merchant_token' => 123])));
+    }
+
+    public function testFromApiLimitsTakesTheMerchantTokenFromTheApiOnly(): void
+    {
+        $previous = $this->config(['merchant_token' => 'OLDTOKEN1']);
+
+        self::assertSame('NEWTOKEN1', PproConfig::fromApiLimits($this->config(['merchant_token' => 'NEWTOKEN1']), $previous)->merchantToken);
+        self::assertNull(PproConfig::fromApiLimits($this->config(), $previous)->merchantToken);
+    }
+
     /**
      * @param array<string, mixed> $overrides
      */

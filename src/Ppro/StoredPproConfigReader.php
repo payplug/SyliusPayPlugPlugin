@@ -31,6 +31,7 @@ final class StoredPproConfigReader
             self::readCountries($stored['configured_countries'] ?? null),
             self::readBool($stored['live'] ?? null),
             self::readString($stored['refreshed_at'] ?? null),
+            self::readString($stored['merchant_token'] ?? null),
         );
     }
 

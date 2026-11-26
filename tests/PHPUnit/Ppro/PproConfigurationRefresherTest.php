@@ -98,6 +98,99 @@ final class PproConfigurationRefresherTest extends TestCase
         self::assertSame(['min' => 500, 'max' => 200000], $this->storedBlock($paymentMethod)['default_amount']);
     }
 
+    public function testCapturesTheScalapayMerchantToken(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $this->logger->expects(self::never())->method('warning');
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME);
+
+        $this->refresher->refresh($paymentMethod);
+
+        self::assertSame('TESTTOKEN1', $this->storedBlock($paymentMethod)['merchant_token']);
+    }
+
+    public function testReplacesAStoredMerchantTokenWithTheOneFromPayPlug(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => array_merge(self::previousBlock(['min' => null, 'max' => null]), ['name' => 'scalapay', 'merchant_token' => 'OLDTOKEN1']),
+        ]);
+
+        $this->refresher->refresh($paymentMethod);
+
+        self::assertSame('TESTTOKEN1', $this->storedBlock($paymentMethod)['merchant_token']);
+    }
+
+    /**
+     * @dataProvider unusableMerchantTokens
+     */
+    public function testUnusableMerchantTokenIsDroppedWithoutFailingTheRefresh(mixed $token): void
+    {
+        $account = self::sampleAccount();
+        $account['payment_methods']['scalapay']['merchant_token'] = $token;
+        $this->client->method('getAccount')->willReturn($account);
+        $this->logger->expects(self::once())->method('warning')->with(self::stringContains('Scalapay merchant token'));
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME, [
+            'payment_method' => array_merge(self::previousBlock(['min' => null, 'max' => null]), ['name' => 'scalapay', 'merchant_token' => 'OLDTOKEN1']),
+        ]);
+
+        $result = $this->refresher->refresh($paymentMethod);
+
+        self::assertTrue($result->refreshed);
+        self::assertArrayNotHasKey('merchant_token', $this->storedBlock($paymentMethod));
+        self::assertSame(['min' => 500, 'max' => 200000], $this->storedBlock($paymentMethod)['default_amount']);
+    }
+
+    /**
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function unusableMerchantTokens(): iterable
+    {
+        yield 'null' => [null];
+        yield 'empty string' => [''];
+        yield 'blank string' => ['   '];
+        yield 'integer' => [12345];
+        yield 'array' => [['TESTTOKEN1']];
+        yield 'contains a quote' => ['TEST"TOKEN'];
+        yield 'contains a space' => ['TEST TOKEN'];
+        yield 'too long' => [str_repeat('A', 256)];
+    }
+
+    public function testMissingScalapayMerchantTokenKeyIsLoggedAndStoresNoToken(): void
+    {
+        $account = self::sampleAccount();
+        unset($account['payment_methods']['scalapay']['merchant_token']);
+        $this->client->method('getAccount')->willReturn($account);
+        $this->logger->expects(self::once())->method('warning')->with(self::stringContains('Scalapay merchant token'));
+        $paymentMethod = $this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME);
+
+        $result = $this->refresher->refresh($paymentMethod);
+
+        self::assertTrue($result->refreshed);
+        self::assertArrayNotHasKey('merchant_token', $this->storedBlock($paymentMethod));
+    }
+
+    public function testNoTokenWarningWhenScalapayIsNotEnabledOnTheAccount(): void
+    {
+        $account = self::sampleAccount();
+        $account['payment_methods']['scalapay'] = ['enabled' => false];
+        $this->client->method('getAccount')->willReturn($account);
+        $this->logger->expects(self::never())->method('warning');
+
+        $this->refresher->refresh($this->paymentMethod(ScalapayGatewayFactory::FACTORY_NAME));
+    }
+
+    public function testNoTokenIsExpectedForOtherPproMethods(): void
+    {
+        $this->client->method('getAccount')->willReturn(self::sampleAccount());
+        $this->logger->expects(self::never())->method('warning');
+        $paymentMethod = $this->paymentMethod(WeroGatewayFactory::FACTORY_NAME);
+
+        $this->refresher->refresh($paymentMethod);
+
+        self::assertArrayNotHasKey('merchant_token', $this->storedBlock($paymentMethod));
+    }
+
     public function testIgnoresGiropayAndSofortKeys(): void
     {
         $this->client->method('getAccount')->willReturn(self::sampleAccount());
@@ -752,7 +845,7 @@ final class PproConfigurationRefresherTest extends TestCase
                 'giropay' => ['enabled' => true, 'allowed_countries' => ['DE'], 'min_amounts' => ['EUR' => 100], 'max_amounts' => ['EUR' => 1000000]],
                 'sofort' => ['enabled' => true, 'allowed_countries' => ['AT', 'BE', 'DE', 'ES', 'NL'], 'min_amounts' => ['EUR' => 100], 'max_amounts' => ['EUR' => 500000]],
                 'wero' => ['enabled' => true, 'allowed_countries' => ['BE', 'DE'], 'min_amounts' => ['EUR' => 30], 'max_amounts' => ['EUR' => 2000000]],
-                'scalapay' => ['enabled' => true, 'allowed_countries' => ['AT', 'BE', 'DE', 'ES', 'FI', 'FR', 'IT', 'NL', 'PT'], 'min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'merchant_token' => 'redacted'],
+                'scalapay' => ['enabled' => true, 'allowed_countries' => ['AT', 'BE', 'DE', 'ES', 'FI', 'FR', 'IT', 'NL', 'PT'], 'min_amounts' => ['EUR' => 500], 'max_amounts' => ['EUR' => 200000], 'merchant_token' => 'TESTTOKEN1'],
             ],
         ];
     }

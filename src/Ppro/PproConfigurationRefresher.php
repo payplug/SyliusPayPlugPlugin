@@ -7,6 +7,7 @@ namespace PayPlug\SyliusPayPlugPlugin\Ppro;
 use Doctrine\ORM\EntityManagerInterface;
 use PayPlug\SyliusPayPlugPlugin\ApiClient\PayPlugApiClientFactoryInterface;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PproPaymentMethods;
+use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAllowedCountriesResolver;
 use PayPlug\SyliusPayPlugPlugin\Resolver\AccountAmountRangeResolver;
 use Psr\Clock\ClockInterface;
@@ -20,6 +21,9 @@ final class PproConfigurationRefresher implements PproConfigurationRefresherInte
 
     /** How recent stored limits must be for refreshIfStale() to keep them without asking PayPlug. */
     private const MIN_REFRESH_INTERVAL = '-5 minutes';
+
+    /** The Scalapay merchant token is printed in an HTML attribute of the storefront widget. */
+    private const MERCHANT_TOKEN_PATTERN = '/^[A-Za-z0-9._~+\/=-]{1,255}$/';
 
     public function __construct(
         private PayPlugApiClientFactoryInterface $apiClientFactory,
@@ -68,6 +72,7 @@ final class PproConfigurationRefresher implements PproConfigurationRefresherInte
         }
 
         $this->warnOnEmptyAmountRange($gatewayConfig, $refreshed);
+        $this->warnOnMissingMerchantToken($gatewayConfig, $refreshed);
 
         return new PproRefreshResult(true, $refreshed->adjustsSettingsOf($previous));
     }
@@ -115,7 +120,27 @@ final class PproConfigurationRefresher implements PproConfigurationRefresherInte
             null,
             true === ($config['live'] ?? false),
             $this->clock->now()->format(\DateTimeInterface::ATOM),
+            $this->readMerchantToken($entry['merchant_token'] ?? null),
         );
+    }
+
+    private function readMerchantToken(mixed $token): ?string
+    {
+        return \is_string($token) && 1 === preg_match(self::MERCHANT_TOKEN_PATTERN, $token) ? $token : null;
+    }
+
+    /**
+     * Without a merchant token the Scalapay widget is not rendered on any storefront page.
+     */
+    private function warnOnMissingMerchantToken(GatewayConfigInterface $gatewayConfig, PproConfig $refreshed): void
+    {
+        if (ScalapayGatewayFactory::FACTORY_NAME !== $gatewayConfig->getFactoryName() || !$refreshed->enabled || null !== $refreshed->merchantToken) {
+            return;
+        }
+
+        $this->logger->warning('[PayPlug] The PayPlug account returned no usable Scalapay merchant token; the Scalapay widget is not shown.', [
+            'factory_name' => $gatewayConfig->getFactoryName(),
+        ]);
     }
 
     /**
