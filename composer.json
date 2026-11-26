@@ -23,7 +23,7 @@
         "symfony/validator": "^6.4|| ^7.2"
     },
     "require-dev": {
-        "behat/behat": "3.20.0",
+        "behat/behat": "3.34.0",
         "behat/mink-selenium2-driver": "1.7.0",
         "dmore/behat-chrome-extension": "1.4.0",
         "dmore/chrome-mink-driver": "2.9.3",

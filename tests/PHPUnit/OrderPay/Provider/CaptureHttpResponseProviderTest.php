@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\ResourceBundle\Controller\RequestConfiguration;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 final class CaptureHttpResponseProviderTest extends TestCase
 {
@@ -104,5 +105,38 @@ final class CaptureHttpResponseProviderTest extends TestCase
         $this->expectException(\LogicException::class);
 
         $this->provider->getResponse($this->requestConfiguration, $paymentRequest);
+    }
+
+    public function testSupports_whenGivenAnHttpRequest_returnsTrueForACaptureWithARedirect(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentRequestInterface::ACTION_CAPTURE, ['redirect_url' => 'https://example.com/3ds']);
+
+        self::assertTrue($this->provider->supports(new Request(), $paymentRequest));
+    }
+
+    public function testSupports_whenGivenAnHttpRequest_returnsFalseWithoutARedirect(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentRequestInterface::ACTION_CAPTURE, ['status' => 'processing']);
+
+        self::assertFalse($this->provider->supports(new Request(), $paymentRequest));
+    }
+
+    public function testGetResponse_whenGivenAnHttpRequest_returnsARedirectResponse(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentRequestInterface::ACTION_CAPTURE, ['redirect_url' => 'https://example.com/3ds']);
+
+        $response = $this->provider->getResponse(new Request(), $paymentRequest);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame('https://example.com/3ds', $response->getTargetUrl());
+    }
+
+    public function testGetResponse_whenGivenAnHttpRequestAndNeitherRedirectFieldIsSet_throws(): void
+    {
+        $paymentRequest = $this->paymentRequest(PaymentRequestInterface::ACTION_CAPTURE, []);
+
+        $this->expectException(\LogicException::class);
+
+        $this->provider->getResponse(new Request(), $paymentRequest);
     }
 }

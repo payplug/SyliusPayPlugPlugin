@@ -4,18 +4,97 @@ name: PHPUnit matrix
     workflow_call:
 
 # sylius_phpunit.yml builds the full cross product of its inputs and has no exclude input,
-# so PHP 8.4 gets its own job, run on the newest Sylius / Symfony pair only.
+# so each PHP / Sylius pairing that needs its own Symfony set gets its own job.
+# Sylius 2.3's admin and shop assets require Node ^22.13 || >=24.
 jobs:
+    versions:
+        name: 'Resolve latest Sylius patches'
+        runs-on: ubuntu-latest
+        outputs:
+            sylius-2-1: ${{ steps.resolve.outputs.sylius-2-1 }}
+            sylius-2-2: ${{ steps.resolve.outputs.sylius-2-2 }}
+            sylius-2-3: ${{ steps.resolve.outputs.sylius-2-3 }}
+        steps:
+            -
+                name: 'Resolve the latest stable sylius/sylius release of each minor on Packagist'
+                id: resolve
+                shell: bash
+                run: |
+                    set -euo pipefail
+                    metadata="$RUNNER_TEMP/sylius.json"
+                    if ! curl -fsSL --retry 3 --retry-all-errors -o "$metadata" https://repo.packagist.org/p2/sylius/sylius.json; then
+                        echo "::error::Could not fetch sylius/sylius metadata from Packagist"
+                        exit 1
+                    fi
+                    for minor in 2.1 2.2 2.3; do
+                        latest=$(jq -r --arg minor "$minor" '
+                            [.packages["sylius/sylius"][].version
+                                | ltrimstr("v")
+                                | select(startswith($minor + ".") and test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+                            | sort_by(split(".") | map(tonumber))
+                            | last // empty
+                        ' "$metadata") || {
+                            echo "::error::Could not read the sylius/sylius versions from the Packagist metadata"
+                            exit 1
+                        }
+                        if [ -z "$latest" ]; then
+                            echo "::error::No stable sylius/sylius $minor.x release found on Packagist"
+                            exit 1
+                        fi
+                        echo "Sylius $minor: $latest"
+                        echo "sylius-${minor/./-}=$latest" >> "$GITHUB_OUTPUT"
+                    done
+
     php-8-2:
+        needs: [versions]
         uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
         with:
             php-versions: '["8.2"]'
-            sylius-versions: '["2.1.0","2.2.0"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-1 }}","${{ needs.versions.outputs.sylius-2-2 }}"]'
             symfony-versions: '["6.4","7.4"]'
 
     php-8-4:
+        needs: [versions]
         uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
         with:
             php-versions: '["8.4"]'
-            sylius-versions: '["2.2.0"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-2 }}"]'
             symfony-versions: '["7.4"]'
+
+    php-8-4-sylius-2-3:
+        needs: [versions]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.4"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-3 }}"]'
+            symfony-versions: '["7.4"]'
+            node-version: '22.x'
+
+    php-8-5:
+        needs: [versions]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.5"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-3 }}"]'
+            symfony-versions: '["7.4"]'
+            node-version: '22.x'
+
+    phpunit-result:
+        name: 'PHPUnit result'
+        needs: [versions, php-8-2, php-8-4, php-8-4-sylius-2-3, php-8-5]
+        if: always()
+        runs-on: ubuntu-latest
+        steps:
+            -
+                name: 'Fail unless every PHPUnit matrix job succeeded'
+                shell: bash
+                env:
+                    NEEDS: ${{ toJson(needs) }}
+                run: |
+                    set -euo pipefail
+                    failed=$(jq -r '[to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"] | join(", ")' <<< "$NEEDS")
+                    if [ -n "$failed" ]; then
+                        echo "::error::PHPUnit matrix jobs did not succeed: $failed"
+                        exit 1
+                    fi
+                    echo "All PHPUnit matrix jobs succeeded"

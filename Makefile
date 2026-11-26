@@ -57,8 +57,6 @@ install-sylius:
 	${COMPOSER} install
 	@# Both packages are pinned to the minor of SYLIUS_VERSION (latest patch). sylius/sylius is pinned explicitly so the
 	@# installed minor does not depend on what the test-application release requires.
-	@# Sylius 2.3 is not supported yet: it drops knp-gaufrette-bundle, which sylius/refund-plugin's config still loads,
-	@# so test-application:install fails.
 	@# Every sylius/sylius 2.1.x release is affected by advisories left unpatched upstream (Sylius 2.1 is out of security
 	@# support, see the 2026-11-18 advisories on https://packagist.org/security-advisories/), and Composer 2.9+ refuses to
 	@# resolve them. The ignore applies to the 2.1 minor only, so new advisories on 2.2 still block the install. It is set
