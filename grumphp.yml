@@ -34,9 +34,6 @@ grumphp:
             files_on_pre_commit: false
             paths: ['src', 'tests/Behat', 'tests/PHPUnit']
             triggered_by: ['php', 'phtml', 'twig', 'yaml', 'yml', 'xml', 'json', 'neon', 'lock']
-        twigcs:
-            path: 'src/'
-            severity: error
         phpcs:
             standard: "ruleset"
             warning_severity: 0

@@ -5,45 +5,28 @@ name: PHPUnit matrix
 
 # sylius_phpunit.yml builds the full cross product of its inputs and has no exclude input,
 # so each PHP / Sylius pairing that needs its own Symfony set gets its own job.
+# The versions job resolves, on every run, the latest patch of each Sylius minor and, for the
+# `latest` job, the newest Sylius, PHP and Symfony allowed by composer.json
+# (see .github/scripts/resolve-test-versions.sh).
 # Sylius 2.3's admin and shop assets require Node ^22.13 || >=24.
 jobs:
     versions:
-        name: 'Resolve latest Sylius patches'
+        name: 'Resolve tested versions'
         runs-on: ubuntu-latest
         outputs:
             sylius-2-1: ${{ steps.resolve.outputs.sylius-2-1 }}
             sylius-2-2: ${{ steps.resolve.outputs.sylius-2-2 }}
             sylius-2-3: ${{ steps.resolve.outputs.sylius-2-3 }}
+            sylius-latest: ${{ steps.resolve.outputs.sylius-latest }}
+            php-latest: ${{ steps.resolve.outputs.php-latest }}
+            symfony-latest: ${{ steps.resolve.outputs.symfony-latest }}
         steps:
             -
-                name: 'Resolve the latest stable sylius/sylius release of each minor on Packagist'
+                uses: actions/checkout@v4
+            -
+                name: 'Resolve Sylius, PHP and Symfony versions from Packagist, php.net and composer.json'
                 id: resolve
-                shell: bash
-                run: |
-                    set -euo pipefail
-                    metadata="$RUNNER_TEMP/sylius.json"
-                    if ! curl -fsSL --retry 3 --retry-all-errors -o "$metadata" https://repo.packagist.org/p2/sylius/sylius.json; then
-                        echo "::error::Could not fetch sylius/sylius metadata from Packagist"
-                        exit 1
-                    fi
-                    for minor in 2.1 2.2 2.3; do
-                        latest=$(jq -r --arg minor "$minor" '
-                            [.packages["sylius/sylius"][].version
-                                | ltrimstr("v")
-                                | select(startswith($minor + ".") and test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))]
-                            | sort_by(split(".") | map(tonumber))
-                            | last // empty
-                        ' "$metadata") || {
-                            echo "::error::Could not read the sylius/sylius versions from the Packagist metadata"
-                            exit 1
-                        }
-                        if [ -z "$latest" ]; then
-                            echo "::error::No stable sylius/sylius $minor.x release found on Packagist"
-                            exit 1
-                        fi
-                        echo "Sylius $minor: $latest"
-                        echo "sylius-${minor/./-}=$latest" >> "$GITHUB_OUTPUT"
-                    done
+                run: 'bash .github/scripts/resolve-test-versions.sh composer.json'
 
     php-8-2:
         needs: [versions]
@@ -70,18 +53,18 @@ jobs:
             symfony-versions: '["7.4"]'
             node-version: '22.x'
 
-    php-8-5:
+    latest:
         needs: [versions]
         uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
         with:
-            php-versions: '["8.5"]'
-            sylius-versions: '["${{ needs.versions.outputs.sylius-2-3 }}"]'
-            symfony-versions: '["7.4"]'
+            php-versions: '["${{ needs.versions.outputs.php-latest }}"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-latest }}"]'
+            symfony-versions: '["${{ needs.versions.outputs.symfony-latest }}"]'
             node-version: '22.x'
 
     phpunit-result:
         name: 'PHPUnit result'
-        needs: [versions, php-8-2, php-8-4, php-8-4-sylius-2-3, php-8-5]
+        needs: [versions, php-8-2, php-8-4, php-8-4-sylius-2-3, latest]
         if: always()
         runs-on: ubuntu-latest
         steps:
