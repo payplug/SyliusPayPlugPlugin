@@ -22,7 +22,9 @@
 
 ## Requirements
 
-In the channel settings, the base currency must be set to **EUR** because the payment gateway only works in this currency. 
+The PayPlug card payment method also supports currencies other than the euro: with the Hosted Fields display mode, and with the redirected display mode when the currency is enabled on your PayPlug account.
+
+In the channel settings, the base currency must still be set to **EUR** for the integrated payment display mode and for the other payment methods (Oney, Bancontact, American Express, Apple Pay, Scalapay and Wero), because they only work in this currency.
 
 In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
 
