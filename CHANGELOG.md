@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - Unreleased
 
 ### Added
-- Support for Sylius v2.0+
-- PHP 8.2+ compatibility
+- Support for Sylius v2.1+
 - Support for Sylius 2.3 (PHP 8.3+)
+- PHP 8.2+ compatibility
 - Use Payment Request API from Sylius
 - New Unified Authentication System (OAuth2)
 - **Multi-shop support**: several gateway configurations of the same type may now coexist, each
