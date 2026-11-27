@@ -34,6 +34,27 @@ $ make reset
   $ make phpunit
   ```
 
+- Lints (PHP syntax, YAML, Twig, Symfony container)
+
+  ```bash
+  $ composer lint
+  ```
+
+  Each check also runs on its own: `composer lint:php`, `composer lint:yaml`, `composer lint:twig`, `composer lint:container`.
+
+- ESLint (from the plugin root, Node 20.19 or later)
+
+  ```bash
+  $ npm ci
+  $ npm run lint
+  ```
+
+- JS tests
+
+  ```bash
+  $ (cd assets && npm test)
+  ```
+
 ### Opening Sylius with your plugin
 
 - Using `test` environment:

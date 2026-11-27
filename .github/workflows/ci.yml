@@ -12,6 +12,87 @@ jobs:
     quality:
         uses: payplug/template-ci/.github/workflows/sylius_quality.yml@main
 
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        env:
+            APP_ENV: test
+        steps:
+            -
+                uses: actions/checkout@v4
+            -
+                name: 'Setup PHP 8.2'
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: '8.2'
+                    ini-values: date.timezone=UTC
+                    extensions: intl
+                    tools: symfony
+                    coverage: none
+            -
+                name: 'Composer - Get Cache Directory'
+                id: composer-cache
+                run: 'echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT'
+            -
+                name: 'Composer - Set cache'
+                uses: actions/cache@v4
+                with:
+                    path: '${{ steps.composer-cache.outputs.dir }}'
+                    key: 'php-8.2-symfony-6.4-lint-composer-${{ hashFiles(''**/composer.json'') }}'
+                    restore-keys: 'php-8.2-symfony-6.4-lint-composer-'
+            -
+                name: 'Composer - Github Auth'
+                run: 'composer config -g github-oauth.github.com ${{ github.token }}'
+            -
+                name: 'Composer - Restrict Symfony version'
+                run: 'composer config extra.symfony.require "^6.4"'
+            -
+                name: 'Composer - Install dependencies'
+                run: 'composer install --no-progress'
+                id: end-of-setup
+            -
+                name: 'PHP - Syntax'
+                run: 'composer lint:php'
+                if: 'always() && steps.end-of-setup.outcome == ''success'''
+            -
+                name: 'Symfony - Lint YAML'
+                run: 'composer lint:yaml'
+                if: 'always() && steps.end-of-setup.outcome == ''success'''
+            -
+                name: 'Symfony - Lint Twig'
+                run: 'composer lint:twig'
+                if: 'always() && steps.end-of-setup.outcome == ''success'''
+            -
+                name: 'Symfony - Lint container'
+                run: 'composer lint:container'
+                if: 'always() && steps.end-of-setup.outcome == ''success'''
+
+    js-quality:
+        uses: payplug/template-ci/.github/workflows/js-quality.yml@main
+        with:
+            node-version: '20'
+            js-folder: './assets/'
+
+    js-tests:
+        name: JS tests
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            -
+                uses: actions/checkout@v4
+            -
+                name: 'Setup Node 20.x'
+                uses: actions/setup-node@v4
+                with:
+                    node-version: '20.x'
+            -
+                name: 'JS - Run the admin controller tests'
+                run: 'npm test'
+                working-directory: assets
+
     sylius-matrix:
         needs: [quality]
         if: github.base_ref == 'develop'
@@ -55,10 +136,6 @@ jobs:
                 uses: actions/setup-node@v4
                 with:
                     node-version: '20.x'
-            -
-                name: 'JS - Run the admin controller tests'
-                run: 'npm test'
-                working-directory: assets
             -
                 name: 'Composer - Get Cache Directory'
                 id: composer-cache
