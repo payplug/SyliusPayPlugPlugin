@@ -47,6 +47,10 @@ services:
         arguments:
             $csrfTokenManager: '@?security.csrf.token_manager'
 
+    PayPlug\SyliusPayPlugPlugin\Gateway\Form\Extension\PproEligibilityTypeExtension:
+        arguments:
+            $countryRepository: '@sylius.repository.country'
+
     PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepositoryInterface:
         class: PayPlug\SyliusPayPlugPlugin\Repository\PaymentRepository
         parent: sylius.repository.payment

@@ -20,21 +20,30 @@ Feature: Refunding order's Oney payment
         And I am viewing the summary of this order
 
     @ui
-    Scenario: Should not be able to refund using oney payment before 48 hours
+    Scenario: Should be able to refund using oney payment as soon as the API allows it
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
         When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment
-        Then I should see an error message "The refund will be possible 48 hours after the last payment or refund transaction."
+        Then I should see a success message "Selected order units have been successfully refunded"
+        Then this order refunded total should be "$10.00"
+        And I should be able to refund 1 "Red Arrow" products
+
+    @ui
+    Scenario: Should not be able to refund using oney payment before the date given by the API
+        When I want to refund some units of order "00000001"
+        Then there should be "Oney" payment method
+        When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment before the API refund window opens on "2100-01-01 12:00:00 UTC"
+        Then I should see an error message "The Oney refund will only be possible from Jan 1, 2100"
         Then this order refunded total should be "$0.00"
         And I should be able to refund 1 "Red Arrow" products
 
     @ui
-    Scenario: Should be able to refund using oney payment after 48 hours
+    Scenario: Should not be able to refund using oney payment once the API refund period has ended
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
-        When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after 48 hours
-        Then I should see a success message "Selected order units have been successfully refunded"
-        Then this order refunded total should be "$10.00"
+        When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after the API refund window closed on "2020-01-01 12:00:00 UTC"
+        Then I should see an error message "The Oney refund period ended on Jan 1, 2020"
+        Then this order refunded total should be "$0.00"
         And I should be able to refund 1 "Red Arrow" products
 
     @ui
@@ -77,26 +86,13 @@ Feature: Refunding order's Oney payment
         And this order refunded total should be "$340.00"
 
     @ui
-    Scenario: Should not be able to refund another item before last transaction exceed 48 hours
+    Scenario: Should be able to refund another item right after a previous oney refund
         When I want to refund some units of order "00000001"
         Then there should be "Oney" payment method
-        When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after 48 hours
+        When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment
         Then I should see a success message "Selected order units have been successfully refunded"
         Then this order refunded total should be "$10.00"
         And I should be able to refund 1 "Red Arrow" products
         When For this order I decide to refund 1st "Red Arrow" product with "Oney" payment
-        Then this order refunded total should be "$10.00"
-        Then I should see an error message "The refund will be possible 48 hours after the last payment or refund transaction."
-
-    @ui
-    Scenario: Should be able to refund another item when last transaction is at least 48 hours old
-        When I want to refund some units of order "00000001"
-        Then there should be "Oney" payment method
-        When For this order I decide to refund 1st "Green Arrow" product with "Oney" payment after 48 hours
         Then I should see a success message "Selected order units have been successfully refunded"
-        Then this order refunded total should be "$10.00"
-        And I should be able to refund 1 "Red Arrow" products
-        Then I wait 48 hours after the last refund of this order
-        When For this order I decide to refund 1st "Red Arrow" product with "Oney" payment
-        Then this order refunded total should be "$340.00"
         And this order refunded total should be "$340.00"

@@ -1,0 +1,4 @@
+{% set widget = payplug_scalapay_product_widget(hookable_metadata.context.variant|default(null)) %}
+{% if widget is not null %}
+    {% include '@PayPlugSyliusPayPlugPlugin/shop/scalapay/widget.html.twig' with {widget} only %}
+{% endif %}

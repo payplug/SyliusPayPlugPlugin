@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace PayPlug\SyliusPayPlugPlugin\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PayPlug\SyliusPayPlugPlugin\Exception\InvalidHostedFieldsSubmissionException;
 use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsCaptureData;
+use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsCardDetails;
 use PayPlug\SyliusPayPlugPlugin\PaymentProcessing\HostedFieldsPaymentProcessorInterface;
+use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -15,9 +18,12 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Resource\Model\ResourceInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Webmozart\Assert\Assert;
 
 final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
@@ -40,11 +46,16 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
 
     private const HOSTED_FIELDS_COUNTRY_FIELD = 'hostedfields_country';
 
+    private const HOSTED_FIELDS_CARD_HOLDER_NAME_FIELD = 'hostedfields_card_holder_name';
+
+    private const INVALID_HOSTED_FIELDS_SUBMISSION_FLASH = 'payplug_sylius_payplug_plugin.error.hosted_fields_submission_invalid';
+
     public function __construct(
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
         private StateMachineInterface $stateMachine,
         private HostedFieldsPaymentProcessorInterface $hostedFieldsPaymentProcessor,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -116,7 +127,7 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         }
 
         if ($this->hasHostedFieldsToken($request)) {
-            $this->handleHostedFieldsToken($request, $lastPayment);
+            $this->handleHostedFieldsToken($resourceControllerEvent, $request, $lastPayment);
 
             return;
         }
@@ -176,28 +187,79 @@ final class PostPaymentSelectEventSubscriber implements EventSubscriberInterface
         return '' !== $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
     }
 
-    private function handleHostedFieldsToken(Request $request, PaymentInterface $lastPayment): void
-    {
+    private function handleHostedFieldsToken(
+        ResourceControllerEvent $resourceControllerEvent,
+        Request $request,
+        PaymentInterface $lastPayment,
+    ): void {
         // Guard against a crafted POST completing checkout through this path for a payment
         // method that does not actually have Hosted Fields enabled.
         if (!$this->isHostedFieldsEnabled($lastPayment)) {
             return;
         }
 
-        $hfToken = $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD);
-        $selectedBrand = $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD);
-        $saveCard = 'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false');
-        $last4 = $this->getRequestField($request, self::HOSTED_FIELDS_LAST4_FIELD);
-        $expirationMonth = $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_MONTH_FIELD);
-        $expirationYear = $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_YEAR_FIELD);
-        $countryCode = $this->getRequestField($request, self::HOSTED_FIELDS_COUNTRY_FIELD);
+        $captureData = $this->buildHostedFieldsCaptureData($request);
+        if (null === $captureData) {
+            $this->refuseHostedFieldsSubmission($resourceControllerEvent, $request);
 
-        $this->hostedFieldsPaymentProcessor->process(
-            $lastPayment,
-            new HostedFieldsCaptureData($hfToken, $selectedBrand, $saveCard, $last4, $expirationMonth, $expirationYear, $countryCode),
-        );
+            return;
+        }
+
+        $this->hostedFieldsPaymentProcessor->process($lastPayment, $captureData);
 
         $this->applyToComplete($lastPayment->getOrder() ?? throw new \LogicException('Order not found for payment'));
+    }
+
+    /**
+     * The checkout form validates the same rules before tokenizing, so only a crafted or replayed
+     * POST, or a theme template without the cardholder name field, gets here with an invalid
+     * submission: it is refused (null) before the Hosted Fields details are stored or the checkout
+     * is completed. The payment method the shopper chose is already saved by then, which is
+     * harmless: the order stays at the payment step.
+     */
+    private function buildHostedFieldsCaptureData(Request $request): ?HostedFieldsCaptureData
+    {
+        try {
+            return new HostedFieldsCaptureData(
+                $this->getRequestField($request, self::HOSTED_FIELDS_TOKEN_FIELD),
+                $this->getRequestField($request, self::HOSTED_FIELDS_SELECTED_BRAND_FIELD),
+                'true' === $request->request->get(self::HOSTED_FIELDS_SAVE_CARD_FIELD, 'false'),
+                new HostedFieldsCardDetails(
+                    $this->getRequestField($request, self::HOSTED_FIELDS_LAST4_FIELD),
+                    $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_MONTH_FIELD),
+                    $this->getOptionalIntRequestField($request, self::HOSTED_FIELDS_EXP_YEAR_FIELD),
+                    $this->getRequestField($request, self::HOSTED_FIELDS_COUNTRY_FIELD),
+                ),
+                $this->getRequestField($request, self::HOSTED_FIELDS_CARD_HOLDER_NAME_FIELD),
+            );
+        } catch (InvalidHostedFieldsSubmissionException $e) {
+            $this->logger->warning('[PayPlug] Hosted Fields submission rejected.', ['reason' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /**
+     * The order was only updated with the chosen payment method: the shopper lands back on the
+     * payment step, with a message, instead of a bare error page, and can submit the form again.
+     *
+     * ResourceController::updateAction() answers a non-HTML request (headless front end) with its
+     * REST view before it reads the event response, so such a client is told with a 400 instead.
+     */
+    private function refuseHostedFieldsSubmission(
+        ResourceControllerEvent $resourceControllerEvent,
+        Request $request,
+    ): void {
+        if ('html' !== $request->getRequestFormat()) {
+            throw new BadRequestHttpException('Invalid Hosted Fields submission.');
+        }
+
+        $session = $request->hasSession() ? $request->getSession() : null;
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add('error', self::INVALID_HOSTED_FIELDS_SUBMISSION_FLASH);
+        }
+
+        $resourceControllerEvent->setResponse(new RedirectResponse($request->getRequestUri()));
     }
 
     private function isHostedFieldsEnabled(PaymentInterface $payment): bool

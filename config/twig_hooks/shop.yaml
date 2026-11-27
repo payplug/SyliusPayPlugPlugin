@@ -1,10 +1,20 @@
 sylius_twig_hooks:
     hooks:
+        'sylius_shop.base.head':
+            payplug_scalapay_widget_script:
+                template: '@PayPlugSyliusPayPlugPlugin/shop/scalapay/script.html.twig'
+                priority: 0
         'sylius_shop.product.show.content.info.summary':
+            pay_with_scalapay:
+                template: '@PayPlugSyliusPayPlugPlugin/shop/scalapay/product/widget.html.twig'
+                priority: 150
             pay_with_oney:
                 template: '@PayPlugSyliusPayPlugPlugin/shop/oney/product/pay_with_oney.html.twig'
                 priority: 101
         'sylius_shop.cart.index.content.form.sections.general#right':
+            pay_with_scalapay:
+                template: '@PayPlugSyliusPayPlugPlugin/shop/scalapay/cart/widget.html.twig'
+                priority: 50
             pay_with_oney:
                 template: '@PayPlugSyliusPayPlugPlugin/shop/oney/cart/pay_with_oney.html.twig'
                 priority: 1
@@ -21,10 +31,24 @@ sylius_twig_hooks:
                 template: '@PayPlugSyliusPayPlugPlugin/shared/modal/index.html.twig'
                 priority: 0
 
+        # Sylius renders no flash message on the payment step, where a refused Hosted Fields
+        # submission sends the shopper back (PostPaymentSelectEventSubscriber).
+        'sylius_shop.checkout.select_payment.content':
+            payplug_flashes:
+                template: '@SyliusShop/shared/flashes.html.twig'
+                priority: 50
+
         'sylius_shop.shared.form.select_payment.payment':
             choice:
                 template: '@PayPlugSyliusPayPlugPlugin/shared/form/select_payment/payment/choice.html.twig'
                 priority: 0
+
+        # After the Scalapay payment card (Sylius 'details', priority 0), outside its <label>: a click
+        # on the widget must not select the payment method.
+        'sylius_shop.shared.form.select_payment.payment.choice.payplug_scalapay':
+            scalapay_widget:
+                template: '@PayPlugSyliusPayPlugPlugin/shop/scalapay/checkout/widget.html.twig'
+                priority: -100
 
         'sylius_shop.shared.form.select_payment.payment.choice.details':
             choice:

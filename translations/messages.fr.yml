@@ -61,7 +61,8 @@ payplug_sylius_payplug_plugin:
         impossible_to_refund_this_payment: Impossible de rembourser ce paiement
         oney_gateway_label: Oney by Payplug
         oney: Oney
-        oney_transaction_less_than_forty_eight_hours: Le remboursement sera possible 48h après la dernière transaction de paiement ou de remboursement.
+        oney_refund_not_available_before: Le remboursement Oney ne sera possible qu'à partir du %date%.
+        oney_refund_period_expired: La période de remboursement Oney s'est terminée le %date%. Ce paiement ne peut plus être remboursé.
         or_pay_with_oney: Ou payez en
         pay: Paiement
         without_fees: sans frais
@@ -131,10 +132,28 @@ payplug_sylius_payplug_plugin:
                 title: 'Les frais sont :'
                 client: Répartis entre vous et vos clients
                 merchant: À votre charge
-        scalapay_gateway_config:
-            min_amount: Montant minimum
-            max_amount: Montant maximum
-            amount_help: Laissez vide pour utiliser les limites autorisées par PayPlug.
+        ppro:
+            amount_title: Montant du panier
+            amount_help: Le moyen de paiement s'affiche uniquement si le montant du panier est compris entre ces deux valeurs.
+            min_amount: Minimum
+            max_amount: Maximum
+            api_limits: "Limites autorisées par PayPlug : de %min% à %max%. Laissez un champ vide pour utiliser la limite PayPlug."
+            countries_title: Pays de facturation
+            countries_help: Le moyen de paiement s'affiche uniquement pour les clients dont l'adresse de facturation est dans un des pays sélectionnés.
+            countries_label: Pays
+            not_connected: Les limites de montant et de pays sont chargées depuis PayPlug une fois ce moyen de paiement connecté à votre compte PayPlug.
+            disabled_by_payplug: Lors de la dernière actualisation de ses limites, PayPlug indiquait que ce moyen de paiement n'est pas activé sur votre compte. Il est masqué au checkout pendant 24 heures après cette actualisation, puis de nouveau affiché, et PayPlug accepte ou refuse le paiement. Contactez PayPlug pour l'activer.
+            no_country_left: Aucun des pays de facturation que vous avez sélectionnés n'est encore autorisé par PayPlug, ce moyen de paiement est donc masqué au checkout. Sélectionnez ci-dessous les pays pour lesquels l'afficher.
+            no_compatible_country: Aucun des pays activés dans Sylius n'est autorisé par PayPlug pour ce moyen de paiement, il est donc masqué au checkout. Activez l'un des pays autorisés par PayPlug pour choisir les pays de facturation.
+        scalapay_widget:
+            title: Widget Scalapay
+            help: Affiche aux clients les échéanciers Scalapay, tels que fournis par Scalapay, sur les pages sélectionnées ci-dessous. Le jeton marchand Scalapay provient de votre compte PayPlug ; vous n'avez rien à saisir.
+            product: Afficher sur la page produit
+            cart: Afficher sur la page panier
+            checkout: Afficher au paiement, dans le moyen de paiement Scalapay
+            amount_selector: Sélecteur CSS du montant
+            amount_selector_help: "Le widget lit le montant dans l'élément correspondant à ce sélecteur. Valeur par défaut pour le thème par défaut de Sylius 2 : %default%. Adaptez-la si votre thème affiche le prix dans un autre élément."
+            no_merchant_token: Le widget s'affiche dès que PayPlug fournit le jeton marchand Scalapay de votre compte. Il est chargé en même temps que les limites du moyen de paiement.
         integrated_payment:
             card_holder.title: 'Nom du titulaire de la carte'
             card_holder.error: 'Nom et/ou prénom invalide(s).'
@@ -153,10 +172,12 @@ payplug_sylius_payplug_plugin:
         hosted_fields:
             error.tokenization_failed: 'Les informations de votre carte n’ont pas pu être validées. Veuillez les vérifier et réessayer.'
             error.unsupported_brand: 'Cette marque de carte n’est pas prise en charge pour ce moyen de paiement. Merci d’utiliser une autre carte.'
+            error.card_holder_required: 'Renseignez le nom du titulaire de la carte.'
+            error.card_holder_length: 'Le nom du titulaire doit contenir entre %min% et %max% caractères.'
+            card_holder.label: 'Nom du titulaire de la carte'
+            card_holder.placeholder: 'Nom du titulaire de la carte'
             save_card.label: 'Enregistrer ma carte bancaire'
             place_order.label: 'Confirmer le paiement'
-            network_selection.label: 'Sélectionnez votre réseau'
-            network_selection.tooltip: 'Votre carte supporte deux réseaux et vous pouvez choisir celui que vous voulez pour ce paiement. Si vous ne le faites pas, alors le réseau sera celui sélectionné par défaut par le marchand.'
         deferred_capture:
             process_order_info: |
                 Vous serez prélevé(é) lors du traitement de votre commande.
@@ -202,3 +223,5 @@ payplug_sylius_payplug_plugin:
         deferred_capture_enable: Activer la capture différée
         deferred_capture_help: |
             Attention, assurez vous qu'un déclencheur de la capture différée a bien été ajouté dans le code source du projet
+    error:
+        ppro_not_available: "Ce moyen de paiement n'est pas disponible pour votre pays de facturation ou pour ce montant. Veuillez choisir un autre moyen de paiement."

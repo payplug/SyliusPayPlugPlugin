@@ -22,7 +22,13 @@ use Sylius\Component\Core\Model\OrderInterface;
  */
 final class OrderAddressDtoCreator
 {
-    public function createBilling(OrderInterface $order): ?BillingDto
+    /**
+     * @param bool $requireRegionMatch true: the phone number must belong to one of the address's
+     *      phoneRegions(); false: any valid number is sent, formatted in its own country.
+     *      Defaults to true to keep the previous behaviour for any other caller: the Hosted
+     *      Fields capture path (PaymentCaptureContextBuilder) passes false explicitly.
+     */
+    public function createBilling(OrderInterface $order, bool $requireRegionMatch = true): ?BillingDto
     {
         $address = $order->getBillingAddress();
         if (null === $address) {
@@ -31,12 +37,15 @@ final class OrderAddressDtoCreator
 
         return new BillingDto(
             $this->buildAddress($address),
-            $this->buildContact($address),
+            $this->buildContact($address, $requireRegionMatch),
             $this->title($order),
         );
     }
 
-    public function createShipping(OrderInterface $order): ?ShippingDto
+    /**
+     * @param bool $requireRegionMatch same as createBilling()
+     */
+    public function createShipping(OrderInterface $order, bool $requireRegionMatch = true): ?ShippingDto
     {
         $address = $order->getShippingAddress();
         if (null === $address) {
@@ -45,15 +54,15 @@ final class OrderAddressDtoCreator
 
         return new ShippingDto(
             $this->buildAddress($address),
-            $this->buildContact($address),
+            $this->buildContact($address, $requireRegionMatch),
             $order->getCustomer()?->getEmail(),
             $address->getCompany(),
         );
     }
 
-    private function buildContact(AddressInterface $address): ContactDto
+    private function buildContact(AddressInterface $address, bool $requireRegionMatch): ContactDto
     {
-        [$phone, $mobilePhone] = $this->splitPhone($address);
+        [$phone, $mobilePhone] = $this->splitPhone($address, $requireRegionMatch);
 
         return new ContactDto($address->getFirstName(), $address->getLastName(), $phone, $mobilePhone);
     }
@@ -86,8 +95,9 @@ final class OrderAddressDtoCreator
      *      phone number per address, so only one of the two ever comes back non-null here, matching
      *      whichever type PhoneHelper::isMobile() detects it as; an unparseable/invalid number is
      *      treated as absent rather than failing the whole payment over supplementary contact data.
+     *      The number is read in each region of phoneRegions() in turn, the first one accepting it wins.
      */
-    private function splitPhone(AddressInterface $address): array
+    private function splitPhone(AddressInterface $address, bool $requireRegionMatch): array
     {
         $rawPhone = $address->getPhoneNumber();
         $countryCode = $address->getCountryCode();
@@ -95,14 +105,27 @@ final class OrderAddressDtoCreator
             return [null, null];
         }
 
-        try {
-            $e164Phone = PhoneHelper::toE164($rawPhone, $countryCode);
-            $isMobile = PhoneHelper::isMobile($rawPhone, $countryCode);
-        } catch (InvalidPhoneNumberException) {
-            return [null, null];
+        foreach ($this->phoneRegions($countryCode) as $region) {
+            try {
+                $e164Phone = PhoneHelper::toE164($rawPhone, $region, $requireRegionMatch);
+                $isMobile = PhoneHelper::isMobile($rawPhone, $region, $requireRegionMatch);
+            } catch (InvalidPhoneNumberException) {
+                continue;
+            }
+
+            return $isMobile ? [null, $e164Phone] : [$e164Phone, null];
         }
 
-        return $isMobile ? [null, $e164Phone] : [$e164Phone, null];
+        return [null, null];
+    }
+
+    /**
+     * @return list<string> the address country first, then the regions sharing its numbering, then
+     *      FR for an overseas territory sharing the French numbering
+     */
+    private function phoneRegions(string $countryCode): array
+    {
+        return PhoneRegionResolver::resolve($countryCode);
     }
 
     private function title(OrderInterface $order): ?string

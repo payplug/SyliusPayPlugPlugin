@@ -11,8 +11,8 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\PayPlugGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\HasNoGatewayChannelConflict;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsScalapayAmountRangeValid;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
+use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Validator\PaymentMethodValidator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -292,25 +292,26 @@ final class PaymentMethodValidatorTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // process() — Scalapay factory → base constraint + amount range constraint
+    // process() — PPRO factories → base constraints only
     // -------------------------------------------------------------------------
 
     /**
-     * Scalapay gateway config. Verifies both IsCanSavePaymentMethod and
-     * IsScalapayAmountRangeValid are passed to the validator (2 total).
+     * The PPRO amount and country settings are refused by the form before the save, so no PPRO
+     * gateway runs an amount constraint after it.
+     *
+     * @dataProvider pproFactories
      */
-    public function testProcess_scalapayFactory_validatesWithBaseAndAmountRangeConstraints(): void
+    public function testProcess_pproFactory_validatesWithTheDefaultConstraints(string $factoryName): void
     {
-        $paymentMethod = $this->buildPaymentMethod(ScalapayGatewayFactory::FACTORY_NAME, []);
+        $paymentMethod = $this->buildPaymentMethod($factoryName, []);
 
         $this->validator
             ->expects(self::once())
             ->method('validate')
             ->willReturnCallback(function ($subject, array $constraints) {
-                self::assertCount(3, $constraints);
-                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[2]);
+                self::assertCount(2, $constraints);
                 self::assertInstanceOf(IsCanSavePaymentMethod::class, $constraints[0]);
-                self::assertInstanceOf(IsScalapayAmountRangeValid::class, $constraints[1]);
+                self::assertInstanceOf(HasNoGatewayChannelConflict::class, $constraints[1]);
 
                 return new ConstraintViolationList();
             })
@@ -322,6 +323,16 @@ final class PaymentMethodValidatorTest extends TestCase
         $this->requestStack->method('getSession')->willReturn($session);
 
         $this->paymentMethodValidator->process($paymentMethod);
+    }
+
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function pproFactories(): iterable
+    {
+        yield 'bancontact' => [BancontactGatewayFactory::FACTORY_NAME];
+        yield 'scalapay' => [ScalapayGatewayFactory::FACTORY_NAME];
+        yield 'wero' => [WeroGatewayFactory::FACTORY_NAME];
     }
 
     // -------------------------------------------------------------------------

@@ -22,7 +22,9 @@
 
 ## Requirements
 
-In the channel settings, the base currency must be set to **EUR** because the payment gateway only works in this currency. 
+The PayPlug card payment method also supports currencies other than the euro: with the Hosted Fields display mode, and with the redirected display mode when the currency is enabled on your PayPlug account.
+
+In the channel settings, the base currency must still be set to **EUR** for the integrated payment display mode and for the other payment methods (Oney, Bancontact, American Express, Apple Pay, Scalapay and Wero), because they only work in this currency.
 
 In local environment, the plugin will not work properly because you will not be notified of the status of payments from the payment gateway.
 
@@ -211,12 +213,20 @@ This library is under the MIT license.
 
 ## Oney Integration
 
-For better Oney integration, you can check the [Oney enhancement documentation](doc/oney_enhancement.md).
+For better Oney integration, you can check the [Oney enhancement documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Oney-Enhancement).
 
 ## Authorized Payment
 
-Since 1.11.0, the plugin supports the authorized payment feature. You can check the [Authorized Payment documentation](doc/authorized_payment.md).
+Since 1.11.0, the plugin supports the authorized payment feature. You can check the [Deferred capture documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Deferred-Capture).
+
+## PPRO display eligibility
+
+Bancontact, Wero and Scalapay are shown only for the cart amounts and billing countries PayPlug and the merchant accept. You can check the [PPRO display eligibility documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/PPRO-Display-Eligibility).
+
+## Scalapay widget
+
+The Scalapay installment widget can be shown on the product page, the cart page and at checkout once the merchant turns it on (it is off by default). You can check the [Scalapay widget documentation](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Scalapay-Widget).
 
 ## Doc
-- [Development](doc/development.md)
+- [Development](https://github.com/payplug/SyliusPayPlugPlugin/wiki/Development)
 - [Release Process](RELEASE.md)

@@ -29,6 +29,9 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
 {
     private const MINIMUM_REFUND_AMOUNT = 10;
 
+    /** Medium date, hours and minutes in the locale's clock, and the short timezone name. */
+    private const DATE_SKELETON = 'yMMMdjmmz';
+
     private const SUPPORTED_METHODS = [
         PayPlugGatewayFactory::FACTORY_NAME,
         OneyGatewayFactory::FACTORY_NAME,
@@ -110,15 +113,47 @@ class RefundUnitsCommandCreatorDecorator implements RequestCommandCreatorInterfa
 
         $data = $this->oneyClient->retrieve($lastPayment->getDetails()['payment_id']);
 
-        $now = new \DateTime();
+        $refundableAfter = $this->toTimestamp($data->refundable_after ?? null);
+        $refundableUntil = $this->toTimestamp($data->refundable_until ?? null);
+        $now = time();
 
-        if (
-            $now->getTimestamp() < $data->refundable_until &&
-            $now->getTimestamp() > $data->refundable_after
-        ) {
-            return;
+        if (null !== $refundableAfter && $now < $refundableAfter) {
+            throw InvalidRefundAmount::withValidationConstraint($this->translator->trans(
+                'payplug_sylius_payplug_plugin.ui.oney_refund_not_available_before',
+                ['%date%' => $this->formatDate($refundableAfter)],
+            ));
         }
 
-        throw InvalidRefundAmount::withValidationConstraint($this->translator->trans('payplug_sylius_payplug_plugin.ui.oney_transaction_less_than_forty_eight_hours'));
+        if (null !== $refundableUntil && $now > $refundableUntil) {
+            throw InvalidRefundAmount::withValidationConstraint($this->translator->trans(
+                'payplug_sylius_payplug_plugin.ui.oney_refund_period_expired',
+                ['%date%' => $this->formatDate($refundableUntil)],
+            ));
+        }
+    }
+
+    private function toTimestamp(mixed $value): ?int
+    {
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    private function formatDate(int $timestamp): string
+    {
+        $locale = $this->translator->getLocale();
+        $pattern = (new \IntlDatePatternGenerator($locale))->getBestPattern(self::DATE_SKELETON);
+        Assert::string($pattern);
+
+        $formatter = new \IntlDateFormatter(
+            $locale,
+            \IntlDateFormatter::NONE,
+            \IntlDateFormatter::NONE,
+            date_default_timezone_get(),
+            null,
+            $pattern,
+        );
+        $formatted = $formatter->format($timestamp);
+        Assert::string($formatted);
+
+        return $formatted;
     }
 }

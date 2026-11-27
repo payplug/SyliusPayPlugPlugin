@@ -25,155 +25,69 @@
     position: relative
 }
 
-.payplugHostedFields__schemes {
+.payplugHostedFields__field {
     width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-    margin: 0 0 10px
-}
-
-.payplugHostedFields__scheme-badge {
-    padding: 2px 6px;
-    border: 1px solid #d5d6d8;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    color: #2b343d;
-    background: #f9fafb
-}
-
-.payplugHostedFields__cardWrapper {
-    width: 100%;
-    margin: 0 0 10px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px
-}
-
-.payplugHostedFields__cardWrapper .payplugHostedFields__container--card {
-    flex: 1 1 100%;
-    min-width: 0;
-    margin: 0
-}
-
-.payplugHostedFields__network {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    margin: 0 0 12px;
     position: relative
 }
 
-.payplugHostedFields__networkLabel {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #767a80
+.payplugHostedFields__field--expiry,
+.payplugHostedFields__field--cvv {
+    width: calc(50% - 6px)
 }
 
-.payplugHostedFields__networkInfo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border: 1px solid #767a80;
-    border-radius: 50%;
-    font-size: 10px;
-    font-weight: 700;
-    font-style: italic;
-    cursor: pointer
+.payplugHostedFields__field .payplugHostedFields__container {
+    margin: 0
 }
 
-.payplugHostedFields__networkInfo:before {
-    content: "i"
-}
-
-.payplugHostedFields__networkTooltip {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 0;
-    z-index: 10;
-    width: 280px;
-    max-width: 100%;
-    padding: 10px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 1.4;
-    color: #fff;
-    background: #000;
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .15s
-}
-
-.payplugHostedFields__networkInfo:hover .payplugHostedFields__networkTooltip,
-.payplugHostedFields__networkInfo:focus .payplugHostedFields__networkTooltip {
-    visibility: visible;
-    opacity: 1
-}
-
-/* The SDK's own label is an absolutely positioned <div id="info-container"> in <body>, placed with
-   pixel coordinates measured once. It stays in the DOM and only toggles inline display, so hide it
-   and show our in-flow label exactly while the SDK reveals its own. */
-body:has(.payplugHostedFields) #info-container {
-    display: none !important
-}
-
-body:has(#info-container:not([style*="display: none"])) .payplugHostedFields__networkLabel {
-    display: inline-flex
-}
-
-.payplugHostedFields__container--brand {
-    height: 44px;
-    min-height: 0;
-    width: 170px;
-    margin: 0 0 0 auto;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center
-}
-
+/* Height includes the 1px borders: the 46px left inside is the line-height given to the iframe
+   text (FIELD_STYLE in hosted-fields_controller.js) to centre it vertically. */
+.payplugHostedFields__container--holder,
 .payplugHostedFields__container--card,
 .payplugHostedFields__container--expiry,
 .payplugHostedFields__container--cvv {
-    height: 42px;
+    box-sizing: border-box;
+    height: 48px;
     cursor: text;
     background: #fafafa;
-    border: 1.5px solid #d5d6d8;
+    border: 1px solid #d5d6d8;
     border-radius: 8px;
-    line-height: 42px;
+    line-height: 46px;
     transition: border-color .2s, box-shadow .2s, background-color .2s
 }
 
+.payplugHostedFields__container--holder:focus-within,
 .payplugHostedFields__container--card:focus-within,
 .payplugHostedFields__container--expiry:focus-within,
-.payplugHostedFields__container--cvv:focus-within {
+.payplugHostedFields__container--cvv:focus-within,
+.payplugHostedFields__container.is-focus {
     background: #fff;
     border-color: #2b343d;
     box-shadow: 0 0 0 3px rgba(43, 52, 61, .1)
 }
 
-.payplugHostedFields__container--card.is-invalid,
-.payplugHostedFields__container--expiry.is-invalid,
-.payplugHostedFields__container--cvv.is-invalid {
+.payplugHostedFields__container.is-valid {
+    border-color: #12805c
+}
+
+.payplugHostedFields__container.is-invalid {
     border-color: #e91932;
     box-shadow: 0 0 0 3px rgba(233, 25, 50, .1)
 }
 
+.payplugHostedFields__container--holder,
 .payplugHostedFields__container--card,
 .payplugHostedFields__container--expiry,
 .payplugHostedFields__container--cvv {
     padding: 0 16px 0 50px
 }
 
+/* Room for the network selector overlaid on the right of the card number. */
+.payplugHostedFields__container--card {
+    padding-right: 144px
+}
+
+.payplugHostedFields__container--holder:before,
 .payplugHostedFields__container--card:before,
 .payplugHostedFields__container--expiry:before,
 .payplugHostedFields__container--cvv:before {
@@ -182,8 +96,100 @@ body:has(#info-container:not([style*="display: none"])) .payplugHostedFields__ne
     height: 24px;
     background: #95999e 50%/100% no-repeat;
     position: absolute;
-    top: 20%;
-    left: 16px
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    pointer-events: none
+}
+
+.payplugHostedFields__container--holder:before {
+    -webkit-mask-image: url(account.039342ad.svg);
+    mask-image: url(account.039342ad.svg)
+}
+
+/* Same font stack, size and colour as FIELD_STYLE inside the iframes; beats the Poppins rule above. */
+.payplugHostedFields .payplugHostedFields__holderInput {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #2b343d;
+    font-family: Helvetica, Arial, sans-serif !important;
+    font-size: 14px;
+    line-height: 46px
+}
+
+.payplugHostedFields .payplugHostedFields__holderInput::placeholder {
+    color: #969a9f;
+    opacity: 1
+}
+
+/* The SDK's brand iframe takes 150px without an explicit height, and draws its ~28px chips at the
+   top: a 32px box 8px below the top of the 48px card field centres them. 132px fits two networks. */
+.payplugHostedFields__brand {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 132px;
+    height: 32px;
+    margin: 0;
+    overflow: hidden
+}
+
+.payplugHostedFields__brand iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block
+}
+
+/* On narrow screens the card number keeps the room of two networks only while the shopper has to
+   pick one (--networkSelection, set by the controller while #info-container is shown); otherwise a
+   single network chip at most is drawn. */
+@media screen and (max-width: 400px) {
+    .payplugHostedFields__container--card {
+        padding-right: 80px
+    }
+
+    .payplugHostedFields__brand {
+        width: 68px
+    }
+
+    .payplugHostedFields--networkSelection .payplugHostedFields__container--card {
+        padding-right: 144px
+    }
+
+    .payplugHostedFields--networkSelection .payplugHostedFields__brand {
+        width: 132px
+    }
+}
+
+#brand-selector-info {
+    color: #6b7078 !important
+}
+
+.payplugHostedFields__fieldError {
+    display: none;
+    color: #e91932;
+    margin: 5px 2px 0;
+    font-size: 11px;
+    line-height: 16px
+}
+
+.payplugHostedFields__fieldError.is-visible {
+    display: block
+}
+
+/* The SDK's "select your network" label (#info-container, appended to <body>) is placed by the
+   controller just under the card field. While it is shown, the card error keeps that space free
+   with its top padding, empty or not, so the error message sits on its own line under the label. */
+.payplugHostedFields--networkSelection .payplugHostedFields__field--card .payplugHostedFields__fieldError {
+    display: block;
+    margin-top: 0;
+    padding-top: 26px
 }
 
 .payplugHostedFields__container--card:before {
@@ -203,18 +209,16 @@ body:has(#info-container:not([style*="display: none"])) .payplugHostedFields__ne
 
 .payplugHostedFields__container--expiry,
 .payplugHostedFields__container--cvv {
-    max-width: calc(50% - 2px);
-    display: inline-block
+    display: block
 }
 
-.payplugHostedFields__container--brand,
+.payplugHostedFields__container--holder,
 .payplugHostedFields__container--card,
 .payplugHostedFields__container--expiry,
 .payplugHostedFields__container--cvv {
     overflow: hidden
 }
 
-.payplugHostedFields__container--brand iframe,
 .payplugHostedFields__container--card iframe,
 .payplugHostedFields__container--expiry iframe,
 .payplugHostedFields__container--cvv iframe {

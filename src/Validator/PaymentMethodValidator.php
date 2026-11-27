@@ -15,7 +15,6 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\ScalapayGatewayFactory;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\HasNoGatewayChannelConflict;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsCanSavePaymentMethod;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsOneyEnabled;
-use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\IsScalapayAmountRangeValid;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Validator\Constraints\PayplugPermission;
 use PayPlug\SyliusPayPlugPlugin\Gateway\WeroGatewayFactory;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -50,7 +49,7 @@ final class PaymentMethodValidator
             BancontactGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             AmericanExpressGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             ApplePayGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
-            ScalapayGatewayFactory::FACTORY_NAME => $this->processScalapay($paymentMethod),
+            ScalapayGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             WeroGatewayFactory::FACTORY_NAME => $this->processDefault($paymentMethod),
             default => throw new \InvalidArgumentException('Unsupported payment method'),
         };
@@ -95,13 +94,6 @@ final class PaymentMethodValidator
     private function processDefault(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
     {
         $constraintList = [new IsCanSavePaymentMethod(), new HasNoGatewayChannelConflict()];
-
-        return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
-    }
-
-    private function processScalapay(PaymentMethodInterface $paymentMethod): ConstraintViolationListInterface
-    {
-        $constraintList = [new IsCanSavePaymentMethod(), new IsScalapayAmountRangeValid(), new HasNoGatewayChannelConflict()];
 
         return $this->validator->validate($paymentMethod, $constraintList, self::VALIDATION_GROUPS);
     }

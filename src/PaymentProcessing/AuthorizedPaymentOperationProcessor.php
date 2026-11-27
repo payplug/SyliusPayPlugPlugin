@@ -63,7 +63,7 @@ use Symfony\Component\Workflow\Event\TransitionEvent;
  * pretend otherwise: Payment::amount is left at the authorized amount, so RefundPlugin's
  * refundable total is not bent to fit an operation it wasn't designed for. What was actually
  * captured is tracked in the payment details (AuthorizationDetails), and RefundPaymentProcessor
- * refunds that captured amount. See doc/authorized_payment.md.
+ * refunds that captured amount. See https://github.com/payplug/SyliusPayPlugPlugin/wiki/Deferred-Capture
  *
  * Amounts are integers in the minor unit Sylius stores everywhere (two decimals, whatever the
  * currency), converted for display and input with UPC's AmountHelper. The helper converts with the
@@ -203,7 +203,7 @@ final class AuthorizedPaymentOperationProcessor
      * Keeps Sylius's own "complete" transition meaningful for a deferred Hosted Fields payment:
      * applied while money is still only authorized — by the native admin "Complete" button, by
      * payplug:capture-authorized-payments, or by a merchant's own shipping listener (see
-     * doc/authorized_payment.md) — it first captures whatever is still capturable. Throwing here
+     * https://github.com/payplug/SyliusPayPlugPlugin/wiki/Deferred-Capture) — it first captures whatever is still capturable. Throwing here
      * aborts the transition, so the payment never reads "completed" without the capture behind it.
      *
      * A no-op when this processor applies "complete" itself after the last capture, since nothing

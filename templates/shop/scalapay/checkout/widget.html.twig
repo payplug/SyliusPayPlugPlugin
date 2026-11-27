@@ -1,0 +1,9 @@
+{% set method = hookable_metadata.context.method %}
+{% set order = hookable_metadata.context.order|default(null) %}
+
+{% if order is not null and method.gatewayConfig.factoryName == constant('PayPlug\\SyliusPayPlugPlugin\\Gateway\\ScalapayGatewayFactory::FACTORY_NAME') %}
+    {% set widget = payplug_scalapay_checkout_widget(order, method) %}
+    {% if widget is not null %}
+        {% include '@PayPlugSyliusPayPlugPlugin/shop/scalapay/widget.html.twig' with {widget} only %}
+    {% endif %}
+{% endif %}
