@@ -16,6 +16,7 @@ export default [
         },
         rules: {
             "no-undef": "error",
+            // TODO PRE-3881: back to "error" once the 12 baseline warnings are fixed
             "no-unused-vars": "warn",
             "no-irregular-whitespace": "warn",
         },

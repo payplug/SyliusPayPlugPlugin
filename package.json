@@ -4,8 +4,11 @@
   "type": "module",
   "description": "Development tooling for the PayPlug Sylius plugin",
   "license": "MIT",
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
   "scripts": {
-    "lint": "eslint assets/"
+    "lint": "eslint assets/ --max-warnings=12"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -94,10 +94,10 @@
             "@phpstan",
             "@phpunit"
         ],
-        "lint:php": "parallel-lint src tests --exclude tests/TestApplication --exclude vendor",
-        "lint:yaml": "vendor/bin/console lint:yaml config translations --parse-tags",
-        "lint:twig": "vendor/bin/console lint:twig templates",
-        "lint:container": "vendor/bin/console lint:container",
+        "lint:php": "@php vendor/bin/parallel-lint src tests --exclude tests/TestApplication --exclude vendor",
+        "lint:yaml": "@php -d memory_limit=-1 vendor/bin/console lint:yaml config translations --parse-tags",
+        "lint:twig": "@php -d memory_limit=-1 vendor/bin/console lint:twig templates",
+        "lint:container": "@php -d memory_limit=-1 vendor/bin/console lint:container",
         "lint": [
             "@lint:php",
             "@lint:yaml",
