@@ -19,6 +19,7 @@ use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
 use Sylius\Bundle\MoneyBundle\Form\Type\MoneyType;
 use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatter;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfig;
+use Sylius\Component\Addressing\Model\Country;
 use Sylius\Component\Core\Model\Channel;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\PaymentMethod;
@@ -66,6 +67,9 @@ final class PaymentMethodTypeExtensionFormSubmissionTest extends TypeTestCase
     /** @var PaymentMethodRepositoryInterface&MockObject */
     private PaymentMethodRepositoryInterface $paymentMethodRepository;
 
+    /** @var list<string> */
+    private array $enabledCountries = ['BE', 'DE'];
+
     protected function setUp(): void
     {
         $this->channelFr = $this->buildChannel('WEB_FR', 'EUR');
@@ -91,7 +95,15 @@ final class PaymentMethodTypeExtensionFormSubmissionTest extends TypeTestCase
 
     protected function getTypeExtensions(): array
     {
-        return [new PproEligibilityTypeExtension()];
+        $countryRepository = $this->createMock(RepositoryInterface::class);
+        $countryRepository->method('findBy')->willReturnCallback(fn (): array => array_map(static function (string $code): Country {
+            $country = new Country();
+            $country->setCode($code);
+
+            return $country;
+        }, $this->enabledCountries));
+
+        return [new PproEligibilityTypeExtension($countryRepository)];
     }
 
     /**
@@ -338,6 +350,52 @@ final class PaymentMethodTypeExtensionFormSubmissionTest extends TypeTestCase
         );
     }
 
+    public function testSubmit_pproCountryNotEnabledInSylius_isRejectedOnTheCountriesField(): void
+    {
+        $this->enabledCountries = ['BE'];
+        $paymentMethod = $this->weroPaymentMethod();
+        $form = $this->createRootForm($paymentMethod, WeroGatewayConfigurationType::class);
+
+        $form->submit($this->weroSubmission(['ppro_countries' => ['DE']]));
+
+        self::assertFalse($form->isValid());
+        $countries = $form->get('gatewayConfig')->get('config')->get('ppro_countries');
+        self::assertSame('The selected choice is invalid.', $countries->getErrors()[0]?->getMessage());
+        self::assertNotContains('DE', $paymentMethod->getGatewayConfig()?->getConfig()['payment_method']['configured_countries'] ?? []);
+    }
+
+    /**
+     * No country enabled in Sylius is accepted by PayPlug: the countries field has nothing to
+     * offer, so it must not block the rest of the page from being saved.
+     */
+    public function testSubmit_pproWithoutAnyCompatibleCountry_isValidAndKeepsTheStoredCountries(): void
+    {
+        $this->enabledCountries = ['FR'];
+        $paymentMethod = $this->weroPaymentMethod(['BE']);
+        $form = $this->createRootForm($paymentMethod, WeroGatewayConfigurationType::class);
+
+        $form->submit($this->weroSubmission(['ppro_min_amount' => '10', 'ppro_max_amount' => '500', 'ppro_countries' => []]));
+
+        self::assertTrue($form->isValid(), (string) $form->getErrors(true));
+        $block = $paymentMethod->getGatewayConfig()?->getConfig()['payment_method'] ?? [];
+        self::assertSame(['min' => 1000, 'max' => 50000], $block['configured_amount']);
+        self::assertSame(['BE'], $block['configured_countries']);
+    }
+
+    public function testSubmit_pproWithoutAnyCompatibleCountry_stillChecksTheAmounts(): void
+    {
+        $this->enabledCountries = ['FR'];
+        $form = $this->createRootForm($this->weroPaymentMethod(), WeroGatewayConfigurationType::class);
+
+        $form->submit($this->weroSubmission(['ppro_min_amount' => '0.10']));
+
+        self::assertFalse($form->isValid());
+        self::assertSame(
+            'payplug_sylius_payplug_plugin.ppro.min_below_api_min|€0.30|€20,000.00',
+            $form->get('gatewayConfig')->get('config')->get('ppro_min_amount')->getErrors()[0]?->getMessage(),
+        );
+    }
+
     public function testSubmit_pproWithinBounds_isValidAndStoredInCents(): void
     {
         $paymentMethod = $this->weroPaymentMethod();
@@ -379,7 +437,10 @@ final class PaymentMethodTypeExtensionFormSubmissionTest extends TypeTestCase
         ];
     }
 
-    private function weroPaymentMethod(): PaymentMethod
+    /**
+     * @param list<string>|null $configuredCountries
+     */
+    private function weroPaymentMethod(?array $configuredCountries = null): PaymentMethod
     {
         $gatewayConfig = new GatewayConfig();
         $gatewayConfig->setFactoryName(WeroGatewayFactory::FACTORY_NAME);
@@ -393,7 +454,7 @@ final class PaymentMethodTypeExtensionFormSubmissionTest extends TypeTestCase
                 'allowed_countries' => ['BE', 'DE'],
                 'default_amount' => ['min' => 30, 'max' => 2000000],
                 'configured_amount' => ['min' => 30, 'max' => 2000000],
-                'configured_countries' => null,
+                'configured_countries' => $configuredCountries,
             ],
         ]);
 

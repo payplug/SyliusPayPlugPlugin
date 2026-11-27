@@ -126,6 +126,7 @@ payplug_sylius_payplug_plugin:
             not_connected: I limiti di importo e di paese vengono caricati da PayPlug una volta collegato questo metodo di pagamento al tuo account PayPlug.
             disabled_by_payplug: All'ultimo aggiornamento dei suoi limiti, PayPlug indicava che questo metodo di pagamento non è attivo sul tuo account. È nascosto al checkout per 24 ore dopo questo aggiornamento, poi viene mostrato di nuovo e PayPlug accetta o rifiuta il pagamento. Contatta PayPlug per attivarlo.
             no_country_left: Nessuno dei paesi di fatturazione che hai selezionato è ancora autorizzato da PayPlug, quindi questo metodo di pagamento è nascosto al checkout. Seleziona qui sotto i paesi per cui mostrarlo.
+            no_compatible_country: Nessuno dei paesi attivati in Sylius è autorizzato da PayPlug per questo metodo di pagamento, quindi è nascosto al checkout. Attiva uno dei paesi autorizzati da PayPlug per scegliere i paesi di fatturazione.
         scalapay_widget:
             title: Widget Scalapay
             help: Mostra ai clienti i piani di pagamento Scalapay, così come forniti da Scalapay, nelle pagine selezionate qui sotto. Il token commerciante Scalapay proviene dal tuo account PayPlug; non devi inserire nulla.

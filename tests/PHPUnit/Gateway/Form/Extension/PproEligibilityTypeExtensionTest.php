@@ -14,9 +14,10 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\PproCountryChoiceType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\ScalapayGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\WeroGatewayConfigurationType;
 use Sylius\Bundle\MoneyBundle\Form\Type\MoneyType;
+use Sylius\Component\Addressing\Model\Country;
+use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\Test\TypeTestCase;
-use Symfony\Component\Intl\Countries;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class PproEligibilityTypeExtensionTest extends TypeTestCase
@@ -24,6 +25,12 @@ final class PproEligibilityTypeExtensionTest extends TypeTestCase
     private const CONNECTED = ['live' => true, 'live_client' => ['client_id' => 'id', 'client_secret' => 'secret']];
 
     private string $previousLocale;
+
+    /** @var list<string|null> */
+    private array $enabledCountries = ['BE', 'DE', 'FR'];
+
+    /** @var list<array<string, mixed>> */
+    private array $countryQueries = [];
 
     protected function setUp(): void
     {
@@ -58,7 +65,7 @@ final class PproEligibilityTypeExtensionTest extends TypeTestCase
 
     protected function getTypeExtensions(): array
     {
-        return [new PproEligibilityTypeExtension()];
+        return [new PproEligibilityTypeExtension($this->countryRepository())];
     }
 
     public function testExtendsTheThreePproConfigTypesOnly(): void
@@ -181,18 +188,141 @@ final class PproEligibilityTypeExtensionTest extends TypeTestCase
         self::assertSame(['BE', 'DE'], $this->choiceValues($form->get('ppro_countries')));
     }
 
-    public function testCountryChoicesAreAllCountriesWhenAllowedIsNull(): void
+    public function testCountryChoicesAreTheEnabledCountriesWhenAllowedIsNull(): void
     {
         $form = $this->factory->create(BancontactGatewayConfigurationType::class, $this->connectedWith($this->block(['allowed_countries' => null])));
 
-        self::assertCount(\count(Countries::getCountryCodes()), $this->choiceValues($form->get('ppro_countries')));
+        self::assertSame(['BE', 'FR', 'DE'], $this->choiceValues($form->get('ppro_countries')));
     }
 
-    public function testCountryChoicesAreAllCountriesWithoutAStoredBlock(): void
+    public function testCountryChoicesAreTheEnabledCountriesWithoutAStoredBlock(): void
     {
         $form = $this->factory->create(BancontactGatewayConfigurationType::class, self::CONNECTED);
 
-        self::assertCount(\count(Countries::getCountryCodes()), $this->choiceValues($form->get('ppro_countries')));
+        self::assertSame(['BE', 'FR', 'DE'], $this->choiceValues($form->get('ppro_countries')));
+    }
+
+    public function testCountryChoicesLeaveOutAllowedCountriesThatAreNotEnabled(): void
+    {
+        $this->enabledCountries = ['BE', 'FR'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block()));
+
+        self::assertSame(['BE'], $this->choiceValues($form->get('ppro_countries')));
+    }
+
+    public function testCountryChoicesAreEmptyWithoutAnEnabledCountry(): void
+    {
+        $this->enabledCountries = [];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block()));
+
+        self::assertSame([], $this->choiceValues($form->get('ppro_countries')));
+        self::assertTrue($form->get('ppro_countries')->isDisabled());
+
+        $form->submit(['live' => '1']);
+
+        self::assertNull($form->getData()['payment_method']['configured_countries']);
+    }
+
+    public function testCountryWithoutCodeIsIgnored(): void
+    {
+        $this->enabledCountries = ['BE', null];
+
+        $form = $this->factory->create(BancontactGatewayConfigurationType::class, self::CONNECTED);
+
+        self::assertSame(['BE'], $this->choiceValues($form->get('ppro_countries')));
+    }
+
+    public function testOnlyEnabledCountriesAreQueried(): void
+    {
+        $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block()));
+
+        self::assertSame([['enabled' => true]], $this->countryQueries);
+    }
+
+    public function testDisabledCountryFieldListsTheEnabledCountriesBeforeTheConnection(): void
+    {
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, []);
+
+        self::assertTrue($form->get('ppro_countries')->isDisabled());
+        self::assertSame(['BE', 'FR', 'DE'], $this->choiceValues($form->get('ppro_countries')));
+    }
+
+    public function testCountryThatIsNotEnabledIsRefused(): void
+    {
+        $this->enabledCountries = ['BE'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block(['configured_countries' => ['BE']])));
+
+        $form->submit(['live' => '1', 'ppro_countries' => ['DE']]);
+
+        self::assertFalse($form->get('ppro_countries')->isValid());
+        self::assertSame([], $form->getData()['payment_method']['configured_countries']);
+    }
+
+    public function testStoredCountryThatIsNoLongerEnabledIsNotRendered(): void
+    {
+        $this->enabledCountries = ['BE', 'FR'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block(['configured_countries' => ['BE', 'DE']])));
+
+        self::assertSame(['BE'], $form->createView()['ppro_countries']->vars['value']);
+    }
+
+    public function testStoredCountryThatIsNoLongerEnabledIsKeptOnSave(): void
+    {
+        $this->enabledCountries = ['BE', 'NL'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block([
+            'allowed_countries' => ['BE', 'DE', 'NL'],
+            'configured_countries' => ['BE', 'DE'],
+        ])));
+
+        $form->submit(['live' => '1', 'ppro_countries' => ['BE']]);
+
+        self::assertSame(['BE', 'DE'], $form->getData()['payment_method']['configured_countries']);
+    }
+
+    public function testRestrictionEqualToTheEnabledCountriesIsKeptOnAnUnrelatedSave(): void
+    {
+        $this->enabledCountries = ['FR'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block([
+            'allowed_countries' => ['FR', 'BE', 'IT', 'ES', 'NL'],
+            'configured_countries' => ['FR'],
+        ])));
+
+        $form->submit(['live' => '1', 'ppro_min_amount' => '1', 'ppro_countries' => ['FR']]);
+
+        self::assertSame(['FR'], $form->getData()['payment_method']['configured_countries']);
+    }
+
+    public function testEveryAllowedAndEnabledCountrySelectedKeepsAnExcludedCountry(): void
+    {
+        $this->enabledCountries = ['BE', 'DE'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block([
+            'allowed_countries' => ['BE', 'DE', 'NL'],
+            'configured_countries' => ['BE'],
+        ])));
+
+        $form->submit(['live' => '1', 'ppro_countries' => ['DE', 'BE']]);
+
+        self::assertSame(['BE', 'DE'], $form->getData()['payment_method']['configured_countries']);
+    }
+
+    public function testEveryAllowedAndEnabledCountrySelectedStaysNullWithoutRestriction(): void
+    {
+        $this->enabledCountries = ['BE', 'DE'];
+
+        $form = $this->factory->create(WeroGatewayConfigurationType::class, $this->connectedWith($this->block([
+            'allowed_countries' => ['BE', 'DE', 'NL'],
+        ])));
+
+        $form->submit(['live' => '1', 'ppro_countries' => ['DE', 'BE']]);
+
+        self::assertNull($form->getData()['payment_method']['configured_countries']);
     }
 
     public function testAllChoicesSelectedMapsToNull(): void
@@ -255,6 +385,26 @@ final class PproEligibilityTypeExtensionTest extends TypeTestCase
 
         self::assertFalse($form->get('ppro_min_amount')->isDisabled());
         self::assertFalse($form->get('ppro_countries')->isDisabled());
+    }
+
+    /**
+     * @return RepositoryInterface<Country>
+     */
+    private function countryRepository(): RepositoryInterface
+    {
+        $repository = $this->createMock(RepositoryInterface::class);
+        $repository->method('findBy')->willReturnCallback(function (array $criteria): array {
+            $this->countryQueries[] = $criteria;
+
+            return array_map(static function (?string $code): Country {
+                $country = new Country();
+                $country->setCode($code);
+
+                return $country;
+            }, $this->enabledCountries);
+        });
+
+        return $repository;
     }
 
     /**

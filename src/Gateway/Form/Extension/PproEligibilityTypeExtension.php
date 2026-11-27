@@ -11,6 +11,8 @@ use PayPlug\SyliusPayPlugPlugin\Gateway\Form\Type\WeroGatewayConfigurationType;
 use PayPlug\SyliusPayPlugPlugin\Gateway\GatewayCredentials;
 use PayPlug\SyliusPayPlugPlugin\Ppro\PproConfig;
 use Sylius\Bundle\MoneyBundle\Form\Type\MoneyType;
+use Sylius\Component\Addressing\Model\CountryInterface;
+use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
@@ -20,7 +22,8 @@ use Symfony\Component\Form\FormEvents;
  * Merchant narrowing of the PayPlug limits of a PPRO payment method. The fields write into the
  * `payment_method` block of the gateway config through nested property paths, so the PayPlug
  * limits stored next to them are kept on save. Amounts are entered in euros and stored in cents;
- * an empty amount follows the PayPlug limit, shown as the field's placeholder.
+ * an empty amount follows the PayPlug limit, shown as the field's placeholder. The countries offered
+ * are those PayPlug allows that are also enabled in Sylius.
  *
  * Before the PayPlug connection there are no limits to narrow, so the fields are disabled.
  */
@@ -37,11 +40,18 @@ final class PproEligibilityTypeExtension extends AbstractTypeExtension
     private const COUNTRIES_PATH = '[' . PproConfig::CONFIG_KEY . '][configured_countries]';
 
     /**
+     * @param RepositoryInterface<CountryInterface> $countryRepository
+     */
+    public function __construct(private RepositoryInterface $countryRepository)
+    {
+    }
+
+    /**
      * @SuppressWarnings("PHPMD.UnusedFormalParameter")
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, static function (FormEvent $event): void {
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
             $config = $event->getData();
             $config = \is_array($config) ? $config : [];
             $stored = PproConfig::fromArray($config[PproConfig::CONFIG_KEY] ?? null);
@@ -53,6 +63,7 @@ final class PproEligibilityTypeExtension extends AbstractTypeExtension
                 ->add(self::COUNTRIES_FIELD, PproCountryChoiceType::class, [
                     'label' => 'payplug_sylius_payplug_plugin.ui.ppro.countries_label',
                     'allowed_countries' => $stored?->allowedCountries,
+                    'available_countries' => $this->enabledCountryCodes(),
                     'property_path' => self::COUNTRIES_PATH,
                     'disabled' => $disabled,
                 ])
@@ -67,6 +78,22 @@ final class PproEligibilityTypeExtension extends AbstractTypeExtension
             WeroGatewayConfigurationType::class,
             ScalapayGatewayConfigurationType::class,
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function enabledCountryCodes(): array
+    {
+        $codes = [];
+        foreach ($this->countryRepository->findBy(['enabled' => true]) as $country) {
+            $code = $country->getCode();
+            if (null !== $code) {
+                $codes[] = $code;
+            }
+        }
+
+        return $codes;
     }
 
     /**
