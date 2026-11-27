@@ -1,0 +1,15 @@
+{
+  "name": "sylius-payplug-plugin-tooling",
+  "private": true,
+  "type": "module",
+  "description": "Development tooling for the PayPlug Sylius plugin",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint assets/"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0"
+  }
+}
