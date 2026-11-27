@@ -47,6 +47,8 @@ final class ScalapayCheckoutWidgetPlacementTest extends TestCase
 
     private const PAYMENT_HOOK = 'sylius_shop.shared.form.select_payment.payment';
 
+    private const HOOKABLE_CONDITION_CHECKER = 'Sylius\TwigHooks\Hookable\Checker\HookableConditionChecker';
+
     /** @var list<mixed> */
     private array $widgetCalls = [];
 
@@ -131,13 +133,18 @@ final class ScalapayCheckoutWidgetPlacementTest extends TestCase
         $twig = new Environment($loader, ['strict_variables' => true]);
 
         $prefixNormalizer = new CompositePrefixNormalizer([new RemoveSectionPartNormalizer('#')]);
-        $hookRenderer = new HookRenderer(
+        $hookRendererArguments = [
             new HookablesRegistry($this->hookables(), new HookableMerger()),
             new CompositeHookableRenderer([new HookableTemplateRenderer($twig, new TemplateConfigurationProvider(new ExpressionLanguage()))]),
             new DefaultContextProvider(),
             new DefaultConfigurationProvider(),
             new HookableMetadataFactory($prefixNormalizer),
-        );
+        ];
+        // sylius/twig-hooks 0.14 (Sylius 2.3) also passes a hookable condition checker to the HookRenderer.
+        if (class_exists(self::HOOKABLE_CONDITION_CHECKER)) {
+            $hookRendererArguments[] = new (self::HOOKABLE_CONDITION_CHECKER)(new ExpressionLanguage());
+        }
+        $hookRenderer = new HookRenderer(...$hookRendererArguments);
         $runtime = new HooksRuntime($hookRenderer, new CompositeNameNormalizer([]), $prefixNormalizer, true);
 
         $twig->addExtension(new HooksExtension());

@@ -36,7 +36,7 @@ In local environment, the plugin will not work properly because you will not be 
 |        | Version |
 |:-------|:--------|
 | PHP    | ^8.2    |
-| Sylius | ^2.0    |
+| Sylius | ^2.1    |
 
 
 ### With Symfony Flex

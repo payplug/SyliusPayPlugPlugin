@@ -11,9 +11,7 @@ jobs:
 
     phpunit:
         needs: [quality]
-        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
-        with:
-            symfony-versions: '["7.3"]'
+        uses: ./.github/workflows/phpunit-matrix.yml
 
     github-release:
         needs: phpunit

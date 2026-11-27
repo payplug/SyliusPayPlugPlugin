@@ -6,7 +6,7 @@ These instructions apply to code reviews on pull requests in this repository.
 
 This is PayPlug's official Sylius plugin. PayPlug is a Payment Service Provider (PSP). The plugin integrates PayPlug's payment processing into Sylius via multiple payment methods: standard card (PayPlug), Oney financing, Bancontact, Scalapay, Apple Pay, and American Express.
 
-**Stack**: PHP 8.2+, Sylius 2.0+, Symfony 6.4+, Payum, `payplug/payplug-php ^4.0`
+**Stack**: PHP 8.2+, Sylius 2.1+, Symfony 6.4+, Payum, `payplug/payplug-php ^4.0`
 
 ## Intentional Patterns — Do Not Flag as Issues
 

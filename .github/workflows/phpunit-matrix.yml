@@ -1,0 +1,83 @@
+name: PHPUnit matrix
+
+'on':
+    workflow_call:
+
+# sylius_phpunit.yml builds the full cross product of its inputs and has no exclude input,
+# so each PHP / Sylius pairing that needs its own Symfony set gets its own job.
+# The versions job resolves, on every run, the latest patch of each Sylius minor and, for the
+# `latest` job, the newest Sylius, PHP and Symfony allowed by composer.json
+# (see .github/scripts/resolve-test-versions.sh).
+# Sylius 2.3's admin and shop assets require Node ^22.13 || >=24.
+jobs:
+    versions:
+        name: 'Resolve tested versions'
+        runs-on: ubuntu-latest
+        outputs:
+            sylius-2-1: ${{ steps.resolve.outputs.sylius-2-1 }}
+            sylius-2-2: ${{ steps.resolve.outputs.sylius-2-2 }}
+            sylius-2-3: ${{ steps.resolve.outputs.sylius-2-3 }}
+            sylius-latest: ${{ steps.resolve.outputs.sylius-latest }}
+            php-latest: ${{ steps.resolve.outputs.php-latest }}
+            symfony-latest: ${{ steps.resolve.outputs.symfony-latest }}
+        steps:
+            -
+                uses: actions/checkout@v4
+            -
+                name: 'Resolve Sylius, PHP and Symfony versions from Packagist, php.net and composer.json'
+                id: resolve
+                run: 'bash .github/scripts/resolve-test-versions.sh composer.json'
+
+    php-8-2:
+        needs: [versions]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.2"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-1 }}","${{ needs.versions.outputs.sylius-2-2 }}"]'
+            symfony-versions: '["6.4","7.4"]'
+
+    php-8-4:
+        needs: [versions]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.4"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-2 }}"]'
+            symfony-versions: '["7.4"]'
+
+    php-8-4-sylius-2-3:
+        needs: [versions]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["8.4"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-2-3 }}"]'
+            symfony-versions: '["7.4"]'
+            node-version: '22.x'
+
+    latest:
+        needs: [versions]
+        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
+        with:
+            php-versions: '["${{ needs.versions.outputs.php-latest }}"]'
+            sylius-versions: '["${{ needs.versions.outputs.sylius-latest }}"]'
+            symfony-versions: '["${{ needs.versions.outputs.symfony-latest }}"]'
+            node-version: '22.x'
+
+    phpunit-result:
+        name: 'PHPUnit result'
+        needs: [versions, php-8-2, php-8-4, php-8-4-sylius-2-3, latest]
+        if: always()
+        runs-on: ubuntu-latest
+        steps:
+            -
+                name: 'Fail unless every PHPUnit matrix job succeeded'
+                shell: bash
+                env:
+                    NEEDS: ${{ toJson(needs) }}
+                run: |
+                    set -euo pipefail
+                    failed=$(jq -r '[to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"] | join(", ")' <<< "$NEEDS")
+                    if [ -n "$failed" ]; then
+                        echo "::error::PHPUnit matrix jobs did not succeed: $failed"
+                        exit 1
+                    fi
+                    echo "All PHPUnit matrix jobs succeeded"

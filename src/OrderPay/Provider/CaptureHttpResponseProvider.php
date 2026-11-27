@@ -9,6 +9,7 @@ use Sylius\Bundle\ResourceBundle\Controller\RequestConfiguration;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 #[AutoconfigureTag(
@@ -41,7 +42,11 @@ use Symfony\Component\HttpFoundation\Response;
 )]
 class CaptureHttpResponseProvider implements HttpResponseProviderInterface
 {
-    public function supports(RequestConfiguration $requestConfiguration, PaymentRequestInterface $paymentRequest): bool
+    /**
+     * Sylius 2.3 passes the Request where Sylius 2.1 and 2.2 pass the RequestConfiguration.
+     * The union can be narrowed to Request once Sylius < 2.3 is no longer supported.
+     */
+    public function supports(Request|RequestConfiguration $request, PaymentRequestInterface $paymentRequest): bool
     {
         if ($paymentRequest->getAction() !== PaymentRequestInterface::ACTION_CAPTURE) {
             return false;
@@ -53,7 +58,7 @@ class CaptureHttpResponseProvider implements HttpResponseProviderInterface
     }
 
     public function getResponse(
-        RequestConfiguration $requestConfiguration,
+        Request|RequestConfiguration $request,
         PaymentRequestInterface $paymentRequest,
     ): Response {
         // This is called after the capture payment request has been handled

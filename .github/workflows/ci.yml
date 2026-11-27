@@ -96,15 +96,14 @@ jobs:
     sylius-matrix:
         needs: [quality]
         if: github.base_ref == 'develop'
-        uses: payplug/template-ci/.github/workflows/sylius_phpunit.yml@main
-        with:
-            symfony-versions: '["7.3"]'
+        uses: ./.github/workflows/phpunit-matrix.yml
 
     # -----------------------------------------------------------------------
     # COVERAGE — generates a Clover coverage report (PCOV) for SonarCloud to
     #    ingest. Kept separate from the reusable sylius_phpunit matrix (which
     #    runs with coverage: none) so coverage generation stays this repo's
     #    own concern, same as payplug/unified-plugin-core's ci.yml.
+    #    Coverage target: Sylius 2.1 / Symfony 7.4 / PHP 8.2.
     # -----------------------------------------------------------------------
     coverage:
         name: Coverage
@@ -146,14 +145,14 @@ jobs:
                 uses: actions/cache@v4
                 with:
                     path: '${{ steps.composer-cache.outputs.dir }}'
-                    key: 'php-8.2-sylius-2.1.0-symfony-7.3-coverage-composer-${{ hashFiles(''**/composer.json'') }}'
-                    restore-keys: 'php-8.2-sylius-2.1.0-symfony-7.3-coverage-composer-'
+                    key: 'php-8.2-sylius-2.1.0-symfony-7.4-coverage-composer-${{ hashFiles(''**/composer.json'') }}'
+                    restore-keys: 'php-8.2-sylius-2.1.0-symfony-7.4-coverage-composer-'
             -
                 name: 'Composer - Github Auth'
                 run: 'composer config -g github-oauth.github.com ${{ github.token }}'
             -
                 name: 'Install Sylius-Standard and Plugin'
-                run: 'make install -e SYLIUS_VERSION=2.1.0 SYMFONY_VERSION=7.3'
+                run: 'make install -e SYLIUS_VERSION=2.1.0 SYMFONY_VERSION=7.4'
                 id: end-of-setup-sylius
             -
                 name: 'Run tests with coverage'
